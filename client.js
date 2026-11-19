@@ -479,6 +479,7 @@ const chatStore = {
     conversationError: '',
     streaming: null,
     stopping: false,
+    sending: false,
     draft: '',
     attachments: [],
     toasts: [],
@@ -672,6 +673,26 @@ function sortConversations(list) {
   return [...list].sort((left, right) => (right.updatedAt ?? 0) - (left.updatedAt ?? 0))
 }
 
+/**
+ * Whether the Chat page is a blank new conversation, i.e. whether the shared
+ * shell switch may show. The answer comes from the message model and the
+ * conversation summaries, never from the DOM:
+ * - an in-flight first send counts as started immediately, before the reply;
+ * - a loaded conversation with messages is not blank, and neither is a
+ *   conversation whose summary already reports messages while its history is
+ *   still loading (so switching to an existing conversation never flashes it);
+ * - a restored session is not judged blank until bootstrap has reported the
+ *   conversation list.
+ */
+function chatPageIsBlank(state) {
+  if (state.sending === true || state.streaming !== null) return false
+  if (state.messages.length > 0) return false
+  if (state.activeId === null) return true
+  const summary = state.conversations.find(item => item.id === state.activeId)
+  if (summary !== undefined) return (summary.messageCount ?? 0) === 0
+  return state.boot === 'ready'
+}
+
 function upsertSummary(summary) {
   if (!summary || typeof summary.id !== 'string') return
   const exists = chatStore.state.conversations.some(item => item.id === summary.id)
@@ -696,6 +717,12 @@ function patchUserMessage(id, patch) {
 let bootPromise = null
 let sendInFlight = false
 let handoffSequence = 0
+
+/** Mirror the send guard into the store so the shell switch hides on send. */
+function markSendInFlight(value) {
+  sendInFlight = value
+  if (chatStore.state.sending !== value) chatStore.set({ sending: value })
+}
 
 async function ensureBoot(force = false) {
   if (!force && (chatStore.state.boot === 'ready' || chatStore.state.boot === 'loading')) {
@@ -1236,18 +1263,18 @@ async function sendMessage() {
   const sentAttachments = state.attachments.filter(item => item.status === 'ready' && item.fileId)
   if (text === '' && readyFiles.length === 0) return
   if (sendInFlight) return
-  sendInFlight = true
+  markSendInFlight(true)
 
   let conversationId = state.activeId
   try {
     if (conversationId === null) conversationId = await createConversation()
   } catch (error) {
-    sendInFlight = false
+    markSendInFlight(false)
     chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
     return
   }
   if (chatStore.state.streaming !== null) {
-    sendInFlight = false
+    markSendInFlight(false)
     return
   }
 
@@ -1444,7 +1471,7 @@ async function sendMessage() {
     }
     finish()
   } finally {
-    sendInFlight = false
+    markSendInFlight(false)
   }
 }
 
@@ -2989,22 +3016,74 @@ function ChatHeader() {
   )
 }
 
+const AGENT_PAGE_POLL_MS = 400
+const AGENT_PAGE_POLL_LIMIT = 25
+
+/**
+ * Read the Agent page's native state. `true` means "blank new page, the shell
+ * switch belongs here": no Session is presented, or the presented Session is
+ * still blank. The list row's `blank` is the Host's own Session-list metadata
+ * (set false by the first `turn/start`), so this never inspects the DOM or the
+ * conversation title. A global panel replaces the conversation, so it counts as
+ * not-blank and the switch stays out of its way.
+ * @returns the state, or null while the native session service is unavailable.
+ */
+function readAgentPageState() {
+  const sessions = appCtx?.get?.('sessions')
+  const list = sessions?.list
+  if (list === undefined || list === null || typeof list.getSnapshot !== 'function') return null
+  let panel = false
+  try {
+    const panelInfo = appCtx?.get?.('layout')?.panelInfo
+    if (panelInfo !== undefined && typeof panelInfo.getSnapshot === 'function') {
+      panel = (panelInfo.getSnapshot()?.activePanelId ?? null) !== null
+    }
+  } catch {
+    panel = false
+  }
+  const snapshot = list.getSnapshot()
+  const rows = snapshot !== null && typeof snapshot === 'object' && snapshot.byId !== null
+    && typeof snapshot.byId === 'object'
+    ? Object.values(snapshot.byId)
+    : []
+  const active = rows.find(row => (row?.retainedBy?.mainView ?? 0) > 0)
+  if (active === undefined) {
+    // `pending` means the first list pull has not arrived, so an existing
+    // conversation may still be about to present itself; staying hidden avoids
+    // flashing the switch over it. `ready` with nothing presented is a genuinely
+    // new page (workspace hero / new session).
+    return { blank: snapshot.phase === 'ready', panel }
+  }
+  // A running Session has already started its turn: hide immediately on send,
+  // without waiting for the first assistant message.
+  if (active.running === true) return { blank: false, panel }
+  return { blank: active.blank === true, panel }
+}
+
 /**
  * The shared Chat | Agent navigation. It is registered in the frame-wide
  * overlay (root scope, outside every column), so it is part of the shell
- * chrome rather than of either view: it stays visible in both modes and
- * switches the whole application view. The toast stack rides along because
- * messages raised while the Chat surface is closed (`handoffSent`, a background
- * stream failure) must still be visible.
+ * chrome rather than of either view, and it switches the whole application
+ * view. The toast stack rides along because messages raised while the Chat
+ * surface is closed (`handoffSent`, a background stream failure) must still be
+ * visible.
  *
- * Placement, measured against the live layout rather than the window:
+ * VISIBILITY — ChatGPT's blank-page rule: the switch only appears on a new,
+ * still-empty page. It hides as soon as the first message starts sending, stays
+ * hidden for existing conversations, and returns for a new blank chat/session.
+ * The decision uses the native state on the Agent side (`ctx.sessions.list`, the
+ * Host's own `blank` metadata) and this plugin's message model on the Chat side
+ * (never the DOM), so loading, switching and streaming cannot make it flicker.
+ * While hidden it renders no element at all: nothing is left to intercept
+ * clicks.
+ *
+ * PLACEMENT — measured against the live layout, not the window:
  * - Vertical: the native Session header's toolbar line, i.e. the middle of the
  *   title row that carries the header utilities and the far-right corner
  *   control. The stylesheet holds the same value as a constant
  *   (`--dsh-frame-chrome-top + 10px padding + 30px row / 2`); the live anchor
  *   `[data-conversation-header-corner]` (published by the conversation header
- *   for exactly this kind of chrome alignment) refines it when present, so a
- *   taller or wrapped header still lines up.
+ *   for exactly this kind of chrome alignment) refines it when present.
  * - Horizontal: the centre of the main content column. Agent mode uses the
  *   native sidebar width the frame publishes (`--dsh-windows-sidebar-width`);
  *   Chat mode measures its own `.dsc-main`. The window centre is never used.
@@ -3016,7 +3095,64 @@ function ChatHeader() {
 function ModeSwitch() {
   const t = useT()
   const open = useChat(state => state.open)
+  const chatBlank = useChat(chatPageIsBlank)
+  // Read once during the first render so the pill is already correct on the
+  // first paint; the effect below attaches the live subscriptions.
+  const [agentPage, setAgentPage] = React.useState(readAgentPageState)
   const ref = React.useRef(null)
+  // Follow the native Session list (and the global panel selection). The
+  // services are registered by other plugins, so a cold start may need to wait
+  // a beat before they exist; the store then pushes every later change.
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    let disposed = false
+    let timer = 0
+    let attempts = 0
+    let detach = null
+    const update = () => {
+      if (disposed) return
+      const next = readAgentPageState()
+      if (next === null) return
+      setAgentPage(previous => (
+        previous !== null && previous.blank === next.blank && previous.panel === next.panel
+          ? previous
+          : next
+      ))
+    }
+    const attach = () => {
+      if (disposed) return
+      const list = appCtx?.get?.('sessions')?.list
+      if (list === undefined || list === null || typeof list.getSnapshot !== 'function') {
+        attempts += 1
+        if (attempts < AGENT_PAGE_POLL_LIMIT) timer = setTimeout(attach, AGENT_PAGE_POLL_MS)
+        return
+      }
+      update()
+      const disposers = []
+      if (typeof list.subscribe === 'function') disposers.push(list.subscribe(update))
+      const panelInfo = appCtx?.get?.('layout')?.panelInfo
+      if (panelInfo !== undefined && typeof panelInfo.subscribe === 'function') disposers.push(panelInfo.subscribe(update))
+      detach = () => {
+        for (const dispose of disposers) {
+          try {
+            if (typeof dispose === 'function') dispose()
+          } catch {
+            // A disposed service owns nothing left to release.
+          }
+        }
+      }
+    }
+    attach()
+    return () => {
+      disposed = true
+      if (timer !== 0) clearTimeout(timer)
+      if (detach !== null) detach()
+    }
+  }, [])
+  // Agent side: unknown state stays hidden (avoids a flash over an existing
+  // conversation while the list loads); a blank page shows it.
+  const agentBlank = agentPage !== null && agentPage.blank && !agentPage.panel
+  const visible = open ? chatBlank : agentBlank
   React.useLayoutEffect(() => {
     if (typeof document === 'undefined') return undefined
     let frame = 0
@@ -3064,7 +3200,7 @@ function ModeSwitch() {
       if (observer !== undefined) observer.disconnect()
       if (frame !== 0) cancelAnimationFrame(frame)
     }
-  }, [open])
+  }, [open, visible])
   const item = (mode, label, selected) => h('button', {
     type: 'button',
     'aria-pressed': selected,
@@ -3073,17 +3209,19 @@ function ModeSwitch() {
     onClick: () => chatActions.setMode(mode),
   }, h('span', { className: 'dsc-modeswitch-label' }, label))
   return h('div', { className: 'dsc-shell' },
-    h('div', {
-      className: 'dsc-modeswitch',
-      role: 'group',
-      'aria-label': t('modeSwitchLabel'),
-      'data-active': open ? 'chat' : 'agent',
-      ref,
-    },
-      h('span', { className: 'dsc-modeswitch-thumb', 'aria-hidden': 'true' }),
-      item('chat', t('chatMode'), open),
-      item('agent', t('agentMode'), !open),
-    ),
+    visible
+      ? h('div', {
+          className: 'dsc-modeswitch',
+          role: 'group',
+          'aria-label': t('modeSwitchLabel'),
+          'data-active': open ? 'chat' : 'agent',
+          ref,
+        },
+          h('span', { className: 'dsc-modeswitch-thumb', 'aria-hidden': 'true' }),
+          item('chat', t('chatMode'), open),
+          item('agent', t('agentMode'), !open),
+        )
+      : null,
     h(Toasts, null),
   )
 }
@@ -4947,6 +5085,8 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     renderInline,
     thinkingSeconds,
     thinkingDurationMs,
+    chatPageIsBlank,
+    readAgentPageState,
   })
 }
 

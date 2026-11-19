@@ -36,5 +36,7 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     renderInline,
     thinkingSeconds,
     thinkingDurationMs,
+    chatPageIsBlank,
+    readAgentPageState,
   })
 }

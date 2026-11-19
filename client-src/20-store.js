@@ -72,6 +72,7 @@ const chatStore = {
     conversationError: '',
     streaming: null,
     stopping: false,
+    sending: false,
     draft: '',
     attachments: [],
     toasts: [],
@@ -265,6 +266,26 @@ function sortConversations(list) {
   return [...list].sort((left, right) => (right.updatedAt ?? 0) - (left.updatedAt ?? 0))
 }
 
+/**
+ * Whether the Chat page is a blank new conversation, i.e. whether the shared
+ * shell switch may show. The answer comes from the message model and the
+ * conversation summaries, never from the DOM:
+ * - an in-flight first send counts as started immediately, before the reply;
+ * - a loaded conversation with messages is not blank, and neither is a
+ *   conversation whose summary already reports messages while its history is
+ *   still loading (so switching to an existing conversation never flashes it);
+ * - a restored session is not judged blank until bootstrap has reported the
+ *   conversation list.
+ */
+function chatPageIsBlank(state) {
+  if (state.sending === true || state.streaming !== null) return false
+  if (state.messages.length > 0) return false
+  if (state.activeId === null) return true
+  const summary = state.conversations.find(item => item.id === state.activeId)
+  if (summary !== undefined) return (summary.messageCount ?? 0) === 0
+  return state.boot === 'ready'
+}
+
 function upsertSummary(summary) {
   if (!summary || typeof summary.id !== 'string') return
   const exists = chatStore.state.conversations.some(item => item.id === summary.id)
@@ -289,6 +310,12 @@ function patchUserMessage(id, patch) {
 let bootPromise = null
 let sendInFlight = false
 let handoffSequence = 0
+
+/** Mirror the send guard into the store so the shell switch hides on send. */
+function markSendInFlight(value) {
+  sendInFlight = value
+  if (chatStore.state.sending !== value) chatStore.set({ sending: value })
+}
 
 async function ensureBoot(force = false) {
   if (!force && (chatStore.state.boot === 'ready' || chatStore.state.boot === 'loading')) {
@@ -829,18 +856,18 @@ async function sendMessage() {
   const sentAttachments = state.attachments.filter(item => item.status === 'ready' && item.fileId)
   if (text === '' && readyFiles.length === 0) return
   if (sendInFlight) return
-  sendInFlight = true
+  markSendInFlight(true)
 
   let conversationId = state.activeId
   try {
     if (conversationId === null) conversationId = await createConversation()
   } catch (error) {
-    sendInFlight = false
+    markSendInFlight(false)
     chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
     return
   }
   if (chatStore.state.streaming !== null) {
-    sendInFlight = false
+    markSendInFlight(false)
     return
   }
 
@@ -1037,7 +1064,7 @@ async function sendMessage() {
     }
     finish()
   } finally {
-    sendInFlight = false
+    markSendInFlight(false)
   }
 }
 

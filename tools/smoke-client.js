@@ -22,7 +22,7 @@ const React = {
   },
   Fragment: Symbol('Fragment'),
   useState(initial) {
-    if (hookIndex >= hookState.length) hookState.push(initial)
+    if (hookIndex >= hookState.length) hookState.push(typeof initial === 'function' ? initial() : initial)
     const value = hookState[hookIndex]
     const index = hookIndex
     hookIndex += 1
@@ -186,8 +186,37 @@ const plugin = context.__definition.factory(name => {
   throw new Error(`unexpected require ${name}`)
 })
 const slots = []
+const agentSessions = { rows: {}, panelId: null }
+const agentSessionListeners = new Set()
+const agentPanelListeners = new Set()
 const ctx = {
   effect(callback) { callback(); return () => {} },
+  get(name) {
+    if (name === 'sessions') {
+      return {
+        list: {
+          getSnapshot() {
+            return {
+              ids: Object.keys(agentSessions.rows),
+              byId: agentSessions.rows,
+              phase: agentSessions.phase === 'pending' ? 'pending' : 'ready',
+              projectionsBySession: {},
+            }
+          },
+          subscribe(listener) { agentSessionListeners.add(listener); return () => agentSessionListeners.delete(listener) },
+        },
+      }
+    }
+    if (name === 'layout') {
+      return {
+        panelInfo: {
+          getSnapshot() { return { activePanelId: agentSessions.panelId } },
+          subscribe(listener) { agentPanelListeners.add(listener); return () => agentPanelListeners.delete(listener) },
+        },
+      }
+    }
+    return undefined
+  },
   locale: {
     register() { return () => {} },
     bind() { return key => key },
@@ -255,6 +284,41 @@ render('AssistantMessage', captured.AssistantMessage, { message: assistant, stre
 render('SettingsDialog', captured.SettingsDialog)
 render('Composer', captured.Composer)
 render('ModeSwitch', captured.ModeSwitch)
+
+// Blank-page rule: the shell switch only exists on a new, still-empty page.
+const blankChat = {
+  open: true, sending: false, streaming: null, activeId: null, messages: [], boot: 'ready', conversations: [],
+}
+const blank = state => captured.chatPageIsBlank({ ...blankChat, ...state })
+if (blank({}) !== true) throw new Error('a new chat must be blank')
+if (blank({ sending: true }) !== false) throw new Error('sending must hide the switch at once')
+if (blank({ messages: [{ id: 'u' }] }) !== false) throw new Error('messages must hide the switch')
+if (blank({ streaming: { assistantId: 'a' } }) !== false) throw new Error('streaming must hide the switch')
+if (blank({ activeId: 'c2', conversations: [{ id: 'c2', messageCount: 0 }] }) !== true) throw new Error('an empty conversation is a blank page')
+if (blank({ activeId: 'c3', conversations: [{ id: 'c3', messageCount: 4 }] }) !== false) throw new Error('an existing conversation must not flash the switch while loading')
+if (blank({ activeId: 'c4', boot: 'idle', conversations: [] }) !== false) throw new Error('a restored session must not flash before bootstrap')
+if (blank({ activeId: 'c4', boot: 'ready', conversations: [] }) !== true) throw new Error('a missing conversation is a blank page')
+console.log('CHAT_BLANK_RULES_OK')
+
+// Agent side: the native Session list decides, not the DOM.
+agentSessions.rows = {}
+agentSessions.phase = 'ready'
+if (captured.readAgentPageState().blank !== true) throw new Error('no Session on a ready list is a blank Agent page')
+agentSessions.phase = 'pending'
+if (captured.readAgentPageState().blank !== false) throw new Error('a pending list must not flash the switch')
+agentSessions.phase = 'ready'
+agentSessions.rows = { s1: { id: 's1', blank: true, running: false, retainedBy: { mainView: 1 } } }
+if (captured.readAgentPageState().blank !== true) throw new Error('a blank Session is a blank page')
+agentSessions.rows = { s1: { id: 's1', blank: false, running: false, retainedBy: { mainView: 1 } } }
+if (captured.readAgentPageState().blank !== false) throw new Error('an existing Session is not blank')
+agentSessions.rows = { s1: { id: 's1', blank: true, running: true, retainedBy: { mainView: 1 } } }
+if (captured.readAgentPageState().blank !== false) throw new Error('a running Session hides the switch on send')
+agentSessions.rows = { s1: { id: 's1', blank: true, running: false, retainedBy: { mainView: 1 } } }
+agentSessions.panelId = 'settings'
+console.log('AGENT_PANEL_STATE', JSON.stringify(captured.readAgentPageState()))
+if (captured.readAgentPageState().panel !== true) throw new Error('a global panel must not show the switch')
+agentSessions.panelId = null
+console.log('AGENT_BLANK_RULES_OK')
 
 // Thinking duration must come from stored timestamps only: a settled reply
 // reports the same value on every render, and an open block is only measured
