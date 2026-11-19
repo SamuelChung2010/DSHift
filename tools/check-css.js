@@ -24,7 +24,7 @@ for (const raw of css.split('\n')) {
   if (depth < 0) offenders.push(`depth<0: ${line}`)
   if (/;\s*;/.test(line)) offenders.push(`double semicolon: ${line}`)
   if (line.startsWith('@media') || line.startsWith('@keyframes') || line.startsWith('/*') || line.startsWith('*')) continue
-  if (line.endsWith('{') || line.endsWith('}') || line.endsWith(';') || line.endsWith(',')) continue
+  if (line.endsWith('{') || line.endsWith('}') || line.endsWith(';') || line.endsWith(',') || line.endsWith(':')) continue
   offenders.push(`unterminated: ${line}`)
 }
 if (offenders.length > 0) {

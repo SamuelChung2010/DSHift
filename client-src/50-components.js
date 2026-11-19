@@ -929,21 +929,68 @@ function ChatHeader() {
  * application view. The toast stack rides along because messages raised while
  * the Chat surface is closed (`handoffSent`, a background stream failure) must
  * still be visible.
+ *
+ * Horizontally it is centered on the main content column, not on the window:
+ * - Agent mode: the stylesheet centers it between the native sidebar's right
+ *   edge and the frame's right edge, using the width the frame publishes as
+ *   `--dsh-windows-sidebar-width`. That follows a sidebar drag or collapse with
+ *   no script and no pixel constants.
+ * - Chat mode: the Chat surface is this plugin's own layout, so its main column
+ *   is measured directly (and re-measured when the chat sidebar or the window
+ *   changes). Either way the sidebar width is never assumed.
  */
 function ModeSwitch() {
   const t = useT()
   const open = useChat(state => state.open)
-  const item = (mode, label, icon, selected) => h('button', {
+  const ref = React.useRef(null)
+  React.useLayoutEffect(() => {
+    if (typeof document === 'undefined') return undefined
+    let frame = 0
+    const apply = () => {
+      frame = 0
+      const node = ref.current
+      if (node === null) return
+      const main = open ? document.querySelector('.dsc-main') : null
+      if (main === null) {
+        // Agent mode: hand the positioning back to the stylesheet.
+        node.style.removeProperty('left')
+        node.style.removeProperty('right')
+        node.style.removeProperty('transform')
+        return
+      }
+      const rect = main.getBoundingClientRect()
+      node.style.left = `${Math.round(rect.left + rect.width / 2)}px`
+      node.style.right = 'auto'
+      node.style.transform = 'translateX(-50%)'
+    }
+    const schedule = () => { if (frame === 0) frame = requestAnimationFrame(apply) }
+    apply()
+    const targets = [document.body]
+    const main = open ? document.querySelector('.dsc-main') : null
+    if (main !== null) targets.push(main)
+    let observer
+    if (typeof ResizeObserver === 'function') {
+      observer = new ResizeObserver(schedule)
+      for (const target of targets) observer.observe(target)
+    }
+    window.addEventListener('resize', schedule)
+    return () => {
+      window.removeEventListener('resize', schedule)
+      if (observer !== undefined) observer.disconnect()
+      if (frame !== 0) cancelAnimationFrame(frame)
+    }
+  }, [open])
+  const item = (mode, label, selected) => h('button', {
     type: 'button',
     'aria-pressed': selected,
     className: cx('dsc-modeswitch-item', selected && 'is-active'),
     title: mode === 'chat' ? t('switchToChat') : t('switchToAgent'),
     onClick: () => chatActions.setMode(mode),
-  }, h(Icon, { name: icon, size: 14 }), h('span', { className: 'dsc-modeswitch-label' }, label))
-  return h(Fragment, null,
-    h('div', { className: 'dsc-modeswitch', role: 'group', 'aria-label': t('modeSwitchLabel') },
-      item('chat', t('chatMode'), 'chat', open),
-      item('agent', t('agentMode'), 'agent', !open),
+  }, h('span', { className: 'dsc-modeswitch-label' }, label))
+  return h('div', { className: 'dsc-shell' },
+    h('div', { className: 'dsc-modeswitch', role: 'group', 'aria-label': t('modeSwitchLabel'), ref },
+      item('chat', t('chatMode'), open),
+      item('agent', t('agentMode'), !open),
     ),
     h(Toasts, null),
   )
@@ -967,11 +1014,13 @@ function ChatRoot() {
     const node = sidebarRef.current
     if (node) node.inert = !sidebarOpen
   }, [open, sidebarOpen])
-  // Keep the drawer in step with the breakpoint: a window that crosses it must
-  // not leave the fixed drawer covering the whole Chat surface.
+  // Keep the drawer presentation in step with the breakpoint: a window that
+  // crosses it must not leave the fixed drawer covering the whole Chat surface.
+  // 1024px is the frame's own sidebar auto-collapse point, so both modes change
+  // posture together and the shared switch keeps the same centre.
   React.useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined
-    const query = window.matchMedia('(max-width: 900px)')
+    const query = window.matchMedia('(max-width: 1024px)')
     const onChange = (event) => chatStore.set({ sidebarOpen: !event.matches })
     if (typeof query.addEventListener === 'function') query.addEventListener('change', onChange)
     return () => {

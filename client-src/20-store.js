@@ -78,7 +78,9 @@ const chatStore = {
     settingsOpen: false,
     handoff: null,
     confirm: null,
-    sidebarOpen: typeof window !== 'undefined' ? window.innerWidth > 900 : true,
+    // The Harness frame auto-collapses its sidebar below 1024px; following the
+    // same breakpoint keeps the shared switch's centre identical in both modes.
+    sidebarOpen: typeof window !== 'undefined' ? window.innerWidth > 1024 : true,
     renamingId: null,
     focusRequest: 0,
     filePickRequest: 0,

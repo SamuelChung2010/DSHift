@@ -10,6 +10,9 @@ const CHAT_CSS = `
      never overlaps the native menu or the window buttons;
    * every colour, radius and motion value comes from the Harness theme.
    ========================================================================== */
+/* Shared token scope: the Chat surface and the two shell entries (the switch
+   and the toast stack) all read the same --dsc-* aliases. */
+.dsc-shell,
 .dsc-root {
   --dsc-brand: var(--dsw-alias-brand-primary, var(--dsw-static-deepseek-500, #4d6bff));
   --dsc-link: var(--dsw-alias-link, var(--dsw-alias-brand-primary, #4d6bff));
@@ -39,6 +42,19 @@ const CHAT_CSS = `
   --dsc-mono: var(--ds-font-family-code, 'SF Mono', Consolas, 'Liberation Mono', monospace);
   --dsc-ease: var(--ds-ease-in-out, cubic-bezier(0.4, 0, 0.2, 1));
   --dsc-fast: var(--ds-transition-duration-fast, 0.1s);
+}
+/* The shell entries are siblings of the Chat surface, so they carry their own
+   root: display:contents keeps them out of the layout while custom
+   properties and box-sizing still reach their children. */
+.dsc-shell { display: contents; }
+.dsc-shell *,
+.dsc-shell *::before,
+.dsc-shell *::after,
+.dsc-root *,
+.dsc-root *::before,
+.dsc-root *::after { box-sizing: border-box; }
+.dsc-shell { font-family: var(--dsc-font); }
+.dsc-root {
   /* The band above the Chat surface that the platform chrome occupies. Windows
      publishes its 40px caption row, macOS its 48px top strip; a plain browser
      gets a 44px band of its own so the shared switch always has a home and is
@@ -63,9 +79,6 @@ const CHAT_CSS = `
   pointer-events: auto;
   -webkit-font-smoothing: antialiased;
 }
-.dsc-root *,
-.dsc-root *::before,
-.dsc-root *::after { box-sizing: border-box; }
 .dsc-root :where(button, input, textarea, select) { font: inherit; color: inherit; }
 .dsc-root button { cursor: pointer; }
 .dsc-root button:disabled { cursor: default; }
@@ -81,62 +94,109 @@ const CHAT_CSS = `
 }
 @keyframes dsc-spin { to { transform: rotate(360deg); } }
 
-/* ---------- shared Chat | Agent switch (shell chrome) ---------- */
+/* ---------- shared Chat | Agent switch (shell chrome) ----------
+   Layout: horizontally centered on the MAIN CONTENT column, vertically on the
+   native caption buttons' midline. Agent mode gets the content start from the
+   frame's published --dsh-windows-sidebar-width (a real length, updated by the
+   native sidebar); Chat mode sets an inline left/transform from the measured
+   chat main column. No window-relative 50% and no fixed offsets. */
 .dsc-modeswitch {
+  --dsc-nav-height: 34px;
   position: fixed;
-  top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 6px;
+  left: var(--dsh-windows-sidebar-width, 0px);
+  right: 0;
+  width: max-content;
+  margin-inline: auto;
   z-index: 20;
-  display: inline-flex;
-  align-items: center;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   gap: 2px;
-  height: 34px;
-  padding: 3px;
-  border: 1px solid var(--dsw-alias-border-l1, rgba(15, 23, 42, 0.1));
+  height: var(--dsc-nav-height);
+  padding: 4px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--dsw-alias-label-primary, #16181d) 8%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-label-primary, #16181d) 5%, transparent);
   color: var(--dsw-alias-label-primary, #16181d);
   font-family: var(--dsw-font-family, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif);
-  font-size: 13px;
+  font-size: 13.4px;
   line-height: 1;
   -webkit-app-region: no-drag;
   pointer-events: auto;
   user-select: none;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
 }
-/* Windows Electron reserves a 40px caption row; the switch sits in it. */
-html[data-windows-titlebar] .dsc-modeswitch { top: 4px; height: 32px; }
-html[data-platform='darwin'] .dsc-modeswitch { top: 9px; }
-html[data-windows-titlebar][data-fullscreen] .dsc-modeswitch { top: 8px; }
+/* Windows Electron's 40px caption row holds the native window buttons and the
+   app menu; the switch shares their midline. */
+html[data-windows-titlebar] .dsc-modeswitch {
+  top: calc((var(--dsh-windows-titlebar-height, 40px) - var(--dsc-nav-height)) / 2);
+}
+html[data-platform='darwin'] .dsc-modeswitch {
+  top: calc((var(--dsh-frame-top-clearance, 48px) - var(--dsc-nav-height)) / 2);
+}
+html[data-windows-titlebar][data-fullscreen] .dsc-modeswitch,
+html[data-platform='darwin'][data-fullscreen] .dsc-modeswitch { top: 6px; }
 /* Fullscreen keeps only the switch band above the chat surface. */
 html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
 .dsc-modeswitch-item {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  min-width: 100px;
   height: 100%;
-  padding: 0 13px;
+  padding: 0 18px;
   border: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--dsw-alias-label-secondary, #6b7280);
-  font-size: 12.8px;
-  font-weight: 550;
-  transition: background var(--ds-transition-duration-fast, 0.1s) ease, color var(--ds-transition-duration-fast, 0.1s) ease;
+  font: inherit;
+  font-size: 13.4px;
+  font-weight: 560;
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+  transition:
+    background-color var(--ds-transition-duration-fast, 0.12s) ease,
+    color var(--ds-transition-duration-fast, 0.12s) ease,
+    box-shadow var(--ds-transition-duration-fast, 0.12s) ease,
+    transform var(--ds-transition-duration-fast, 0.12s) ease;
 }
-.dsc-modeswitch-item:hover { color: var(--dsw-alias-label-primary, #16181d); }
-.dsc-modeswitch-item.is-active {
-  background: var(--dsw-alias-bg-layer-1, #ffffff);
+.dsc-modeswitch-item:hover {
+  background: color-mix(in srgb, var(--dsw-alias-label-primary, #16181d) 4%, transparent);
   color: var(--dsw-alias-label-primary, #16181d);
-  box-shadow: 0 1px 2px rgba(9, 12, 20, 0.14), 0 0 0 0.5px rgba(9, 12, 20, 0.06);
+}
+.dsc-modeswitch-item:active { transform: scale(0.985); }
+.dsc-modeswitch-item.is-active {
+  background: var(--dsw-alias-bg-base, #ffffff);
+  color: var(--dsw-alias-label-primary, #16181d);
+  box-shadow:
+    0 1px 2px rgba(9, 12, 20, 0.14),
+    0 4px 10px rgba(9, 12, 20, 0.06),
+    inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-label-primary, #16181d) 8%, transparent);
+}
+/* Dark palette: the caption is already dark, so the selected chip has to be
+   LIGHTER than the track (a raised surface), not a white card. */
+body[data-ds-dark-theme] .dsc-modeswitch-item.is-active {
+  background: color-mix(in srgb, var(--dsw-alias-label-primary, #f2f3f7) 14%, var(--dsw-alias-bg-layer-1, #1b1c1f));
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.45),
+    0 4px 12px rgba(0, 0, 0, 0.22),
+    inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-label-primary, #f2f3f7) 9%, transparent);
+}
+.dsc-modeswitch-item:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary, #4d6bff);
+  outline-offset: 2px;
 }
 .dsc-modeswitch-label { white-space: nowrap; }
 
 /* ---------- sidebar ---------- */
 .dsc-sidebar {
-  width: 264px;
-  flex: 0 0 264px;
+  /* Follow the Harness sidebar's own track (published by the frame on the
+     desktop shell) inside a sane range, so flipping Chat/Agent does not move
+     the shared switch: both modes then center over the same content column.
+     A collapsed native sidebar (0px) keeps this column at its 264px floor. */
+  width: clamp(264px, var(--dsh-windows-sidebar-width, 280px), 360px);
+  flex: 0 0 auto;
   min-height: 0;
   background: var(--dsc-sidebar);
   border-right: 1px solid var(--dsc-border);
@@ -1168,10 +1228,18 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-boot-card p { margin: 0 0 14px; font-size: 12.5px; color: var(--dsc-muted); line-height: 1.6; word-break: break-word; }
 
 /* ---------- responsive ---------- */
-@media (max-width: 1100px) {
-  .dsc-sidebar { width: 248px; flex-basis: 248px; }
-}
+/* The drawer breakpoint matches the Harness frame's own drawer breakpoint
+   (768px), so a narrow window puts both modes in the same posture. */
 @media (max-width: 900px) {
+  .dsc-header { padding: 0 10px 0 12px; }
+  .dsc-thread { padding: 20px 14px 8px; }
+  .dsc-composer-wrap { padding: 6px 12px 10px; }
+  .dsc-msg-user { padding-left: 6%; }
+  .dsc-msg-assistant { padding-right: 0; }
+  .dsc-handoff-label { display: none; }
+  .dsc-handoff-button { padding: 0 9px; }
+}
+@media (max-width: 768px) {
   .dsc-sidebar {
     position: fixed;
     inset: var(--dsc-top, 0px) auto 0 0;
@@ -1194,20 +1262,14 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
     background: var(--dsw-alias-bg-mask-1, color-mix(in srgb, #0b0f19 38%, transparent));
     backdrop-filter: blur(1px);
   }
-  .dsc-header { padding: 0 10px 0 12px; }
-  .dsc-thread { padding: 20px 14px 8px; }
-  .dsc-composer-wrap { padding: 6px 12px 10px; }
-  .dsc-msg-user { padding-left: 6%; }
-  .dsc-msg-assistant { padding-right: 0; }
-  .dsc-handoff-label { display: none; }
-  .dsc-handoff-button { padding: 0 9px; }
 }
-@media (min-width: 901px) {
+@media (min-width: 769px) {
   .dsc-sidebar-backdrop { display: none; }
 }
 @media (max-width: 760px) {
-  .dsc-modeswitch-label { display: none; }
-  .dsc-modeswitch-item { padding: 0 11px; }
+  /* Narrow content column: keep the switch inside its band by tightening the
+     item padding instead of dropping a label. */
+  .dsc-modeswitch-item { min-width: 76px; padding: 0 12px; font-size: 12.4px; }
   .dsc-suggestions { grid-template-columns: 1fr; }
   .dsc-source-list { grid-template-columns: 1fr; }
   .dsc-empty { padding-top: 8vh; }
