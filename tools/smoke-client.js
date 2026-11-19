@@ -461,6 +461,254 @@ render('HandoffDialog', captured.HandoffDialog)
 render('ChatRoot-handoff', captured.ChatRoot)
 captured.chatStore.set({ handoff: null })
 
+// ── Handoff workspace creation ───────────────────────────────────────────────
+// The end-to-end flow: open the draft from the picker menu, choose where a new
+// project folder goes through the native picker, create + register it on the
+// Host, then create the Agent session with the edited brief in that workspace.
+console.log('WORKSPACE_FLOW_START')
+const flowBootstrap = {
+  ...bootstrap,
+  handoff: { enabled: true, workspaceCreate: true },
+  workspaces: [{ id: 'w1', title: 'dsh-chat', path: 'C:/Users/Zhong/Documents/dsh-chat' }],
+}
+let pickedDirectory = null
+let openedAgentSession = null
+let workspaceRequest = null
+let sendRequest = null
+const uiWorkspaceMock = {
+  async pickDirectory() { return pickedDirectory },
+  openSession(sessionId) { openedAgentSession = sessionId },
+}
+const baseGet = ctx.get
+ctx.get = name => (name === 'uiWorkspace' ? uiWorkspaceMock : baseGet(name))
+const json = value => new Response(JSON.stringify(value), {
+  status: 200,
+  headers: { 'content-type': 'application/json' },
+})
+context.fetch = async (url, init) => {
+  const target = String(url)
+  if (target.includes('/api/deepseek-chat/bootstrap')) return json(flowBootstrap)
+  if (target.includes('/api/deepseek-chat/workspace')) {
+    workspaceRequest = JSON.parse(init.body)
+    return json({
+      workspace: { id: 'w9', title: workspaceRequest.title, path: workspaceRequest.path },
+      created: { directory: true, workspace: true },
+    })
+  }
+  if (target.includes('/api/deepseek-chat/handoff/send')) {
+    sendRequest = JSON.parse(init.body)
+    return json({ sessionId: 's9', workspaceId: sendRequest.workspaceId })
+  }
+  if (target.includes('/api/deepseek-chat/handoff')) {
+    return json({ brief: '## 目标\n从零实现一个《星露谷物语》Mod。', generated: true })
+  }
+  return new Response(JSON.stringify({ error: { message: `unexpected ${target}` } }), { status: 500 })
+}
+const conversationMessages = [
+  { id: 'u1', role: 'user', content: '我想做一个星露谷 Mod', files: [], createdAt: 1 },
+  { id: 'a1', role: 'assistant', content: '', blocks: [{ type: 'text', text: '好的。', citations: [] }], status: 'done', createdAt: 2, updatedAt: 3 },
+]
+const flowConversations = [
+  { id: 'c1', title: '星露谷物语 Mod 开发', titleAuto: true, createdAt: 1, updatedAt: 3, messageCount: 2 },
+]
+captured.chatStore.set({
+  open: true,
+  boot: 'ready',
+  bootData: flowBootstrap,
+  conversations: flowConversations,
+  activeId: 'c1',
+  messages: conversationMessages,
+  workspaces: flowBootstrap.workspaces,
+  handoff: null,
+  streaming: null,
+})
+await captured.chatActions.openHandoff()
+let flowHandoff = captured.chatStore.state.handoff
+if (flowHandoff === null || flowHandoff.workspaceId !== 'w1') throw new Error('handoff must start on the selected workspace')
+if (flowHandoff.workspaceDraft !== null) throw new Error('the creator must stay closed while an existing workspace is selected')
+
+const suggestion = captured.handoffWorkspaceSuggestion({
+  title: '星露谷物语 Mod 开发',
+  brief: '## 目标\n从零实现一个《星露谷物语》Mod。',
+  workspace: { id: 'w1', title: 'dsh-chat', path: 'C:/Users/Zhong/Documents/dsh-chat' },
+  fallbackName: '新项目',
+})
+if (suggestion === null || suggestion.name !== '星露谷物语-Mod-开发') {
+  throw new Error(`a new-project discussion must suggest a workspace: ${JSON.stringify(suggestion)}`)
+}
+if (captured.handoffWorkspaceSuggestion({
+  title: 'dsh-chat 工作区交接',
+  workspace: { id: 'w1', title: 'dsh-chat', path: 'C:/Users/Zhong/Documents/dsh-chat' },
+}) !== null) throw new Error('a related workspace must not suggest a new one')
+
+captured.chatActions.openHandoffWorkspaceDraft()
+let draft = captured.chatStore.state.handoff.workspaceDraft
+if (draft === null) throw new Error('selecting New workspace must open the creation panel')
+if (draft.name !== '星露谷物语-Mod-开发') throw new Error(`unexpected suggested name: ${draft.name}`)
+if (draft.path !== 'C:/Users/Zhong/Documents/星露谷物语-Mod-开发') {
+  throw new Error(`the project folder must be proposed next to the current workspace: ${draft.path}`)
+}
+captured.chatActions.setHandoffWorkspaceDraftName('Stardew-Mod')
+draft = captured.chatStore.state.handoff.workspaceDraft
+if (draft.path !== 'C:/Users/Zhong/Documents/Stardew-Mod') throw new Error(`the name must drive the folder: ${draft.path}`)
+
+// Switching back to an existing workspace closes the creation draft.
+captured.chatActions.setHandoffWorkspace('w1')
+if (captured.chatStore.state.handoff.workspaceDraft !== null) throw new Error('selecting an existing workspace must close the draft')
+captured.chatActions.openHandoffWorkspaceDraft()
+captured.chatActions.setHandoffWorkspaceDraftName('Stardew-Mod')
+pickedDirectory = 'D:/Projects'
+await captured.chatActions.pickHandoffWorkspaceDirectory('parent')
+draft = captured.chatStore.state.handoff.workspaceDraft
+if (draft.path !== 'D:/Projects/Stardew-Mod') throw new Error(`the picked parent must receive the folder: ${draft.path}`)
+
+// An existing directory picked directly becomes the project folder and its
+// name, and does not lose the brief/instruction already written.
+captured.chatActions.setHandoffBrief('## 目标\n实现 Stardew-Mod。')
+captured.chatActions.setHandoffInstruction('只在这个新项目里改动。')
+pickedDirectory = 'D:/Projects/Stardew-Mod'
+await captured.chatActions.pickHandoffWorkspaceDirectory('existing')
+draft = captured.chatStore.state.handoff.workspaceDraft
+if (draft.path !== 'D:/Projects/Stardew-Mod' || draft.name !== 'Stardew-Mod') {
+  throw new Error(`picking an existing folder must adopt it: ${draft.path} / ${draft.name}`)
+}
+if (captured.chatStore.state.handoff.brief !== '## 目标\n实现 Stardew-Mod。') throw new Error('the workspace draft must not touch the brief')
+if (captured.chatStore.state.handoff.instruction !== '只在这个新项目里改动。') throw new Error('the workspace draft must not touch the extra requirement')
+
+const editedBrief = '## 目标\n实现 Stardew-Mod 的第一个可玩版本。'
+captured.chatActions.setHandoffBrief(editedBrief)
+await captured.chatActions.createHandoffWorkspace()
+flowHandoff = captured.chatStore.state.handoff
+if (flowHandoff === null) throw new Error('creating a workspace must keep the handoff dialog open')
+if (flowHandoff.workspaceId !== 'w9') throw new Error(`the created workspace must be selected: ${flowHandoff.workspaceId}`)
+if (flowHandoff.workspaceDraft !== null) throw new Error('the creation panel must close after creating')
+if (flowHandoff.brief !== editedBrief) throw new Error('creating a workspace must preserve the edited brief')
+if (flowHandoff.instruction !== '只在这个新项目里改动。') throw new Error('creating a workspace must preserve the extra requirement')
+if (!captured.chatStore.state.workspaces.some(workspace => workspace.id === 'w9')) throw new Error('the created workspace must join the selected list')
+if (workspaceRequest === null || workspaceRequest.path !== 'D:/Projects/Stardew-Mod' || workspaceRequest.title !== 'Stardew-Mod') {
+  throw new Error(`the Host must receive the confirmed folder and name: ${JSON.stringify(workspaceRequest)}`)
+}
+console.log('WORKSPACE_CREATE_OK')
+
+render('HandoffDialog-creator', captured.HandoffDialog)
+render('HandoffWorkspaceCreator', captured.HandoffWorkspaceCreator, {
+  draft: { name: 'Stardew-Mod', path: 'D:/Projects/Stardew-Mod', folderParent: 'D:/Projects', busy: false, error: '' },
+})
+
+await captured.chatActions.submitHandoff()
+if (sendRequest === null) throw new Error('the handoff must reach the Host')
+if (sendRequest.workspaceId !== 'w9') throw new Error(`the session must be created in the new workspace: ${sendRequest.workspaceId}`)
+if (sendRequest.prompt !== editedBrief) throw new Error('the session must receive the confirmed brief')
+if (openedAgentSession !== 's9') throw new Error(`the created session must be opened: ${openedAgentSession}`)
+if (captured.chatStore.state.handoff !== null) throw new Error('a sent handoff must close')
+if (captured.chatStore.state.open !== false) throw new Error('a sent handoff must return to Agent mode')
+
+const namingCases = [
+  ['星露谷物语 Mod 开发', '星露谷物语-Mod-开发'],
+  ['a/b:c*?"<>|', 'a-b-c'],
+  ['CON', 'fallback'],
+  ['新对话', 'fallback'],
+  ['   ', 'fallback'],
+]
+for (const [title, expected] of namingCases) {
+  const value = captured.workspaceNameFromTitle(title, 'fallback')
+  if (value !== expected) throw new Error(`workspace name from ${JSON.stringify(title)}: ${value} != ${expected}`)
+}
+if (captured.pathParent('C:\\Users\\Zhong\\Documents\\dsh-chat') !== 'C:\\Users\\Zhong\\Documents') throw new Error('Windows parent path')
+if (captured.pathParent('/home/me/project') !== '/home/me') throw new Error('POSIX parent path')
+if (captured.pathBasename('C:\\Projects\\Stardew-Mod\\') !== 'Stardew-Mod') throw new Error('Windows basename')
+if (captured.joinWorkspacePath('C:\\Projects', 'Stardew-Mod') !== 'C:\\Projects\\Stardew-Mod') throw new Error('Windows join')
+if (captured.joinWorkspacePath('D:/Projects', 'Stardew-Mod') !== 'D:/Projects/Stardew-Mod') throw new Error('POSIX join')
+if (captured.isAbsoluteWorkspacePath('relative/path') !== false) throw new Error('relative paths are not absolute')
+if (captured.isAbsoluteWorkspacePath('\\\\server\\share') !== true) throw new Error('UNC paths are absolute')
+if (captured.isAbsoluteWorkspacePath('/home/me') !== true) throw new Error('POSIX absolute paths are absolute')
+console.log('WORKSPACE_FLOW_OK')
+
+// With no workspace at all, opening the handoff lands on the creation panel and
+// proposes no folder (there is no sibling project to anchor it to).
+context.fetch = async (url) => {
+  const target = String(url)
+  if (target.includes('/api/deepseek-chat/bootstrap')) return json({ ...flowBootstrap, workspaces: [] })
+  if (target.includes('/api/deepseek-chat/handoff')) return json({ brief: '## 目标\n新项目。', generated: true })
+  return new Response(JSON.stringify({ error: { message: `unexpected ${target}` } }), { status: 500 })
+}
+captured.chatStore.set({
+  open: true,
+  workspaces: [],
+  bootData: { ...flowBootstrap, workspaces: [] },
+  conversations: flowConversations,
+  activeId: 'c1',
+  messages: conversationMessages,
+  handoff: null,
+  streaming: null,
+})
+await captured.chatActions.openHandoff()
+let emptyHandoff = captured.chatStore.state.handoff
+if (emptyHandoff === null || emptyHandoff.workspaceDraft === null) throw new Error('no workspace must open the creation panel')
+if (emptyHandoff.workspaceDraft.path !== '') throw new Error('there is no directory to propose a new project next to')
+if (emptyHandoff.workspaceDraft.name !== '星露谷物语-Mod-开发') throw new Error(`the name suggestion must still apply: ${emptyHandoff.workspaceDraft.name}`)
+if (emptyHandoff.workspaceId !== '') throw new Error('no workspace can be selected yet')
+captured.chatStore.set({ handoff: null })
+
+// The folder leaf is sanitized while the typed workspace name stays verbatim;
+// a pasted quoted path (Explorer's "Copy as path") is accepted.
+captured.chatStore.set({
+  handoff: {
+    generating: false, brief: 'B', generated: false, warning: '', instruction: '', title: 'X',
+    workspaceId: 'w1',
+    workspaceDraft: { name: 'X', folderParent: 'D:/Projects', path: 'D:/Projects/X', nameEdited: false, busy: false, error: '' },
+    busy: false, error: '',
+  },
+})
+captured.chatActions.setHandoffWorkspaceDraftName('A/B')
+let leafDraft = captured.chatStore.state.handoff.workspaceDraft
+if (leafDraft.path !== 'D:/Projects/A-B' || leafDraft.name !== 'A/B') {
+  throw new Error(`the folder leaf must be sanitized without rewriting the name: ${leafDraft.path} / ${leafDraft.name}`)
+}
+captured.chatActions.setHandoffWorkspaceDraftPath('"D:\\Projects\\A-B"')
+if (captured.chatStore.state.handoff.workspaceDraft.path !== 'D:\\Projects\\A-B') throw new Error('a pasted quoted path must drop its quotes')
+if (captured.workspaceFolderLeaf('CON') !== 'CON-') throw new Error('reserved Windows names must not become folders')
+if (captured.workspaceDraftIssue({ name: '', path: 'C:\\X' }) !== 'name') throw new Error('a blank name must be an issue')
+if (captured.workspaceDraftIssue({ name: 'X', path: '' }) !== 'path') throw new Error('a blank path must be an issue')
+if (captured.workspaceDraftIssue({ name: 'X', path: 'relative' }) !== 'absolute') throw new Error('a relative path must be an issue')
+if (captured.workspaceDraftIssue({ name: 'X', path: '"C:\\X"' }) !== '') throw new Error('a quoted absolute path is usable')
+if (captured.workspaceFolderLeaf('.') !== '') throw new Error('a dots-only name has no folder leaf')
+if (captured.workspaceDraftIssue({ name: '...', path: 'D:/X', folderParent: 'D:/' }) !== 'folderName') {
+  throw new Error('a name that cannot be a folder must be rejected while it drives the path')
+}
+captured.chatStore.set({ handoff: null })
+
+// A Host that cannot register workspaces reports it without losing the draft.
+captured.chatStore.set({
+  workspaces: flowBootstrap.workspaces,
+  handoff: {
+    generating: false,
+    brief: '## 尚未提交的任务',
+    generated: true,
+    warning: '',
+    instruction: '保留我',
+    title: '星露谷物语 Mod 开发',
+    workspaceId: 'w1',
+    workspaceDraft: {
+      name: 'Stardew-Mod', folderParent: 'D:/Projects', path: 'D:/Projects/Stardew-Mod',
+      nameEdited: true, busy: false, error: '',
+    },
+    busy: false,
+    error: '',
+  },
+})
+context.fetch = async () => new Response(JSON.stringify({
+  error: { message: '没有可用的工作区服务', code: 'WORKSPACE_UNAVAILABLE', status: 501 },
+}), { status: 501, headers: { 'content-type': 'application/json' } })
+await captured.chatActions.createHandoffWorkspace()
+const failedHandoff = captured.chatStore.state.handoff
+if (failedHandoff.workspaceDraft === null || failedHandoff.workspaceDraft.busy !== false) throw new Error('a failed creation must unlock the panel')
+if (!failedHandoff.workspaceDraft.error.includes('不支持')) throw new Error(`a failed creation must explain itself: ${failedHandoff.workspaceDraft.error}`)
+if (failedHandoff.brief !== '## 尚未提交的任务' || failedHandoff.instruction !== '保留我') throw new Error('a failed creation must preserve the draft content')
+if (failedHandoff.workspaceId !== 'w1') throw new Error('a failed creation must keep the previous workspace selected')
+captured.chatStore.set({ handoff: null })
+console.log('WORKSPACE_FAILURE_OK')
+
 // End-to-end client state flow against a synthetic NDJSON stream.
 console.log('FLOW_START')
 const streamLines = [

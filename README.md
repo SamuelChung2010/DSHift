@@ -44,9 +44,14 @@
 
 1. 在 Chat 里讨论完需求，点右上角 **交给 Agent**。
 2. Host 用 DeepSeek 把对话整理成任务说明（模型不可用时退回本地整理的版本，仍可编辑）。
-3. 选择工作区，确认后创建新的 Agent 会话并提交这条提示，界面自动切到 Agent 模式并打开该会话。
+3. 选择工作区：
+   - 直接选择已有工作区；
+   - 或者选 **＋ 新建工作区…**，填工作区名称、选项目文件夹。**选择已有目录…** 会把所选目录直接当作项目文件夹；**在此新建文件夹…** 会把所选目录当作上级目录，按名称创建项目文件夹（目录不存在时会自动创建）。也可以直接把完整的绝对路径粘贴到输入框。
+   - 创建分成两步且都由 Harness 原生能力完成：先在本地建好文件夹，再通过 Host 的 `ctx.workspaceRegistry.create()` 注册为工作区。成功后自动注册到 Harness 工作区列表并选中，已经写好的任务说明、补充要求和对话上下文都不会丢。
+4. 如果对话看起来是一个新项目、而当前工作区与对话标题没有关联，工作区下方会出现一条不阻断操作的提示，可以一键打开带名称建议的新建面板。
+5. 确认后创建新的 Agent 会话并把任务说明作为首条提示提交，界面自动切到 Agent 模式并打开该会话。
 
-它走的是 Harness 原生机制：`ctx.sessionController.create()` + `prompt()` 建立会话，浏览器侧用 `ctx.uiWorkspace.openSession()` 切到该会话。
+它走的是 Harness 原生机制：`ctx.sessionController.create()` + `prompt()` 建立会话，浏览器侧用 `ctx.uiWorkspace.openSession()` 切到该会话；新建工作区时用 `ctx.uiWorkspace.pickDirectory()` 打开原生目录选择器，由 Host 的 `/api/deepseek-chat/workspace` 建目录并调用 `ctx.workspaceRegistry.create()` 注册，不复制一套独立的工作区存储。
 
 ## 认证
 

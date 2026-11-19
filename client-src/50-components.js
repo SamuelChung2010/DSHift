@@ -1259,8 +1259,15 @@ function ChatRoot() {
           chatStore.set({ confirm: null })
           return
         }
-        if (chatStore.state.handoff !== null && chatStore.state.handoff.busy !== true) {
-          chatActions.closeHandoff()
+        if (chatStore.state.handoff !== null) {
+          const handoff = chatStore.state.handoff
+          // Escape closes the innermost layer: the creation panel first, then
+          // the handoff dialog itself.
+          if (handoff.workspaceDraft !== null && handoff.workspaceDraft !== undefined) {
+            if (handoff.workspaceDraft.busy !== true) chatActions.closeHandoffWorkspaceDraft()
+            return
+          }
+          if (handoff.busy !== true) chatActions.closeHandoff()
           return
         }
         if (settingsOpen) {

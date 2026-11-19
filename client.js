@@ -184,7 +184,37 @@ const DICT_ZH = {
   handoffDrafting: '正在整理任务说明…',
   handoffEditorLabel: '任务说明（可编辑）',
   handoffWorkspace: '工作区',
-  handoffWorkspaceEmpty: '还没有工作区。请先在 Agent 模式中打开一个项目目录。',
+  handoffWorkspaceEmpty: '还没有工作区。可以在下面直接新建一个。',
+  handoffWorkspaceEmptyUnavailable: '还没有工作区。请先在 Agent 模式中打开一个项目目录。',
+  handoffNewWorkspace: '＋ 新建工作区…',
+  handoffWorkspaceNone: '请选择工作区',
+  handoffWorkspaceCreateTitle: '新建工作区',
+  handoffWorkspaceName: '工作区名称',
+  handoffWorkspaceNamePlaceholder: '例如：Stardew-Mod',
+  handoffWorkspaceNameFallback: '新项目',
+  handoffWorkspaceLocation: '项目文件夹',
+  handoffWorkspacePathPlaceholder: '例如：C:\\Projects\\Stardew-Mod',
+  handoffWorkspacePickExisting: '选择已有目录…',
+  handoffWorkspacePickParent: '在此新建文件夹…',
+  handoffWorkspacePathHint: '文件夹不存在时会自动创建，然后注册为 Harness 工作区。',
+  handoffWorkspaceCancel: '取消新建',
+  handoffWorkspaceCreate: '创建并选中',
+  handoffWorkspaceCreating: '正在创建…',
+  handoffWorkspaceCreated: '工作区「{name}」已创建。',
+  handoffWorkspaceRegisteredExisting: '已把现有文件夹注册为工作区「{name}」。',
+  handoffWorkspaceSelectedExisting: '工作区「{name}」已存在，已选中。',
+  handoffWorkspaceNameRequired: '请填写工作区名称。',
+  handoffWorkspaceNameInvalid: '这个名称不能用作文件夹名，请换一个。',
+  handoffWorkspacePathRequired: '请选择或填写项目文件夹。',
+  handoffWorkspacePathAbsolute: '请填写完整的绝对路径（例如 C:\\Projects\\My-App）。',
+  handoffWorkspaceFolderFailed: '无法创建项目文件夹：{message}',
+  handoffWorkspaceRegisterFailed: '文件夹已创建，但注册工作区失败：{message}',
+  handoffWorkspaceUnavailable: '当前 Harness 环境不支持在此新建工作区，请改为选择已有工作区。',
+  handoffWorkspacePickerUnavailable: '当前环境没有目录选择器，可以直接填写完整的项目文件夹路径。',
+  handoffWorkspacePickFailed: '无法打开目录选择器：{message}',
+  handoffWorkspaceRequired: '请先选择或新建一个工作区。',
+  handoffNewProjectHint: '对话看起来是一个新项目，当前工作区可能不相关。',
+  handoffNewProjectAction: '新建「{name}」',
   handoffExtra: '补充要求（可选）',
   handoffExtraPlaceholder: '例如：只改插件，不要动 Harness 核心。',
   handoffRegenerate: '重新生成',
@@ -199,7 +229,6 @@ const DICT_ZH = {
   handoffRestart: 'Chat 的宿主端代码已更新，需要刷新插件或重启 Harness 后才能创建 Agent 会话。',
   handoffNoSession: '无法打开新建的 Agent 会话，请在 Agent 模式中手动选择。',
   handoffPromptPartial: 'Agent 会话已创建，但任务说明未送达（{message}）。可以在该会话里重新粘贴。',
-  goToAgentMode: '前往 Agent 模式',
   settingsSubtitle: 'Chat 的认证、默认选项与数据位置。',
   emptyResponse: 'DeepSeek 返回了空响应。',
   copyBrief: '复制',
@@ -387,7 +416,37 @@ const DICT_EN = {
   handoffDrafting: 'Drafting the task brief…',
   handoffEditorLabel: 'Task brief (editable)',
   handoffWorkspace: 'Workspace',
-  handoffWorkspaceEmpty: 'No workspace yet. Open a project directory in Agent mode first.',
+  handoffWorkspaceEmpty: 'No workspace yet. Create one below.',
+  handoffWorkspaceEmptyUnavailable: 'No workspace yet. Open a project directory in Agent mode first.',
+  handoffNewWorkspace: '＋ New workspace…',
+  handoffWorkspaceNone: 'Select a workspace',
+  handoffWorkspaceCreateTitle: 'New workspace',
+  handoffWorkspaceName: 'Workspace name',
+  handoffWorkspaceNamePlaceholder: 'e.g. Stardew-Mod',
+  handoffWorkspaceNameFallback: 'new-project',
+  handoffWorkspaceLocation: 'Project folder',
+  handoffWorkspacePathPlaceholder: 'e.g. C:\\Projects\\Stardew-Mod',
+  handoffWorkspacePickExisting: 'Choose existing folder…',
+  handoffWorkspacePickParent: 'Create folder here…',
+  handoffWorkspacePathHint: 'A missing folder is created, then registered as a Harness workspace.',
+  handoffWorkspaceCancel: 'Cancel new workspace',
+  handoffWorkspaceCreate: 'Create and select',
+  handoffWorkspaceCreating: 'Creating…',
+  handoffWorkspaceCreated: 'Workspace "{name}" created.',
+  handoffWorkspaceRegisteredExisting: 'Registered the existing folder as workspace "{name}".',
+  handoffWorkspaceSelectedExisting: 'Workspace "{name}" already exists; selected it.',
+  handoffWorkspaceNameRequired: 'Enter a workspace name.',
+  handoffWorkspaceNameInvalid: 'That name cannot be used as a folder name; choose another.',
+  handoffWorkspacePathRequired: 'Choose or enter a project folder.',
+  handoffWorkspacePathAbsolute: 'Enter a fully qualified path (e.g. C:\\Projects\\My-App).',
+  handoffWorkspaceFolderFailed: 'Could not create the project folder: {message}',
+  handoffWorkspaceRegisterFailed: 'The folder was created, but registering the workspace failed: {message}',
+  handoffWorkspaceUnavailable: 'This Harness environment cannot create a workspace here. Choose an existing workspace instead.',
+  handoffWorkspacePickerUnavailable: 'This environment has no directory picker; type the full project folder path instead.',
+  handoffWorkspacePickFailed: 'Could not open the directory picker: {message}',
+  handoffWorkspaceRequired: 'Select or create a workspace first.',
+  handoffNewProjectHint: 'This conversation looks like a new project; the selected workspace may be unrelated.',
+  handoffNewProjectAction: 'New "{name}"',
   handoffExtra: 'Extra requirements (optional)',
   handoffExtraPlaceholder: 'e.g. change only the plugin, not the Harness core.',
   handoffRegenerate: 'Regenerate',
@@ -402,7 +461,6 @@ const DICT_EN = {
   handoffRestart: 'The Chat Host half has changed. Refresh the plugin or restart Harness before creating Agent sessions.',
   handoffNoSession: 'The new Agent session could not be opened. Pick it in Agent mode.',
   handoffPromptPartial: 'The Agent session was created, but the brief was not delivered ({message}). Paste it in that session.',
-  goToAgentMode: 'Go to Agent mode',
   settingsSubtitle: 'Chat authentication, defaults and data location.',
   emptyResponse: 'DeepSeek returned an empty response.',
   copyBrief: 'Copy',
@@ -1695,10 +1753,378 @@ function defaultWorkspaceId() {
   return workspaces[0]?.id ?? ''
 }
 
+/** The handoff workspace select's sentinel for the inline creation panel. */
+const NEW_WORKSPACE_OPTION = '__dsc_new_workspace__'
+
+/** Last path segment, for either separator (paths arrive from the Host as-is). */
+function pathBasename(value) {
+  const input = typeof value === 'string' ? value.replace(/[\\/]+$/, '') : ''
+  if (input === '') return ''
+  const index = Math.max(input.lastIndexOf('\\'), input.lastIndexOf('/'))
+  return index < 0 ? input : input.slice(index + 1)
+}
+
+/** Directory containing `value`; used to propose where a new project folder goes. */
+function pathParent(value) {
+  const raw = typeof value === 'string' ? value.trim() : ''
+  const input = raw.replace(/[\\/]+$/, '')
+  if (input === '') return raw === '/' ? '/' : ''
+  const index = Math.max(input.lastIndexOf('\\'), input.lastIndexOf('/'))
+  if (index < 0) return ''
+  if (index === 0) return input.startsWith('/') ? '/' : ''
+  const parent = input.slice(0, index)
+  return /^[A-Za-z]:$/.test(parent) ? `${parent}\\` : parent
+}
+
+/** Join a directory and one child name for display and for the Host request. */
+function joinWorkspacePath(parent, name) {
+  const raw = typeof parent === 'string' ? parent.trim() : ''
+  const leaf = typeof name === 'string' ? name.trim() : ''
+  if (raw === '') return leaf
+  if (leaf === '') return raw
+  const separator = /^[A-Za-z]:$/.test(raw) ? '\\' : raw.includes('\\') && !raw.includes('/') ? '\\' : '/'
+  const base = raw.endsWith('/') || raw.endsWith('\\') ? raw : `${raw}${separator}`
+  return `${base}${leaf}`
+}
+
+/** Whether the Host will accept this as one fixed directory location. */
+function isAbsoluteWorkspacePath(value) {
+  if (typeof value !== 'string') return false
+  if (/^[A-Za-z]:[\\/]/.test(value) || /^\\\\[^\\]/.test(value)) return true
+  return value.startsWith('/')
+}
+
+/**
+ * Turn a conversation title into one folder-friendly workspace name. CJK text
+ * is kept; path separators and characters Windows cannot store become dashes.
+ * @param title - conversation title, possibly blank.
+ * @param fallback - name used when nothing usable remains.
+ */
+function workspaceNameFromTitle(title, fallback = 'new-project') {
+  const value = typeof title === 'string' ? title : ''
+  const cleaned = value
+    .replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ')
+    .replace(/[\s\u3000]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^[\s.-]+|[\s.-]+$/g, '')
+    .slice(0, 48)
+    .replace(/[\s.-]+$/g, '')
+  if (cleaned === '' || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i.test(cleaned)) return fallback
+  // The Host's placeholder title names no project, so it must not become a folder.
+  if (/^(新对话|新会话|new chat|new conversation|conversation)$/i.test(cleaned)) return fallback
+  return cleaned
+}
+
+function workspaceWords(value) {
+  return String(value ?? '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(word => word.length >= 2)
+}
+
+/** Whether the conversation title shares a meaningful word with a workspace. */
+function workspaceRelatesToText(text, workspace) {
+  const words = workspaceWords(text)
+  if (words.length === 0) return false
+  const haystack = ` ${workspaceWords(`${workspace?.title ?? ''} ${workspace?.path ?? ''}`).join(' ')} `
+  return words.some(word => haystack.includes(word))
+}
+
+/** Words that mark a discussion as starting something new rather than changing one. */
+const NEW_PROJECT_INTENT = /(新项目|从零|新建|创建一个|开发一个|做一个|搭建一个|新插件|新游戏|新模组|新模块|模组|\bmod\b|new project|from scratch|new (?:plugin|game|mod|app|tool)|create a new|build a new)/i
+
+/**
+ * A soft hint for the handoff workspace field: the conversation reads like a
+ * new project while the selected Workspace shares nothing with its title.
+ * Never blocks sending; it only offers a prefilled creation shortcut.
+ * @returns `{ name }` for the suggested workspace, or null when no hint applies.
+ */
+function handoffWorkspaceSuggestion({ title, brief, workspace, fallbackName }) {
+  if (workspace === null || workspace === undefined) return null
+  if (typeof title === 'string' && title.trim() !== '' && workspaceRelatesToText(title, workspace)) return null
+  const intent = NEW_PROJECT_INTENT.test(`${title ?? ''}\n${brief ?? ''}`)
+    || pathBasename(workspace.path ?? '') === 'default-workspace'
+  if (!intent) return null
+  return { name: workspaceNameFromTitle(title, fallbackName) }
+}
+
+function handoffConversationTitle() {
+  const id = chatStore.state.activeId
+  const conversation = chatStore.state.conversations.find(item => item.id === id)
+  return typeof conversation?.title === 'string' ? conversation.title : ''
+}
+
+function handoffSelectedWorkspace() {
+  const handoff = chatStore.state.handoff
+  if (handoff === null) return undefined
+  return chatStore.state.workspaces.find(workspace => workspace.id === handoff.workspaceId)
+}
+
+/** Whether the Host half advertises the folder-create + register capability. */
+function canCreateHandoffWorkspace() {
+  return chatStore.state.bootData?.handoff?.workspaceCreate === true
+}
+
+/** Strip the quotes Windows Explorer's "Copy as path" adds. */
+function stripPathQuotes(value) {
+  let text = typeof value === 'string' ? value.trim() : ''
+  if (text.length >= 2 && ((text.startsWith('"') && text.endsWith('"')) || (text.startsWith("'") && text.endsWith("'")))) {
+    text = text.slice(1, -1).trim()
+  }
+  return text
+}
+
+/**
+ * The single path segment a workspace name becomes when a project folder is
+ * derived from it. The display name itself stays as typed; only the folder leaf
+ * is cleaned so a name like `Stardew/Mod` cannot silently create nested folders.
+ */
+function workspaceFolderLeaf(name) {
+  const value = typeof name === 'string' ? name.trim() : ''
+  const cleaned = value
+    .replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '-')
+    .replace(/\s+/g, ' ')
+    .replace(/^[\s.-]+|[\s.-]+$/g, '')
+    .slice(0, 120)
+    .replace(/[. ]+$/g, '')
+  if (cleaned === '') return ''
+  return /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i.test(cleaned) ? `${cleaned}-` : cleaned
+}
+
+/**
+ * Why the creation draft cannot be committed yet, if anything is missing.
+ * @returns 'name' | 'folderName' | 'path' | 'absolute' | '' for a complete draft.
+ */
+function workspaceDraftIssue(draft) {
+  const name = typeof draft?.name === 'string' ? draft.name.trim() : ''
+  const target = stripPathQuotes(draft?.path)
+  if (name === '') return 'name'
+  // When the name is the new folder's leaf, it must survive path cleaning.
+  if (typeof draft?.folderParent === 'string' && draft.folderParent !== ''
+    && workspaceFolderLeaf(name) === '') return 'folderName'
+  if (target === '') return 'path'
+  if (!isAbsoluteWorkspacePath(target)) return 'absolute'
+  return ''
+}
+
+/**
+ * One empty creation draft. With a known Workspace, the folder is proposed next
+ * to it so a new project starts where the user already keeps projects.
+ */
+function initialWorkspaceDraft() {
+  const workspace = handoffSelectedWorkspace()
+  const suggested = workspaceNameFromTitle(handoffConversationTitle(), tr('handoffWorkspaceNameFallback'))
+  const base = workspace?.path ? pathParent(workspace.path) : ''
+  return {
+    name: suggested,
+    folderParent: base,
+    path: base === '' ? '' : joinWorkspacePath(base, workspaceFolderLeaf(suggested) || suggested),
+    nameEdited: false,
+    busy: false,
+    error: '',
+  }
+}
+
+function mergeWorkspaceRow(rows, row) {
+  const index = rows.findIndex(item => item.id === row.id)
+  if (index < 0) return [row, ...rows]
+  const next = rows.slice()
+  next[index] = { ...next[index], ...row }
+  return next
+}
+
 function handoffPatch(patch) {
   const current = chatStore.state.handoff
   if (current === null) return
   chatStore.set({ handoff: { ...current, ...patch } })
+}
+
+function patchHandoffWorkspaceDraft(patch) {
+  const draft = chatStore.state.handoff?.workspaceDraft
+  if (draft === null || draft === undefined) return
+  handoffPatch({ workspaceDraft: { ...draft, ...patch } })
+}
+
+/** Open the inline creation panel. */
+function openHandoffWorkspaceDraft() {
+  const handoff = chatStore.state.handoff
+  if (handoff === null || handoff.busy === true) return
+  if (handoff.workspaceDraft !== null && handoff.workspaceDraft !== undefined) return
+  if (!canCreateHandoffWorkspace()) {
+    handoffPatch({ error: tr('handoffWorkspaceUnavailable') })
+    return
+  }
+  handoffPatch({ workspaceDraft: initialWorkspaceDraft(), error: '' })
+}
+
+function closeHandoffWorkspaceDraft() {
+  const draft = chatStore.state.handoff?.workspaceDraft
+  if (draft === null || draft === undefined || draft.busy === true) return
+  handoffPatch({ workspaceDraft: null })
+}
+
+function setHandoffWorkspaceDraftName(name) {
+  const draft = chatStore.state.handoff?.workspaceDraft
+  if (draft === null || draft === undefined || draft.busy === true) return
+  const value = typeof name === 'string' ? name.slice(0, 80) : ''
+  handoffPatch({
+    workspaceDraft: {
+      ...draft,
+      name: value,
+      nameEdited: true,
+      ...(draft.folderParent === ''
+        ? {}
+        : { path: joinWorkspacePath(draft.folderParent, workspaceFolderLeaf(value)) }),
+      error: '',
+    },
+  })
+}
+
+function setHandoffWorkspaceDraftPath(value) {
+  const draft = chatStore.state.handoff?.workspaceDraft
+  if (draft === null || draft === undefined || draft.busy === true) return
+  handoffPatch({
+    workspaceDraft: {
+      ...draft,
+      path: stripPathQuotes(value),
+      // A manually pinned path stops following the workspace-name field.
+      folderParent: '',
+      error: '',
+    },
+  })
+}
+
+function handoffDirectoryPicker() {
+  const ui = appCtx?.get?.('uiWorkspace')
+  return ui !== undefined && typeof ui.pickDirectory === 'function' ? ui : undefined
+}
+
+/**
+ * Open the Host's native directory chooser.
+ * @param kind - `existing` adopts the picked directory; `parent` uses it as the
+ *   place where the named project folder will be created.
+ */
+async function pickHandoffWorkspaceDirectory(kind) {
+  const draft = chatStore.state.handoff?.workspaceDraft
+  if (draft === null || draft === undefined || draft.busy === true) return
+  const picker = handoffDirectoryPicker()
+  if (picker === undefined) {
+    patchHandoffWorkspaceDraft({ error: tr('handoffWorkspacePickerUnavailable') })
+    return
+  }
+  patchHandoffWorkspaceDraft({ busy: true, error: '' })
+  let picked
+  try {
+    picked = await picker.pickDirectory()
+  } catch (error) {
+    patchHandoffWorkspaceDraft({
+      busy: false,
+      error: tr('handoffWorkspacePickFailed', { message: error instanceof Error ? error.message : String(error) }),
+    })
+    return
+  }
+  const current = chatStore.state.handoff?.workspaceDraft
+  if (current === null || current === undefined) return
+  if (typeof picked !== 'string' || picked.trim() === '') {
+    patchHandoffWorkspaceDraft({ busy: false })
+    return
+  }
+  const value = picked.trim()
+  if (kind === 'parent') {
+    const name = current.name.trim() === ''
+      ? workspaceNameFromTitle(handoffConversationTitle(), tr('handoffWorkspaceNameFallback'))
+      : current.name
+    patchHandoffWorkspaceDraft({
+      busy: false,
+      name,
+      folderParent: value,
+      path: joinWorkspacePath(value, workspaceFolderLeaf(name)),
+    })
+    return
+  }
+  const name = current.nameEdited === true && current.name.trim() !== ''
+    ? current.name
+    : pathBasename(value)
+  patchHandoffWorkspaceDraft({ busy: false, name, folderParent: '', path: value })
+}
+
+function handoffWorkspaceErrorMessage(error) {
+  const code = error?.payload?.code
+  if (code === 'WORKSPACE_UNAVAILABLE') return tr('handoffWorkspaceUnavailable')
+  if (code === 'MKDIR_FAILED' || code === 'NOT_A_DIRECTORY') {
+    return tr('handoffWorkspaceFolderFailed', { message: error instanceof Error ? error.message : String(error) })
+  }
+  // The Host's registration failure already says whether the folder was
+  // created; wrapping it again would contradict that.
+  if (code === 'WORKSPACE_CREATE_FAILED') return error instanceof Error ? error.message : String(error)
+  if (error?.status === 404 || error?.status === 501) return tr('handoffRestart')
+  return error instanceof Error ? error.message : String(error)
+}
+
+/**
+ * Create the selected project folder (when missing) and register it through the
+ * Host's native Workspace registry, then select it for the handoff. The task
+ * brief, the extra requirement, and the conversation stay untouched.
+ */
+async function createHandoffWorkspace() {
+  const handoff = chatStore.state.handoff
+  const draft = handoff?.workspaceDraft
+  if (handoff === null || draft === null || draft === undefined || draft.busy === true) return
+  const issue = workspaceDraftIssue(draft)
+  if (issue !== '') {
+    const message = issue === 'name'
+      ? tr('handoffWorkspaceNameRequired')
+      : issue === 'folderName'
+        ? tr('handoffWorkspaceNameInvalid')
+        : issue === 'path' ? tr('handoffWorkspacePathRequired') : tr('handoffWorkspacePathAbsolute')
+    patchHandoffWorkspaceDraft({ error: message })
+    return
+  }
+  const name = draft.name.trim()
+  const target = stripPathQuotes(draft.path)
+  patchHandoffWorkspaceDraft({ busy: true, error: '' })
+  let result
+  try {
+    result = await hostJson('/api/deepseek-chat/workspace', { title: name, path: target })
+  } catch (error) {
+    const latest = chatStore.state.handoff?.workspaceDraft
+    if (latest !== null && latest !== undefined) {
+      patchHandoffWorkspaceDraft({ busy: false, error: handoffWorkspaceErrorMessage(error) })
+    }
+    return
+  }
+  const workspace = result?.workspace
+  const id = typeof workspace?.id === 'string' ? workspace.id : ''
+  if (id === '') {
+    patchHandoffWorkspaceDraft({
+      busy: false,
+      error: tr('handoffWorkspaceRegisterFailed', { message: 'missing workspace id' }),
+    })
+    return
+  }
+  const row = {
+    id,
+    title: typeof workspace.title === 'string' && workspace.title !== '' ? workspace.title : name,
+    path: typeof workspace.path === 'string' && workspace.path !== '' ? workspace.path : target,
+  }
+  const created = result?.created ?? {}
+  stored.workspaceId = row.id
+  writeStored({ workspaceId: row.id })
+  handoffPatch({ workspaceId: row.id, workspaceDraft: null, error: '' })
+  chatStore.set({ workspaces: mergeWorkspaceRow(chatStore.state.workspaces, row) })
+  chatStore.toast(
+    created.workspace === false
+      ? tr('handoffWorkspaceSelectedExisting', { name: row.title })
+      : created.directory === false
+        ? tr('handoffWorkspaceRegisteredExisting', { name: row.title })
+        : tr('handoffWorkspaceCreated', { name: row.title }),
+    'success',
+  )
+  // Keep the dropdown's source of truth (the Host registry) in sync; the local
+  // row above already made the new workspace selectable.
+  void refreshBootstrapSnapshot()
 }
 
 /** Refresh the workspace list without flashing the boot view. */
@@ -1733,7 +2159,9 @@ async function openHandoff() {
       generated: false,
       warning: '',
       instruction: '',
+      title: handoffConversationTitle(),
       workspaceId: defaultWorkspaceId(),
+      workspaceDraft: null,
       busy: false,
       error: '',
     },
@@ -1741,11 +2169,15 @@ async function openHandoff() {
   await refreshBootstrapSnapshot()
   if (chatStore.state.handoff === null) return
   handoffPatch({ workspaceId: chatStore.state.handoff.workspaceId || defaultWorkspaceId() })
+  // With nothing to select, the creation panel is the only way forward — when
+  // this Host can create one.
+  if (chatStore.state.workspaces.length === 0 && canCreateHandoffWorkspace()) openHandoffWorkspaceDraft()
   await draftHandoff()
 }
 
 function closeHandoff() {
-  if (chatStore.state.handoff?.busy === true) return
+  const handoff = chatStore.state.handoff
+  if (handoff?.busy === true || handoff?.workspaceDraft?.busy === true) return
   handoffSequence += 1
   chatStore.set({ handoff: null })
 }
@@ -1790,8 +2222,9 @@ function setHandoffInstruction(instruction) {
 }
 
 function setHandoffWorkspace(workspaceId) {
+  if (chatStore.state.handoff?.workspaceDraft?.busy === true) return
   stored.workspaceId = workspaceId
-  handoffPatch({ workspaceId })
+  handoffPatch({ workspaceId, workspaceDraft: null })
   writeStored({ workspaceId })
 }
 
@@ -1829,6 +2262,12 @@ async function openAgentSession(sessionId) {
 async function submitHandoff() {
   const handoff = chatStore.state.handoff
   if (handoff === null || handoff.busy) return
+  // A creation draft has not registered its workspace yet; sending would land
+  // the task in whichever workspace is still selected behind it.
+  if (handoff.workspaceDraft !== null && handoff.workspaceDraft !== undefined) {
+    handoffPatch({ error: tr('handoffWorkspaceRequired') })
+    return
+  }
   const brief = typeof handoff.brief === 'string' ? handoff.brief.trim() : ''
   if (brief === '') {
     handoffPatch({ error: tr('handoffEmpty') })
@@ -1902,6 +2341,12 @@ const chatActions = {
   setHandoffBrief,
   setHandoffInstruction,
   setHandoffWorkspace,
+  openHandoffWorkspaceDraft,
+  closeHandoffWorkspaceDraft,
+  setHandoffWorkspaceDraftName,
+  setHandoffWorkspaceDraftPath,
+  pickHandoffWorkspaceDirectory,
+  createHandoffWorkspace,
   submitHandoff,
 }
 
@@ -3586,8 +4031,15 @@ function ChatRoot() {
           chatStore.set({ confirm: null })
           return
         }
-        if (chatStore.state.handoff !== null && chatStore.state.handoff.busy !== true) {
-          chatActions.closeHandoff()
+        if (chatStore.state.handoff !== null) {
+          const handoff = chatStore.state.handoff
+          // Escape closes the innermost layer: the creation panel first, then
+          // the handoff dialog itself.
+          if (handoff.workspaceDraft !== null && handoff.workspaceDraft !== undefined) {
+            if (handoff.workspaceDraft.busy !== true) chatActions.closeHandoffWorkspaceDraft()
+            return
+          }
+          if (handoff.busy !== true) chatActions.closeHandoff()
           return
         }
         if (settingsOpen) {
@@ -3879,6 +4331,107 @@ function SettingsDialog() {
 }
 
 /**
+ * Inline "new workspace" panel of the handoff dialog. It keeps the task brief
+ * and the extra requirement untouched: only a new workspace registration is
+ * added, and the dialog's own fields stay mounted above and below it.
+ */
+function HandoffWorkspaceCreator({ draft }) {
+  const t = useT()
+  const busy = draft.busy === true
+  const name = typeof draft.name === 'string' ? draft.name : ''
+  const path = typeof draft.path === 'string' ? draft.path : ''
+  const issue = workspaceDraftIssue(draft)
+  const canCreate = !busy && issue === ''
+  const hint = issue === 'name'
+    ? t('handoffWorkspaceNameRequired')
+    : issue === 'folderName'
+      ? t('handoffWorkspaceNameInvalid')
+      : issue === 'path'
+        ? t('handoffWorkspacePathRequired')
+        : issue === 'absolute'
+          ? t('handoffWorkspacePathAbsolute')
+          : t('handoffWorkspacePathHint')
+  return h('div', {
+    className: 'dsc-workspace-creator',
+    role: 'group',
+    'aria-label': t('handoffWorkspaceCreateTitle'),
+  },
+    h('div', { className: 'dsc-workspace-creator-head' },
+      h(Icon, { name: 'plus', size: 15 }),
+      h('strong', null, t('handoffWorkspaceCreateTitle')),
+      h('button', {
+        type: 'button', className: 'dsc-icon-button dsc-workspace-creator-close',
+        title: t('handoffWorkspaceCancel'), 'aria-label': t('handoffWorkspaceCancel'), disabled: busy,
+        onClick: () => chatActions.closeHandoffWorkspaceDraft(),
+      }, h(Icon, { name: 'close', size: 15 })),
+    ),
+    h('div', { className: 'dsc-field' },
+      h('label', { className: 'dsc-field-label', htmlFor: 'handoff-workspace-name' }, t('handoffWorkspaceName')),
+      h('input', {
+        id: 'handoff-workspace-name',
+        className: 'dsc-input',
+        value: name,
+        placeholder: t('handoffWorkspaceNamePlaceholder'),
+        maxLength: 80,
+        disabled: busy,
+        onFocus: (event) => event.target.select(),
+        onChange: (event) => chatActions.setHandoffWorkspaceDraftName(event.target.value),
+        onKeyDown: (event) => {
+          if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+            event.preventDefault()
+            void chatActions.createHandoffWorkspace()
+          }
+        },
+      }),
+    ),
+    h('div', { className: 'dsc-field' },
+      h('label', { className: 'dsc-field-label', htmlFor: 'handoff-workspace-path' }, t('handoffWorkspaceLocation')),
+      h('input', {
+        id: 'handoff-workspace-path',
+        className: 'dsc-input',
+        value: path,
+        placeholder: t('handoffWorkspacePathPlaceholder'),
+        spellCheck: false,
+        disabled: busy,
+        onChange: (event) => chatActions.setHandoffWorkspaceDraftPath(event.target.value),
+        onKeyDown: (event) => {
+          if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+            event.preventDefault()
+            void chatActions.createHandoffWorkspace()
+          }
+        },
+      }),
+      h('div', { className: 'dsc-workspace-picks' },
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button', disabled: busy,
+          onClick: () => { void chatActions.pickHandoffWorkspaceDirectory('existing') },
+        }, t('handoffWorkspacePickExisting')),
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button', disabled: busy,
+          onClick: () => { void chatActions.pickHandoffWorkspaceDirectory('parent') },
+        }, t('handoffWorkspacePickParent')),
+      ),
+      h('p', { className: cx('dsc-field-hint', issue !== '' && 'is-warning') }, hint),
+    ),
+    draft.error !== ''
+      ? h('div', {
+          className: 'dsc-notice is-error', role: 'alert',
+        }, h(Icon, { name: 'warning', size: 15 }), h('span', null, draft.error))
+      : null,
+    h('div', { className: 'dsc-workspace-creator-actions' },
+      h('button', {
+        type: 'button', className: 'dsc-secondary-button', disabled: busy,
+        onClick: () => chatActions.closeHandoffWorkspaceDraft(),
+      }, t('handoffWorkspaceCancel')),
+      h('button', {
+        type: 'button', className: 'dsc-primary-button', disabled: !canCreate,
+        onClick: () => { void chatActions.createHandoffWorkspace() },
+      }, busy ? t('handoffWorkspaceCreating') : t('handoffWorkspaceCreate')),
+    ),
+  )
+}
+
+/**
  * Chat → Agent handoff: draft an editable task brief from this conversation,
  * create a real Agent Session in the chosen Workspace, and switch the shell to
  * Agent mode on that Session.
@@ -3888,11 +4441,24 @@ function HandoffDialog() {
   const handoff = useChat(state => state.handoff)
   const workspaces = useChat(state => state.workspaces)
   const hostReady = useChat(state => state.bootData?.handoff !== undefined)
+  const createAvailable = useChat(state => state.bootData?.handoff?.workspaceCreate === true)
   const [copied, setCopied] = React.useState(false)
   if (handoff === null) return null
   const close = () => chatActions.closeHandoff()
   const brief = handoff.brief ?? ''
+  const draft = handoff.workspaceDraft ?? null
+  const selectedWorkspace = workspaces.find(workspace => workspace.id === handoff.workspaceId)
+  const suggestion = draft === null && createAvailable
+    ? handoffWorkspaceSuggestion({
+        title: handoff.title,
+        brief,
+        workspace: selectedWorkspace,
+        fallbackName: t('handoffWorkspaceNameFallback'),
+      })
+    : null
+  const workspaceReady = handoff.workspaceId !== '' || workspaces.length === 0
   const canSend = hostReady && brief.trim() !== '' && !handoff.busy && !handoff.generating
+    && draft === null && workspaceReady
   const copy = () => {
     copyToClipboard(brief).then(() => {
       setCopied(true)
@@ -3911,86 +4477,113 @@ function HandoffDialog() {
         ),
         h('button', {
           type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
-          autoFocus: true, disabled: handoff.busy, onClick: close,
+          autoFocus: !draft, disabled: handoff.busy || draft?.busy === true, onClick: close,
         }, h(Icon, { name: 'close', size: 18 })),
       ),
       h('div', { className: 'dsc-modal-body' },
         !hostReady
           ? h('div', { className: 'dsc-notice' }, h(Icon, { name: 'warning', size: 16 }), h('span', null, t('handoffRestart')))
-          : workspaces.length === 0
-            ? h('div', { className: 'dsc-notice' },
-                h(Icon, { name: 'warning', size: 16 }),
-                h('span', null, t('handoffWorkspaceEmpty')),
-                h('button', { type: 'button', className: 'dsc-inline-button', onClick: () => chatActions.setMode('agent') }, t('goToAgentMode')),
-              )
-            : h('div', { className: 'dsc-field' },
+          : [
+              h('div', { className: 'dsc-field', key: 'workspace' },
                 h('label', { className: 'dsc-field-label', htmlFor: 'handoff-workspace' }, t('handoffWorkspace')),
                 h('select', {
                   id: 'handoff-workspace',
                   className: 'dsc-select',
-                  value: handoff.workspaceId ?? '',
-                  onChange: (event) => chatActions.setHandoffWorkspace(event.target.value),
-                }, workspaces.map(workspace => h('option', { key: workspace.id, value: workspace.id }, workspace.title || workspace.path))),
-                h('p', { className: 'dsc-field-hint' }, workspaces.find(workspace => workspace.id === handoff.workspaceId)?.path ?? ''),
+                  value: draft === null ? (handoff.workspaceId ?? '') : NEW_WORKSPACE_OPTION,
+                  disabled: handoff.busy || draft?.busy === true,
+                  onChange: (event) => {
+                    if (event.target.value === NEW_WORKSPACE_OPTION) chatActions.openHandoffWorkspaceDraft()
+                    else chatActions.setHandoffWorkspace(event.target.value)
+                  },
+                }, [
+                  workspaces.length === 0 && draft === null
+                    ? h('option', { key: 'none', value: '', disabled: true }, t('handoffWorkspaceNone'))
+                    : null,
+                  ...workspaces.map(workspace => h('option', {
+                    key: workspace.id, value: workspace.id,
+                  }, workspace.title || workspace.path)),
+                  createAvailable
+                    ? h('option', { key: NEW_WORKSPACE_OPTION, value: NEW_WORKSPACE_OPTION }, t('handoffNewWorkspace'))
+                    : null,
+                ]),
+                draft !== null
+                  ? null
+                  : h('p', { className: 'dsc-field-hint' },
+                      selectedWorkspace?.path
+                        ?? (createAvailable ? t('handoffWorkspaceRequired') : t('handoffWorkspaceEmptyUnavailable'))),
+                suggestion !== null
+                  ? h('div', { className: 'dsc-workspace-hint' },
+                      h('span', null, t('handoffNewProjectHint')),
+                      h('button', {
+                        type: 'button', className: 'dsc-text-button',
+                        onClick: () => chatActions.openHandoffWorkspaceDraft(),
+                      }, t('handoffNewProjectAction', { name: suggestion.name })),
+                    )
+                  : null,
               ),
-        h('div', { className: 'dsc-field' },
-          h('label', { className: 'dsc-field-label', htmlFor: 'handoff-extra-input' }, t('handoffExtra')),
-          h('input', {
-            id: 'handoff-extra-input',
-            className: 'dsc-input',
-            value: handoff.instruction ?? '',
-            placeholder: t('handoffExtraPlaceholder'),
-            maxLength: 4000,
-            onChange: (event) => chatActions.setHandoffInstruction(event.target.value),
-            onKeyDown: (event) => {
-              if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
-                event.preventDefault()
-                void chatActions.draftHandoff()
-              }
-            },
-          }),
-        ),
-        h('div', { className: 'dsc-field' },
-          h('div', { className: 'dsc-field-row' },
-            h('span', { className: 'dsc-field-label' }, t('handoffEditorLabel')),
-            h('div', { className: 'dsc-field-tools' },
-              h('button', {
-                type: 'button', className: 'dsc-text-button', disabled: handoff.generating,
-                onClick: () => { void chatActions.draftHandoff() },
-              }, h(Icon, { name: 'refresh', size: 14 }), t('handoffRegenerate')),
-              brief.trim() === '' ? null : h('button', {
-                type: 'button', className: 'dsc-text-button', onClick: copy,
-              }, h(Icon, { name: copied ? 'check' : 'copy', size: 14 }), copied ? t('copied') : t('copyBrief')),
-            ),
-          ),
-          handoff.generating
-            ? h('div', { className: 'dsc-handoff-loading' }, h(Spinner, { size: 16 }), t('handoffDrafting'))
-            : h('textarea', {
-                id: 'handoff-brief',
-                className: 'dsc-textarea dsc-handoff-brief',
-                value: brief,
-                rows: 12,
-                spellCheck: false,
-                'aria-label': t('handoffEditorLabel'),
-                onChange: (event) => chatActions.setHandoffBrief(event.target.value),
-              }),
-          handoff.warning !== '' && !handoff.generating
-            ? h('p', { className: 'dsc-field-hint' }, `${t('handoffLocal')} ${t('handoffShortcut')}`)
-            : h('p', { className: 'dsc-field-hint' }, t('handoffShortcut')),
-          handoff.error !== ''
-            ? h('div', { className: 'dsc-notice is-error' }, h(Icon, { name: 'warning', size: 15 }), h('span', null, handoff.error))
-            : null,
-        ),
+              draft === null ? null : h(HandoffWorkspaceCreator, { key: 'workspace-creator', draft }),
+              h('div', { className: 'dsc-field', key: 'instruction' },
+                h('label', { className: 'dsc-field-label', htmlFor: 'handoff-extra-input' }, t('handoffExtra')),
+                h('input', {
+                  id: 'handoff-extra-input',
+                  className: 'dsc-input',
+                  value: handoff.instruction ?? '',
+                  placeholder: t('handoffExtraPlaceholder'),
+                  maxLength: 4000,
+                  onChange: (event) => chatActions.setHandoffInstruction(event.target.value),
+                  onKeyDown: (event) => {
+                    if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+                      event.preventDefault()
+                      void chatActions.draftHandoff()
+                    }
+                  },
+                }),
+              ),
+              h('div', { className: 'dsc-field', key: 'brief' },
+                h('div', { className: 'dsc-field-row' },
+                  h('span', { className: 'dsc-field-label' }, t('handoffEditorLabel')),
+                  h('div', { className: 'dsc-field-tools' },
+                    h('button', {
+                      type: 'button', className: 'dsc-text-button', disabled: handoff.generating,
+                      onClick: () => { void chatActions.draftHandoff() },
+                    }, h(Icon, { name: 'refresh', size: 14 }), t('handoffRegenerate')),
+                    brief.trim() === '' ? null : h('button', {
+                      type: 'button', className: 'dsc-text-button', onClick: copy,
+                    }, h(Icon, { name: copied ? 'check' : 'copy', size: 14 }), copied ? t('copied') : t('copyBrief')),
+                  ),
+                ),
+                handoff.generating
+                  ? h('div', { className: 'dsc-handoff-loading' }, h(Spinner, { size: 16 }), t('handoffDrafting'))
+                  : h('textarea', {
+                      id: 'handoff-brief',
+                      className: 'dsc-textarea dsc-handoff-brief',
+                      value: brief,
+                      rows: 12,
+                      spellCheck: false,
+                      'aria-label': t('handoffEditorLabel'),
+                      onChange: (event) => chatActions.setHandoffBrief(event.target.value),
+                    }),
+                handoff.warning !== '' && !handoff.generating
+                  ? h('p', { className: 'dsc-field-hint' }, `${t('handoffLocal')} ${t('handoffShortcut')}`)
+                  : h('p', { className: 'dsc-field-hint' }, t('handoffShortcut')),
+                handoff.error !== ''
+                  ? h('div', { className: 'dsc-notice is-error' }, h(Icon, { name: 'warning', size: 15 }), h('span', null, handoff.error))
+                  : null,
+              ),
+            ],
       ),
       h('footer', { className: 'dsc-modal-foot' },
-        h('div', { className: 'dsc-modal-foot-note' }, workspaces.length === 0 ? t('handoffWorkspaceEmpty') : ''),
+        h('div', { className: 'dsc-modal-foot-note' },
+          workspaces.length === 0 && draft === null
+            ? (createAvailable ? t('handoffWorkspaceEmpty') : t('handoffWorkspaceEmptyUnavailable'))
+            : ''),
         h('button', {
-          type: 'button', className: 'dsc-secondary-button', disabled: handoff.busy, onClick: close,
+          type: 'button', className: 'dsc-secondary-button', disabled: handoff.busy || draft?.busy === true, onClick: close,
         }, t('cancel')),
         h('button', {
           type: 'button',
           className: 'dsc-primary-button',
-          disabled: !canSend || workspaces.length === 0,
+          disabled: !canSend,
           onClick: () => { void chatActions.submitHandoff() },
         }, handoff.busy ? t('handoffSending') : t('handoffSend')),
       ),
@@ -5240,6 +5833,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-field-tools { margin-left: auto; display: flex; align-items: center; gap: 2px; }
 .dsc-field-label { font-size: 11.9px; font-weight: 620; color: var(--dsc-muted); }
 .dsc-field-hint { margin: 0; font-size: 11.4px; line-height: 1.6; color: var(--dsc-muted); word-break: break-word; }
+.dsc-field-hint.is-warning { color: var(--dsc-warn); }
 .dsc-segment { display: inline-flex; align-self: flex-start; gap: 2px; padding: 2px; border: 1px solid var(--dsc-border); border-radius: 9px; background: var(--dsc-layer2); }
 .dsc-segment-button { height: 29px; padding: 0 11px; border: 0; border-radius: 7px; background: transparent; color: var(--dsc-muted); font-size: 12px; font-weight: 550; }
 .dsc-segment-button.is-active { background: var(--dsc-layer); color: var(--dsc-text); box-shadow: 0 1px 3px rgba(9, 12, 20, 0.1); }
@@ -5313,6 +5907,35 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   color: var(--dsc-muted);
   font-size: 12.7px;
 }
+.dsc-workspace-creator {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 12px;
+  border: 1px solid var(--dsc-border-strong);
+  border-radius: 12px;
+  background: var(--dsc-layer2);
+}
+.dsc-workspace-creator-head { display: flex; align-items: center; gap: 7px; }
+.dsc-workspace-creator-head strong { font-size: 12.6px; font-weight: 620; }
+.dsc-workspace-creator-head .dsc-icon { color: var(--dsc-link); flex: none; }
+.dsc-workspace-creator-close { margin-left: auto; width: 26px; height: 26px; }
+.dsc-workspace-picks { display: flex; flex-wrap: wrap; gap: 7px; }
+.dsc-workspace-picks .dsc-secondary-button { height: 31px; padding: 0 11px; font-size: 12px; }
+.dsc-workspace-creator-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1px; }
+.dsc-workspace-creator-actions .dsc-primary-button,
+.dsc-workspace-creator-actions .dsc-secondary-button { height: 33px; padding: 0 13px; font-size: 12.4px; }
+.dsc-workspace-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--dsc-warn) 7%, transparent);
+}
+.dsc-workspace-hint span { font-size: 11.4px; line-height: 1.5; color: var(--dsc-muted); }
+.dsc-workspace-hint .dsc-text-button { padding: 0 6px; font-size: 11.8px; }
 .dsc-field-actions { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .dsc-data-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .dsc-path { max-width: 68%; overflow-x: auto; padding: 5px 7px; border-radius: 6px; background: var(--dsc-layer2); font-size: 11.2px; white-space: nowrap; font-family: var(--dsc-mono); }
@@ -5455,6 +6078,17 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     ModeSwitch,
     SettingsDialog,
     HandoffDialog,
+    HandoffWorkspaceCreator,
+    NEW_WORKSPACE_OPTION,
+    handoffWorkspaceSuggestion,
+    workspaceNameFromTitle,
+    workspaceFolderLeaf,
+    workspaceDraftIssue,
+    stripPathQuotes,
+    pathParent,
+    pathBasename,
+    joinWorkspacePath,
+    isAbsoluteWorkspacePath,
     AssistantMessage,
     Composer,
     EmptyState,
