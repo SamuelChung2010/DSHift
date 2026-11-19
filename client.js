@@ -1833,7 +1833,7 @@ function renderBlock(block, index) {
 
 function Markdown({ text, className = '', streaming = false }) {
   const blocks = React.useMemo(() => parseMarkdown(text), [text])
-  return h('div', { className: `dsc-md ${streaming ? 'dsc-md-streaming' : ''} ${className}`.trim() },
+  return h('div', { className: `dsc-md ${className}`.trim() },
     blocks.map(renderBlock),
     streaming ? h('span', { className: 'dsc-caret', 'aria-hidden': 'true' }) : null,
   )
@@ -3235,9 +3235,9 @@ function HandoffDialog() {
                 h('p', { className: 'dsc-field-hint' }, workspaces.find(workspace => workspace.id === handoff.workspaceId)?.path ?? ''),
               ),
         h('div', { className: 'dsc-field' },
-          h('label', { className: 'dsc-field-label', htmlFor: 'dsc-handoff-extra' }, t('handoffExtra')),
+          h('label', { className: 'dsc-field-label', htmlFor: 'handoff-extra-input' }, t('handoffExtra')),
           h('input', {
-            id: 'dsc-handoff-extra',
+            id: 'handoff-extra-input',
             className: 'dsc-input',
             value: handoff.instruction ?? '',
             placeholder: t('handoffExtraPlaceholder'),
@@ -4360,6 +4360,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-modal-foot { display: flex; align-items: center; gap: 8px; padding: 12px 20px 16px; border-top: 1px solid var(--dsc-border); }
 .dsc-modal-foot-note { flex: 1; min-width: 0; font-size: 11.5px; color: var(--dsc-muted); }
 .dsc-settings-title { margin: 0 0 7px 2px; font-size: 11.8px; font-weight: 620; color: var(--dsc-muted); }
+.dsc-settings-section { display: flex; flex-direction: column; gap: 6px; }
 .dsc-settings-card {
   display: flex;
   flex-direction: column;

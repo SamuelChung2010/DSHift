@@ -225,7 +225,7 @@ function renderBlock(block, index) {
 
 function Markdown({ text, className = '', streaming = false }) {
   const blocks = React.useMemo(() => parseMarkdown(text), [text])
-  return h('div', { className: `dsc-md ${streaming ? 'dsc-md-streaming' : ''} ${className}`.trim() },
+  return h('div', { className: `dsc-md ${className}`.trim() },
     blocks.map(renderBlock),
     streaming ? h('span', { className: 'dsc-caret', 'aria-hidden': 'true' }) : null,
   )

@@ -254,9 +254,9 @@ function HandoffDialog() {
                 h('p', { className: 'dsc-field-hint' }, workspaces.find(workspace => workspace.id === handoff.workspaceId)?.path ?? ''),
               ),
         h('div', { className: 'dsc-field' },
-          h('label', { className: 'dsc-field-label', htmlFor: 'dsc-handoff-extra' }, t('handoffExtra')),
+          h('label', { className: 'dsc-field-label', htmlFor: 'handoff-extra-input' }, t('handoffExtra')),
           h('input', {
-            id: 'dsc-handoff-extra',
+            id: 'handoff-extra-input',
             className: 'dsc-input',
             value: handoff.instruction ?? '',
             placeholder: t('handoffExtraPlaceholder'),
