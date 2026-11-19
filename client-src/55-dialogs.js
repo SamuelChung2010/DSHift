@@ -34,6 +34,48 @@ function SettingsSection({ title, children }) {
   )
 }
 
+/**
+ * Every dialog is a native modal <dialog>. showModal() puts the dialog and its
+ * mask in the browser's top layer, above the Chat shell's own stacking contexts,
+ * and makes the rest of the page inert — including the shared Chat | Agent
+ * switch, which must not show through the mask or receive clicks. The dialog
+ * stays inside ChatRoot, so the --dsc-* theme tokens still inherit.
+ */
+function ModalBackdrop({ children, onDismiss }) {
+  const ref = React.useRef(null)
+  const dismissRef = React.useRef(onDismiss)
+  dismissRef.current = onDismiss
+  React.useEffect(() => {
+    const node = ref.current
+    if (node === null) return undefined
+    // Keep Escape under React's control: an overlay that is busy must be able
+    // to refuse the close, and a dialog that closes natively would leave the
+    // store thinking it is still open.
+    const cancel = (event) => {
+      event.preventDefault()
+      dismissRef.current()
+    }
+    node.addEventListener('cancel', cancel)
+    if (typeof node.showModal === 'function') {
+      if (!node.open) node.showModal()
+    } else {
+      // Very old WebViews keep the previous fixed-overlay rendering.
+      node.setAttribute('open', '')
+    }
+    return () => {
+      node.removeEventListener('cancel', cancel)
+      if (node.open) node.close()
+    }
+  }, [])
+  return h('dialog', {
+    ref,
+    className: 'dsc-modal-backdrop',
+    onMouseDown: (event) => {
+      if (event.target === event.currentTarget) dismissRef.current()
+    },
+  }, children)
+}
+
 function SettingsDialog() {
   const t = useT()
   const auth = useChat(state => state.auth)
@@ -82,10 +124,7 @@ function SettingsDialog() {
     }
   }
   const mode = settings.authMode
-  return h('div', {
-    className: 'dsc-modal-backdrop',
-    onMouseDown: (event) => { if (event.target === event.currentTarget) close() },
-  },
+  return h(ModalBackdrop, { onDismiss: close },
     h('div', { className: 'dsc-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('settingsTitle') },
       h('header', { className: 'dsc-modal-head' },
         h('div', null,
@@ -358,10 +397,7 @@ function HandoffDialog() {
       setTimeout(() => setCopied(false), 1600)
     }).catch(() => chatStore.toast(t('copyFailed'), 'error'))
   }
-  return h('div', {
-    className: 'dsc-modal-backdrop',
-    onMouseDown: (event) => { if (event.target === event.currentTarget) close() },
-  },
+  return h(ModalBackdrop, { onDismiss: close },
     h('div', { className: 'dsc-modal dsc-handoff', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('handoffTitle') },
       h('header', { className: 'dsc-modal-head' },
         h('div', null,
@@ -656,10 +692,7 @@ function FolderPromptDialog() {
   }, [prompt?.mode, prompt?.id])
   if (prompt === null) return null
   const title = prompt.mode === 'rename' ? t('folderRenameTitle') : t('folderCreateTitle')
-  return h('div', {
-    className: 'dsc-modal-backdrop',
-    onMouseDown: (event) => { if (event.target === event.currentTarget) chatActions.closeFolderPrompt() },
-  },
+  return h(ModalBackdrop, { onDismiss: () => chatActions.closeFolderPrompt() },
     h('form', {
       className: 'dsc-confirm',
       role: 'dialog',
@@ -700,10 +733,7 @@ function MoveChatDialog() {
   const folders = useChat(state => state.folders)
   if (move === null) return null
   const options = [{ id: null, name: t('unfiled') }, ...folders.map(folder => ({ id: folder.id, name: folder.name }))]
-  return h('div', {
-    className: 'dsc-modal-backdrop',
-    onMouseDown: (event) => { if (event.target === event.currentTarget) chatActions.closeMoveChat() },
-  },
+  return h(ModalBackdrop, { onDismiss: () => chatActions.closeMoveChat() },
     h('div', { className: 'dsc-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('moveChatTitle') },
       h('header', { className: 'dsc-modal-head' },
         h('div', null,
@@ -752,10 +782,7 @@ function FolderAddDialog() {
   const candidates = conversations
     .filter(conversation => conversation.archived !== true && conversation.folderId !== add.folderId)
     .sort(byActivity)
-  return h('div', {
-    className: 'dsc-modal-backdrop',
-    onMouseDown: (event) => { if (event.target === event.currentTarget) chatActions.closeFolderAdd() },
-  },
+  return h(ModalBackdrop, { onDismiss: () => chatActions.closeFolderAdd() },
     h('div', { className: 'dsc-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('folderAddTitle', { name: add.name }) },
       h('header', { className: 'dsc-modal-head' },
         h('div', null,
@@ -812,10 +839,7 @@ function ArchiveDialog() {
     .filter(conversation => conversation.archived === true)
     .sort((left, right) => (right.archivedAt ?? right.updatedAt) - (left.archivedAt ?? left.updatedAt))
   const folderName = folderId => folders.find(folder => folder.id === folderId)?.name ?? ''
-  return h('div', {
-    className: 'dsc-modal-backdrop',
-    onMouseDown: (event) => { if (event.target === event.currentTarget) chatActions.closeArchive() },
-  },
+  return h(ModalBackdrop, { onDismiss: () => chatActions.closeArchive() },
     h('div', { className: 'dsc-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('archiveTitle') },
       h('header', { className: 'dsc-modal-head' },
         h('div', null,
@@ -868,10 +892,7 @@ function ConfirmDialog() {
       chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
     }
   }
-  return h('div', {
-    className: 'dsc-modal-backdrop',
-    onMouseDown: (event) => { if (event.target === event.currentTarget) chatStore.set({ confirm: null }) },
-  },
+  return h(ModalBackdrop, { onDismiss: () => chatStore.set({ confirm: null }) },
     h('div', { className: 'dsc-confirm', role: 'alertdialog', 'aria-modal': 'true', 'aria-label': confirm.title },
       h('h2', null, confirm.title),
       h('p', null, confirm.message),

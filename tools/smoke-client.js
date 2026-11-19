@@ -367,6 +367,12 @@ render('ChatRoot-streaming', captured.ChatRoot)
 captured.chatStore.set({ streaming: null })
 render('AssistantMessage', captured.AssistantMessage, { message: assistant, streaming: false, isLast: true })
 render('SettingsDialog', captured.SettingsDialog)
+// Dialogs must be native modal <dialog> elements: the top layer is what keeps
+// the shared Chat | Agent switch behind the mask and inert while one is open.
+const settingsModal = collectByClass(React.createElement(captured.SettingsDialog), 'dsc-modal-backdrop')
+if (settingsModal.length !== 1 || settingsModal[0].type !== 'dialog') {
+  throw new Error('dialogs must mount a native modal <dialog> top layer')
+}
 render('Composer', captured.Composer)
 render('ModeSwitch', captured.ModeSwitch)
 render('Sidebar', captured.Sidebar)

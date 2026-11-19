@@ -117,8 +117,9 @@ body[data-ds-dark-theme] .dsc-root {
   right: 0;
   bottom: 0;
   left: 0;
-  /* Above the mode switch so an open dialog backdrop also covers it; the box
-     itself starts below the band, so the switch stays clickable. */
+  /* The Chat surface sits below the shared switch (z 40). Dialogs do not use
+     this stack at all: they are native modal <dialog> elements in the browser
+     top layer, which is why their mask can cover the switch. */
   z-index: 30;
   display: flex;
   overflow: hidden;
@@ -1773,18 +1774,30 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-disclaimer { margin-top: 7px; text-align: center; font-size: 10.9px; color: var(--dsc-muted); }
 
 /* ---------- dialogs ---------- */
+/* Rendered as a native modal <dialog> (top layer), so the Chat shell's own
+   stacking context cannot put the mode switch above the mask. These resets keep
+   the original full-viewport mask and centered card layout. */
 .dsc-modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 30;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  color: inherit;
   background: var(--dsw-alias-bg-mask-1, color-mix(in srgb, #0b0f19 46%, transparent));
   backdrop-filter: blur(3px);
   animation: dsc-fade var(--ds-transition-duration-fast, 0.1s) ease;
 }
+.dsc-modal-backdrop::backdrop { background: transparent; }
 @keyframes dsc-fade { from { opacity: 0; } to { opacity: 1; } }
 .dsc-modal {
   width: min(620px, 100%);
