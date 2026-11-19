@@ -95,6 +95,40 @@ function makeNode(name) {
   }
 }
 
+function translate(key, vars) {
+  const dictionary = captured?.DICTS?.zh ?? {}
+  const template = typeof dictionary[key] === 'string' ? dictionary[key] : key
+  if (vars === undefined) return template
+  return template.replace(/\{(\w+)\}/g, (match, name) => (vars[name] === undefined ? match : String(vars[name])))
+}
+
+function collectText(node, out = []) {
+  if (node === null || node === undefined || typeof node === 'boolean') return out
+  if (typeof node === 'string' || typeof node === 'number') {
+    out.push(String(node))
+    return out
+  }
+  if (Array.isArray(node)) {
+    for (const child of node) collectText(child, out)
+    return out
+  }
+  if (typeof node === 'function') {
+    collectText(renderFunction(node, {}), out)
+    return out
+  }
+  if (typeof node !== 'object') return out
+  if (node.type === React.Fragment) {
+    collectText(node.props?.children, out)
+    return out
+  }
+  if (typeof node.type === 'function') {
+    collectText(renderFunction(node.type, node.props), out)
+    return out
+  }
+  collectText(node.props?.children, out)
+  return out
+}
+
 const bootstrap = {
   version: 1,
   model: { id: 'deepseek-flash', name: 'DeepSeek V4.1 Flash' },
@@ -219,7 +253,7 @@ const ctx = {
   },
   locale: {
     register() { return () => {} },
-    bind() { return key => key },
+    bind() { return translate },
     subscribe() { return () => {} },
     getSnapshot() { return { active: 'zh' } },
   },
@@ -284,6 +318,84 @@ render('AssistantMessage', captured.AssistantMessage, { message: assistant, stre
 render('SettingsDialog', captured.SettingsDialog)
 render('Composer', captured.Composer)
 render('ModeSwitch', captured.ModeSwitch)
+render('Sidebar', captured.Sidebar)
+render('SidebarResizer', captured.SidebarResizer, { onDraggingChange() {} })
+render('DeepSeekLockup', captured.DeepSeekLockup, { height: 24 })
+
+// Home: one greeting from the pool, no feature grid and no footnotes.
+const readyAuth = {
+  ready: true, mode: 'auto', source: 'account', accountSignedIn: true, canStoreKey: true,
+  chatKeyConfigured: false, dshKeyConfigured: false,
+}
+captured.chatStore.set({
+  messages: [], activeId: null, userName: '', auth: readyAuth, settingsOpen: false, sidebarOpen: true,
+})
+const greetingOptions = captured.GREETINGS
+if (!Array.isArray(greetingOptions) || greetingOptions.length < 12) throw new Error('the greeting pool is too small')
+const zhDict = captured.DICTS.zh
+const enDict = captured.DICTS.en
+let namedGreetings = 0
+for (let index = 0; index < greetingOptions.length; index += 1) {
+  const option = greetingOptions[index]
+  for (const key of [option.named, option.plain]) {
+    if (key === undefined) continue
+    if (typeof zhDict[key] !== 'string' || zhDict[key].trim() === '') throw new Error(`missing zh greeting ${key}`)
+    if (typeof enDict[key] !== 'string' || enDict[key].trim() === '') throw new Error(`missing en greeting ${key}`)
+  }
+  captured.chatStore.set({ greetingIndex: index, userName: '' })
+  const plainHome = collectText(React.createElement(captured.EmptyState, {})).join(' ').trim()
+  if (plainHome === '') throw new Error(`greeting ${index} renders empty`)
+  if (/^greeting\d/.test(plainHome)) throw new Error(`greeting ${index} leaked its locale key`)
+  if (plainHome.includes('{name}') || plainHome.includes('@')) throw new Error(`greeting ${index} left a dangling name slot: ${plainHome}`)
+  if (/深度思考|编写代码|联网搜索|文件问答/.test(plainHome)) throw new Error('feature cards must not render on the home')
+  if (option.named !== undefined) {
+    namedGreetings += 1
+    captured.chatStore.set({ userName: '  @烨明 ' })
+    const namedHome = collectText(React.createElement(captured.EmptyState, {})).join(' ').trim()
+    if (!namedHome.includes('@烨明')) throw new Error(`greeting ${index} must use the account display name: ${namedHome}`)
+    if (namedHome.includes('{name}')) throw new Error(`greeting ${index} did not interpolate the name`)
+  }
+}
+if (namedGreetings < 3) throw new Error('the pool needs name-capable greetings')
+captured.chatStore.set({ greetingIndex: 2, userName: '@烨明' })
+const plainWithName = collectText(React.createElement(captured.EmptyState, {})).join(' ')
+if (plainWithName.includes('@烨明')) throw new Error('a plain greeting must not append the name')
+// No immediate repeat, across many rolls and from any starting point.
+let previousGreeting = captured.pickGreetingIndex(-1, () => 0)
+for (let roll = 0; roll < 200; roll += 1) {
+  const next = captured.pickGreetingIndex(previousGreeting)
+  if (next === previousGreeting) throw new Error(`greeting repeated consecutively at ${next}`)
+  if (!Number.isInteger(next) || next < 0 || next >= greetingOptions.length) throw new Error(`greeting index out of range: ${next}`)
+  previousGreeting = next
+}
+// "New chat" rotates the greeting and starts a fresh blank page.
+const beforeNewChat = greetingOptions.length - 1
+captured.chatStore.set({
+  greetingIndex: beforeNewChat, activeId: 'c1', messages: [{ id: 'u1', role: 'user', content: 'x', files: [], createdAt: 1 }],
+  streaming: null, settingsOpen: false, userName: '',
+})
+await captured.chatActions.newChat()
+if (captured.chatStore.state.greetingIndex === beforeNewChat) throw new Error('a new chat must re-roll the greeting')
+if (captured.chatStore.state.activeId !== null || captured.chatStore.state.messages.length !== 0) throw new Error('a new chat must return to a blank page')
+captured.chatStore.set({ greetingIndex: 0 })
+console.log('HOME_GREETING_OK')
+
+// Sidebar width: the native contract, the narrow-window guard, and persistence.
+const clamp = captured.clampSidebarWidth
+if (clamp(100, 1200) !== captured.SIDEBAR_MIN) throw new Error('sidebar width must clamp at its minimum')
+if (clamp(9999, 1200) !== captured.SIDEBAR_MAX) throw new Error('sidebar width must clamp at its maximum')
+if (clamp(333, 1200) !== 333) throw new Error('a fitting sidebar width must pass through')
+if (clamp(420, 800) !== 340) throw new Error(`a narrow window must keep the chat column usable: ${clamp(420, 800)}`)
+if (clamp(420, 600) !== captured.SIDEBAR_MIN) throw new Error('the narrow-window guard must not fall below the floor')
+if (captured.greetingUserName('  @ 烨明  ') !== '烨明') throw new Error('the greeting name must be normalized')
+if (captured.greetingUserName('@') !== '') throw new Error('a bare "@" is not a display name')
+captured.chatActions.setSidebarWidth(333)
+if (captured.chatStore.state.sidebarWidth !== 333) throw new Error('the drag width must reach the store')
+captured.chatActions.saveSidebarWidth()
+const persistedWidth = JSON.parse(storage.get('dsh-deepseek-chat:v1')).sidebarWidth
+if (persistedWidth !== 333) throw new Error(`the sidebar width must persist: ${persistedWidth}`)
+captured.chatActions.setSidebarWidth(280)
+console.log('SIDEBAR_WIDTH_OK')
 
 // Blank-page rule: the shell switch only exists on a new, still-empty page.
 const blankChat = {

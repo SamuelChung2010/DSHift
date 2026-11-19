@@ -25,6 +25,7 @@ test('host entry registers owner-only routes and disposes them', async () => {
   apply(ctx, {})
   assert.deepEqual(paths, [
     '/api/deepseek-chat/bootstrap',
+    '/api/deepseek-chat/profile',
     '/api/deepseek-chat/conversation',
     '/api/deepseek-chat/upload',
     '/api/deepseek-chat/stream',

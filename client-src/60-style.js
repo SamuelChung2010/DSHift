@@ -25,6 +25,10 @@ const CHAT_CSS = `
   --dsc-muted: var(--dsw-alias-label-secondary, #6b7280);
   --dsc-border: var(--dsw-alias-border-l1, rgba(15, 23, 42, 0.08));
   --dsc-border-strong: var(--dsw-alias-border-l2, rgba(15, 23, 42, 0.14));
+  --dsc-border-l3: var(--dsw-alias-border-l3, rgba(15, 23, 42, 0.12));
+  --dsc-elevated: var(--dsw-alias-button-elevated-fill, var(--dsc-layer));
+  --dsc-elevated-hover: var(--dsw-alias-button-floating-hover, var(--dsc-layer2));
+  --dsc-field: color-mix(in srgb, var(--dsc-text) 4%, transparent);
   --dsc-hover: color-mix(in srgb, var(--dsc-text) 5.5%, transparent);
   --dsc-active: color-mix(in srgb, var(--dsc-text) 9%, transparent);
   --dsc-brand-soft: color-mix(in srgb, var(--dsc-link) 11%, transparent);
@@ -217,71 +221,109 @@ body[data-ds-dark-theme] .dsc-modeswitch-thumb {
 html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
 
 /* ---------- sidebar ---------- */
-.dsc-sidebar {
-  /* Follow the Harness sidebar's own track (published by the frame on the
-     desktop shell) inside a sane range, so flipping Chat/Agent does not move
-     the shared switch: both modes then center over the same content column.
-     A collapsed native sidebar (0px) keeps this column at its 264px floor. */
-  width: clamp(264px, var(--dsh-windows-sidebar-width, 280px), 360px);
+/* The Chat column mirrors the native Harness sidebar's anatomy: one brand row,
+   the New conversation bar, the search field, then the history list and the
+   footer. Its width is a Chat-owned preference (the same 264-420px contract as
+   the native handle) because Chat has no workspace rail to follow; the shared
+   Chat | Agent switch measures the content column, so it stays centred at any
+   sidebar width. */
+.dsc-sidebar-column {
+  position: relative;
   flex: 0 0 auto;
+  display: flex;
+  width: var(--dsc-sidebar-width, 280px);
+  min-width: 264px;
+  /* Never squeeze the chat column below a readable width in a narrow window. */
+  max-width: calc(100vw - 460px);
+  min-height: 0;
+}
+.dsc-sidebar-column:not(.is-open) { display: none; }
+.dsc-sidebar {
+  display: flex;
+  flex: 1;
+  min-width: 0;
   min-height: 0;
   background: var(--dsc-sidebar);
   border-right: 1px solid var(--dsc-border);
   overflow: hidden;
 }
-.dsc-sidebar:not(.is-open) { display: none; }
 .dsc-sidebar-inner {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
   min-height: 0;
-  padding: 10px 8px 8px;
+  padding: 6px 8px 8px;
 }
-.dsc-sidebar-top { flex: none; display: flex; flex-direction: column; gap: 8px; padding: 0 2px; }
-.dsc-sidebar-actions { display: flex; align-items: center; gap: 6px; height: 36px; }
-.dsc-new-chat {
-  flex: 1;
-  min-width: 0;
-  height: 36px;
-  padding: 0 11px;
-  border: 1px solid var(--dsc-border);
-  border-radius: 10px;
-  background: var(--dsc-layer);
-  color: var(--dsc-text);
-  font-size: 13.3px;
-  font-weight: 560;
+/* Brand row: centers the lockup on the native sidebar's Windows logo line (a
+   40px row with a 1px optical lift, i.e. a 21px center inset) rather than the
+   taller Chat header, so the whale + wordmark sit level with the Harness Agent
+   brand beside the shared switch. */
+.dsc-sidebar-brand {
+  flex: none;
   display: flex;
   align-items: center;
-  gap: 7px;
-  text-align: left;
+  gap: 8px;
+  height: 42px;
+  padding: 0 2px 0 8px;
+  overflow: hidden;
+}
+.dsc-brand-lockup {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  color: var(--dsc-link);
+  overflow: hidden;
+}
+.dsc-brand-logo { display: block; flex: none; }
+.dsc-sidebar-collapse { flex: none; width: 28px; height: 28px; border-radius: 8px; }
+/* New conversation: native New Session geometry (38px bar, 12px radius,
+   elevated fill) with icon and label centred as one group. */
+.dsc-new-chat {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  margin: 4px 2px 10px;
+  padding: 0 12px;
+  border: 0.5px solid var(--dsc-border-l3);
+  border-radius: var(--dsc-radius);
+  background: var(--dsc-elevated);
+  color: var(--dsc-text);
+  font-size: 14px;
+  font-weight: 500;
   transition: background var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
 }
-.dsc-new-chat:hover { background: color-mix(in srgb, var(--dsc-layer) 60%, var(--dsc-layer2)); border-color: var(--dsc-border-strong); }
-.dsc-sidebar-collapse { flex: none; }
+.dsc-new-chat:hover { background: var(--dsc-elevated-hover); }
+.dsc-new-chat .dsc-icon { color: var(--dsc-muted); }
 .dsc-search {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 7px;
   height: 34px;
-  padding: 0 9px;
+  margin: 0 2px;
+  padding: 0 10px;
   border: 1px solid transparent;
   border-radius: 10px;
-  background: color-mix(in srgb, var(--dsc-text) 4%, transparent);
+  background: var(--dsc-field);
   color: var(--dsc-muted);
   cursor: text;
   transition: background var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
 }
 .dsc-search:hover { background: color-mix(in srgb, var(--dsc-text) 6%, transparent); }
 .dsc-search:focus-within { border-color: var(--dsc-border-strong); background: var(--dsc-layer); }
-.dsc-search-input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 12.9px; color: var(--dsc-text); }
+.dsc-search-input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 13px; color: var(--dsc-text); }
 .dsc-search-input::placeholder { color: var(--dsc-muted); }
-.dsc-chat-list { flex: 1; min-height: 0; overflow-y: auto; padding: 6px 2px 10px; }
-.dsc-chat-group { margin-top: 14px; }
-.dsc-chat-group:first-child { margin-top: 4px; }
+.dsc-chat-list { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 2px 10px; }
+.dsc-chat-group { margin-top: 12px; }
+.dsc-chat-group:first-child { margin-top: 2px; }
 .dsc-chat-group-label {
-  padding: 0 8px 5px;
-  font-size: 11.4px;
+  padding: 0 8px 6px;
+  font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--dsc-muted);
@@ -291,10 +333,10 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 36px;
+  height: 34px;
   padding: 0 8px;
   margin: 1px 0;
-  border-radius: 9px;
+  border-radius: var(--dsc-radius);
   cursor: pointer;
   transition: background var(--dsc-fast) ease;
 }
@@ -307,7 +349,7 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 34px;
+  height: 32px;
   padding: 0;
   border: 0;
   border-radius: 7px;
@@ -322,8 +364,8 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 13.1px;
-  font-weight: 455;
+  font-size: 13.4px;
+  font-weight: 450;
 }
 .dsc-chat-item.is-active .dsc-chat-item-title { font-weight: 550; }
 .dsc-chat-item-time { flex: none; font-size: 11px; color: var(--dsc-muted); }
@@ -355,22 +397,19 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   font-size: 13px;
 }
 .dsc-list-empty { padding: 22px 10px; text-align: center; color: var(--dsc-muted); font-size: 12.4px; line-height: 1.6; }
-.dsc-sidebar-foot {
-  flex: none;
-  padding-top: 6px;
-  border-top: 1px solid var(--dsc-border);
-}
+/* The foot keeps the native sidebar's spacing-only separation: no extra rule. */
+.dsc-sidebar-foot { flex: none; padding-top: 6px; }
 .dsc-foot-action {
   display: flex;
   align-items: center;
   gap: 9px;
   width: 100%;
-  height: 34px;
+  height: 36px;
   padding: 0 9px;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--dsc-radius);
   background: transparent;
-  font-size: 12.9px;
+  font-size: 13px;
   color: var(--dsc-muted);
   text-align: left;
   transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease;
@@ -379,6 +418,39 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
 .dsc-auth-dot { width: 7px; height: 7px; border-radius: 999px; margin-left: auto; background: var(--dsc-warn); }
 .dsc-auth-dot.is-ready { background: var(--dsc-success); }
 .dsc-auth-dot.is-missing { background: var(--dsc-warn); }
+/* Right-edge resize affordance: an 8px pointer-capture strip over the column
+   border, like the native frame handle. A short accent line appears on hover,
+   keyboard focus and while dragging instead of a permanent divider. */
+.dsc-sidebar-resizer {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  bottom: 0;
+  width: 8px;
+  z-index: 2;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+.dsc-sidebar-resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dsc-text) 22%, transparent);
+  opacity: 0;
+  transition: opacity var(--dsc-fast) ease;
+}
+.dsc-sidebar-resizer:hover::after,
+.dsc-sidebar-resizer:focus-visible::after,
+.dsc-sidebar-resizer.is-dragging::after { opacity: 1; }
+.dsc-sidebar-resizer:focus-visible { outline: 2px solid var(--dsc-brand); outline-offset: -1px; }
+.dsc-root[data-resizing] { cursor: col-resize; user-select: none; }
+.dsc-root[data-resizing] :where(button, a, textarea, input, label) { cursor: col-resize; }
+.dsc-root[data-resizing] .dsc-sidebar-resizer::after { opacity: 1; }
 
 /* ---------- main column ---------- */
 .dsc-main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--dsc-bg); }
@@ -390,7 +462,7 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   align-items: center;
   gap: 12px;
   padding: 0 14px 0 16px;
-  border-bottom: 1px solid var(--dsc-border);
+  border: 0;
   background: color-mix(in srgb, var(--dsc-bg) 88%, transparent);
   backdrop-filter: blur(14px);
   z-index: 3;
@@ -509,63 +581,30 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
 .dsc-modal-body::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--dsc-text) 28%, transparent); background-clip: content-box; }
 
 /* ---------- empty state ---------- */
-.dsc-empty { width: 100%; max-width: 720px; margin: 0 auto; padding: 11vh 0 20px; text-align: center; }
-.dsc-empty-title {
-  margin: 0 0 10px;
-  font-size: clamp(25px, 2.6vw, 33px);
-  font-weight: 600;
+/* A blank Chat page is one personalized line and the composer. The thread
+   centres the line in the space above the composer (auto margins keep it
+   scrollable when the window is short), so the eye lands on the greeting
+   instead of on a grid of feature cards. */
+.dsc-thread.is-empty { display: flex; flex-direction: column; scrollbar-gutter: auto; }
+.dsc-thread.is-empty .dsc-empty { margin-block: auto; }
+.dsc-empty {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 4px 5vh;
+  text-align: center;
+}
+.dsc-greeting {
+  max-width: 700px;
+  margin: 0 auto;
+  font-size: clamp(26px, 2.45vw, 32px);
+  font-weight: 560;
   letter-spacing: -0.022em;
-  line-height: 1.22;
+  line-height: 1.36;
+  color: var(--dsc-text);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
 }
-.dsc-empty-subtitle { max-width: 540px; margin: 0 auto; color: var(--dsc-muted); font-size: 14.2px; line-height: 1.72; }
-.dsc-suggestions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 30px; text-align: left; }
-.dsc-suggestion {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px 13px;
-  border: 1px solid var(--dsc-border);
-  border-radius: 13px;
-  background: var(--dsc-layer);
-  text-align: left;
-  transition: border-color var(--dsc-fast) ease, background var(--dsc-fast) ease, transform var(--dsc-fast) ease;
-}
-.dsc-suggestion:hover {
-  border-color: var(--dsc-border-strong);
-  background: color-mix(in srgb, var(--dsc-layer) 55%, var(--dsc-layer2));
-  transform: translateY(-1px);
-}
-.dsc-suggestion-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--dsc-brand-soft);
-  color: var(--dsc-link);
-  flex: none;
-}
-.dsc-suggestion-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.dsc-suggestion-title { font-size: 12.7px; font-weight: 600; }
-.dsc-suggestion-text { font-size: 12.4px; color: var(--dsc-muted); line-height: 1.5; }
-.dsc-empty-foot { margin-top: 26px; font-size: 11.6px; color: var(--dsc-muted); }
-.dsc-setup-card {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  max-width: 560px;
-  margin: 22px auto 0;
-  padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--dsc-warn) 22%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--dsc-warn) 7%, var(--dsc-layer));
-  text-align: left;
-}
-.dsc-setup-icon { color: var(--dsc-warn); flex: none; }
-.dsc-setup-body { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
-.dsc-setup-body strong { font-size: 12.9px; }
-.dsc-setup-body span { font-size: 11.9px; color: var(--dsc-muted); }
 .dsc-primary-button {
   height: 36px;
   padding: 0 15px;
@@ -1267,19 +1306,24 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   .dsc-handoff-button { padding: 0 9px; }
 }
 @media (max-width: 768px) {
-  .dsc-sidebar {
+  /* Narrow windows keep the native drawer posture: the Chat sidebar overlays
+     the content instead of taking a column, and the resize handle is moot. */
+  .dsc-sidebar-column {
     position: fixed;
     inset: var(--dsc-top, 0px) auto 0 0;
     z-index: 12;
+    display: flex;
     width: min(300px, 86vw);
-    flex-basis: auto;
+    min-width: 0;
+    max-width: none;
     box-shadow: var(--dsc-shadow);
     transform: translateX(-101%);
     transition: transform var(--ds-transition-duration-slow, 0.3s) var(--dsc-ease);
-    display: flex;
   }
-  .dsc-sidebar.is-open { transform: translateX(0); }
-  .dsc-sidebar:not(.is-open) { display: flex; }
+  .dsc-sidebar-column.is-open { transform: translateX(0); }
+  .dsc-sidebar-column:not(.is-open) { display: flex; }
+  .dsc-sidebar { border-right: 0; }
+  .dsc-sidebar-resizer { display: none; }
   .dsc-sidebar-backdrop {
     position: fixed;
     inset: var(--dsc-top, 0px) 0 0;
@@ -1297,9 +1341,9 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   /* Narrow content column: shrink the whole control, keep both labels. */
   .dsc-modeswitch { --dsc-nav-width: 208px; --dsc-nav-height: 36px; font-size: 12.6px; }
   .dsc-modeswitch-item { font-size: 12.6px; }
-  .dsc-suggestions { grid-template-columns: 1fr; }
   .dsc-source-list { grid-template-columns: 1fr; }
-  .dsc-empty { padding-top: 8vh; }
+  .dsc-greeting { font-size: clamp(23px, 5.6vw, 28px); }
+  .dsc-empty { padding-bottom: 3vh; }
 }
 @media (max-width: 620px) {
   .dsc-mode-label { display: none; }

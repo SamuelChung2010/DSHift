@@ -28,12 +28,64 @@ const ACCEPT_EXT = [
   'sh', 'bash', 'ps1', 'sql', 'log', 'ini', 'toml', 'conf', 'tex', 'rst', 'epub', 'mobi', 'xls', 'xlsx',
 ]
 const ACCEPT = ACCEPT_EXT.map(ext => `.${ext}`).join(',')
-const SUGGESTIONS = [
-  { id: 'think', icon: 'spark', titleKey: 'suggestionThinkTitle', textKey: 'suggestionThink', thinking: true },
-  { id: 'code', icon: 'code', titleKey: 'suggestionCodeTitle', textKey: 'suggestionCode' },
-  { id: 'search', icon: 'globe', titleKey: 'suggestionSearchTitle', textKey: 'suggestionSearch', search: true },
-  { id: 'file', icon: 'file', titleKey: 'suggestionFileTitle', textKey: 'suggestionFile', file: true },
+/** Sidebar geometry contract, shared with the native Harness sidebar drag range. */
+const SIDEBAR_MIN = 264
+const SIDEBAR_MAX = 420
+const SIDEBAR_DEFAULT = 280
+/** The chat column never gives up more than this to the sidebar at one window width. */
+const CHAT_COLUMN_MIN = 460
+
+/**
+ * Clamp one sidebar width into the contract range, also keeping the chat column
+ * usable on a narrow window. The stored preference is the user's; this function
+ * decides only what fits right now.
+ * @param value - requested width in px.
+ * @param viewport - window width in px.
+ * @returns the width to render and persist.
+ */
+function clampSidebarWidth(value, viewport) {
+  const width = typeof value === 'number' && Number.isFinite(value) ? Math.round(value) : SIDEBAR_DEFAULT
+  const max = typeof viewport === 'number' && Number.isFinite(viewport) && viewport > 0
+    ? Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, viewport - CHAT_COLUMN_MIN))
+    : SIDEBAR_MAX
+  return Math.min(max, Math.max(SIDEBAR_MIN, width))
+}
+
+/**
+ * Greeting options for a blank Chat page. A name-capable option also carries a
+ * natural no-name variant, so an unavailable account name is omitted as part of
+ * the sentence instead of leaving an empty "@" behind.
+ */
+const GREETINGS = [
+  { named: 'greeting1Named', plain: 'greeting1Plain' },
+  { named: 'greeting2Named', plain: 'greeting2Plain' },
+  { plain: 'greeting3Plain' },
+  { plain: 'greeting4Plain' },
+  { named: 'greeting5Named', plain: 'greeting5Plain' },
+  { plain: 'greeting6Plain' },
+  { plain: 'greeting7Plain' },
+  { plain: 'greeting8Plain' },
+  { plain: 'greeting9Plain' },
+  { plain: 'greeting10Plain' },
+  { plain: 'greeting11Plain' },
+  { plain: 'greeting12Plain' },
 ]
+
+/**
+ * Pick the next blank-page greeting, never the one already showing. Uniform
+ * among the other options, so a second consecutive repeat is impossible.
+ * @param previous - the greeting currently on screen, or an invalid index.
+ * @param random - random source in [0, 1); injectable for tests.
+ * @returns the chosen greeting index.
+ */
+function pickGreetingIndex(previous, random = Math.random) {
+  const count = GREETINGS.length
+  const current = Number.isInteger(previous) && previous >= 0 && previous < count ? previous : -1
+  const pool = current >= 0 ? count - 1 : count
+  const roll = Math.floor(random() * pool)
+  const pick = Math.min(pool - 1, Math.max(0, roll))
+  return current >= 0 && pick >= current ? pick + 1 : pick
+}
 
 function readStored() {
   try {
@@ -82,6 +134,16 @@ const chatStore = {
     // The Harness frame auto-collapses its sidebar below 1024px; following the
     // same breakpoint keeps the shared switch's centre identical in both modes.
     sidebarOpen: typeof window !== 'undefined' ? window.innerWidth > 1024 : true,
+    // One Chat-owned width preference. It follows the same 264-420px contract
+    // and drag handle behaviour as the native sidebar, but Chat remembers it
+    // across restarts instead of resetting to the contract default.
+    sidebarWidth: clampSidebarWidth(stored.sidebarWidth, typeof window !== 'undefined' ? window.innerWidth : undefined),
+    // Last known account display name for the greeting; refreshed from the Host
+    // and cached here so a reload paints the personalized line immediately.
+    userName: typeof stored.userName === 'string' ? stored.userName : '',
+    // One greeting per blank conversation: chosen at launch and re-rolled by
+    // "New chat" (never the same one twice in a row).
+    greetingIndex: pickGreetingIndex(-1),
     renamingId: null,
     focusRequest: 0,
     filePickRequest: 0,
@@ -317,6 +379,90 @@ function markSendInFlight(value) {
   if (chatStore.state.sending !== value) chatStore.set({ sending: value })
 }
 
+/** Display name accepted for the greeting: trimmed, with any leading "@" removed. */
+function greetingUserName(value) {
+  return typeof value === 'string' ? value.trim().replace(/^@+/, '').trim() : ''
+}
+
+/**
+ * Resolve one greeting option for the current name. Name-capable options use
+ * their personalized form only with a real display name; every other case reads
+ * the natural no-name form.
+ * @param t - translator bound to the Chat namespace.
+ * @param index - greeting index from the store.
+ * @param userName - latest account display name, possibly empty.
+ * @returns the greeting line.
+ */
+function greetingText(t, index, userName) {
+  const option = GREETINGS[index] ?? GREETINGS[0]
+  const name = greetingUserName(userName)
+  if (name !== '' && option.named !== undefined) return t(option.named, { name })
+  return t(option.plain)
+}
+
+let profileFetchedAt = 0
+const PROFILE_REFRESH_MS = 60 * 1000
+
+/**
+ * Read the account display name. The Chat Host route is preferred (it keeps
+ * account access on the Host and caches the answer); an older Host half that
+ * does not serve it yet falls back to the account Remote the shell already
+ * mounts, so the greeting personalizes without waiting for a Host reload.
+ * @param locale - active UI language for the Platform request.
+ * @returns `{ name, resolved }`; `resolved: false` means a temporary failure, so
+ * the caller keeps the last known name instead of clearing it.
+ */
+async function readUserProfileName(locale) {
+  try {
+    const data = await hostJson(`/api/deepseek-chat/profile?locale=${locale}`)
+    return { name: greetingUserName(data?.name), resolved: data?.resolved !== false }
+  } catch {
+    // The running Host half may predate the profile route.
+  }
+  try {
+    const service = appCtx?.get?.('remote.account')
+    if (service === undefined || typeof service.getProfile !== 'function') return { name: '', resolved: false }
+    const release = globalThis.__DSH_BOOT__?.release
+    const version = typeof release?.version === 'string' && release.version !== '' ? release.version : '0.1.0'
+    const result = await service.getProfile({
+      version,
+      locale,
+      timezoneOffsetSeconds: -new Date().getTimezoneOffset() * 60,
+    })
+    if (result?.ok !== true) return { name: '', resolved: false }
+    const profile = result.value
+    if (profile?.status !== 'ready') return { name: '', resolved: true }
+    return { name: greetingUserName(profile.value?.name), resolved: true }
+  } catch {
+    return { name: '', resolved: false }
+  }
+}
+
+/**
+ * Refresh the personalized greeting from the Host. Personalization is optional:
+ * a Host without the profile route, a signed-out account, or an offline
+ * Platform keeps the last known name (or the localized fallback) and never
+ * interrupts the Chat surface. A resolved empty name clears a stale account
+ * name after sign-out or an account switch.
+ */
+async function refreshUserProfile(force = false) {
+  const now = Date.now()
+  if (!force && profileFetchedAt !== 0 && now - profileFetchedAt < PROFILE_REFRESH_MS) return
+  profileFetchedAt = now
+  const locale = (appCtx?.locale.getSnapshot().active ?? '').toLowerCase().startsWith('zh') ? 'zh' : 'en'
+  const { name, resolved } = await readUserProfileName(locale)
+  if (!resolved) {
+    // Retry on the next Chat open rather than waiting out the throttle after a
+    // transient failure.
+    profileFetchedAt = 0
+    return
+  }
+  if (name !== chatStore.state.userName) {
+    chatStore.set({ userName: name })
+    writeStored({ userName: name })
+  }
+}
+
 async function ensureBoot(force = false) {
   if (!force && (chatStore.state.boot === 'ready' || chatStore.state.boot === 'loading')) {
     return bootPromise ?? Promise.resolve()
@@ -324,6 +470,7 @@ async function ensureBoot(force = false) {
   if (bootPromise !== null && !force) return bootPromise
   chatStore.set({ boot: 'loading', bootError: '' })
   bootPromise = (async () => {
+    void refreshUserProfile()
     try {
       const data = await hostJson('/api/deepseek-chat/bootstrap')
       chatStore.set({
@@ -335,6 +482,11 @@ async function ensureBoot(force = false) {
         workspaces: Array.isArray(data.workspaces) ? data.workspaces : [],
         limits: normalizeLimits(data.limits),
       })
+      // A signed-out account has no display name: stop showing the last one.
+      if (data.auth?.accountSignedIn === false && chatStore.state.userName !== '') {
+        chatStore.set({ userName: '' })
+        writeStored({ userName: '' })
+      }
       const active = chatStore.state.activeId
       const exists = active !== null && (data.conversations ?? []).some(item => item.id === active)
       if (active !== null && exists) {
@@ -400,6 +552,7 @@ function openChat() {
   chatStore.set({ open: true, focusRequest: chatStore.state.focusRequest + 1 })
   writeStored({ open: true })
   void ensureBoot()
+  void refreshUserProfile()
 }
 
 function closeChat() {
@@ -410,6 +563,21 @@ function closeChat() {
 
 function requestFocus() {
   chatStore.set({ focusRequest: chatStore.state.focusRequest + 1 })
+}
+
+/**
+ * Set the Chat sidebar width within the shared 264-420px contract, also keeping
+ * the chat column usable on a narrow window. The resizer calls this for every
+ * drag frame; `saveSidebarWidth` persists the settled preference.
+ */
+function setSidebarWidth(width) {
+  const viewport = typeof window !== 'undefined' ? window.innerWidth : undefined
+  const next = clampSidebarWidth(width, viewport)
+  if (next !== chatStore.state.sidebarWidth) chatStore.set({ sidebarWidth: next })
+}
+
+function saveSidebarWidth() {
+  writeStored({ sidebarWidth: chatStore.state.sidebarWidth })
 }
 
 function requestFilePicker() {
@@ -431,6 +599,7 @@ async function newChat() {
     messages: [],
     conversationError: '',
     renamingId: null,
+    greetingIndex: pickGreetingIndex(chatStore.state.greetingIndex),
     focusRequest: chatStore.state.focusRequest + 1,
   })
   writeStored({ activeId: null })
@@ -476,7 +645,12 @@ function requestDeleteConversation(id, title) {
           })
           if (chatStore.state.activeId === id) {
             clearComposer()
-            chatStore.set({ activeId: null, messages: [], conversationError: '' })
+            chatStore.set({
+              activeId: null,
+              messages: [],
+              conversationError: '',
+              greetingIndex: pickGreetingIndex(chatStore.state.greetingIndex),
+            })
             writeStored({ activeId: null })
           }
         } catch (error) {
@@ -1303,6 +1477,8 @@ const chatActions = {
   requestFocus,
   requestFilePicker,
   requestStop,
+  setSidebarWidth,
+  saveSidebarWidth,
   openHandoff,
   closeHandoff,
   draftHandoff,

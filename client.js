@@ -22,16 +22,22 @@ const DICT_ZH = {
   earlier: '更早',
   noChats: '还没有对话',
   settings: '设置',
-  greeting: '你好，我是 DeepSeek',
-  greetingSubtitle: '可以问我任何问题。我可以深度思考、联网搜索，也可以阅读你上传的文件。',
-  suggestionThinkTitle: '深度思考',
-  suggestionThink: '用简单的比喻解释量子纠缠',
-  suggestionCodeTitle: '编写代码',
-  suggestionCode: '用 Python 实现快速排序，并解释思路',
-  suggestionSearchTitle: '联网搜索',
-  suggestionSearch: '总结今天 AI 领域的重要新闻',
-  suggestionFileTitle: '文件问答',
-  suggestionFile: '上传一份 PDF，让我总结要点',
+  greeting1Named: 'Ciallo～(∠・ω< )⌒☆，@{name}！',
+  greeting1Plain: 'Ciallo～(∠・ω< )⌒☆！',
+  greeting2Named: '又见面啦，@{name}！',
+  greeting2Plain: '又见面啦！',
+  greeting3Plain: '欸嘿～(๑•̀ㅂ•́)و✧ 今天有什么新计划？',
+  greeting4Plain: '准备好探索新点子了吗？',
+  greeting5Named: '有什么新鲜事吗，@{name}？',
+  greeting5Plain: '有什么新鲜事吗？',
+  greeting6Plain: '灵感加载完成！✧',
+  greeting7Plain: '今天也来创造点有趣的东西吧！',
+  greeting8Plain: '欢迎回来！(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧',
+  greeting9Plain: '世界那么大，今天探索哪里？',
+  greeting10Plain: '代码、灵感，还是随便聊聊？',
+  greeting11Plain: '今天有什么奇思妙想？',
+  greeting12Plain: '新的一天，新的可能性！',
+  resizeSidebar: '调整侧边栏宽度',
   composerPlaceholder: '给 DeepSeek 发送消息',
   send: '发送',
   stop: '停止生成',
@@ -138,7 +144,6 @@ const DICT_ZH = {
   you: '你',
   assistant: 'DeepSeek',
   openAgent: '返回 Agent 模式',
-  modeSwitchHint: 'Chat 历史独立保存，不会出现在 Agent 会话列表中。',
   copyFailed: '复制失败',
   searchEmpty: '没有匹配的对话',
   collapseSidebar: '收起侧边栏',
@@ -221,16 +226,22 @@ const DICT_EN = {
   earlier: 'Earlier',
   noChats: 'No conversations yet',
   settings: 'Settings',
-  greeting: "Hi, I'm DeepSeek",
-  greetingSubtitle: 'Ask me anything. I can think deeply, search the web, and read files you upload.',
-  suggestionThinkTitle: 'Deep thinking',
-  suggestionThink: 'Explain quantum entanglement with a simple analogy',
-  suggestionCodeTitle: 'Write code',
-  suggestionCode: 'Implement quicksort in Python and explain it',
-  suggestionSearchTitle: 'Web search',
-  suggestionSearch: "Summarize today's important AI news",
-  suggestionFileTitle: 'File Q&A',
-  suggestionFile: 'Upload a PDF and summarize its key points',
+  greeting1Named: 'Ciallo～(∠・ω< )⌒☆, @{name}!',
+  greeting1Plain: 'Ciallo～(∠・ω< )⌒☆!',
+  greeting2Named: 'Good to see you again, @{name}!',
+  greeting2Plain: 'Good to see you again!',
+  greeting3Plain: 'Hehe～(๑•̀ㅂ•́)و✧ Any new plans today?',
+  greeting4Plain: 'Ready to explore some new ideas?',
+  greeting5Named: 'Anything new with you, @{name}?',
+  greeting5Plain: 'Anything new with you?',
+  greeting6Plain: 'Inspiration loaded! ✧',
+  greeting7Plain: "Let's make something fun today!",
+  greeting8Plain: 'Welcome back! (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧',
+  greeting9Plain: 'The world is wide — where shall we explore today?',
+  greeting10Plain: 'Code, ideas, or just a chat?',
+  greeting11Plain: "What's on your mind today?",
+  greeting12Plain: 'A new day, new possibilities!',
+  resizeSidebar: 'Resize sidebar',
   composerPlaceholder: 'Message DeepSeek',
   send: 'Send',
   stop: 'Stop generating',
@@ -337,7 +348,6 @@ const DICT_EN = {
   you: 'You',
   assistant: 'DeepSeek',
   openAgent: 'Back to Agent mode',
-  modeSwitchHint: 'Chat history is independent and does not appear in the Agent session list.',
   copyFailed: 'Could not copy',
   searchEmpty: 'No matching conversations',
   collapseSidebar: 'Collapse sidebar',
@@ -435,12 +445,64 @@ const ACCEPT_EXT = [
   'sh', 'bash', 'ps1', 'sql', 'log', 'ini', 'toml', 'conf', 'tex', 'rst', 'epub', 'mobi', 'xls', 'xlsx',
 ]
 const ACCEPT = ACCEPT_EXT.map(ext => `.${ext}`).join(',')
-const SUGGESTIONS = [
-  { id: 'think', icon: 'spark', titleKey: 'suggestionThinkTitle', textKey: 'suggestionThink', thinking: true },
-  { id: 'code', icon: 'code', titleKey: 'suggestionCodeTitle', textKey: 'suggestionCode' },
-  { id: 'search', icon: 'globe', titleKey: 'suggestionSearchTitle', textKey: 'suggestionSearch', search: true },
-  { id: 'file', icon: 'file', titleKey: 'suggestionFileTitle', textKey: 'suggestionFile', file: true },
+/** Sidebar geometry contract, shared with the native Harness sidebar drag range. */
+const SIDEBAR_MIN = 264
+const SIDEBAR_MAX = 420
+const SIDEBAR_DEFAULT = 280
+/** The chat column never gives up more than this to the sidebar at one window width. */
+const CHAT_COLUMN_MIN = 460
+
+/**
+ * Clamp one sidebar width into the contract range, also keeping the chat column
+ * usable on a narrow window. The stored preference is the user's; this function
+ * decides only what fits right now.
+ * @param value - requested width in px.
+ * @param viewport - window width in px.
+ * @returns the width to render and persist.
+ */
+function clampSidebarWidth(value, viewport) {
+  const width = typeof value === 'number' && Number.isFinite(value) ? Math.round(value) : SIDEBAR_DEFAULT
+  const max = typeof viewport === 'number' && Number.isFinite(viewport) && viewport > 0
+    ? Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, viewport - CHAT_COLUMN_MIN))
+    : SIDEBAR_MAX
+  return Math.min(max, Math.max(SIDEBAR_MIN, width))
+}
+
+/**
+ * Greeting options for a blank Chat page. A name-capable option also carries a
+ * natural no-name variant, so an unavailable account name is omitted as part of
+ * the sentence instead of leaving an empty "@" behind.
+ */
+const GREETINGS = [
+  { named: 'greeting1Named', plain: 'greeting1Plain' },
+  { named: 'greeting2Named', plain: 'greeting2Plain' },
+  { plain: 'greeting3Plain' },
+  { plain: 'greeting4Plain' },
+  { named: 'greeting5Named', plain: 'greeting5Plain' },
+  { plain: 'greeting6Plain' },
+  { plain: 'greeting7Plain' },
+  { plain: 'greeting8Plain' },
+  { plain: 'greeting9Plain' },
+  { plain: 'greeting10Plain' },
+  { plain: 'greeting11Plain' },
+  { plain: 'greeting12Plain' },
 ]
+
+/**
+ * Pick the next blank-page greeting, never the one already showing. Uniform
+ * among the other options, so a second consecutive repeat is impossible.
+ * @param previous - the greeting currently on screen, or an invalid index.
+ * @param random - random source in [0, 1); injectable for tests.
+ * @returns the chosen greeting index.
+ */
+function pickGreetingIndex(previous, random = Math.random) {
+  const count = GREETINGS.length
+  const current = Number.isInteger(previous) && previous >= 0 && previous < count ? previous : -1
+  const pool = current >= 0 ? count - 1 : count
+  const roll = Math.floor(random() * pool)
+  const pick = Math.min(pool - 1, Math.max(0, roll))
+  return current >= 0 && pick >= current ? pick + 1 : pick
+}
 
 function readStored() {
   try {
@@ -489,6 +551,16 @@ const chatStore = {
     // The Harness frame auto-collapses its sidebar below 1024px; following the
     // same breakpoint keeps the shared switch's centre identical in both modes.
     sidebarOpen: typeof window !== 'undefined' ? window.innerWidth > 1024 : true,
+    // One Chat-owned width preference. It follows the same 264-420px contract
+    // and drag handle behaviour as the native sidebar, but Chat remembers it
+    // across restarts instead of resetting to the contract default.
+    sidebarWidth: clampSidebarWidth(stored.sidebarWidth, typeof window !== 'undefined' ? window.innerWidth : undefined),
+    // Last known account display name for the greeting; refreshed from the Host
+    // and cached here so a reload paints the personalized line immediately.
+    userName: typeof stored.userName === 'string' ? stored.userName : '',
+    // One greeting per blank conversation: chosen at launch and re-rolled by
+    // "New chat" (never the same one twice in a row).
+    greetingIndex: pickGreetingIndex(-1),
     renamingId: null,
     focusRequest: 0,
     filePickRequest: 0,
@@ -724,6 +796,90 @@ function markSendInFlight(value) {
   if (chatStore.state.sending !== value) chatStore.set({ sending: value })
 }
 
+/** Display name accepted for the greeting: trimmed, with any leading "@" removed. */
+function greetingUserName(value) {
+  return typeof value === 'string' ? value.trim().replace(/^@+/, '').trim() : ''
+}
+
+/**
+ * Resolve one greeting option for the current name. Name-capable options use
+ * their personalized form only with a real display name; every other case reads
+ * the natural no-name form.
+ * @param t - translator bound to the Chat namespace.
+ * @param index - greeting index from the store.
+ * @param userName - latest account display name, possibly empty.
+ * @returns the greeting line.
+ */
+function greetingText(t, index, userName) {
+  const option = GREETINGS[index] ?? GREETINGS[0]
+  const name = greetingUserName(userName)
+  if (name !== '' && option.named !== undefined) return t(option.named, { name })
+  return t(option.plain)
+}
+
+let profileFetchedAt = 0
+const PROFILE_REFRESH_MS = 60 * 1000
+
+/**
+ * Read the account display name. The Chat Host route is preferred (it keeps
+ * account access on the Host and caches the answer); an older Host half that
+ * does not serve it yet falls back to the account Remote the shell already
+ * mounts, so the greeting personalizes without waiting for a Host reload.
+ * @param locale - active UI language for the Platform request.
+ * @returns `{ name, resolved }`; `resolved: false` means a temporary failure, so
+ * the caller keeps the last known name instead of clearing it.
+ */
+async function readUserProfileName(locale) {
+  try {
+    const data = await hostJson(`/api/deepseek-chat/profile?locale=${locale}`)
+    return { name: greetingUserName(data?.name), resolved: data?.resolved !== false }
+  } catch {
+    // The running Host half may predate the profile route.
+  }
+  try {
+    const service = appCtx?.get?.('remote.account')
+    if (service === undefined || typeof service.getProfile !== 'function') return { name: '', resolved: false }
+    const release = globalThis.__DSH_BOOT__?.release
+    const version = typeof release?.version === 'string' && release.version !== '' ? release.version : '0.1.0'
+    const result = await service.getProfile({
+      version,
+      locale,
+      timezoneOffsetSeconds: -new Date().getTimezoneOffset() * 60,
+    })
+    if (result?.ok !== true) return { name: '', resolved: false }
+    const profile = result.value
+    if (profile?.status !== 'ready') return { name: '', resolved: true }
+    return { name: greetingUserName(profile.value?.name), resolved: true }
+  } catch {
+    return { name: '', resolved: false }
+  }
+}
+
+/**
+ * Refresh the personalized greeting from the Host. Personalization is optional:
+ * a Host without the profile route, a signed-out account, or an offline
+ * Platform keeps the last known name (or the localized fallback) and never
+ * interrupts the Chat surface. A resolved empty name clears a stale account
+ * name after sign-out or an account switch.
+ */
+async function refreshUserProfile(force = false) {
+  const now = Date.now()
+  if (!force && profileFetchedAt !== 0 && now - profileFetchedAt < PROFILE_REFRESH_MS) return
+  profileFetchedAt = now
+  const locale = (appCtx?.locale.getSnapshot().active ?? '').toLowerCase().startsWith('zh') ? 'zh' : 'en'
+  const { name, resolved } = await readUserProfileName(locale)
+  if (!resolved) {
+    // Retry on the next Chat open rather than waiting out the throttle after a
+    // transient failure.
+    profileFetchedAt = 0
+    return
+  }
+  if (name !== chatStore.state.userName) {
+    chatStore.set({ userName: name })
+    writeStored({ userName: name })
+  }
+}
+
 async function ensureBoot(force = false) {
   if (!force && (chatStore.state.boot === 'ready' || chatStore.state.boot === 'loading')) {
     return bootPromise ?? Promise.resolve()
@@ -731,6 +887,7 @@ async function ensureBoot(force = false) {
   if (bootPromise !== null && !force) return bootPromise
   chatStore.set({ boot: 'loading', bootError: '' })
   bootPromise = (async () => {
+    void refreshUserProfile()
     try {
       const data = await hostJson('/api/deepseek-chat/bootstrap')
       chatStore.set({
@@ -742,6 +899,11 @@ async function ensureBoot(force = false) {
         workspaces: Array.isArray(data.workspaces) ? data.workspaces : [],
         limits: normalizeLimits(data.limits),
       })
+      // A signed-out account has no display name: stop showing the last one.
+      if (data.auth?.accountSignedIn === false && chatStore.state.userName !== '') {
+        chatStore.set({ userName: '' })
+        writeStored({ userName: '' })
+      }
       const active = chatStore.state.activeId
       const exists = active !== null && (data.conversations ?? []).some(item => item.id === active)
       if (active !== null && exists) {
@@ -807,6 +969,7 @@ function openChat() {
   chatStore.set({ open: true, focusRequest: chatStore.state.focusRequest + 1 })
   writeStored({ open: true })
   void ensureBoot()
+  void refreshUserProfile()
 }
 
 function closeChat() {
@@ -817,6 +980,21 @@ function closeChat() {
 
 function requestFocus() {
   chatStore.set({ focusRequest: chatStore.state.focusRequest + 1 })
+}
+
+/**
+ * Set the Chat sidebar width within the shared 264-420px contract, also keeping
+ * the chat column usable on a narrow window. The resizer calls this for every
+ * drag frame; `saveSidebarWidth` persists the settled preference.
+ */
+function setSidebarWidth(width) {
+  const viewport = typeof window !== 'undefined' ? window.innerWidth : undefined
+  const next = clampSidebarWidth(width, viewport)
+  if (next !== chatStore.state.sidebarWidth) chatStore.set({ sidebarWidth: next })
+}
+
+function saveSidebarWidth() {
+  writeStored({ sidebarWidth: chatStore.state.sidebarWidth })
 }
 
 function requestFilePicker() {
@@ -838,6 +1016,7 @@ async function newChat() {
     messages: [],
     conversationError: '',
     renamingId: null,
+    greetingIndex: pickGreetingIndex(chatStore.state.greetingIndex),
     focusRequest: chatStore.state.focusRequest + 1,
   })
   writeStored({ activeId: null })
@@ -883,7 +1062,12 @@ function requestDeleteConversation(id, title) {
           })
           if (chatStore.state.activeId === id) {
             clearComposer()
-            chatStore.set({ activeId: null, messages: [], conversationError: '' })
+            chatStore.set({
+              activeId: null,
+              messages: [],
+              conversationError: '',
+              greetingIndex: pickGreetingIndex(chatStore.state.greetingIndex),
+            })
             writeStored({ activeId: null })
           }
         } catch (error) {
@@ -1710,6 +1894,8 @@ const chatActions = {
   requestFocus,
   requestFilePicker,
   requestStop,
+  setSidebarWidth,
+  saveSidebarWidth,
   openHandoff,
   closeHandoff,
   draftHandoff,
@@ -2090,6 +2276,52 @@ const ICONS = {
 function Icon({ name, size = 18, className = '' }) {
   const Component = ICONS[name] ?? IconSpark
   return h(Component, { size, className })
+}
+
+/* ---- 45-brand.js ---- */
+/**
+ * Official DeepSeek brand artwork for the Chat sidebar.
+ *
+ * The whale and wordmark geometry is the official DeepSeek lockup shipped with
+ * DeepSeek Harness, rendered here as local inline SVG because a Client plugin
+ * must not load Harness Client packages. Only the theme-provided ink is
+ * parameterized; the lockup keeps its official proportions. The "HARNESS"
+ * badge of the Harness lockup is intentionally omitted: Chat is the DeepSeek
+ * Chat surface, not the Harness Agent surface.
+ */
+const DEEPSEEK_LOCKUP = {
+  viewBox: '0 0 122 24',
+  width: 122,
+  height: 24,
+  paths: [
+    'M23.0584 4.95203C22.8129 4.83203 22.7074 5.06103 22.5639 5.17704C22.5149 5.21454 22.4734 5.26354 22.4319 5.30854C22.0734 5.69155 21.6543 5.94306 21.1073 5.91306C20.3073 5.86806 19.6243 6.11957 19.0203 6.73158C18.8918 5.97706 18.4652 5.52655 17.8162 5.23754C17.4767 5.08753 17.1332 4.93703 16.8952 4.61052C16.7292 4.37801 16.6837 4.11901 16.6007 3.8635C16.5477 3.70949 16.4952 3.55199 16.3177 3.52549C16.1252 3.49549 16.0497 3.65699 15.9742 3.792C15.6722 4.34401 15.5552 4.95203 15.5667 5.56805C15.5932 6.95359 16.1782 8.05712 17.3407 8.84215C17.4727 8.93215 17.5067 9.02215 17.4652 9.15366C17.3857 9.42416 17.2917 9.68667 17.2087 9.95718C17.1557 10.1297 17.0767 10.1677 16.8917 10.0922C16.2537 9.82568 15.7027 9.43117 15.2156 8.95465C14.3891 8.15513 13.6416 7.2726 12.7096 6.58158C12.4906 6.42007 12.2716 6.27007 12.045 6.12707C11.094 5.20354 12.1696 4.44502 12.4186 4.35501C12.6791 4.26101 12.5091 3.938 11.6675 3.942C10.826 3.9455 10.056 4.22751 9.07446 4.60302C8.93096 4.65952 8.77995 4.70052 8.62545 4.73452C7.73492 4.56552 6.80989 4.52802 5.84386 4.63702C4.02481 4.83953 2.57177 5.69955 1.50373 7.1676C0.220694 8.93215 -0.0813148 10.9372 0.288196 13.0283C0.676708 15.2323 1.80174 17.0569 3.53029 18.4834C5.32285 19.9625 7.38741 20.6875 9.74298 20.5485C11.1735 20.466 12.7661 20.2745 14.5626 18.7539C15.0156 18.9795 15.4912 19.0695 16.2797 19.137C16.8872 19.1935 17.4722 19.107 17.9252 19.013C18.6347 18.8629 18.5857 18.2059 18.3292 18.0854C16.2497 17.1169 16.7062 17.5109 16.2912 17.1919C17.3477 15.9419 18.9618 13.7198 19.4598 10.6942C19.5088 10.3602 19.5713 9.88968 19.5638 9.61917C19.5598 9.45417 19.5978 9.39016 19.7863 9.37116C20.3073 9.31116 20.8128 9.16866 21.2773 8.91315C22.6249 8.17713 23.1684 6.96809 23.2964 5.51905C23.3154 5.29754 23.2924 5.06853 23.0584 4.95203ZM11.3165 17.9954C9.30097 16.4109 8.32344 15.8894 7.91992 15.9119C7.54241 15.9344 7.61042 16.3664 7.69342 16.6479C7.78042 16.9259 7.89342 17.1174 8.05193 17.3614C8.16143 17.5229 8.23694 17.7629 7.94243 17.9434C7.29341 18.3449 6.16487 17.8084 6.11187 17.7819C4.79833 17.0084 3.7003 15.9874 2.92628 14.5908C2.17875 13.2468 1.74474 11.8047 1.67324 10.2657C1.65424 9.89418 1.76374 9.76267 2.13375 9.69517C2.62077 9.60517 3.12278 9.58617 3.6093 9.65767C5.66636 9.95818 7.41741 10.8777 8.88545 12.3348C9.72348 13.1643 10.3575 14.1558 11.0105 15.1243C11.705 16.1529 12.4521 17.1329 13.4036 17.9364C13.7396 18.2179 14.0076 18.4319 14.2641 18.5899C13.4906 18.6764 12.1996 18.6949 11.3165 17.9964V17.9954ZM12.2826 11.7817C12.2826 11.6167 12.4146 11.4852 12.5806 11.4852C12.6181 11.4852 12.6521 11.4927 12.6826 11.5037C12.7241 11.5187 12.7621 11.5412 12.7921 11.5752C12.8451 11.6277 12.8751 11.7027 12.8751 11.7817C12.8751 11.9467 12.7431 12.0782 12.5771 12.0782C12.4111 12.0782 12.2826 11.9467 12.2826 11.7817ZM15.2831 13.3208C15.0906 13.3998 14.8981 13.4673 14.7131 13.4748C14.4261 13.4898 14.1131 13.3733 13.9431 13.2308C13.6791 13.0093 13.4901 12.8853 13.4111 12.4988C13.3771 12.3338 13.3961 12.0782 13.4261 11.9317C13.4941 11.6162 13.4186 11.4137 13.1961 11.2297C13.0151 11.0797 12.7846 11.0382 12.5316 11.0382C12.4371 11.0382 12.3506 10.9967 12.2861 10.9632C12.1806 10.9107 12.0936 10.7792 12.1766 10.6177C12.2031 10.5652 12.3316 10.4377 12.3616 10.4152C12.7051 10.2197 13.1011 10.2837 13.4676 10.4302C13.8071 10.5692 14.0641 10.8242 14.4336 11.1847C14.8111 11.6202 14.8791 11.7402 15.0941 12.0672C15.2641 12.3228 15.4186 12.5853 15.5247 12.8858C15.5887 13.0733 15.5057 13.2268 15.2831 13.3208Z', // whale
+    'M68.416 18.2447H67.0501V16.1272H68.416C69.2619 16.1272 70.1166 15.9163 70.6671 15.3304C71.2181 14.7444 71.426 13.8455 71.426 12.9471C71.426 12.0487 71.2268 11.1498 70.6671 10.5643C70.1083 9.97831 69.2619 9.76744 68.416 9.76744C67.5701 9.76744 66.7154 9.97831 66.1639 10.5643C65.6129 11.1503 65.4049 12.0487 65.4049 12.9471V21.6435H63.009V7.6582H65.4049V8.54883H65.8442C65.8918 8.49393 65.9394 8.44728 65.9875 8.40064C66.5871 7.85353 67.5049 7.6582 68.4072 7.6582C69.8212 7.6582 71.2341 8.00998 72.1607 8.98662C73.0868 9.96325 73.4143 11.4632 73.4143 12.9558C73.4143 14.4485 73.0785 15.9406 72.1607 16.925C71.2424 17.9094 69.8212 18.2457 68.416 18.2457V18.2447Z',
+    'M31.9551 8.03497H33.3204V10.1525H31.9551C31.1087 10.1525 30.2545 10.3633 29.7035 10.9493C29.1525 11.5353 28.945 12.4342 28.945 13.3326C28.945 14.231 29.1447 15.1294 29.7035 15.7154C30.2623 16.3014 31.1087 16.5122 31.9551 16.5122C32.8015 16.5122 33.6562 16.3014 34.2072 15.7154C34.7582 15.1294 34.9657 14.231 34.9657 13.3326V4.62842H37.3611V18.6219H34.9657V17.7313H34.5264C34.4783 17.7857 34.4307 17.8329 34.3826 17.8795C33.7835 18.4261 32.8652 18.6219 31.9629 18.6219C30.5494 18.6219 29.136 18.2707 28.2099 17.294C27.2838 16.3174 26.9563 14.817 26.9563 13.3248C26.9563 11.8327 27.2916 10.34 28.2099 9.35561C29.136 8.37898 30.5494 8.03497 31.9551 8.03497Z',
+    'M49.3786 13.1431V13.9948H42.9984V12.2996H47.2305C47.1348 11.6825 46.9113 11.1043 46.5119 10.682C45.9371 10.0727 45.0503 9.85409 44.1723 9.85409C43.2943 9.85409 42.4076 10.0727 41.8328 10.682C41.258 11.2913 41.05 12.2213 41.05 13.1435C41.05 14.0658 41.2575 15.003 41.8328 15.6046C42.4076 16.2061 43.2939 16.433 44.1723 16.433C45.0508 16.433 45.9371 16.2143 46.5119 15.6046C46.5916 15.5186 46.6635 15.4248 46.7354 15.331H49.0992C48.8918 16.0657 48.5643 16.7299 48.0691 17.2454C47.111 18.2531 45.6339 18.6205 44.1723 18.6205C42.7108 18.6205 41.2337 18.2609 40.2755 17.2454C39.3174 16.2299 38.9661 14.6828 38.9661 13.1435C38.9661 11.6043 39.3096 10.0494 40.2755 9.04168C41.242 8.03396 42.7108 7.66663 44.1723 7.66663C45.6339 7.66663 47.111 8.02618 48.0691 9.04168C49.0351 10.0572 49.3786 11.6043 49.3786 13.1435V13.1431Z',
+    'M61.4045 13.1431V13.9948H55.0243V12.2996H59.2564C59.1602 11.6825 58.9372 11.1043 58.5378 10.682C57.963 10.0727 57.0762 9.85409 56.1982 9.85409C55.3202 9.85409 54.4335 10.0727 53.8587 10.682C53.2839 11.2913 53.0759 12.2213 53.0759 13.1435C53.0759 14.0658 53.2834 15.003 53.8587 15.6046C54.4335 16.2061 55.3202 16.433 56.1982 16.433C57.0762 16.433 57.963 16.2143 58.5378 15.6046C58.6179 15.5186 58.6894 15.4248 58.7608 15.331H61.1251C60.9171 16.0657 60.5897 16.7299 60.0945 17.2454C59.1364 18.2531 57.6593 18.6205 56.1982 18.6205C54.7372 18.6205 53.2596 18.2609 52.3014 17.2454C51.3432 16.2299 50.9919 14.6828 50.9919 13.1435C50.9919 11.6043 51.3355 10.0494 52.3014 9.04168C53.2678 8.03396 54.7367 7.66663 56.1982 7.66663C57.6598 7.66663 59.1364 8.02618 60.0945 9.04168C61.061 10.0572 61.4045 11.6043 61.4045 13.1435V13.1431Z',
+    'M80.242 18.6214C81.7035 18.6214 83.1801 18.4105 84.1383 17.809C85.0965 17.2075 85.4482 16.2931 85.4482 15.3869C85.4482 14.4807 85.1042 13.5585 84.1383 12.9647C83.1801 12.371 81.703 12.1518 80.242 12.1518C79.6186 12.1518 79.0438 12.0658 78.6366 11.8394C78.2294 11.6047 78.0778 11.2534 78.0778 10.9017C78.0778 10.5499 78.2216 10.1908 78.6366 9.9639C79.0438 9.72921 79.6749 9.65147 80.2973 9.65147C80.9198 9.65147 81.5509 9.73747 81.9591 9.9639C82.3663 10.1986 82.5179 10.5499 82.5179 10.9017H84.9531C84.9531 9.99499 84.6421 9.07327 83.7719 8.47951C82.9017 7.88576 81.5679 7.66663 80.2424 7.66663C78.9169 7.66663 77.5837 7.8775 76.713 8.47951C75.8427 9.08104 75.5308 9.99499 75.5308 10.9017C75.5308 11.8083 75.8423 12.73 76.713 13.3238C77.5832 13.9176 78.9165 14.1367 80.2424 14.1367C80.929 14.1367 81.688 14.2227 82.1428 14.4491C82.5985 14.676 82.7579 15.0351 82.7579 15.3869C82.7579 15.7387 82.5985 16.0977 82.1428 16.3246C81.688 16.5511 80.9931 16.6371 80.3066 16.6371C79.62 16.6371 78.9169 16.5511 78.4694 16.3246C78.0224 16.0982 77.8543 15.7387 77.8543 15.3869H75.0435C75.0435 16.2935 75.3865 17.2153 76.3534 17.809C77.3194 18.4028 78.7809 18.6214 80.2424 18.6214H80.242Z',
+    'M97.4733 13.1431V13.9948H91.0932V12.2996H95.3252C95.23 11.6825 95.006 11.1043 94.6071 10.682C94.0313 10.0727 93.1456 9.85409 92.2666 9.85409C91.3876 9.85409 90.5018 10.0727 89.927 10.682C89.3522 11.2913 89.1452 12.2213 89.1452 13.1435C89.1452 14.0658 89.3522 15.003 89.927 15.6046C90.5018 16.2061 91.3886 16.433 92.2666 16.433C93.1446 16.433 94.0313 16.2143 94.6071 15.6046C94.6863 15.5186 94.7587 15.4248 94.8301 15.331H97.1935C96.9855 16.0657 96.6585 16.7299 96.1639 17.2454C95.2057 18.2531 93.7281 18.6205 92.2666 18.6205C90.805 18.6205 89.3284 18.2609 88.3703 17.2454C87.4121 16.2299 87.0613 14.6828 87.0613 13.1435C87.0613 11.6043 87.4043 10.0494 88.3703 9.04168C89.3367 8.03396 90.806 7.66663 92.2666 7.66663C93.7272 7.66663 95.2057 8.02618 96.1639 9.04168C97.1298 10.0572 97.4729 11.6043 97.4729 13.1435L97.4733 13.1431Z',
+    'M109.499 13.1431V13.9948H103.119V12.2996H107.351C107.256 11.6825 107.032 11.1043 106.632 10.682C106.057 10.0727 105.172 9.85409 104.293 9.85409C103.414 9.85409 102.528 10.0727 101.953 10.682C101.378 11.2913 101.17 12.2213 101.17 13.1435C101.17 14.0658 101.378 15.003 101.953 15.6046C102.528 16.2061 103.415 16.433 104.293 16.433C105.171 16.433 106.057 16.2143 106.632 15.6046C106.712 15.5186 106.784 15.4248 106.856 15.331H109.22C109.012 16.0657 108.685 16.7299 108.19 17.2454C107.231 18.2531 105.754 18.6205 104.293 18.6205C102.831 18.6205 101.355 18.2609 100.396 17.2454C99.4382 16.2299 99.0864 14.6828 99.0864 13.1435C99.0864 11.6043 99.4295 10.0494 100.396 9.04168C101.362 8.03396 102.832 7.66663 104.293 7.66663C105.754 7.66663 107.231 8.02618 108.19 9.04168C109.156 10.0572 109.499 11.6043 109.499 13.1435V13.1431Z',
+    'M113.5 4.62817H111.104V18.6217H113.5V4.62817Z',
+    'M117.589 12.8154L121.517 18.6208H118.554L114.625 12.8154L118.554 8.15088H121.517L117.589 12.8154Z',
+  ],
+}
+
+/**
+ * Render the official whale + "deepseek" lockup.
+ * @param height - rendered height in px; the width follows the official ratio.
+ */
+function DeepSeekLockup({ height = 24, className = '' }) {
+  return h('svg', {
+    className: `dsc-brand-logo ${className}`.trim(),
+    width: Math.round(height * DEEPSEEK_LOCKUP.width / DEEPSEEK_LOCKUP.height * 100) / 100,
+    height,
+    viewBox: DEEPSEEK_LOCKUP.viewBox,
+    fill: 'none',
+    role: 'img',
+    'aria-label': 'DeepSeek',
+    focusable: 'false',
+  }, DEEPSEEK_LOCKUP.paths.map((d, index) => h('path', { key: index, d, fill: 'currentColor' })))
 }
 
 /* ---- 50-components.js ---- */
@@ -2559,51 +2791,12 @@ function UserMessage({ message }) {
   )
 }
 
-function SuggestionCard({ suggestion, onClick }) {
-  const t = useT()
-  return h('button', { type: 'button', className: 'dsc-suggestion', onClick },
-    h('span', { className: 'dsc-suggestion-icon' }, h(Icon, { name: suggestion.icon, size: 17 })),
-    h('span', { className: 'dsc-suggestion-body' },
-      h('span', { className: 'dsc-suggestion-title' }, t(suggestion.titleKey)),
-      h('span', { className: 'dsc-suggestion-text' }, t(suggestion.textKey)),
-    ),
-  )
-}
-
 function EmptyState() {
   const t = useT()
-  const auth = useChat(state => state.auth)
-  const settings = useChat(state => state.settings)
-  const onSuggestion = (suggestion) => {
-    if (suggestion.file) {
-      chatActions.requestFilePicker()
-      return
-    }
-    chatStore.set({ draft: tr(suggestion.textKey) })
-    if (suggestion.thinking && !settings.thinking) chatActions.toggleThinking()
-    if (suggestion.search && !settings.search) chatActions.toggleSearch()
-    chatActions.requestFocus()
-  }
+  const userName = useChat(state => state.userName)
+  const greetingIndex = useChat(state => state.greetingIndex)
   return h('div', { className: 'dsc-empty' },
-    h('h1', { className: 'dsc-empty-title' }, t('greeting')),
-    h('p', { className: 'dsc-empty-subtitle' }, t('greetingSubtitle')),
-    auth?.ready === false
-      ? h('div', { className: 'dsc-setup-card' },
-          h('span', { className: 'dsc-setup-icon' }, h(Icon, { name: 'warning', size: 18 })),
-          h('div', { className: 'dsc-setup-body' },
-            h('strong', null, t('noAuthTitle')),
-            h('span', null, t('noAuthBody')),
-          ),
-          h('button', {
-            type: 'button', className: 'dsc-primary-button',
-            onClick: () => chatStore.set({ settingsOpen: true }),
-          }, t('configureNow')),
-        )
-      : null,
-    h('div', { className: 'dsc-suggestions' }, SUGGESTIONS.map(suggestion => (
-      h(SuggestionCard, { key: suggestion.id, suggestion, onClick: () => onSuggestion(suggestion) })
-    ))),
-    h('div', { className: 'dsc-empty-foot' }, t('modeSwitchHint')),
+    h('h1', { className: 'dsc-greeting' }, greetingText(t, greetingIndex, userName)),
   )
 }
 
@@ -2635,7 +2828,7 @@ function Thread() {
       ),
     )
   }
-  return h('div', { className: 'dsc-thread', ref, 'aria-label': tr('appTitle') },
+  return h('div', { className: cx('dsc-thread', messages.length === 0 && 'is-empty'), ref, 'aria-label': tr('appTitle') },
     messages.length === 0
       ? h(EmptyState, null)
       : h('div', { className: 'dsc-thread-inner' }, messages.map((message, index) => (
@@ -2886,6 +3079,120 @@ function ConversationItem({ conversation, active, renaming, onOpen, onRename, on
   )
 }
 
+/**
+ * The Chat sidebar's right-edge drag handle. It mirrors the native Harness
+ * sidebar handle: an 8px pointer-capture strip that reports rAF-throttled dx
+ * against the drag-start width, plus arrow-key resizing for keyboard users.
+ * The width it writes is the shared 264-420px contract from the store.
+ */
+function SidebarResizer({ onDraggingChange }) {
+  const t = useT()
+  const width = useChat(state => state.sidebarWidth)
+  const drag = React.useRef(null)
+  const [dragging, setDragging] = React.useState(false)
+  const setDraggingState = (value) => {
+    setDragging(value)
+    if (onDraggingChange) onDraggingChange(value)
+  }
+  const renderedWidth = (element) => {
+    const rect = element?.parentElement?.getBoundingClientRect?.()
+    return rect !== undefined && rect.width > 0 ? rect.width : width
+  }
+  // The column can be CSS-clamped on a narrow window; the announced value must
+  // describe what is actually rendered, not just the stored preference.
+  const effectiveWidth = clampSidebarWidth(width, typeof window !== 'undefined' ? window.innerWidth : undefined)
+  const endDrag = (commit) => {
+    const state = drag.current
+    if (state === null) return
+    drag.current = null
+    if (state.frame !== 0) cancelAnimationFrame(state.frame)
+    try {
+      if (state.element.hasPointerCapture?.(state.pointerId)) state.element.releasePointerCapture(state.pointerId)
+    } catch {
+      // The pointer may already be gone with its capture.
+    }
+    // A cancelled or unexpectedly lost capture must not treat clientX=0 as a
+    // rightward-to-left drag and snap the column to its minimum.
+    if (commit) {
+      chatActions.setSidebarWidth(state.startWidth + state.latest - state.startX)
+      chatActions.saveSidebarWidth()
+    }
+    setDraggingState(false)
+  }
+  React.useEffect(() => () => {
+    const state = drag.current
+    if (state === null) return
+    if (state.frame !== 0) cancelAnimationFrame(state.frame)
+    if (onDraggingChange) onDraggingChange(false)
+  }, [])
+  const onPointerDown = (event) => {
+    if (event.button !== 0 || drag.current !== null) return
+    event.preventDefault()
+    try {
+      event.currentTarget.setPointerCapture?.(event.pointerId)
+    } catch {
+      // Pointer capture is an enhancement; the move handler still receives events.
+    }
+    drag.current = {
+      element: event.currentTarget,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startWidth: renderedWidth(event.currentTarget),
+      latest: event.clientX,
+      frame: 0,
+    }
+    setDraggingState(true)
+  }
+  const onPointerMove = (event) => {
+    const state = drag.current
+    if (state === null || state.pointerId !== event.pointerId) return
+    state.latest = event.clientX
+    if (state.frame !== 0) return
+    state.frame = requestAnimationFrame(() => {
+      state.frame = 0
+      chatActions.setSidebarWidth(state.startWidth + state.latest - state.startX)
+    })
+  }
+  const onPointerUp = (event) => {
+    const state = drag.current
+    if (state === null || state.pointerId !== event.pointerId) return
+    state.latest = event.clientX
+    endDrag(true)
+  }
+  const onPointerCancel = () => {
+    // Cancellation has no reliable coordinates; keep the last live width and
+    // do not persist a gesture the user did not finish.
+    endDrag(false)
+  }
+  const onKeyDown = (event) => {
+    const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End']
+    if (!keys.includes(event.key)) return
+    event.preventDefault()
+    const step = event.shiftKey ? 32 : 16
+    if (event.key === 'Home') chatActions.setSidebarWidth(SIDEBAR_MIN)
+    else if (event.key === 'End') chatActions.setSidebarWidth(SIDEBAR_MAX)
+    else chatActions.setSidebarWidth(renderedWidth(event.currentTarget) + (event.key === 'ArrowRight' ? step : -step))
+    chatActions.saveSidebarWidth()
+  }
+  return h('div', {
+    className: cx('dsc-sidebar-resizer', dragging && 'is-dragging'),
+    role: 'separator',
+    'aria-orientation': 'vertical',
+    'aria-label': t('resizeSidebar'),
+    'aria-valuemin': SIDEBAR_MIN,
+    'aria-valuemax': SIDEBAR_MAX,
+    'aria-valuenow': Math.round(effectiveWidth),
+    title: t('resizeSidebar'),
+    tabIndex: 0,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    onPointerCancel,
+    onLostPointerCapture: onPointerCancel,
+    onKeyDown,
+  })
+}
+
 function Sidebar() {
   const t = useT()
   const conversations = useChat(state => state.conversations)
@@ -2898,7 +3205,9 @@ function Sidebar() {
     : conversations.filter(item => (item.title || '').toLowerCase().includes(query.trim().toLowerCase()))
   const groups = groupConversations(filtered, t)
   const closeOnMobile = () => {
-    if (typeof window !== 'undefined' && window.innerWidth <= 900) chatStore.set({ sidebarOpen: false })
+    // Same breakpoint as the drawer presentation; between 769-1024px the
+    // sidebar is still a column and selecting a conversation must not hide it.
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) chatStore.set({ sidebarOpen: false })
   }
   const select = (id) => {
     if (id === activeId) {
@@ -2914,27 +3223,26 @@ function Sidebar() {
     closeOnMobile()
   }
   return h('aside', { className: 'dsc-sidebar-inner' },
-    h('div', { className: 'dsc-sidebar-top' },
-      h('div', { className: 'dsc-sidebar-actions' },
-        h('button', {
-          type: 'button', className: 'dsc-new-chat',
-          onClick: () => { void chatActions.newChat(); closeOnMobile() },
-        }, h(Icon, { name: 'plus', size: 16 }), h('span', null, t('newChat'))),
-        h('button', {
-          type: 'button', className: 'dsc-icon-button dsc-sidebar-collapse', title: t('collapseSidebar'),
-          'aria-label': t('collapseSidebar'), onClick: () => chatStore.set({ sidebarOpen: false }),
-        }, h(Icon, { name: 'sidebar', size: 17 })),
-      ),
-      h('label', { className: 'dsc-search' },
-        h(Icon, { name: 'search', size: 15 }),
-        h('input', {
-          className: 'dsc-search-input',
-          value: query,
-          placeholder: t('searchChats'),
-          'aria-label': t('searchChats'),
-          onChange: (event) => setQuery(event.target.value),
-        }),
-      ),
+    h('div', { className: 'dsc-sidebar-brand' },
+      h('div', { className: 'dsc-brand-lockup' }, h(DeepSeekLockup, { height: 24 })),
+      h('button', {
+        type: 'button', className: 'dsc-icon-button dsc-sidebar-collapse', title: t('collapseSidebar'),
+        'aria-label': t('collapseSidebar'), onClick: () => chatStore.set({ sidebarOpen: false }),
+      }, h(Icon, { name: 'sidebar', size: 16 })),
+    ),
+    h('button', {
+      type: 'button', className: 'dsc-new-chat',
+      onClick: () => { void chatActions.newChat(); closeOnMobile() },
+    }, h(Icon, { name: 'plus', size: 15 }), h('span', null, t('newChat'))),
+    h('label', { className: 'dsc-search' },
+      h(Icon, { name: 'search', size: 15 }),
+      h('input', {
+        className: 'dsc-search-input',
+        value: query,
+        placeholder: t('searchChats'),
+        'aria-label': t('searchChats'),
+        onChange: (event) => setQuery(event.target.value),
+      }),
     ),
     h('div', { className: 'dsc-chat-list' },
       groups.length === 0
@@ -2963,7 +3271,7 @@ function Sidebar() {
         type: 'button', className: 'dsc-foot-action',
         title: t('chatSettings'),
         onClick: () => chatStore.set({ settingsOpen: true }),
-      }, h(Icon, { name: 'settings', size: 17 }), h('span', null, t('settings')),
+      }, h(Icon, { name: 'settings', size: 16 }), h('span', null, t('settings')),
         h('span', { className: cx('dsc-auth-dot', auth?.ready ? 'is-ready' : 'is-missing'), title: authSourceLabel(auth, t) }),
       ),
     ),
@@ -2979,6 +3287,7 @@ function ChatHeader() {
   const sidebarOpen = useChat(state => state.sidebarOpen)
   const conversation = conversations.find(item => item.id === activeId)
   const canDraft = messages.length > 0
+  const blankHome = activeId === null && messages.length === 0
   const hostHandoff = useChat(state => state.bootData?.handoff?.enabled !== false)
   return h('header', { className: 'dsc-header' },
     h('div', { className: 'dsc-header-left' },
@@ -2989,7 +3298,11 @@ function ChatHeader() {
             onClick: () => chatStore.set({ sidebarOpen: true }),
           }, h(Icon, { name: 'menu', size: 18 }))
         : null,
-      h('div', { className: 'dsc-header-title' }, conversation?.title || t('newChatTitle')),
+      // A blank home already carries its greeting; a repeated "New chat" title
+      // would only add chrome above it.
+      blankHome
+        ? null
+        : h('div', { className: 'dsc-header-title' }, conversation?.title || t('newChatTitle')),
     ),
     h('div', { className: 'dsc-header-right' },
       auth?.ready === false
@@ -3243,6 +3556,8 @@ function ChatRoot() {
   const confirm = useChat(state => state.confirm)
   const handoff = useChat(state => state.handoff)
   const sidebarOpen = useChat(state => state.sidebarOpen)
+  const sidebarWidth = useChat(state => state.sidebarWidth)
+  const [resizing, setResizing] = React.useState(false)
   const rootRef = React.useRef(null)
   const sidebarRef = React.useRef(null)
   React.useEffect(() => {
@@ -3275,7 +3590,15 @@ function ChatRoot() {
           chatActions.closeHandoff()
           return
         }
-        if (settingsOpen) chatStore.set({ settingsOpen: false })
+        if (settingsOpen) {
+          chatStore.set({ settingsOpen: false })
+          return
+        }
+        // On the narrow drawer presentation Escape dismisses the sidebar, the
+        // same gesture as the native drawer.
+        if (chatStore.state.sidebarOpen && typeof window !== 'undefined' && window.innerWidth <= 768) {
+          chatStore.set({ sidebarOpen: false })
+        }
         return
       }
       if (event.key !== 'Tab') return
@@ -3323,12 +3646,17 @@ function ChatRoot() {
     className: 'dsc-root', role: 'region', 'aria-label': t('appTitle'), tabIndex: -1,
     ref: rootRef,
     'data-dsc-mode': 'chat',
+    'data-resizing': resizing || undefined,
   },
     h('div', {
-      className: cx('dsc-sidebar', sidebarOpen && 'is-open'),
+      className: cx('dsc-sidebar-column', sidebarOpen && 'is-open'),
       'aria-hidden': !sidebarOpen ? 'true' : undefined,
       ref: sidebarRef,
-    }, h(Sidebar, null)),
+      style: { '--dsc-sidebar-width': `${sidebarWidth}px` },
+    },
+      h('aside', { className: 'dsc-sidebar' }, h(Sidebar, null)),
+      sidebarOpen ? h(SidebarResizer, { onDraggingChange: setResizing }) : null,
+    ),
     sidebarOpen ? h('button', {
       type: 'button', className: 'dsc-sidebar-backdrop', 'aria-label': t('close'),
       onClick: () => chatStore.set({ sidebarOpen: false }),
@@ -3743,6 +4071,10 @@ const CHAT_CSS = `
   --dsc-muted: var(--dsw-alias-label-secondary, #6b7280);
   --dsc-border: var(--dsw-alias-border-l1, rgba(15, 23, 42, 0.08));
   --dsc-border-strong: var(--dsw-alias-border-l2, rgba(15, 23, 42, 0.14));
+  --dsc-border-l3: var(--dsw-alias-border-l3, rgba(15, 23, 42, 0.12));
+  --dsc-elevated: var(--dsw-alias-button-elevated-fill, var(--dsc-layer));
+  --dsc-elevated-hover: var(--dsw-alias-button-floating-hover, var(--dsc-layer2));
+  --dsc-field: color-mix(in srgb, var(--dsc-text) 4%, transparent);
   --dsc-hover: color-mix(in srgb, var(--dsc-text) 5.5%, transparent);
   --dsc-active: color-mix(in srgb, var(--dsc-text) 9%, transparent);
   --dsc-brand-soft: color-mix(in srgb, var(--dsc-link) 11%, transparent);
@@ -3935,71 +4267,109 @@ body[data-ds-dark-theme] .dsc-modeswitch-thumb {
 html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
 
 /* ---------- sidebar ---------- */
-.dsc-sidebar {
-  /* Follow the Harness sidebar's own track (published by the frame on the
-     desktop shell) inside a sane range, so flipping Chat/Agent does not move
-     the shared switch: both modes then center over the same content column.
-     A collapsed native sidebar (0px) keeps this column at its 264px floor. */
-  width: clamp(264px, var(--dsh-windows-sidebar-width, 280px), 360px);
+/* The Chat column mirrors the native Harness sidebar's anatomy: one brand row,
+   the New conversation bar, the search field, then the history list and the
+   footer. Its width is a Chat-owned preference (the same 264-420px contract as
+   the native handle) because Chat has no workspace rail to follow; the shared
+   Chat | Agent switch measures the content column, so it stays centred at any
+   sidebar width. */
+.dsc-sidebar-column {
+  position: relative;
   flex: 0 0 auto;
+  display: flex;
+  width: var(--dsc-sidebar-width, 280px);
+  min-width: 264px;
+  /* Never squeeze the chat column below a readable width in a narrow window. */
+  max-width: calc(100vw - 460px);
+  min-height: 0;
+}
+.dsc-sidebar-column:not(.is-open) { display: none; }
+.dsc-sidebar {
+  display: flex;
+  flex: 1;
+  min-width: 0;
   min-height: 0;
   background: var(--dsc-sidebar);
   border-right: 1px solid var(--dsc-border);
   overflow: hidden;
 }
-.dsc-sidebar:not(.is-open) { display: none; }
 .dsc-sidebar-inner {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
   min-height: 0;
-  padding: 10px 8px 8px;
+  padding: 6px 8px 8px;
 }
-.dsc-sidebar-top { flex: none; display: flex; flex-direction: column; gap: 8px; padding: 0 2px; }
-.dsc-sidebar-actions { display: flex; align-items: center; gap: 6px; height: 36px; }
-.dsc-new-chat {
-  flex: 1;
-  min-width: 0;
-  height: 36px;
-  padding: 0 11px;
-  border: 1px solid var(--dsc-border);
-  border-radius: 10px;
-  background: var(--dsc-layer);
-  color: var(--dsc-text);
-  font-size: 13.3px;
-  font-weight: 560;
+/* Brand row: centers the lockup on the native sidebar's Windows logo line (a
+   40px row with a 1px optical lift, i.e. a 21px center inset) rather than the
+   taller Chat header, so the whale + wordmark sit level with the Harness Agent
+   brand beside the shared switch. */
+.dsc-sidebar-brand {
+  flex: none;
   display: flex;
   align-items: center;
-  gap: 7px;
-  text-align: left;
+  gap: 8px;
+  height: 42px;
+  padding: 0 2px 0 8px;
+  overflow: hidden;
+}
+.dsc-brand-lockup {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  color: var(--dsc-link);
+  overflow: hidden;
+}
+.dsc-brand-logo { display: block; flex: none; }
+.dsc-sidebar-collapse { flex: none; width: 28px; height: 28px; border-radius: 8px; }
+/* New conversation: native New Session geometry (38px bar, 12px radius,
+   elevated fill) with icon and label centred as one group. */
+.dsc-new-chat {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  margin: 4px 2px 10px;
+  padding: 0 12px;
+  border: 0.5px solid var(--dsc-border-l3);
+  border-radius: var(--dsc-radius);
+  background: var(--dsc-elevated);
+  color: var(--dsc-text);
+  font-size: 14px;
+  font-weight: 500;
   transition: background var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
 }
-.dsc-new-chat:hover { background: color-mix(in srgb, var(--dsc-layer) 60%, var(--dsc-layer2)); border-color: var(--dsc-border-strong); }
-.dsc-sidebar-collapse { flex: none; }
+.dsc-new-chat:hover { background: var(--dsc-elevated-hover); }
+.dsc-new-chat .dsc-icon { color: var(--dsc-muted); }
 .dsc-search {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 7px;
   height: 34px;
-  padding: 0 9px;
+  margin: 0 2px;
+  padding: 0 10px;
   border: 1px solid transparent;
   border-radius: 10px;
-  background: color-mix(in srgb, var(--dsc-text) 4%, transparent);
+  background: var(--dsc-field);
   color: var(--dsc-muted);
   cursor: text;
   transition: background var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
 }
 .dsc-search:hover { background: color-mix(in srgb, var(--dsc-text) 6%, transparent); }
 .dsc-search:focus-within { border-color: var(--dsc-border-strong); background: var(--dsc-layer); }
-.dsc-search-input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 12.9px; color: var(--dsc-text); }
+.dsc-search-input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 13px; color: var(--dsc-text); }
 .dsc-search-input::placeholder { color: var(--dsc-muted); }
-.dsc-chat-list { flex: 1; min-height: 0; overflow-y: auto; padding: 6px 2px 10px; }
-.dsc-chat-group { margin-top: 14px; }
-.dsc-chat-group:first-child { margin-top: 4px; }
+.dsc-chat-list { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 2px 10px; }
+.dsc-chat-group { margin-top: 12px; }
+.dsc-chat-group:first-child { margin-top: 2px; }
 .dsc-chat-group-label {
-  padding: 0 8px 5px;
-  font-size: 11.4px;
+  padding: 0 8px 6px;
+  font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--dsc-muted);
@@ -4009,10 +4379,10 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 36px;
+  height: 34px;
   padding: 0 8px;
   margin: 1px 0;
-  border-radius: 9px;
+  border-radius: var(--dsc-radius);
   cursor: pointer;
   transition: background var(--dsc-fast) ease;
 }
@@ -4025,7 +4395,7 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 34px;
+  height: 32px;
   padding: 0;
   border: 0;
   border-radius: 7px;
@@ -4040,8 +4410,8 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 13.1px;
-  font-weight: 455;
+  font-size: 13.4px;
+  font-weight: 450;
 }
 .dsc-chat-item.is-active .dsc-chat-item-title { font-weight: 550; }
 .dsc-chat-item-time { flex: none; font-size: 11px; color: var(--dsc-muted); }
@@ -4073,22 +4443,19 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   font-size: 13px;
 }
 .dsc-list-empty { padding: 22px 10px; text-align: center; color: var(--dsc-muted); font-size: 12.4px; line-height: 1.6; }
-.dsc-sidebar-foot {
-  flex: none;
-  padding-top: 6px;
-  border-top: 1px solid var(--dsc-border);
-}
+/* The foot keeps the native sidebar's spacing-only separation: no extra rule. */
+.dsc-sidebar-foot { flex: none; padding-top: 6px; }
 .dsc-foot-action {
   display: flex;
   align-items: center;
   gap: 9px;
   width: 100%;
-  height: 34px;
+  height: 36px;
   padding: 0 9px;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--dsc-radius);
   background: transparent;
-  font-size: 12.9px;
+  font-size: 13px;
   color: var(--dsc-muted);
   text-align: left;
   transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease;
@@ -4097,6 +4464,39 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
 .dsc-auth-dot { width: 7px; height: 7px; border-radius: 999px; margin-left: auto; background: var(--dsc-warn); }
 .dsc-auth-dot.is-ready { background: var(--dsc-success); }
 .dsc-auth-dot.is-missing { background: var(--dsc-warn); }
+/* Right-edge resize affordance: an 8px pointer-capture strip over the column
+   border, like the native frame handle. A short accent line appears on hover,
+   keyboard focus and while dragging instead of a permanent divider. */
+.dsc-sidebar-resizer {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  bottom: 0;
+  width: 8px;
+  z-index: 2;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+.dsc-sidebar-resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dsc-text) 22%, transparent);
+  opacity: 0;
+  transition: opacity var(--dsc-fast) ease;
+}
+.dsc-sidebar-resizer:hover::after,
+.dsc-sidebar-resizer:focus-visible::after,
+.dsc-sidebar-resizer.is-dragging::after { opacity: 1; }
+.dsc-sidebar-resizer:focus-visible { outline: 2px solid var(--dsc-brand); outline-offset: -1px; }
+.dsc-root[data-resizing] { cursor: col-resize; user-select: none; }
+.dsc-root[data-resizing] :where(button, a, textarea, input, label) { cursor: col-resize; }
+.dsc-root[data-resizing] .dsc-sidebar-resizer::after { opacity: 1; }
 
 /* ---------- main column ---------- */
 .dsc-main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--dsc-bg); }
@@ -4108,7 +4508,7 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   align-items: center;
   gap: 12px;
   padding: 0 14px 0 16px;
-  border-bottom: 1px solid var(--dsc-border);
+  border: 0;
   background: color-mix(in srgb, var(--dsc-bg) 88%, transparent);
   backdrop-filter: blur(14px);
   z-index: 3;
@@ -4227,63 +4627,30 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
 .dsc-modal-body::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--dsc-text) 28%, transparent); background-clip: content-box; }
 
 /* ---------- empty state ---------- */
-.dsc-empty { width: 100%; max-width: 720px; margin: 0 auto; padding: 11vh 0 20px; text-align: center; }
-.dsc-empty-title {
-  margin: 0 0 10px;
-  font-size: clamp(25px, 2.6vw, 33px);
-  font-weight: 600;
+/* A blank Chat page is one personalized line and the composer. The thread
+   centres the line in the space above the composer (auto margins keep it
+   scrollable when the window is short), so the eye lands on the greeting
+   instead of on a grid of feature cards. */
+.dsc-thread.is-empty { display: flex; flex-direction: column; scrollbar-gutter: auto; }
+.dsc-thread.is-empty .dsc-empty { margin-block: auto; }
+.dsc-empty {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 4px 5vh;
+  text-align: center;
+}
+.dsc-greeting {
+  max-width: 700px;
+  margin: 0 auto;
+  font-size: clamp(26px, 2.45vw, 32px);
+  font-weight: 560;
   letter-spacing: -0.022em;
-  line-height: 1.22;
+  line-height: 1.36;
+  color: var(--dsc-text);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
 }
-.dsc-empty-subtitle { max-width: 540px; margin: 0 auto; color: var(--dsc-muted); font-size: 14.2px; line-height: 1.72; }
-.dsc-suggestions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 30px; text-align: left; }
-.dsc-suggestion {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px 13px;
-  border: 1px solid var(--dsc-border);
-  border-radius: 13px;
-  background: var(--dsc-layer);
-  text-align: left;
-  transition: border-color var(--dsc-fast) ease, background var(--dsc-fast) ease, transform var(--dsc-fast) ease;
-}
-.dsc-suggestion:hover {
-  border-color: var(--dsc-border-strong);
-  background: color-mix(in srgb, var(--dsc-layer) 55%, var(--dsc-layer2));
-  transform: translateY(-1px);
-}
-.dsc-suggestion-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--dsc-brand-soft);
-  color: var(--dsc-link);
-  flex: none;
-}
-.dsc-suggestion-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.dsc-suggestion-title { font-size: 12.7px; font-weight: 600; }
-.dsc-suggestion-text { font-size: 12.4px; color: var(--dsc-muted); line-height: 1.5; }
-.dsc-empty-foot { margin-top: 26px; font-size: 11.6px; color: var(--dsc-muted); }
-.dsc-setup-card {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  max-width: 560px;
-  margin: 22px auto 0;
-  padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--dsc-warn) 22%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--dsc-warn) 7%, var(--dsc-layer));
-  text-align: left;
-}
-.dsc-setup-icon { color: var(--dsc-warn); flex: none; }
-.dsc-setup-body { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
-.dsc-setup-body strong { font-size: 12.9px; }
-.dsc-setup-body span { font-size: 11.9px; color: var(--dsc-muted); }
 .dsc-primary-button {
   height: 36px;
   padding: 0 15px;
@@ -4985,19 +5352,24 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   .dsc-handoff-button { padding: 0 9px; }
 }
 @media (max-width: 768px) {
-  .dsc-sidebar {
+  /* Narrow windows keep the native drawer posture: the Chat sidebar overlays
+     the content instead of taking a column, and the resize handle is moot. */
+  .dsc-sidebar-column {
     position: fixed;
     inset: var(--dsc-top, 0px) auto 0 0;
     z-index: 12;
+    display: flex;
     width: min(300px, 86vw);
-    flex-basis: auto;
+    min-width: 0;
+    max-width: none;
     box-shadow: var(--dsc-shadow);
     transform: translateX(-101%);
     transition: transform var(--ds-transition-duration-slow, 0.3s) var(--dsc-ease);
-    display: flex;
   }
-  .dsc-sidebar.is-open { transform: translateX(0); }
-  .dsc-sidebar:not(.is-open) { display: flex; }
+  .dsc-sidebar-column.is-open { transform: translateX(0); }
+  .dsc-sidebar-column:not(.is-open) { display: flex; }
+  .dsc-sidebar { border-right: 0; }
+  .dsc-sidebar-resizer { display: none; }
   .dsc-sidebar-backdrop {
     position: fixed;
     inset: var(--dsc-top, 0px) 0 0;
@@ -5015,9 +5387,9 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   /* Narrow content column: shrink the whole control, keep both labels. */
   .dsc-modeswitch { --dsc-nav-width: 208px; --dsc-nav-height: 36px; font-size: 12.6px; }
   .dsc-modeswitch-item { font-size: 12.6px; }
-  .dsc-suggestions { grid-template-columns: 1fr; }
   .dsc-source-list { grid-template-columns: 1fr; }
-  .dsc-empty { padding-top: 8vh; }
+  .dsc-greeting { font-size: clamp(23px, 5.6vw, 28px); }
+  .dsc-empty { padding-bottom: 3vh; }
 }
 @media (max-width: 620px) {
   .dsc-mode-label { display: none; }
@@ -5085,6 +5457,10 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     HandoffDialog,
     AssistantMessage,
     Composer,
+    EmptyState,
+    Sidebar,
+    SidebarResizer,
+    DeepSeekLockup,
     Markdown,
     parseMarkdown,
     renderBlock,
@@ -5093,6 +5469,15 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     thinkingDurationMs,
     chatPageIsBlank,
     readAgentPageState,
+    clampSidebarWidth,
+    greetingUserName,
+    greetingText,
+    pickGreetingIndex,
+    GREETINGS,
+    SIDEBAR_MIN,
+    SIDEBAR_MAX,
+    SIDEBAR_DEFAULT,
+    DICTS: { zh: DICT_ZH, en: DICT_EN },
   })
 }
 

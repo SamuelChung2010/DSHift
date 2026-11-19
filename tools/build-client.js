@@ -8,6 +8,7 @@ const parts = [
   '20-store.js',
   '30-markdown.js',
   '40-icons.js',
+  '45-brand.js',
   '50-components.js',
   '55-dialogs.js',
   '60-style.js',

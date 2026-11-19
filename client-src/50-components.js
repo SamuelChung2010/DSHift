@@ -464,51 +464,12 @@ function UserMessage({ message }) {
   )
 }
 
-function SuggestionCard({ suggestion, onClick }) {
-  const t = useT()
-  return h('button', { type: 'button', className: 'dsc-suggestion', onClick },
-    h('span', { className: 'dsc-suggestion-icon' }, h(Icon, { name: suggestion.icon, size: 17 })),
-    h('span', { className: 'dsc-suggestion-body' },
-      h('span', { className: 'dsc-suggestion-title' }, t(suggestion.titleKey)),
-      h('span', { className: 'dsc-suggestion-text' }, t(suggestion.textKey)),
-    ),
-  )
-}
-
 function EmptyState() {
   const t = useT()
-  const auth = useChat(state => state.auth)
-  const settings = useChat(state => state.settings)
-  const onSuggestion = (suggestion) => {
-    if (suggestion.file) {
-      chatActions.requestFilePicker()
-      return
-    }
-    chatStore.set({ draft: tr(suggestion.textKey) })
-    if (suggestion.thinking && !settings.thinking) chatActions.toggleThinking()
-    if (suggestion.search && !settings.search) chatActions.toggleSearch()
-    chatActions.requestFocus()
-  }
+  const userName = useChat(state => state.userName)
+  const greetingIndex = useChat(state => state.greetingIndex)
   return h('div', { className: 'dsc-empty' },
-    h('h1', { className: 'dsc-empty-title' }, t('greeting')),
-    h('p', { className: 'dsc-empty-subtitle' }, t('greetingSubtitle')),
-    auth?.ready === false
-      ? h('div', { className: 'dsc-setup-card' },
-          h('span', { className: 'dsc-setup-icon' }, h(Icon, { name: 'warning', size: 18 })),
-          h('div', { className: 'dsc-setup-body' },
-            h('strong', null, t('noAuthTitle')),
-            h('span', null, t('noAuthBody')),
-          ),
-          h('button', {
-            type: 'button', className: 'dsc-primary-button',
-            onClick: () => chatStore.set({ settingsOpen: true }),
-          }, t('configureNow')),
-        )
-      : null,
-    h('div', { className: 'dsc-suggestions' }, SUGGESTIONS.map(suggestion => (
-      h(SuggestionCard, { key: suggestion.id, suggestion, onClick: () => onSuggestion(suggestion) })
-    ))),
-    h('div', { className: 'dsc-empty-foot' }, t('modeSwitchHint')),
+    h('h1', { className: 'dsc-greeting' }, greetingText(t, greetingIndex, userName)),
   )
 }
 
@@ -540,7 +501,7 @@ function Thread() {
       ),
     )
   }
-  return h('div', { className: 'dsc-thread', ref, 'aria-label': tr('appTitle') },
+  return h('div', { className: cx('dsc-thread', messages.length === 0 && 'is-empty'), ref, 'aria-label': tr('appTitle') },
     messages.length === 0
       ? h(EmptyState, null)
       : h('div', { className: 'dsc-thread-inner' }, messages.map((message, index) => (
@@ -791,6 +752,120 @@ function ConversationItem({ conversation, active, renaming, onOpen, onRename, on
   )
 }
 
+/**
+ * The Chat sidebar's right-edge drag handle. It mirrors the native Harness
+ * sidebar handle: an 8px pointer-capture strip that reports rAF-throttled dx
+ * against the drag-start width, plus arrow-key resizing for keyboard users.
+ * The width it writes is the shared 264-420px contract from the store.
+ */
+function SidebarResizer({ onDraggingChange }) {
+  const t = useT()
+  const width = useChat(state => state.sidebarWidth)
+  const drag = React.useRef(null)
+  const [dragging, setDragging] = React.useState(false)
+  const setDraggingState = (value) => {
+    setDragging(value)
+    if (onDraggingChange) onDraggingChange(value)
+  }
+  const renderedWidth = (element) => {
+    const rect = element?.parentElement?.getBoundingClientRect?.()
+    return rect !== undefined && rect.width > 0 ? rect.width : width
+  }
+  // The column can be CSS-clamped on a narrow window; the announced value must
+  // describe what is actually rendered, not just the stored preference.
+  const effectiveWidth = clampSidebarWidth(width, typeof window !== 'undefined' ? window.innerWidth : undefined)
+  const endDrag = (commit) => {
+    const state = drag.current
+    if (state === null) return
+    drag.current = null
+    if (state.frame !== 0) cancelAnimationFrame(state.frame)
+    try {
+      if (state.element.hasPointerCapture?.(state.pointerId)) state.element.releasePointerCapture(state.pointerId)
+    } catch {
+      // The pointer may already be gone with its capture.
+    }
+    // A cancelled or unexpectedly lost capture must not treat clientX=0 as a
+    // rightward-to-left drag and snap the column to its minimum.
+    if (commit) {
+      chatActions.setSidebarWidth(state.startWidth + state.latest - state.startX)
+      chatActions.saveSidebarWidth()
+    }
+    setDraggingState(false)
+  }
+  React.useEffect(() => () => {
+    const state = drag.current
+    if (state === null) return
+    if (state.frame !== 0) cancelAnimationFrame(state.frame)
+    if (onDraggingChange) onDraggingChange(false)
+  }, [])
+  const onPointerDown = (event) => {
+    if (event.button !== 0 || drag.current !== null) return
+    event.preventDefault()
+    try {
+      event.currentTarget.setPointerCapture?.(event.pointerId)
+    } catch {
+      // Pointer capture is an enhancement; the move handler still receives events.
+    }
+    drag.current = {
+      element: event.currentTarget,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startWidth: renderedWidth(event.currentTarget),
+      latest: event.clientX,
+      frame: 0,
+    }
+    setDraggingState(true)
+  }
+  const onPointerMove = (event) => {
+    const state = drag.current
+    if (state === null || state.pointerId !== event.pointerId) return
+    state.latest = event.clientX
+    if (state.frame !== 0) return
+    state.frame = requestAnimationFrame(() => {
+      state.frame = 0
+      chatActions.setSidebarWidth(state.startWidth + state.latest - state.startX)
+    })
+  }
+  const onPointerUp = (event) => {
+    const state = drag.current
+    if (state === null || state.pointerId !== event.pointerId) return
+    state.latest = event.clientX
+    endDrag(true)
+  }
+  const onPointerCancel = () => {
+    // Cancellation has no reliable coordinates; keep the last live width and
+    // do not persist a gesture the user did not finish.
+    endDrag(false)
+  }
+  const onKeyDown = (event) => {
+    const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End']
+    if (!keys.includes(event.key)) return
+    event.preventDefault()
+    const step = event.shiftKey ? 32 : 16
+    if (event.key === 'Home') chatActions.setSidebarWidth(SIDEBAR_MIN)
+    else if (event.key === 'End') chatActions.setSidebarWidth(SIDEBAR_MAX)
+    else chatActions.setSidebarWidth(renderedWidth(event.currentTarget) + (event.key === 'ArrowRight' ? step : -step))
+    chatActions.saveSidebarWidth()
+  }
+  return h('div', {
+    className: cx('dsc-sidebar-resizer', dragging && 'is-dragging'),
+    role: 'separator',
+    'aria-orientation': 'vertical',
+    'aria-label': t('resizeSidebar'),
+    'aria-valuemin': SIDEBAR_MIN,
+    'aria-valuemax': SIDEBAR_MAX,
+    'aria-valuenow': Math.round(effectiveWidth),
+    title: t('resizeSidebar'),
+    tabIndex: 0,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    onPointerCancel,
+    onLostPointerCapture: onPointerCancel,
+    onKeyDown,
+  })
+}
+
 function Sidebar() {
   const t = useT()
   const conversations = useChat(state => state.conversations)
@@ -803,7 +878,9 @@ function Sidebar() {
     : conversations.filter(item => (item.title || '').toLowerCase().includes(query.trim().toLowerCase()))
   const groups = groupConversations(filtered, t)
   const closeOnMobile = () => {
-    if (typeof window !== 'undefined' && window.innerWidth <= 900) chatStore.set({ sidebarOpen: false })
+    // Same breakpoint as the drawer presentation; between 769-1024px the
+    // sidebar is still a column and selecting a conversation must not hide it.
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) chatStore.set({ sidebarOpen: false })
   }
   const select = (id) => {
     if (id === activeId) {
@@ -819,27 +896,26 @@ function Sidebar() {
     closeOnMobile()
   }
   return h('aside', { className: 'dsc-sidebar-inner' },
-    h('div', { className: 'dsc-sidebar-top' },
-      h('div', { className: 'dsc-sidebar-actions' },
-        h('button', {
-          type: 'button', className: 'dsc-new-chat',
-          onClick: () => { void chatActions.newChat(); closeOnMobile() },
-        }, h(Icon, { name: 'plus', size: 16 }), h('span', null, t('newChat'))),
-        h('button', {
-          type: 'button', className: 'dsc-icon-button dsc-sidebar-collapse', title: t('collapseSidebar'),
-          'aria-label': t('collapseSidebar'), onClick: () => chatStore.set({ sidebarOpen: false }),
-        }, h(Icon, { name: 'sidebar', size: 17 })),
-      ),
-      h('label', { className: 'dsc-search' },
-        h(Icon, { name: 'search', size: 15 }),
-        h('input', {
-          className: 'dsc-search-input',
-          value: query,
-          placeholder: t('searchChats'),
-          'aria-label': t('searchChats'),
-          onChange: (event) => setQuery(event.target.value),
-        }),
-      ),
+    h('div', { className: 'dsc-sidebar-brand' },
+      h('div', { className: 'dsc-brand-lockup' }, h(DeepSeekLockup, { height: 24 })),
+      h('button', {
+        type: 'button', className: 'dsc-icon-button dsc-sidebar-collapse', title: t('collapseSidebar'),
+        'aria-label': t('collapseSidebar'), onClick: () => chatStore.set({ sidebarOpen: false }),
+      }, h(Icon, { name: 'sidebar', size: 16 })),
+    ),
+    h('button', {
+      type: 'button', className: 'dsc-new-chat',
+      onClick: () => { void chatActions.newChat(); closeOnMobile() },
+    }, h(Icon, { name: 'plus', size: 15 }), h('span', null, t('newChat'))),
+    h('label', { className: 'dsc-search' },
+      h(Icon, { name: 'search', size: 15 }),
+      h('input', {
+        className: 'dsc-search-input',
+        value: query,
+        placeholder: t('searchChats'),
+        'aria-label': t('searchChats'),
+        onChange: (event) => setQuery(event.target.value),
+      }),
     ),
     h('div', { className: 'dsc-chat-list' },
       groups.length === 0
@@ -868,7 +944,7 @@ function Sidebar() {
         type: 'button', className: 'dsc-foot-action',
         title: t('chatSettings'),
         onClick: () => chatStore.set({ settingsOpen: true }),
-      }, h(Icon, { name: 'settings', size: 17 }), h('span', null, t('settings')),
+      }, h(Icon, { name: 'settings', size: 16 }), h('span', null, t('settings')),
         h('span', { className: cx('dsc-auth-dot', auth?.ready ? 'is-ready' : 'is-missing'), title: authSourceLabel(auth, t) }),
       ),
     ),
@@ -884,6 +960,7 @@ function ChatHeader() {
   const sidebarOpen = useChat(state => state.sidebarOpen)
   const conversation = conversations.find(item => item.id === activeId)
   const canDraft = messages.length > 0
+  const blankHome = activeId === null && messages.length === 0
   const hostHandoff = useChat(state => state.bootData?.handoff?.enabled !== false)
   return h('header', { className: 'dsc-header' },
     h('div', { className: 'dsc-header-left' },
@@ -894,7 +971,11 @@ function ChatHeader() {
             onClick: () => chatStore.set({ sidebarOpen: true }),
           }, h(Icon, { name: 'menu', size: 18 }))
         : null,
-      h('div', { className: 'dsc-header-title' }, conversation?.title || t('newChatTitle')),
+      // A blank home already carries its greeting; a repeated "New chat" title
+      // would only add chrome above it.
+      blankHome
+        ? null
+        : h('div', { className: 'dsc-header-title' }, conversation?.title || t('newChatTitle')),
     ),
     h('div', { className: 'dsc-header-right' },
       auth?.ready === false
@@ -1148,6 +1229,8 @@ function ChatRoot() {
   const confirm = useChat(state => state.confirm)
   const handoff = useChat(state => state.handoff)
   const sidebarOpen = useChat(state => state.sidebarOpen)
+  const sidebarWidth = useChat(state => state.sidebarWidth)
+  const [resizing, setResizing] = React.useState(false)
   const rootRef = React.useRef(null)
   const sidebarRef = React.useRef(null)
   React.useEffect(() => {
@@ -1180,7 +1263,15 @@ function ChatRoot() {
           chatActions.closeHandoff()
           return
         }
-        if (settingsOpen) chatStore.set({ settingsOpen: false })
+        if (settingsOpen) {
+          chatStore.set({ settingsOpen: false })
+          return
+        }
+        // On the narrow drawer presentation Escape dismisses the sidebar, the
+        // same gesture as the native drawer.
+        if (chatStore.state.sidebarOpen && typeof window !== 'undefined' && window.innerWidth <= 768) {
+          chatStore.set({ sidebarOpen: false })
+        }
         return
       }
       if (event.key !== 'Tab') return
@@ -1228,12 +1319,17 @@ function ChatRoot() {
     className: 'dsc-root', role: 'region', 'aria-label': t('appTitle'), tabIndex: -1,
     ref: rootRef,
     'data-dsc-mode': 'chat',
+    'data-resizing': resizing || undefined,
   },
     h('div', {
-      className: cx('dsc-sidebar', sidebarOpen && 'is-open'),
+      className: cx('dsc-sidebar-column', sidebarOpen && 'is-open'),
       'aria-hidden': !sidebarOpen ? 'true' : undefined,
       ref: sidebarRef,
-    }, h(Sidebar, null)),
+      style: { '--dsc-sidebar-width': `${sidebarWidth}px` },
+    },
+      h('aside', { className: 'dsc-sidebar' }, h(Sidebar, null)),
+      sidebarOpen ? h(SidebarResizer, { onDraggingChange: setResizing }) : null,
+    ),
     sidebarOpen ? h('button', {
       type: 'button', className: 'dsc-sidebar-backdrop', 'aria-label': t('close'),
       onClick: () => chatStore.set({ sidebarOpen: false }),
