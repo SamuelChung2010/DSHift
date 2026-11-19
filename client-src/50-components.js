@@ -540,7 +540,7 @@ function Thread() {
       ),
     )
   }
-  return h('div', { className: 'dsc-thread', ref, role: 'log', 'aria-live': 'polite' },
+  return h('div', { className: 'dsc-thread', ref, 'aria-label': tr('appTitle') },
     messages.length === 0
       ? h(EmptyState, null)
       : h('div', { className: 'dsc-thread-inner' }, messages.map((message, index) => (
@@ -762,20 +762,16 @@ function ConversationItem({ conversation, active, renaming, onOpen, onRename, on
   }
   return h('div', {
     className: cx('dsc-chat-item', active && 'is-active'),
-    role: 'button',
-    tabIndex: 0,
-    onClick: onOpen,
-    onKeyDown: (event) => {
-      if (event.target !== event.currentTarget) return
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault()
-        onOpen()
-      }
-    },
     title: conversation.title || t('newChatTitle'),
   },
-    h('span', { className: 'dsc-chat-item-title' }, conversation.title || t('newChatTitle')),
-    h('span', { className: 'dsc-chat-item-time' }, relativeTime(conversation.updatedAt, t)),
+    h('button', {
+      type: 'button',
+      className: 'dsc-chat-item-main',
+      onClick: onOpen,
+    },
+      h('span', { className: 'dsc-chat-item-title' }, conversation.title || t('newChatTitle')),
+      h('span', { className: 'dsc-chat-item-time' }, relativeTime(conversation.updatedAt, t)),
+    ),
     h('span', { className: 'dsc-chat-item-actions' },
       h('button', {
         type: 'button', className: 'dsc-icon-button is-small', title: t('rename'), 'aria-label': t('rename'),
@@ -883,10 +879,12 @@ function ChatHeader() {
   const t = useT()
   const activeId = useChat(state => state.activeId)
   const conversations = useChat(state => state.conversations)
+  const messages = useChat(state => state.messages)
   const auth = useChat(state => state.auth)
   const sidebarOpen = useChat(state => state.sidebarOpen)
   const conversation = conversations.find(item => item.id === activeId)
-  const canHandoff = useChat(state => state.bootData?.handoff?.enabled !== false)
+  const canDraft = messages.length > 0
+  const hostHandoff = useChat(state => state.bootData?.handoff?.enabled !== false)
   return h('header', { className: 'dsc-header' },
     h('div', { className: 'dsc-header-left' },
       !sidebarOpen
@@ -905,11 +903,18 @@ function ChatHeader() {
             onClick: () => chatStore.set({ settingsOpen: true }),
           }, h(Icon, { name: 'warning', size: 13 }), h('span', null, t('authMissing')))
         : null,
+      !sidebarOpen
+        ? h('button', {
+            type: 'button', className: 'dsc-icon-button',
+            title: t('chatSettings'), 'aria-label': t('chatSettings'),
+            onClick: () => chatStore.set({ settingsOpen: true }),
+          }, h(Icon, { name: 'settings', size: 17 }))
+        : null,
       h('button', {
         type: 'button',
         className: 'dsc-handoff-button',
-        title: canHandoff ? t('handoffSubtitle') : t('handoffUnavailable'),
-        disabled: !canHandoff,
+        title: !canDraft ? t('handoffEmpty') : hostHandoff ? t('handoffSubtitle') : t('handoffUnavailable'),
+        disabled: !canDraft,
         onClick: () => { void chatActions.openHandoff() },
       }, h(Icon, { name: 'agent', size: 15 }), h('span', { className: 'dsc-handoff-label' }, t('handoff'))),
     ),
@@ -921,24 +926,30 @@ function ChatHeader() {
  * overlay (root scope, outside every column), so it is part of the shell
  * chrome rather than of either view: it sits in the desktop caption row above
  * the window's drag strip, stays visible in both modes, and switches the whole
- * application view.
+ * application view. The toast stack rides along because messages raised while
+ * the Chat surface is closed (`handoffSent`, a background stream failure) must
+ * still be visible.
  */
 function ModeSwitch() {
   const t = useT()
   const open = useChat(state => state.open)
   const item = (mode, label, icon, selected) => h('button', {
     type: 'button',
-    role: 'tab',
-    'aria-selected': selected,
+    'aria-pressed': selected,
     className: cx('dsc-modeswitch-item', selected && 'is-active'),
     title: mode === 'chat' ? t('switchToChat') : t('switchToAgent'),
     onClick: () => chatActions.setMode(mode),
   }, h(Icon, { name: icon, size: 14 }), h('span', { className: 'dsc-modeswitch-label' }, label))
-  return h('div', { className: 'dsc-modeswitch', role: 'tablist', 'aria-label': t('modeSwitchLabel') },
-    item('chat', t('chatMode'), 'chat', open),
-    item('agent', t('agentMode'), 'agent', !open),
+  return h(Fragment, null,
+    h('div', { className: 'dsc-modeswitch', role: 'group', 'aria-label': t('modeSwitchLabel') },
+      item('chat', t('chatMode'), 'chat', open),
+      item('agent', t('agentMode'), 'agent', !open),
+    ),
+    h(Toasts, null),
   )
 }
+
+const FOCUSABLE = 'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])'
 
 function ChatRoot() {
   const t = useT()
@@ -949,24 +960,75 @@ function ChatRoot() {
   const confirm = useChat(state => state.confirm)
   const handoff = useChat(state => state.handoff)
   const sidebarOpen = useChat(state => state.sidebarOpen)
+  const rootRef = React.useRef(null)
   const sidebarRef = React.useRef(null)
   React.useEffect(() => {
     if (!open) return
     const node = sidebarRef.current
     if (node) node.inert = !sidebarOpen
   }, [open, sidebarOpen])
+  // Keep the drawer in step with the breakpoint: a window that crosses it must
+  // not leave the fixed drawer covering the whole Chat surface.
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined
+    const query = window.matchMedia('(max-width: 900px)')
+    const onChange = (event) => chatStore.set({ sidebarOpen: !event.matches })
+    if (typeof query.addEventListener === 'function') query.addEventListener('change', onChange)
+    return () => {
+      if (typeof query.removeEventListener === 'function') query.removeEventListener('change', onChange)
+    }
+  }, [])
   React.useEffect(() => {
     if (!open) return undefined
     const onKeyDown = (event) => {
-      if (event.key !== 'Escape') return
-      if (confirm !== null) {
-        chatStore.set({ confirm: null })
+      if (event.key === 'Escape') {
+        if (confirm !== null) {
+          chatStore.set({ confirm: null })
+          return
+        }
+        if (chatStore.state.handoff !== null && chatStore.state.handoff.busy !== true) {
+          chatActions.closeHandoff()
+          return
+        }
+        if (settingsOpen) chatStore.set({ settingsOpen: false })
         return
       }
-      if (chatStore.state.handoff !== null) {
-        chatActions.closeHandoff()
+      if (event.key !== 'Tab') return
+      const root = rootRef.current
+      if (!root) return
+      // A dialog traps focus on its own; otherwise the surface and the shared
+      // switch form one scope, so Tab never reaches the native Agent UI that
+      // stays mounted underneath.
+      const modal = root.querySelector('.dsc-modal, .dsc-confirm')
+      const scope = modal ?? root
+      // The share switch is a fixed-position shell entry; its own buttons are
+      // laid out inside it, so they carry an offsetParent while the pill does not.
+      const extras = modal === null ? [...document.querySelectorAll('.dsc-modeswitch button')] : []
+      const focusables = [...scope.querySelectorAll(FOCUSABLE), ...extras].filter(element => (
+        element.offsetParent !== null
+        && element.closest('[inert]') === null
+        && element.getAttribute('aria-hidden') !== 'true'
+      ))
+      if (focusables.length === 0) {
+        event.preventDefault()
         return
-      }      if (settingsOpen) chatStore.set({ settingsOpen: false })
+      }
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const current = document.activeElement
+      if (current === null || !focusables.includes(current)) {
+        event.preventDefault()
+        const target = event.shiftKey ? last : first
+        target.focus()
+        return
+      }
+      if (event.shiftKey && current === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && current === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
@@ -974,6 +1036,7 @@ function ChatRoot() {
   if (!open) return null
   return h('div', {
     className: 'dsc-root', role: 'region', 'aria-label': t('appTitle'), tabIndex: -1,
+    ref: rootRef,
     'data-dsc-mode': 'chat',
   },
     h('div', {
@@ -993,6 +1056,5 @@ function ChatRoot() {
     settingsOpen ? h(SettingsDialog, null) : null,
     confirm !== null ? h(ConfirmDialog, null) : null,
     handoff !== null ? h(HandoffDialog, null) : null,
-    h(Toasts, null),
   )
 }

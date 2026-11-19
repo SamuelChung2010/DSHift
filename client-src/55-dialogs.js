@@ -87,7 +87,7 @@ function SettingsDialog() {
       h('header', { className: 'dsc-modal-head' },
         h('div', null,
           h('h2', null, t('settingsTitle')),
-          h('p', { className: 'dsc-modal-sub' }, t('modeSwitchHint')),
+          h('p', { className: 'dsc-modal-sub' }, t('settingsSubtitle')),
         ),
         h('button', {
           type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
@@ -236,17 +236,22 @@ function HandoffDialog() {
         ),
         h('button', {
           type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
-          autoFocus: true, onClick: close,
+          autoFocus: true, disabled: handoff.busy, onClick: close,
         }, h(Icon, { name: 'close', size: 18 })),
       ),
       h('div', { className: 'dsc-modal-body' },
         !hostReady
           ? h('div', { className: 'dsc-notice' }, h(Icon, { name: 'warning', size: 16 }), h('span', null, t('handoffRestart')))
           : workspaces.length === 0
-            ? h('div', { className: 'dsc-notice' }, h(Icon, { name: 'warning', size: 16 }), h('span', null, t('handoffWorkspaceEmpty')))
+            ? h('div', { className: 'dsc-notice' },
+                h(Icon, { name: 'warning', size: 16 }),
+                h('span', null, t('handoffWorkspaceEmpty')),
+                h('button', { type: 'button', className: 'dsc-inline-button', onClick: () => chatActions.setMode('agent') }, t('goToAgentMode')),
+              )
             : h('div', { className: 'dsc-field' },
-                h('span', { className: 'dsc-field-label' }, t('handoffWorkspace')),
+                h('label', { className: 'dsc-field-label', htmlFor: 'handoff-workspace' }, t('handoffWorkspace')),
                 h('select', {
+                  id: 'handoff-workspace',
                   className: 'dsc-select',
                   value: handoff.workspaceId ?? '',
                   onChange: (event) => chatActions.setHandoffWorkspace(event.target.value),
@@ -286,10 +291,12 @@ function HandoffDialog() {
           handoff.generating
             ? h('div', { className: 'dsc-handoff-loading' }, h(Spinner, { size: 16 }), t('handoffDrafting'))
             : h('textarea', {
+                id: 'handoff-brief',
                 className: 'dsc-textarea dsc-handoff-brief',
                 value: brief,
                 rows: 12,
                 spellCheck: false,
+                'aria-label': t('handoffEditorLabel'),
                 onChange: (event) => chatActions.setHandoffBrief(event.target.value),
               }),
           handoff.warning !== '' && !handoff.generating
@@ -302,13 +309,16 @@ function HandoffDialog() {
       ),
       h('footer', { className: 'dsc-modal-foot' },
         h('div', { className: 'dsc-modal-foot-note' }, workspaces.length === 0 ? t('handoffWorkspaceEmpty') : ''),
-        h('button', { type: 'button', className: 'dsc-secondary-button', onClick: close }, t('cancel')),
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button', disabled: handoff.busy, onClick: close,
+        }, t('cancel')),
         h('button', {
           type: 'button',
           className: 'dsc-primary-button',
           disabled: !canSend || workspaces.length === 0,
           onClick: () => { void chatActions.submitHandoff() },
-        }, handoff.busy ? t('handoffSending') : t('handoffSend')),      ),
+        }, handoff.busy ? t('handoffSending') : t('handoffSend')),
+      ),
     ),
   )
 }

@@ -39,13 +39,19 @@ const CHAT_CSS = `
   --dsc-mono: var(--ds-font-family-code, 'SF Mono', Consolas, 'Liberation Mono', monospace);
   --dsc-ease: var(--ds-ease-in-out, cubic-bezier(0.4, 0, 0.2, 1));
   --dsc-fast: var(--ds-transition-duration-fast, 0.1s);
+  /* The band above the Chat surface that the platform chrome occupies. Windows
+     publishes its 40px caption row, macOS its 48px top strip; a plain browser
+     gets a 44px band of its own so the shared switch always has a home and is
+     never covered by the chat surface. Fullscreen hides the native chrome, so
+     only the switch band remains. */
+  --dsc-top: var(--dsh-frame-chrome-top, var(--dsh-frame-top-clearance, 44px));
   position: fixed;
-  top: var(--dsh-frame-chrome-top, 0px);
+  top: var(--dsc-top);
   right: 0;
   bottom: 0;
   left: 0;
   /* Above the mode switch so an open dialog backdrop also covers it; the box
-     itself starts below the caption row, so the switch stays clickable. */
+     itself starts below the band, so the switch stays clickable. */
   z-index: 30;
   display: flex;
   overflow: hidden;
@@ -64,7 +70,7 @@ const CHAT_CSS = `
 .dsc-root button { cursor: pointer; }
 .dsc-root button:disabled { cursor: default; }
 .dsc-root ::selection { background: var(--dsc-brand-soft-strong); }
-.dsc-root :focus-visible { outline: 2px solid var(--dsc-brand); outline-offset: 2px; border-radius: 6px; }
+.dsc-root :focus-visible { outline: 2px solid var(--dsc-brand); outline-offset: 2px; }
 .dsc-icon { display: block; flex: none; }
 .dsc-spinner {
   display: inline-block;
@@ -103,6 +109,8 @@ const CHAT_CSS = `
 html[data-windows-titlebar] .dsc-modeswitch { top: 4px; height: 32px; }
 html[data-platform='darwin'] .dsc-modeswitch { top: 9px; }
 html[data-windows-titlebar][data-fullscreen] .dsc-modeswitch { top: 8px; }
+/* Fullscreen keeps only the switch band above the chat surface. */
+html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
 .dsc-modeswitch-item {
   display: inline-flex;
   align-items: center;
@@ -204,7 +212,23 @@ html[data-windows-titlebar][data-fullscreen] .dsc-modeswitch { top: 8px; }
   transition: background var(--dsc-fast) ease;
 }
 .dsc-chat-item:hover { background: var(--dsc-hover); }
+.dsc-chat-item:focus-within { background: var(--dsc-hover); }
 .dsc-chat-item.is-active { background: var(--dsc-active); }
+.dsc-chat-item-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+.dsc-chat-item-main:focus-visible { outline-offset: 0; }
 .dsc-chat-item-title {
   flex: 1;
   min-width: 0;
@@ -228,8 +252,10 @@ html[data-windows-titlebar][data-fullscreen] .dsc-modeswitch { top: 8px; }
   background: linear-gradient(to right, transparent, var(--dsc-sidebar) 30%);
 }
 .dsc-chat-item:hover .dsc-chat-item-actions,
+.dsc-chat-item:focus-within .dsc-chat-item-actions,
 .dsc-chat-item.is-active .dsc-chat-item-actions { display: flex; }
 .dsc-chat-item:hover .dsc-chat-item-time,
+.dsc-chat-item:focus-within .dsc-chat-item-time,
 .dsc-chat-item.is-active .dsc-chat-item-time { visibility: hidden; }
 .dsc-chat-item.is-renaming { background: var(--dsc-layer); border: 1px solid var(--dsc-border-strong); }
 .dsc-rename-input {
@@ -786,6 +812,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 /* ---------- message actions / notices ---------- */
 .dsc-msg-actions { display: flex; align-items: center; gap: 2px; margin-top: 7px; opacity: 0; transition: opacity var(--dsc-fast) ease; }
 .dsc-msg-assistant:hover .dsc-msg-actions,
+.dsc-msg-assistant:focus-within .dsc-msg-actions,
 .dsc-msg-actions.is-last { opacity: 1; }
 .dsc-msg-action {
   display: inline-flex;
@@ -1147,7 +1174,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 @media (max-width: 900px) {
   .dsc-sidebar {
     position: fixed;
-    inset: var(--dsh-frame-chrome-top, 0px) auto 0 0;
+    inset: var(--dsc-top, 0px) auto 0 0;
     z-index: 12;
     width: min(300px, 86vw);
     flex-basis: auto;
@@ -1160,7 +1187,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   .dsc-sidebar:not(.is-open) { display: flex; }
   .dsc-sidebar-backdrop {
     position: fixed;
-    inset: var(--dsh-frame-chrome-top, 0px) 0 0;
+    inset: var(--dsc-top, 0px) 0 0;
     z-index: 11;
     border: 0;
     padding: 0;

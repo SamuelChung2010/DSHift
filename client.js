@@ -193,6 +193,10 @@ const DICT_ZH = {
   handoffShortcut: '也可以先复制，稍后自行粘贴到 Agent。',
   handoffRestart: 'Chat 的宿主端代码已更新，需要刷新插件或重启 Harness 后才能创建 Agent 会话。',
   handoffNoSession: '无法打开新建的 Agent 会话，请在 Agent 模式中手动选择。',
+  handoffPromptPartial: 'Agent 会话已创建，但任务说明未送达（{message}）。可以在该会话里重新粘贴。',
+  goToAgentMode: '前往 Agent 模式',
+  settingsSubtitle: 'Chat 的认证、默认选项与数据位置。',
+  emptyResponse: 'DeepSeek 返回了空响应。',
   copyBrief: '复制',
   // Mode / layout
   chatSettings: 'Chat 设置',
@@ -387,6 +391,10 @@ const DICT_EN = {
   handoffShortcut: 'You can also copy it and paste it in Agent mode yourself.',
   handoffRestart: 'The Chat Host half has changed. Refresh the plugin or restart Harness before creating Agent sessions.',
   handoffNoSession: 'The new Agent session could not be opened. Pick it in Agent mode.',
+  handoffPromptPartial: 'The Agent session was created, but the brief was not delivered ({message}). Paste it in that session.',
+  goToAgentMode: 'Go to Agent mode',
+  settingsSubtitle: 'Chat authentication, defaults and data location.',
+  emptyResponse: 'DeepSeek returned an empty response.',
   copyBrief: 'Copy',
   chatSettings: 'Chat settings',
   openSettings: 'Open settings',
@@ -464,6 +472,7 @@ const chatStore = {
     settings: { authMode: 'auto', thinking: false, search: false, systemPrompt: '' },
     conversations: [],
     workspaces: [],
+    limits: { maxFiles: MAX_FILES, maxUploadBytes: MAX_UPLOAD_MB, maxUserDataBytes: MAX_USER_DATA_MB * 1024 * 1024 },
     activeId: typeof stored.activeId === 'string' ? stored.activeId : null,
     messages: [],
     conversationLoading: false,
@@ -557,7 +566,9 @@ async function hostJson(path, body) {
   try {
     value = JSON.parse(text)
   } catch {
-    throw new Error(text || `HTTP ${response.status}`)
+    const error = new Error(text || `HTTP ${response.status}`)
+    error.status = response.status
+    throw error
   }
   if (!response.ok) {
     const error = new Error(value?.error?.message || `HTTP ${response.status}`)
@@ -593,7 +604,7 @@ async function streamChat(payload, { signal, onItem }) {
     error.status = response.status
     throw error
   }
-  if (response.body === null) throw new Error('DeepSeek 返回了空响应')
+  if (response.body === null) throw new Error(tr('emptyResponse'))
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
@@ -700,6 +711,7 @@ async function ensureBoot(force = false) {
         settings: data.settings,
         conversations: data.conversations ?? [],
         workspaces: Array.isArray(data.workspaces) ? data.workspaces : [],
+        limits: normalizeLimits(data.limits),
       })
       const active = chatStore.state.activeId
       const exists = active !== null && (data.conversations ?? []).some(item => item.id === active)
@@ -755,6 +767,14 @@ async function loadConversation(id, { quiet = false } = {}) {
 }
 
 function openChat() {
+  // Chat is a full view: a native right panel painted above the frame overlay
+  // would otherwise cover it. The native service owns this action, so the
+  // Agent layout stays consistent when the user switches back.
+  try {
+    appCtx?.get?.('layout')?.closeRightbar?.()
+  } catch {
+    // Optional service: the mode still opens without it.
+  }
   chatStore.set({ open: true, focusRequest: chatStore.state.focusRequest + 1 })
   writeStored({ open: true })
   void ensureBoot()
@@ -848,10 +868,10 @@ function requestDeleteConversation(id, title) {
 let settingsSequence = 0
 let settingsChain = Promise.resolve()
 
-async function saveSettings(patch, { quiet = true } = {}) {
+async function saveSettings(patch, { quiet = true, rollback = null } = {}) {
   const sequence = ++settingsSequence
-  const previous = chatStore.state.settings
-  chatStore.set({ settings: { ...previous, ...patch } })
+  const before = rollback ?? chatStore.state.settings
+  chatStore.set({ settings: { ...chatStore.state.settings, ...patch } })
   const request = settingsChain.then(() => hostJson('/api/deepseek-chat/settings', patch))
   settingsChain = request.catch(() => {})
   try {
@@ -864,22 +884,24 @@ async function saveSettings(patch, { quiet = true } = {}) {
     }
     return true
   } catch (error) {
-    if (sequence === settingsSequence) chatStore.set({ settings: previous })
+    if (sequence === settingsSequence) chatStore.set({ settings: before })
     chatStore.toast(tr('settingsSaveFailed', { message: error instanceof Error ? error.message : String(error) }), 'error')
     return false
   }
 }
 
 function toggleThinking() {
-  const next = !chatStore.state.settings.thinking
-  chatStore.set({ settings: { ...chatStore.state.settings, thinking: next } })
-  void saveSettings({ thinking: next })
+  const before = chatStore.state.settings
+  const next = !before.thinking
+  chatStore.set({ settings: { ...before, thinking: next } })
+  void saveSettings({ thinking: next }, { rollback: before })
 }
 
 function toggleSearch() {
-  const next = !chatStore.state.settings.search
-  chatStore.set({ settings: { ...chatStore.state.settings, search: next } })
-  void saveSettings({ search: next })
+  const before = chatStore.state.settings
+  const next = !before.search
+  chatStore.set({ settings: { ...before, search: next } })
+  void saveSettings({ search: next }, { rollback: before })
 }
 
 async function saveKey(key) {
@@ -927,7 +949,19 @@ function formatTime(timestamp) {
 }
 
 function attachmentFileLimit(name) {
-  return LAYOUT_EXT.has(fileExtension(name)) || isImageName(name, '') ? MAX_UPLOAD_MB : MAX_USER_DATA_MB
+  const limits = chatStore.state.limits
+  const bytes = LAYOUT_EXT.has(fileExtension(name)) || isImageName(name, '') ? limits.maxUploadBytes : limits.maxUserDataBytes
+  return bytes / 1024 / 1024
+}
+
+function normalizeLimits(input) {
+  const value = input !== null && typeof input === 'object' ? input : {}
+  const positive = (candidate, fallback) => (typeof candidate === 'number' && Number.isFinite(candidate) && candidate > 0 ? candidate : fallback)
+  return {
+    maxFiles: Math.floor(positive(value.maxFiles, MAX_FILES)),
+    maxUploadBytes: positive(value.maxUploadBytes, MAX_UPLOAD_MB * 1024 * 1024),
+    maxUserDataBytes: positive(value.maxUserDataBytes, MAX_USER_DATA_MB * 1024 * 1024),
+  }
 }
 
 let uploadActive = 0
@@ -1001,8 +1035,9 @@ async function uploadAttachment(attachment, file, signal) {
 function addFiles(fileList) {
   const files = [...fileList]
   const existing = chatStore.state.attachments.length
-  if (existing + files.length > MAX_FILES) {
-    chatStore.toast(tr('tooManyFiles', { count: MAX_FILES }), 'warning')
+  const maxFiles = chatStore.state.limits.maxFiles
+  if (existing + files.length > maxFiles) {
+    chatStore.toast(tr('tooManyFiles', { count: maxFiles }), 'warning')
     return
   }
   const accepted = []
@@ -1453,6 +1488,21 @@ function handoffPatch(patch) {
   chatStore.set({ handoff: { ...current, ...patch } })
 }
 
+/** Refresh the workspace list without flashing the boot view. */
+async function refreshBootstrapSnapshot() {
+  try {
+    const data = await hostJson('/api/deepseek-chat/bootstrap')
+    const current = chatStore.state
+    chatStore.set({
+      workspaces: Array.isArray(data.workspaces) ? data.workspaces : current.workspaces,
+      bootData: { ...(current.bootData ?? {}), ...data },
+      limits: normalizeLimits(data.limits),
+    })
+  } catch {
+    // Keep the last known snapshot; the dialog explains what is missing.
+  }
+}
+
 async function openHandoff() {
   if (chatStore.state.handoff !== null) return
   if (chatStore.state.messages.length === 0 || chatStore.state.activeId === null) {
@@ -1475,10 +1525,14 @@ async function openHandoff() {
       error: '',
     },
   })
+  await refreshBootstrapSnapshot()
+  if (chatStore.state.handoff === null) return
+  handoffPatch({ workspaceId: chatStore.state.handoff.workspaceId || defaultWorkspaceId() })
   await draftHandoff()
 }
 
 function closeHandoff() {
+  if (chatStore.state.handoff?.busy === true) return
   handoffSequence += 1
   chatStore.set({ handoff: null })
 }
@@ -1523,20 +1577,40 @@ function setHandoffInstruction(instruction) {
 }
 
 function setHandoffWorkspace(workspaceId) {
+  stored.workspaceId = workspaceId
   handoffPatch({ workspaceId })
   writeStored({ workspaceId })
 }
 
-/** Open the created Session through the native workspace navigation. */
-function openAgentSession(sessionId) {
-  try {
-    appCtx?.get?.('uiWorkspace')?.openSession?.(sessionId)
-    appCtx?.get?.('layout')?.selectPanel?.(null)
-    return true
-  } catch (error) {
-    console.error('deepseek-chat: could not open the Agent session', error)
-    return false
+const AGENT_OPEN_ATTEMPTS = 4
+const AGENT_OPEN_DELAY_MS = 350
+
+/**
+ * Open the created Session through the native workspace navigation. The
+ * Session was created on the Host, so the browser's session list can lag one
+ * frame behind; retry briefly instead of reporting a false success.
+ */
+async function openAgentSession(sessionId) {
+  const uiWorkspace = appCtx?.get?.('uiWorkspace')
+  if (uiWorkspace === undefined || typeof uiWorkspace.openSession !== 'function') return false
+  for (let attempt = 0; attempt < AGENT_OPEN_ATTEMPTS; attempt += 1) {
+    try {
+      uiWorkspace.openSession(sessionId)
+      try {
+        appCtx?.get?.('layout')?.selectPanel?.(null)
+      } catch {
+        // Returning to the Conversation is a convenience, not a requirement.
+      }
+      return true
+    } catch (error) {
+      if (attempt === AGENT_OPEN_ATTEMPTS - 1) {
+        console.error('deepseek-chat: could not open the Agent session', error)
+        return false
+      }
+      await new Promise(resolve => setTimeout(resolve, AGENT_OPEN_DELAY_MS))
+    }
   }
+  return false
 }
 
 async function submitHandoff() {
@@ -1547,16 +1621,19 @@ async function submitHandoff() {
     handoffPatch({ error: tr('handoffEmpty') })
     return
   }
+  const sequence = ++handoffSequence
   handoffPatch({ busy: true, error: '' })
-  let sessionId = ''
+  const conversation = chatStore.state.conversations.find(item => item.id === chatStore.state.activeId)
+  let result
   try {
-    const data = await hostJson('/api/deepseek-chat/handoff/send', {
+    result = await hostJson('/api/deepseek-chat/handoff/send', {
       prompt: brief,
       ...(handoff.workspaceId === '' ? {} : { workspaceId: handoff.workspaceId }),
+      ...(conversation?.title ? { title: conversation.title } : {}),
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     })
-    sessionId = typeof data.sessionId === 'string' ? data.sessionId : ''
   } catch (error) {
+    if (sequence !== handoffSequence) return
     handoffPatch({
       busy: false,
       error: error?.status === 404 || error?.status === 501
@@ -1565,10 +1642,18 @@ async function submitHandoff() {
     })
     return
   }
+  const sessionId = typeof result?.sessionId === 'string' ? result.sessionId : ''
+  // Open the Session before closing the Chat surface so a navigation failure
+  // leaves the dialog (and its copy action) in place instead of stranding it.
+  const opened = sessionId === '' ? false : await openAgentSession(sessionId)
   chatStore.set({ handoff: null })
   closeChat()
-  if (sessionId === '' || !openAgentSession(sessionId)) {
+  if (!opened) {
     chatStore.toast(tr('handoffNoSession'), 'warning')
+    return
+  }
+  if (typeof result?.warning === 'string' && result.warning !== '') {
+    chatStore.toast(tr('handoffPromptPartial', { message: result.warning }), 'warning')
     return
   }
   chatStore.toast(tr('handoffSent'), 'success')
@@ -2521,7 +2606,7 @@ function Thread() {
       ),
     )
   }
-  return h('div', { className: 'dsc-thread', ref, role: 'log', 'aria-live': 'polite' },
+  return h('div', { className: 'dsc-thread', ref, 'aria-label': tr('appTitle') },
     messages.length === 0
       ? h(EmptyState, null)
       : h('div', { className: 'dsc-thread-inner' }, messages.map((message, index) => (
@@ -2743,20 +2828,16 @@ function ConversationItem({ conversation, active, renaming, onOpen, onRename, on
   }
   return h('div', {
     className: cx('dsc-chat-item', active && 'is-active'),
-    role: 'button',
-    tabIndex: 0,
-    onClick: onOpen,
-    onKeyDown: (event) => {
-      if (event.target !== event.currentTarget) return
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault()
-        onOpen()
-      }
-    },
     title: conversation.title || t('newChatTitle'),
   },
-    h('span', { className: 'dsc-chat-item-title' }, conversation.title || t('newChatTitle')),
-    h('span', { className: 'dsc-chat-item-time' }, relativeTime(conversation.updatedAt, t)),
+    h('button', {
+      type: 'button',
+      className: 'dsc-chat-item-main',
+      onClick: onOpen,
+    },
+      h('span', { className: 'dsc-chat-item-title' }, conversation.title || t('newChatTitle')),
+      h('span', { className: 'dsc-chat-item-time' }, relativeTime(conversation.updatedAt, t)),
+    ),
     h('span', { className: 'dsc-chat-item-actions' },
       h('button', {
         type: 'button', className: 'dsc-icon-button is-small', title: t('rename'), 'aria-label': t('rename'),
@@ -2864,10 +2945,12 @@ function ChatHeader() {
   const t = useT()
   const activeId = useChat(state => state.activeId)
   const conversations = useChat(state => state.conversations)
+  const messages = useChat(state => state.messages)
   const auth = useChat(state => state.auth)
   const sidebarOpen = useChat(state => state.sidebarOpen)
   const conversation = conversations.find(item => item.id === activeId)
-  const canHandoff = useChat(state => state.bootData?.handoff?.enabled !== false)
+  const canDraft = messages.length > 0
+  const hostHandoff = useChat(state => state.bootData?.handoff?.enabled !== false)
   return h('header', { className: 'dsc-header' },
     h('div', { className: 'dsc-header-left' },
       !sidebarOpen
@@ -2886,11 +2969,18 @@ function ChatHeader() {
             onClick: () => chatStore.set({ settingsOpen: true }),
           }, h(Icon, { name: 'warning', size: 13 }), h('span', null, t('authMissing')))
         : null,
+      !sidebarOpen
+        ? h('button', {
+            type: 'button', className: 'dsc-icon-button',
+            title: t('chatSettings'), 'aria-label': t('chatSettings'),
+            onClick: () => chatStore.set({ settingsOpen: true }),
+          }, h(Icon, { name: 'settings', size: 17 }))
+        : null,
       h('button', {
         type: 'button',
         className: 'dsc-handoff-button',
-        title: canHandoff ? t('handoffSubtitle') : t('handoffUnavailable'),
-        disabled: !canHandoff,
+        title: !canDraft ? t('handoffEmpty') : hostHandoff ? t('handoffSubtitle') : t('handoffUnavailable'),
+        disabled: !canDraft,
         onClick: () => { void chatActions.openHandoff() },
       }, h(Icon, { name: 'agent', size: 15 }), h('span', { className: 'dsc-handoff-label' }, t('handoff'))),
     ),
@@ -2902,24 +2992,30 @@ function ChatHeader() {
  * overlay (root scope, outside every column), so it is part of the shell
  * chrome rather than of either view: it sits in the desktop caption row above
  * the window's drag strip, stays visible in both modes, and switches the whole
- * application view.
+ * application view. The toast stack rides along because messages raised while
+ * the Chat surface is closed (`handoffSent`, a background stream failure) must
+ * still be visible.
  */
 function ModeSwitch() {
   const t = useT()
   const open = useChat(state => state.open)
   const item = (mode, label, icon, selected) => h('button', {
     type: 'button',
-    role: 'tab',
-    'aria-selected': selected,
+    'aria-pressed': selected,
     className: cx('dsc-modeswitch-item', selected && 'is-active'),
     title: mode === 'chat' ? t('switchToChat') : t('switchToAgent'),
     onClick: () => chatActions.setMode(mode),
   }, h(Icon, { name: icon, size: 14 }), h('span', { className: 'dsc-modeswitch-label' }, label))
-  return h('div', { className: 'dsc-modeswitch', role: 'tablist', 'aria-label': t('modeSwitchLabel') },
-    item('chat', t('chatMode'), 'chat', open),
-    item('agent', t('agentMode'), 'agent', !open),
+  return h(Fragment, null,
+    h('div', { className: 'dsc-modeswitch', role: 'group', 'aria-label': t('modeSwitchLabel') },
+      item('chat', t('chatMode'), 'chat', open),
+      item('agent', t('agentMode'), 'agent', !open),
+    ),
+    h(Toasts, null),
   )
 }
+
+const FOCUSABLE = 'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])'
 
 function ChatRoot() {
   const t = useT()
@@ -2930,24 +3026,75 @@ function ChatRoot() {
   const confirm = useChat(state => state.confirm)
   const handoff = useChat(state => state.handoff)
   const sidebarOpen = useChat(state => state.sidebarOpen)
+  const rootRef = React.useRef(null)
   const sidebarRef = React.useRef(null)
   React.useEffect(() => {
     if (!open) return
     const node = sidebarRef.current
     if (node) node.inert = !sidebarOpen
   }, [open, sidebarOpen])
+  // Keep the drawer in step with the breakpoint: a window that crosses it must
+  // not leave the fixed drawer covering the whole Chat surface.
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined
+    const query = window.matchMedia('(max-width: 900px)')
+    const onChange = (event) => chatStore.set({ sidebarOpen: !event.matches })
+    if (typeof query.addEventListener === 'function') query.addEventListener('change', onChange)
+    return () => {
+      if (typeof query.removeEventListener === 'function') query.removeEventListener('change', onChange)
+    }
+  }, [])
   React.useEffect(() => {
     if (!open) return undefined
     const onKeyDown = (event) => {
-      if (event.key !== 'Escape') return
-      if (confirm !== null) {
-        chatStore.set({ confirm: null })
+      if (event.key === 'Escape') {
+        if (confirm !== null) {
+          chatStore.set({ confirm: null })
+          return
+        }
+        if (chatStore.state.handoff !== null && chatStore.state.handoff.busy !== true) {
+          chatActions.closeHandoff()
+          return
+        }
+        if (settingsOpen) chatStore.set({ settingsOpen: false })
         return
       }
-      if (chatStore.state.handoff !== null) {
-        chatActions.closeHandoff()
+      if (event.key !== 'Tab') return
+      const root = rootRef.current
+      if (!root) return
+      // A dialog traps focus on its own; otherwise the surface and the shared
+      // switch form one scope, so Tab never reaches the native Agent UI that
+      // stays mounted underneath.
+      const modal = root.querySelector('.dsc-modal, .dsc-confirm')
+      const scope = modal ?? root
+      // The share switch is a fixed-position shell entry; its own buttons are
+      // laid out inside it, so they carry an offsetParent while the pill does not.
+      const extras = modal === null ? [...document.querySelectorAll('.dsc-modeswitch button')] : []
+      const focusables = [...scope.querySelectorAll(FOCUSABLE), ...extras].filter(element => (
+        element.offsetParent !== null
+        && element.closest('[inert]') === null
+        && element.getAttribute('aria-hidden') !== 'true'
+      ))
+      if (focusables.length === 0) {
+        event.preventDefault()
         return
-      }      if (settingsOpen) chatStore.set({ settingsOpen: false })
+      }
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const current = document.activeElement
+      if (current === null || !focusables.includes(current)) {
+        event.preventDefault()
+        const target = event.shiftKey ? last : first
+        target.focus()
+        return
+      }
+      if (event.shiftKey && current === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && current === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
@@ -2955,6 +3102,7 @@ function ChatRoot() {
   if (!open) return null
   return h('div', {
     className: 'dsc-root', role: 'region', 'aria-label': t('appTitle'), tabIndex: -1,
+    ref: rootRef,
     'data-dsc-mode': 'chat',
   },
     h('div', {
@@ -2974,7 +3122,6 @@ function ChatRoot() {
     settingsOpen ? h(SettingsDialog, null) : null,
     confirm !== null ? h(ConfirmDialog, null) : null,
     handoff !== null ? h(HandoffDialog, null) : null,
-    h(Toasts, null),
   )
 }
 
@@ -3068,7 +3215,7 @@ function SettingsDialog() {
       h('header', { className: 'dsc-modal-head' },
         h('div', null,
           h('h2', null, t('settingsTitle')),
-          h('p', { className: 'dsc-modal-sub' }, t('modeSwitchHint')),
+          h('p', { className: 'dsc-modal-sub' }, t('settingsSubtitle')),
         ),
         h('button', {
           type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
@@ -3217,17 +3364,22 @@ function HandoffDialog() {
         ),
         h('button', {
           type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
-          autoFocus: true, onClick: close,
+          autoFocus: true, disabled: handoff.busy, onClick: close,
         }, h(Icon, { name: 'close', size: 18 })),
       ),
       h('div', { className: 'dsc-modal-body' },
         !hostReady
           ? h('div', { className: 'dsc-notice' }, h(Icon, { name: 'warning', size: 16 }), h('span', null, t('handoffRestart')))
           : workspaces.length === 0
-            ? h('div', { className: 'dsc-notice' }, h(Icon, { name: 'warning', size: 16 }), h('span', null, t('handoffWorkspaceEmpty')))
+            ? h('div', { className: 'dsc-notice' },
+                h(Icon, { name: 'warning', size: 16 }),
+                h('span', null, t('handoffWorkspaceEmpty')),
+                h('button', { type: 'button', className: 'dsc-inline-button', onClick: () => chatActions.setMode('agent') }, t('goToAgentMode')),
+              )
             : h('div', { className: 'dsc-field' },
-                h('span', { className: 'dsc-field-label' }, t('handoffWorkspace')),
+                h('label', { className: 'dsc-field-label', htmlFor: 'handoff-workspace' }, t('handoffWorkspace')),
                 h('select', {
+                  id: 'handoff-workspace',
                   className: 'dsc-select',
                   value: handoff.workspaceId ?? '',
                   onChange: (event) => chatActions.setHandoffWorkspace(event.target.value),
@@ -3267,10 +3419,12 @@ function HandoffDialog() {
           handoff.generating
             ? h('div', { className: 'dsc-handoff-loading' }, h(Spinner, { size: 16 }), t('handoffDrafting'))
             : h('textarea', {
+                id: 'handoff-brief',
                 className: 'dsc-textarea dsc-handoff-brief',
                 value: brief,
                 rows: 12,
                 spellCheck: false,
+                'aria-label': t('handoffEditorLabel'),
                 onChange: (event) => chatActions.setHandoffBrief(event.target.value),
               }),
           handoff.warning !== '' && !handoff.generating
@@ -3283,13 +3437,16 @@ function HandoffDialog() {
       ),
       h('footer', { className: 'dsc-modal-foot' },
         h('div', { className: 'dsc-modal-foot-note' }, workspaces.length === 0 ? t('handoffWorkspaceEmpty') : ''),
-        h('button', { type: 'button', className: 'dsc-secondary-button', onClick: close }, t('cancel')),
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button', disabled: handoff.busy, onClick: close,
+        }, t('cancel')),
         h('button', {
           type: 'button',
           className: 'dsc-primary-button',
           disabled: !canSend || workspaces.length === 0,
           onClick: () => { void chatActions.submitHandoff() },
-        }, handoff.busy ? t('handoffSending') : t('handoffSend')),      ),
+        }, handoff.busy ? t('handoffSending') : t('handoffSend')),
+      ),
     ),
   )
 }
@@ -3381,13 +3538,19 @@ const CHAT_CSS = `
   --dsc-mono: var(--ds-font-family-code, 'SF Mono', Consolas, 'Liberation Mono', monospace);
   --dsc-ease: var(--ds-ease-in-out, cubic-bezier(0.4, 0, 0.2, 1));
   --dsc-fast: var(--ds-transition-duration-fast, 0.1s);
+  /* The band above the Chat surface that the platform chrome occupies. Windows
+     publishes its 40px caption row, macOS its 48px top strip; a plain browser
+     gets a 44px band of its own so the shared switch always has a home and is
+     never covered by the chat surface. Fullscreen hides the native chrome, so
+     only the switch band remains. */
+  --dsc-top: var(--dsh-frame-chrome-top, var(--dsh-frame-top-clearance, 44px));
   position: fixed;
-  top: var(--dsh-frame-chrome-top, 0px);
+  top: var(--dsc-top);
   right: 0;
   bottom: 0;
   left: 0;
   /* Above the mode switch so an open dialog backdrop also covers it; the box
-     itself starts below the caption row, so the switch stays clickable. */
+     itself starts below the band, so the switch stays clickable. */
   z-index: 30;
   display: flex;
   overflow: hidden;
@@ -3406,7 +3569,7 @@ const CHAT_CSS = `
 .dsc-root button { cursor: pointer; }
 .dsc-root button:disabled { cursor: default; }
 .dsc-root ::selection { background: var(--dsc-brand-soft-strong); }
-.dsc-root :focus-visible { outline: 2px solid var(--dsc-brand); outline-offset: 2px; border-radius: 6px; }
+.dsc-root :focus-visible { outline: 2px solid var(--dsc-brand); outline-offset: 2px; }
 .dsc-icon { display: block; flex: none; }
 .dsc-spinner {
   display: inline-block;
@@ -3445,6 +3608,8 @@ const CHAT_CSS = `
 html[data-windows-titlebar] .dsc-modeswitch { top: 4px; height: 32px; }
 html[data-platform='darwin'] .dsc-modeswitch { top: 9px; }
 html[data-windows-titlebar][data-fullscreen] .dsc-modeswitch { top: 8px; }
+/* Fullscreen keeps only the switch band above the chat surface. */
+html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
 .dsc-modeswitch-item {
   display: inline-flex;
   align-items: center;
@@ -3546,7 +3711,23 @@ html[data-windows-titlebar][data-fullscreen] .dsc-modeswitch { top: 8px; }
   transition: background var(--dsc-fast) ease;
 }
 .dsc-chat-item:hover { background: var(--dsc-hover); }
+.dsc-chat-item:focus-within { background: var(--dsc-hover); }
 .dsc-chat-item.is-active { background: var(--dsc-active); }
+.dsc-chat-item-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+.dsc-chat-item-main:focus-visible { outline-offset: 0; }
 .dsc-chat-item-title {
   flex: 1;
   min-width: 0;
@@ -3570,8 +3751,10 @@ html[data-windows-titlebar][data-fullscreen] .dsc-modeswitch { top: 8px; }
   background: linear-gradient(to right, transparent, var(--dsc-sidebar) 30%);
 }
 .dsc-chat-item:hover .dsc-chat-item-actions,
+.dsc-chat-item:focus-within .dsc-chat-item-actions,
 .dsc-chat-item.is-active .dsc-chat-item-actions { display: flex; }
 .dsc-chat-item:hover .dsc-chat-item-time,
+.dsc-chat-item:focus-within .dsc-chat-item-time,
 .dsc-chat-item.is-active .dsc-chat-item-time { visibility: hidden; }
 .dsc-chat-item.is-renaming { background: var(--dsc-layer); border: 1px solid var(--dsc-border-strong); }
 .dsc-rename-input {
@@ -4128,6 +4311,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 /* ---------- message actions / notices ---------- */
 .dsc-msg-actions { display: flex; align-items: center; gap: 2px; margin-top: 7px; opacity: 0; transition: opacity var(--dsc-fast) ease; }
 .dsc-msg-assistant:hover .dsc-msg-actions,
+.dsc-msg-assistant:focus-within .dsc-msg-actions,
 .dsc-msg-actions.is-last { opacity: 1; }
 .dsc-msg-action {
   display: inline-flex;
@@ -4489,7 +4673,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 @media (max-width: 900px) {
   .dsc-sidebar {
     position: fixed;
-    inset: var(--dsh-frame-chrome-top, 0px) auto 0 0;
+    inset: var(--dsc-top, 0px) auto 0 0;
     z-index: 12;
     width: min(300px, 86vw);
     flex-basis: auto;
@@ -4502,7 +4686,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   .dsc-sidebar:not(.is-open) { display: flex; }
   .dsc-sidebar-backdrop {
     position: fixed;
-    inset: var(--dsh-frame-chrome-top, 0px) 0 0;
+    inset: var(--dsc-top, 0px) 0 0;
     z-index: 11;
     border: 0;
     padding: 0;

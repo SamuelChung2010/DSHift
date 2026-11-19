@@ -65,6 +65,7 @@ const chatStore = {
     settings: { authMode: 'auto', thinking: false, search: false, systemPrompt: '' },
     conversations: [],
     workspaces: [],
+    limits: { maxFiles: MAX_FILES, maxUploadBytes: MAX_UPLOAD_MB, maxUserDataBytes: MAX_USER_DATA_MB * 1024 * 1024 },
     activeId: typeof stored.activeId === 'string' ? stored.activeId : null,
     messages: [],
     conversationLoading: false,
@@ -158,7 +159,9 @@ async function hostJson(path, body) {
   try {
     value = JSON.parse(text)
   } catch {
-    throw new Error(text || `HTTP ${response.status}`)
+    const error = new Error(text || `HTTP ${response.status}`)
+    error.status = response.status
+    throw error
   }
   if (!response.ok) {
     const error = new Error(value?.error?.message || `HTTP ${response.status}`)
@@ -194,7 +197,7 @@ async function streamChat(payload, { signal, onItem }) {
     error.status = response.status
     throw error
   }
-  if (response.body === null) throw new Error('DeepSeek 返回了空响应')
+  if (response.body === null) throw new Error(tr('emptyResponse'))
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
@@ -301,6 +304,7 @@ async function ensureBoot(force = false) {
         settings: data.settings,
         conversations: data.conversations ?? [],
         workspaces: Array.isArray(data.workspaces) ? data.workspaces : [],
+        limits: normalizeLimits(data.limits),
       })
       const active = chatStore.state.activeId
       const exists = active !== null && (data.conversations ?? []).some(item => item.id === active)
@@ -356,6 +360,14 @@ async function loadConversation(id, { quiet = false } = {}) {
 }
 
 function openChat() {
+  // Chat is a full view: a native right panel painted above the frame overlay
+  // would otherwise cover it. The native service owns this action, so the
+  // Agent layout stays consistent when the user switches back.
+  try {
+    appCtx?.get?.('layout')?.closeRightbar?.()
+  } catch {
+    // Optional service: the mode still opens without it.
+  }
   chatStore.set({ open: true, focusRequest: chatStore.state.focusRequest + 1 })
   writeStored({ open: true })
   void ensureBoot()
@@ -449,10 +461,10 @@ function requestDeleteConversation(id, title) {
 let settingsSequence = 0
 let settingsChain = Promise.resolve()
 
-async function saveSettings(patch, { quiet = true } = {}) {
+async function saveSettings(patch, { quiet = true, rollback = null } = {}) {
   const sequence = ++settingsSequence
-  const previous = chatStore.state.settings
-  chatStore.set({ settings: { ...previous, ...patch } })
+  const before = rollback ?? chatStore.state.settings
+  chatStore.set({ settings: { ...chatStore.state.settings, ...patch } })
   const request = settingsChain.then(() => hostJson('/api/deepseek-chat/settings', patch))
   settingsChain = request.catch(() => {})
   try {
@@ -465,22 +477,24 @@ async function saveSettings(patch, { quiet = true } = {}) {
     }
     return true
   } catch (error) {
-    if (sequence === settingsSequence) chatStore.set({ settings: previous })
+    if (sequence === settingsSequence) chatStore.set({ settings: before })
     chatStore.toast(tr('settingsSaveFailed', { message: error instanceof Error ? error.message : String(error) }), 'error')
     return false
   }
 }
 
 function toggleThinking() {
-  const next = !chatStore.state.settings.thinking
-  chatStore.set({ settings: { ...chatStore.state.settings, thinking: next } })
-  void saveSettings({ thinking: next })
+  const before = chatStore.state.settings
+  const next = !before.thinking
+  chatStore.set({ settings: { ...before, thinking: next } })
+  void saveSettings({ thinking: next }, { rollback: before })
 }
 
 function toggleSearch() {
-  const next = !chatStore.state.settings.search
-  chatStore.set({ settings: { ...chatStore.state.settings, search: next } })
-  void saveSettings({ search: next })
+  const before = chatStore.state.settings
+  const next = !before.search
+  chatStore.set({ settings: { ...before, search: next } })
+  void saveSettings({ search: next }, { rollback: before })
 }
 
 async function saveKey(key) {
@@ -528,7 +542,19 @@ function formatTime(timestamp) {
 }
 
 function attachmentFileLimit(name) {
-  return LAYOUT_EXT.has(fileExtension(name)) || isImageName(name, '') ? MAX_UPLOAD_MB : MAX_USER_DATA_MB
+  const limits = chatStore.state.limits
+  const bytes = LAYOUT_EXT.has(fileExtension(name)) || isImageName(name, '') ? limits.maxUploadBytes : limits.maxUserDataBytes
+  return bytes / 1024 / 1024
+}
+
+function normalizeLimits(input) {
+  const value = input !== null && typeof input === 'object' ? input : {}
+  const positive = (candidate, fallback) => (typeof candidate === 'number' && Number.isFinite(candidate) && candidate > 0 ? candidate : fallback)
+  return {
+    maxFiles: Math.floor(positive(value.maxFiles, MAX_FILES)),
+    maxUploadBytes: positive(value.maxUploadBytes, MAX_UPLOAD_MB * 1024 * 1024),
+    maxUserDataBytes: positive(value.maxUserDataBytes, MAX_USER_DATA_MB * 1024 * 1024),
+  }
 }
 
 let uploadActive = 0
@@ -602,8 +628,9 @@ async function uploadAttachment(attachment, file, signal) {
 function addFiles(fileList) {
   const files = [...fileList]
   const existing = chatStore.state.attachments.length
-  if (existing + files.length > MAX_FILES) {
-    chatStore.toast(tr('tooManyFiles', { count: MAX_FILES }), 'warning')
+  const maxFiles = chatStore.state.limits.maxFiles
+  if (existing + files.length > maxFiles) {
+    chatStore.toast(tr('tooManyFiles', { count: maxFiles }), 'warning')
     return
   }
   const accepted = []
@@ -1054,6 +1081,21 @@ function handoffPatch(patch) {
   chatStore.set({ handoff: { ...current, ...patch } })
 }
 
+/** Refresh the workspace list without flashing the boot view. */
+async function refreshBootstrapSnapshot() {
+  try {
+    const data = await hostJson('/api/deepseek-chat/bootstrap')
+    const current = chatStore.state
+    chatStore.set({
+      workspaces: Array.isArray(data.workspaces) ? data.workspaces : current.workspaces,
+      bootData: { ...(current.bootData ?? {}), ...data },
+      limits: normalizeLimits(data.limits),
+    })
+  } catch {
+    // Keep the last known snapshot; the dialog explains what is missing.
+  }
+}
+
 async function openHandoff() {
   if (chatStore.state.handoff !== null) return
   if (chatStore.state.messages.length === 0 || chatStore.state.activeId === null) {
@@ -1076,10 +1118,14 @@ async function openHandoff() {
       error: '',
     },
   })
+  await refreshBootstrapSnapshot()
+  if (chatStore.state.handoff === null) return
+  handoffPatch({ workspaceId: chatStore.state.handoff.workspaceId || defaultWorkspaceId() })
   await draftHandoff()
 }
 
 function closeHandoff() {
+  if (chatStore.state.handoff?.busy === true) return
   handoffSequence += 1
   chatStore.set({ handoff: null })
 }
@@ -1124,20 +1170,40 @@ function setHandoffInstruction(instruction) {
 }
 
 function setHandoffWorkspace(workspaceId) {
+  stored.workspaceId = workspaceId
   handoffPatch({ workspaceId })
   writeStored({ workspaceId })
 }
 
-/** Open the created Session through the native workspace navigation. */
-function openAgentSession(sessionId) {
-  try {
-    appCtx?.get?.('uiWorkspace')?.openSession?.(sessionId)
-    appCtx?.get?.('layout')?.selectPanel?.(null)
-    return true
-  } catch (error) {
-    console.error('deepseek-chat: could not open the Agent session', error)
-    return false
+const AGENT_OPEN_ATTEMPTS = 4
+const AGENT_OPEN_DELAY_MS = 350
+
+/**
+ * Open the created Session through the native workspace navigation. The
+ * Session was created on the Host, so the browser's session list can lag one
+ * frame behind; retry briefly instead of reporting a false success.
+ */
+async function openAgentSession(sessionId) {
+  const uiWorkspace = appCtx?.get?.('uiWorkspace')
+  if (uiWorkspace === undefined || typeof uiWorkspace.openSession !== 'function') return false
+  for (let attempt = 0; attempt < AGENT_OPEN_ATTEMPTS; attempt += 1) {
+    try {
+      uiWorkspace.openSession(sessionId)
+      try {
+        appCtx?.get?.('layout')?.selectPanel?.(null)
+      } catch {
+        // Returning to the Conversation is a convenience, not a requirement.
+      }
+      return true
+    } catch (error) {
+      if (attempt === AGENT_OPEN_ATTEMPTS - 1) {
+        console.error('deepseek-chat: could not open the Agent session', error)
+        return false
+      }
+      await new Promise(resolve => setTimeout(resolve, AGENT_OPEN_DELAY_MS))
+    }
   }
+  return false
 }
 
 async function submitHandoff() {
@@ -1148,16 +1214,19 @@ async function submitHandoff() {
     handoffPatch({ error: tr('handoffEmpty') })
     return
   }
+  const sequence = ++handoffSequence
   handoffPatch({ busy: true, error: '' })
-  let sessionId = ''
+  const conversation = chatStore.state.conversations.find(item => item.id === chatStore.state.activeId)
+  let result
   try {
-    const data = await hostJson('/api/deepseek-chat/handoff/send', {
+    result = await hostJson('/api/deepseek-chat/handoff/send', {
       prompt: brief,
       ...(handoff.workspaceId === '' ? {} : { workspaceId: handoff.workspaceId }),
+      ...(conversation?.title ? { title: conversation.title } : {}),
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     })
-    sessionId = typeof data.sessionId === 'string' ? data.sessionId : ''
   } catch (error) {
+    if (sequence !== handoffSequence) return
     handoffPatch({
       busy: false,
       error: error?.status === 404 || error?.status === 501
@@ -1166,10 +1235,18 @@ async function submitHandoff() {
     })
     return
   }
+  const sessionId = typeof result?.sessionId === 'string' ? result.sessionId : ''
+  // Open the Session before closing the Chat surface so a navigation failure
+  // leaves the dialog (and its copy action) in place instead of stranding it.
+  const opened = sessionId === '' ? false : await openAgentSession(sessionId)
   chatStore.set({ handoff: null })
   closeChat()
-  if (sessionId === '' || !openAgentSession(sessionId)) {
+  if (!opened) {
     chatStore.toast(tr('handoffNoSession'), 'warning')
+    return
+  }
+  if (typeof result?.warning === 'string' && result.warning !== '') {
+    chatStore.toast(tr('handoffPromptPartial', { message: result.warning }), 'warning')
     return
   }
   chatStore.toast(tr('handoffSent'), 'success')
