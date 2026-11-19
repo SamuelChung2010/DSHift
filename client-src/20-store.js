@@ -54,7 +54,7 @@ function clampSidebarWidth(value, viewport) {
 /**
  * Greeting options for a blank Chat page. A name-capable option also carries a
  * natural no-name variant, so an unavailable account name is omitted as part of
- * the sentence instead of leaving an empty "@" behind.
+ * the sentence instead of leaving a dangling placeholder behind.
  */
 const GREETINGS = [
   { named: 'greeting1Named', plain: 'greeting1Plain' },
@@ -379,9 +379,9 @@ function markSendInFlight(value) {
   if (chatStore.state.sending !== value) chatStore.set({ sending: value })
 }
 
-/** Display name accepted for the greeting: trimmed, with any leading "@" removed. */
+/** Display name accepted for the greeting: trimmed; the account name is shown as-is. */
 function greetingUserName(value) {
-  return typeof value === 'string' ? value.trim().replace(/^@+/, '').trim() : ''
+  return typeof value === 'string' ? value.trim() : ''
 }
 
 /**

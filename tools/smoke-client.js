@@ -350,16 +350,17 @@ for (let index = 0; index < greetingOptions.length; index += 1) {
   if (/深度思考|编写代码|联网搜索|文件问答/.test(plainHome)) throw new Error('feature cards must not render on the home')
   if (option.named !== undefined) {
     namedGreetings += 1
-    captured.chatStore.set({ userName: '  @烨明 ' })
+    captured.chatStore.set({ userName: '  烨明  ' })
     const namedHome = collectText(React.createElement(captured.EmptyState, {})).join(' ').trim()
-    if (!namedHome.includes('@烨明')) throw new Error(`greeting ${index} must use the account display name: ${namedHome}`)
+    if (!namedHome.includes('烨明')) throw new Error(`greeting ${index} must use the account display name: ${namedHome}`)
     if (namedHome.includes('{name}')) throw new Error(`greeting ${index} did not interpolate the name`)
+    if (namedHome.includes('@')) throw new Error(`greeting ${index} must not print a literal @: ${namedHome}`)
   }
 }
 if (namedGreetings < 3) throw new Error('the pool needs name-capable greetings')
-captured.chatStore.set({ greetingIndex: 2, userName: '@烨明' })
+captured.chatStore.set({ greetingIndex: 2, userName: '烨明' })
 const plainWithName = collectText(React.createElement(captured.EmptyState, {})).join(' ')
-if (plainWithName.includes('@烨明')) throw new Error('a plain greeting must not append the name')
+if (plainWithName.includes('烨明')) throw new Error('a plain greeting must not append the name')
 // No immediate repeat, across many rolls and from any starting point.
 let previousGreeting = captured.pickGreetingIndex(-1, () => 0)
 for (let roll = 0; roll < 200; roll += 1) {
@@ -387,8 +388,8 @@ if (clamp(9999, 1200) !== captured.SIDEBAR_MAX) throw new Error('sidebar width m
 if (clamp(333, 1200) !== 333) throw new Error('a fitting sidebar width must pass through')
 if (clamp(420, 800) !== 340) throw new Error(`a narrow window must keep the chat column usable: ${clamp(420, 800)}`)
 if (clamp(420, 600) !== captured.SIDEBAR_MIN) throw new Error('the narrow-window guard must not fall below the floor')
-if (captured.greetingUserName('  @ 烨明  ') !== '烨明') throw new Error('the greeting name must be normalized')
-if (captured.greetingUserName('@') !== '') throw new Error('a bare "@" is not a display name')
+if (captured.greetingUserName('  烨明  ') !== '烨明') throw new Error('the greeting name must be trimmed')
+if (captured.greetingUserName('   ') !== '') throw new Error('a blank name is not a display name')
 captured.chatActions.setSidebarWidth(333)
 if (captured.chatStore.state.sidebarWidth !== 333) throw new Error('the drag width must reach the store')
 captured.chatActions.saveSidebarWidth()

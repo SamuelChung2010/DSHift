@@ -22,13 +22,13 @@ const DICT_ZH = {
   earlier: '更早',
   noChats: '还没有对话',
   settings: '设置',
-  greeting1Named: 'Ciallo～(∠・ω< )⌒☆，@{name}！',
+  greeting1Named: 'Ciallo～(∠・ω< )⌒☆，{name}！',
   greeting1Plain: 'Ciallo～(∠・ω< )⌒☆！',
-  greeting2Named: '又见面啦，@{name}！',
+  greeting2Named: '又见面啦，{name}！',
   greeting2Plain: '又见面啦！',
   greeting3Plain: '欸嘿～(๑•̀ㅂ•́)و✧ 今天有什么新计划？',
   greeting4Plain: '准备好探索新点子了吗？',
-  greeting5Named: '有什么新鲜事吗，@{name}？',
+  greeting5Named: '有什么新鲜事吗，{name}？',
   greeting5Plain: '有什么新鲜事吗？',
   greeting6Plain: '灵感加载完成！✧',
   greeting7Plain: '今天也来创造点有趣的东西吧！',
@@ -226,13 +226,13 @@ const DICT_EN = {
   earlier: 'Earlier',
   noChats: 'No conversations yet',
   settings: 'Settings',
-  greeting1Named: 'Ciallo～(∠・ω< )⌒☆, @{name}!',
+  greeting1Named: 'Ciallo～(∠・ω< )⌒☆, {name}!',
   greeting1Plain: 'Ciallo～(∠・ω< )⌒☆!',
-  greeting2Named: 'Good to see you again, @{name}!',
+  greeting2Named: 'Good to see you again, {name}!',
   greeting2Plain: 'Good to see you again!',
   greeting3Plain: 'Hehe～(๑•̀ㅂ•́)و✧ Any new plans today?',
   greeting4Plain: 'Ready to explore some new ideas?',
-  greeting5Named: 'Anything new with you, @{name}?',
+  greeting5Named: 'Anything new with you, {name}?',
   greeting5Plain: 'Anything new with you?',
   greeting6Plain: 'Inspiration loaded! ✧',
   greeting7Plain: "Let's make something fun today!",
@@ -471,7 +471,7 @@ function clampSidebarWidth(value, viewport) {
 /**
  * Greeting options for a blank Chat page. A name-capable option also carries a
  * natural no-name variant, so an unavailable account name is omitted as part of
- * the sentence instead of leaving an empty "@" behind.
+ * the sentence instead of leaving a dangling placeholder behind.
  */
 const GREETINGS = [
   { named: 'greeting1Named', plain: 'greeting1Plain' },
@@ -796,9 +796,9 @@ function markSendInFlight(value) {
   if (chatStore.state.sending !== value) chatStore.set({ sending: value })
 }
 
-/** Display name accepted for the greeting: trimmed, with any leading "@" removed. */
+/** Display name accepted for the greeting: trimmed; the account name is shown as-is. */
 function greetingUserName(value) {
-  return typeof value === 'string' ? value.trim().replace(/^@+/, '').trim() : ''
+  return typeof value === 'string' ? value.trim() : ''
 }
 
 /**
