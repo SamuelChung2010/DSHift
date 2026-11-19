@@ -924,20 +924,26 @@ function ChatHeader() {
 /**
  * The shared Chat | Agent navigation. It is registered in the frame-wide
  * overlay (root scope, outside every column), so it is part of the shell
- * chrome rather than of either view: it sits in the desktop caption row above
- * the window's drag strip, stays visible in both modes, and switches the whole
- * application view. The toast stack rides along because messages raised while
- * the Chat surface is closed (`handoffSent`, a background stream failure) must
- * still be visible.
+ * chrome rather than of either view: it stays visible in both modes and
+ * switches the whole application view. The toast stack rides along because
+ * messages raised while the Chat surface is closed (`handoffSent`, a background
+ * stream failure) must still be visible.
  *
- * Horizontally it is centered on the main content column, not on the window:
- * - Agent mode: the stylesheet centers it between the native sidebar's right
- *   edge and the frame's right edge, using the width the frame publishes as
- *   `--dsh-windows-sidebar-width`. That follows a sidebar drag or collapse with
- *   no script and no pixel constants.
- * - Chat mode: the Chat surface is this plugin's own layout, so its main column
- *   is measured directly (and re-measured when the chat sidebar or the window
- *   changes). Either way the sidebar width is never assumed.
+ * Placement, measured against the live layout rather than the window:
+ * - Vertical: the native Session header's toolbar line, i.e. the middle of the
+ *   title row that carries the header utilities and the far-right corner
+ *   control. The stylesheet holds the same value as a constant
+ *   (`--dsh-frame-chrome-top + 10px padding + 30px row / 2`); the live anchor
+ *   `[data-conversation-header-corner]` (published by the conversation header
+ *   for exactly this kind of chrome alignment) refines it when present, so a
+ *   taller or wrapped header still lines up.
+ * - Horizontal: the centre of the main content column. Agent mode uses the
+ *   native sidebar width the frame publishes (`--dsh-windows-sidebar-width`);
+ *   Chat mode measures its own `.dsc-main`. The window centre is never used.
+ *
+ * Both modes therefore share one line: the native header sits behind the Chat
+ * surface and keeps its geometry, so the switch does not move when the mode
+ * flips.
  */
 function ModeSwitch() {
   const t = useT()
@@ -950,24 +956,35 @@ function ModeSwitch() {
       frame = 0
       const node = ref.current
       if (node === null) return
+      // Horizontal: only the Chat surface needs a measurement; in Agent mode
+      // the stylesheet tracks the native sidebar width on its own.
       const main = open ? document.querySelector('.dsc-main') : null
       if (main === null) {
-        // Agent mode: hand the positioning back to the stylesheet.
         node.style.removeProperty('left')
         node.style.removeProperty('right')
         node.style.removeProperty('transform')
-        return
+      } else {
+        const rect = main.getBoundingClientRect()
+        node.style.left = `${Math.round(rect.left + rect.width / 2)}px`
+        node.style.right = 'auto'
+        node.style.transform = 'translate(-50%, -50%)'
       }
-      const rect = main.getBoundingClientRect()
-      node.style.left = `${Math.round(rect.left + rect.width / 2)}px`
-      node.style.right = 'auto'
-      node.style.transform = 'translateX(-50%)'
+      // Vertical: the native toolbar line published by the Session header.
+      const anchor = document.querySelector('[data-conversation-header-corner]')
+      const anchorRect = anchor === null ? null : anchor.getBoundingClientRect()
+      if (anchorRect !== null && anchorRect.height > 0) {
+        node.style.top = `${Math.round(anchorRect.top + anchorRect.height / 2)}px`
+      } else {
+        node.style.removeProperty('top')
+      }
     }
     const schedule = () => { if (frame === 0) frame = requestAnimationFrame(apply) }
     apply()
     const targets = [document.body]
     const main = open ? document.querySelector('.dsc-main') : null
     if (main !== null) targets.push(main)
+    const anchor = document.querySelector('[data-conversation-header-corner]')
+    if (anchor !== null) targets.push(anchor)
     let observer
     if (typeof ResizeObserver === 'function') {
       observer = new ResizeObserver(schedule)
@@ -983,12 +1000,19 @@ function ModeSwitch() {
   const item = (mode, label, selected) => h('button', {
     type: 'button',
     'aria-pressed': selected,
-    className: cx('dsc-modeswitch-item', selected && 'is-active'),
+    className: cx('dsc-modeswitch-item', mode === 'chat' ? 'is-chat' : 'is-agent'),
     title: mode === 'chat' ? t('switchToChat') : t('switchToAgent'),
     onClick: () => chatActions.setMode(mode),
   }, h('span', { className: 'dsc-modeswitch-label' }, label))
   return h('div', { className: 'dsc-shell' },
-    h('div', { className: 'dsc-modeswitch', role: 'group', 'aria-label': t('modeSwitchLabel'), ref },
+    h('div', {
+      className: 'dsc-modeswitch',
+      role: 'group',
+      'aria-label': t('modeSwitchLabel'),
+      'data-active': open ? 'chat' : 'agent',
+      ref,
+    },
+      h('span', { className: 'dsc-modeswitch-thumb', 'aria-hidden': 'true' }),
       item('chat', t('chatMode'), open),
       item('agent', t('agentMode'), !open),
     ),

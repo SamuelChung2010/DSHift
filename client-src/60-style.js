@@ -95,99 +95,126 @@ const CHAT_CSS = `
 @keyframes dsc-spin { to { transform: rotate(360deg); } }
 
 /* ---------- shared Chat | Agent switch (shell chrome) ----------
-   Layout: horizontally centered on the MAIN CONTENT column, vertically on the
-   native caption buttons' midline. Agent mode gets the content start from the
-   frame's published --dsh-windows-sidebar-width (a real length, updated by the
-   native sidebar); Chat mode sets an inline left/transform from the measured
-   chat main column. No window-relative 50% and no fixed offsets. */
+   ChatGPT-style asymmetric segmented control:
+   * one dark pill track, two text segments inside it;
+   * ONE floating chip behind the selected segment, wider (55%) than the other
+     segment (45%) and slightly taller than the track's inner area, so the
+     selected mode owns a real, larger surface and the other one is plain text;
+   * when the mode flips, the chip slides and resizes while the track keeps its
+     width and centre, and the labels re-centre inside their own segments.
+
+   Placement: the middle of the native Session header's toolbar line
+   (--dsh-frame-chrome-top + the header's 10px top padding + half of its 30px
+   title row), refined at runtime from the header's published corner anchor.
+   Horizontally the main content column: the published native sidebar width in
+   Agent mode, the measured chat column in Chat mode. */
 .dsc-modeswitch {
-  --dsc-nav-height: 34px;
+  --dsc-nav-height: 40px;
+  --dsc-nav-width: 244px;
+  --dsc-nav-selected: 55%;
   position: fixed;
-  top: 6px;
+  top: calc(var(--dsh-frame-chrome-top, 0px) + 25px);
   left: var(--dsh-windows-sidebar-width, 0px);
   right: 0;
-  width: max-content;
-  margin-inline: auto;
-  z-index: 20;
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  gap: 2px;
+  width: var(--dsc-nav-width);
   height: var(--dsc-nav-height);
-  padding: 4px;
+  margin-inline: auto;
+  transform: translateY(-50%);
+  /* Above the Chat surface (z 30): the switch belongs to both modes and must
+     stay clickable while the Chat layer covers the native header behind it. */
+  z-index: 40;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--dsw-alias-label-primary, #16181d) 8%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-label-primary, #16181d) 5%, transparent);
+  background: color-mix(in srgb, var(--dsw-alias-label-primary, #16181d) 6%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-label-primary, #16181d) 7%, transparent),
+    0 1px 2px rgba(9, 12, 20, 0.12);
   color: var(--dsw-alias-label-primary, #16181d);
   font-family: var(--dsw-font-family, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif);
-  font-size: 13.4px;
+  font-size: 13.5px;
   line-height: 1;
   -webkit-app-region: no-drag;
   pointer-events: auto;
   user-select: none;
   backdrop-filter: blur(12px);
 }
-/* Windows Electron's 40px caption row holds the native window buttons and the
-   app menu; the switch shares their midline. */
-html[data-windows-titlebar] .dsc-modeswitch {
-  top: calc((var(--dsh-windows-titlebar-height, 40px) - var(--dsc-nav-height)) / 2);
+/* The chip: one element that slides and resizes with the active segment. It is
+   taller than the segments' hit area (2px rim instead of 4px), which is what
+   makes the selected mode read as a fuller, raised surface. */
+.dsc-modeswitch-thumb {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc(var(--dsc-nav-selected) - 4px);
+  border-radius: 999px;
+  background: var(--dsw-alias-bg-base, #ffffff);
+  box-shadow:
+    0 1px 2px rgba(9, 12, 20, 0.16),
+    0 6px 18px rgba(9, 12, 20, 0.08),
+    inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-label-primary, #16181d) 9%, transparent);
+  transition:
+    left 240ms var(--dsc-ease),
+    width 240ms var(--dsc-ease),
+    background-color 160ms ease,
+    box-shadow 160ms ease;
 }
-html[data-platform='darwin'] .dsc-modeswitch {
-  top: calc((var(--dsh-frame-top-clearance, 48px) - var(--dsc-nav-height)) / 2);
+/* Dark palette: the header is already dark, so the chip is a lighter surface
+   with a soft rim rather than a white card. */
+body[data-ds-dark-theme] .dsc-modeswitch-thumb {
+  background: color-mix(in srgb, var(--dsw-alias-label-primary, #f2f3f7) 12%, var(--dsw-alias-bg-layer-1, #1b1c1f));
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.42),
+    0 8px 22px rgba(0, 0, 0, 0.20),
+    inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-label-primary, #f2f3f7) 10%, transparent);
 }
-html[data-windows-titlebar][data-fullscreen] .dsc-modeswitch,
-html[data-platform='darwin'][data-fullscreen] .dsc-modeswitch { top: 6px; }
-/* Fullscreen keeps only the switch band above the chat surface. */
-html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
+.dsc-modeswitch[data-active='agent'] .dsc-modeswitch-thumb {
+  left: calc(100% - var(--dsc-nav-selected) + 2px);
+}
 .dsc-modeswitch-item {
+  position: absolute;
+  top: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 100px;
-  height: 100%;
-  padding: 0 18px;
+  padding: 0;
   border: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--dsw-alias-label-secondary, #6b7280);
   font: inherit;
-  font-size: 13.4px;
-  font-weight: 560;
+  font-size: 13.5px;
+  font-weight: 500;
   letter-spacing: 0.005em;
   white-space: nowrap;
   transition:
-    background-color var(--ds-transition-duration-fast, 0.12s) ease,
-    color var(--ds-transition-duration-fast, 0.12s) ease,
-    box-shadow var(--ds-transition-duration-fast, 0.12s) ease,
-    transform var(--ds-transition-duration-fast, 0.12s) ease;
+    left 240ms var(--dsc-ease),
+    width 240ms var(--dsc-ease),
+    color 160ms ease;
 }
-.dsc-modeswitch-item:hover {
-  background: color-mix(in srgb, var(--dsw-alias-label-primary, #16181d) 4%, transparent);
+.dsc-modeswitch-item:hover { color: var(--dsw-alias-label-primary, #16181d); }
+.dsc-modeswitch[data-active='chat'] .dsc-modeswitch-item.is-chat,
+.dsc-modeswitch[data-active='agent'] .dsc-modeswitch-item.is-agent {
   color: var(--dsw-alias-label-primary, #16181d);
+  font-weight: 600;
 }
-.dsc-modeswitch-item:active { transform: scale(0.985); }
-.dsc-modeswitch-item.is-active {
-  background: var(--dsw-alias-bg-base, #ffffff);
-  color: var(--dsw-alias-label-primary, #16181d);
-  box-shadow:
-    0 1px 2px rgba(9, 12, 20, 0.14),
-    0 4px 10px rgba(9, 12, 20, 0.06),
-    inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-label-primary, #16181d) 8%, transparent);
-}
-/* Dark palette: the caption is already dark, so the selected chip has to be
-   LIGHTER than the track (a raised surface), not a white card. */
-body[data-ds-dark-theme] .dsc-modeswitch-item.is-active {
-  background: color-mix(in srgb, var(--dsw-alias-label-primary, #f2f3f7) 14%, var(--dsw-alias-bg-layer-1, #1b1c1f));
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.45),
-    0 4px 12px rgba(0, 0, 0, 0.22),
-    inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-label-primary, #f2f3f7) 9%, transparent);
+/* Segment geometry: the selected one is wider (55%) and the other 45%; the
+   total width and centre never change. */
+.dsc-modeswitch[data-active='chat'] .dsc-modeswitch-item.is-chat { left: 0; width: var(--dsc-nav-selected); }
+.dsc-modeswitch[data-active='chat'] .dsc-modeswitch-item.is-agent { left: var(--dsc-nav-selected); width: calc(100% - var(--dsc-nav-selected)); }
+.dsc-modeswitch[data-active='agent'] .dsc-modeswitch-item.is-chat { left: 0; width: calc(100% - var(--dsc-nav-selected)); }
+.dsc-modeswitch[data-active='agent'] .dsc-modeswitch-item.is-agent { left: calc(100% - var(--dsc-nav-selected)); width: var(--dsc-nav-selected); }
+.dsc-modeswitch-item:active .dsc-modeswitch-label { transform: scale(0.985); }
+.dsc-modeswitch-label {
+  display: block;
+  transition: transform 120ms var(--dsc-ease);
 }
 .dsc-modeswitch-item:focus-visible {
   outline: 2px solid var(--dsw-alias-brand-primary, #4d6bff);
   outline-offset: 2px;
 }
-.dsc-modeswitch-label { white-space: nowrap; }
+/* Fullscreen hides the native chrome; the Chat surface keeps only the switch band. */
+html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
 
 /* ---------- sidebar ---------- */
 .dsc-sidebar {
@@ -1267,9 +1294,9 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   .dsc-sidebar-backdrop { display: none; }
 }
 @media (max-width: 760px) {
-  /* Narrow content column: keep the switch inside its band by tightening the
-     item padding instead of dropping a label. */
-  .dsc-modeswitch-item { min-width: 76px; padding: 0 12px; font-size: 12.4px; }
+  /* Narrow content column: shrink the whole control, keep both labels. */
+  .dsc-modeswitch { --dsc-nav-width: 208px; --dsc-nav-height: 36px; font-size: 12.6px; }
+  .dsc-modeswitch-item { font-size: 12.6px; }
   .dsc-suggestions { grid-template-columns: 1fr; }
   .dsc-source-list { grid-template-columns: 1fr; }
   .dsc-empty { padding-top: 8vh; }
