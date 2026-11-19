@@ -3029,9 +3029,16 @@ const AGENT_PAGE_POLL_LIMIT = 25
  * @returns the state, or null while the native session service is unavailable.
  */
 function readAgentPageState() {
-  const sessions = appCtx?.get?.('sessions')
-  const list = sessions?.list
-  if (list === undefined || list === null || typeof list.getSnapshot !== 'function') return null
+  // Called during render, so a disposed or half-mounted foreign service must
+  // never take the shell entry down with it.
+  let snapshot
+  try {
+    const list = appCtx?.get?.('sessions')?.list
+    if (list === undefined || list === null || typeof list.getSnapshot !== 'function') return null
+    snapshot = list.getSnapshot()
+  } catch {
+    return null
+  }
   let panel = false
   try {
     const panelInfo = appCtx?.get?.('layout')?.panelInfo
@@ -3041,7 +3048,6 @@ function readAgentPageState() {
   } catch {
     panel = false
   }
-  const snapshot = list.getSnapshot()
   const rows = snapshot !== null && typeof snapshot === 'object' && snapshot.byId !== null
     && typeof snapshot.byId === 'object'
     ? Object.values(snapshot.byId)
