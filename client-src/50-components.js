@@ -27,6 +27,18 @@ function hostnameOf(url) {
   }
 }
 
+/**
+ * Every source of one answer, deduplicated by URL and numbered once.
+ *
+ * Cited pages come first, in the order the model cited them, so the numbering
+ * inside the answer matches the list; search hits the model did not cite follow
+ * in tool order. Deduplication is by URL only: a URL keeps the number it got on
+ * its first appearance, which is what keeps the in-text citation map stable
+ * after a reload (the stored blocks are replayed in the same order).
+ *
+ * @returns `{ sources, indexByUrl }`; `indexByUrl` maps a URL to its 1-based
+ * citation number.
+ */
 function collectMessageSources(message) {
   const cited = new Map()
   const found = new Map()
@@ -65,9 +77,21 @@ function collectMessageSources(message) {
       }
     }
   }
-  // When the answer cites specific pages, show those as its sources. Search
-  // hits remain available in the process timeline above.
-  return [...(cited.size > 0 ? cited : found).values()]
+  const sources = [...cited.values()]
+  for (const source of found.values()) {
+    const target = cited.get(source.url)
+    if (target !== undefined) {
+      // A cited page may also be in the search results: borrow the richer
+      // display metadata without changing its number.
+      if (target.snippet === '' && source.snippet !== '') target.snippet = source.snippet
+      if (target.siteName === '' && source.siteName !== '') target.siteName = source.siteName
+      if (source.title && (target.title === '' || target.title === hostnameOf(target.url))) target.title = source.title
+      continue
+    }
+    sources.push(source)
+  }
+  const indexByUrl = new Map(sources.map((source, index) => [source.url, index + 1]))
+  return { sources, indexByUrl }
 }
 
 function messageText(message) {
@@ -75,6 +99,27 @@ function messageText(message) {
     .filter(block => block.type === 'text')
     .map(block => block.text)
     .join('')
+}
+
+/**
+ * Answer text with citation markers appended where the model cited a source.
+ *
+ * The API ends a text block at each citation, so the marker belongs at the end
+ * of that block. Markers are only added for URLs present in the source list,
+ * which keeps the numbering in the answer and in the footer identical.
+ */
+function answerText(message, indexByUrl) {
+  const parts = []
+  for (const block of message.blocks ?? []) {
+    if (block.type !== 'text') continue
+    const marks = new Set()
+    for (const citation of block.citations ?? []) {
+      const index = indexByUrl.get(citation.url)
+      if (index !== undefined) marks.add(index)
+    }
+    parts.push(block.text + [...marks].map(citationMark).join(''))
+  }
+  return parts.join('')
 }
 
 /**
@@ -223,20 +268,70 @@ function AttachmentCard({ file, onRemove, onRetry, compact = false }) {
   )
 }
 
-function SourceCard({ source, index }) {
+function SourceRow({ source, index, active }) {
+  const t = useT()
   const href = safeHref(source.url)
   if (href === null) return null
-  return h('a', {
-    className: 'dsc-source', href, target: '_blank', rel: 'noreferrer noopener',
-    title: source.title,
+  const site = source.siteName || hostnameOf(source.url) || t('sourceDomainFallback')
+  return h('li', {
+    className: cx('dsc-source', active && 'is-target'),
+    'data-source-index': index,
   },
-    h('span', { className: 'dsc-source-index' }, String(index + 1)),
-    h('span', { className: 'dsc-source-body' },
+    h('span', { className: 'dsc-source-index' }, String(index)),
+    h('a', {
+      className: 'dsc-source-link',
+      href,
+      target: '_blank',
+      rel: 'noreferrer noopener',
+      title: source.title,
+    },
       h('span', { className: 'dsc-source-title' }, source.title),
-      h('span', { className: 'dsc-source-meta' }, source.siteName || hostnameOf(source.url)),
+      h('span', { className: 'dsc-source-meta' }, site),
       source.snippet ? h('span', { className: 'dsc-source-snippet' }, source.snippet) : null,
     ),
-    h(Icon, { name: 'external', size: 13 }),
+    h(Icon, { name: 'external', size: 12 }),
+  )
+}
+
+/**
+ * The answer's sources as one compact footer.
+ *
+ * Collapsed by default: a single "Sources · 15" line, so fifteen citations no
+ * longer push the answer off the page. Expanding shows a numbered, scrollable
+ * list; a citation marker in the answer expands the list and highlights its row.
+ */
+function SourcePanel({ sources, messageId, open, onToggle, activeIndex }) {
+  const t = useT()
+  const listRef = React.useRef(null)
+  React.useEffect(() => {
+    if (!open || activeIndex === null) return
+    const node = listRef.current?.querySelector?.(`[data-source-index="${activeIndex}"]`)
+    node?.scrollIntoView?.({ block: 'nearest' })
+  }, [open, activeIndex])
+  if (sources.length === 0) return null
+  const listId = `dsc-sources-${messageId}`
+  return h('div', { className: cx('dsc-sources', open && 'is-open') },
+    h('button', {
+      type: 'button',
+      className: 'dsc-sources-toggle',
+      'aria-expanded': open,
+      'aria-controls': listId,
+      onClick: onToggle,
+    },
+      h(Icon, { name: 'link', size: 13 }),
+      h('span', { className: 'dsc-sources-count' }, t('sourceSummary', { count: sources.length })),
+      h(Icon, { name: open ? 'chevronDown' : 'chevronRight', size: 12 }),
+    ),
+    open
+      ? h('ol', { className: 'dsc-source-list', id: listId, ref: listRef },
+          sources.map((source, index) => h(SourceRow, {
+            key: `${source.url}-${index}`,
+            source,
+            index: index + 1,
+            active: activeIndex === index + 1,
+          })),
+        )
+      : null,
   )
 }
 
@@ -387,22 +482,74 @@ function ProcessPanel({ message, streaming }) {
   )
 }
 
-function AssistantMessage({ message, streaming, isLast }) {
+/**
+ * Compact branch switcher shared by user questions and assistant answers.
+ * Only rendered when the sibling group has more than one version, so a normal
+ * single-path chat keeps its message actions clean.
+ */
+function VersionNav({ message }) {
+  const t = useT()
+  const busy = useChat(state => state.streaming !== null)
+  const version = message?.version
+  if (!version || !(version.count > 1)) return null
+  const index = Math.max(1, Math.min(version.count, version.index ?? 1))
+  const step = (direction) => {
+    if (busy) return
+    void chatActions.selectVersion(message.id, direction)
+  }
+  return h('span', { className: 'dsc-version', role: 'group', 'aria-label': t('versionLabel', { index, count: version.count }) },
+    h('button', {
+      type: 'button', className: 'dsc-version-button', title: t('versionPrev'), 'aria-label': t('versionPrev'),
+      disabled: busy, onClick: () => step(-1),
+    }, h(Icon, { name: 'chevronLeft', size: 13 })),
+    h('span', { className: 'dsc-version-label' }, `${index} / ${version.count}`),
+    h('button', {
+      type: 'button', className: 'dsc-version-button', title: t('versionNext'), 'aria-label': t('versionNext'),
+      disabled: busy, onClick: () => step(1),
+    }, h(Icon, { name: 'chevronRight', size: 13 })),
+  )
+}
+
+function AssistantMessage({ message, streaming, isLast, canRegenerate, highlighted }) {
   const t = useT()
   const [copied, setCopied] = React.useState(false)
+  const [sourcesOpen, setSourcesOpen] = React.useState(false)
+  const [activeSource, setActiveSource] = React.useState(null)
   const text = messageText(message)
-  const sources = collectMessageSources(message)
+  const { sources, indexByUrl } = collectMessageSources(message)
+  const answer = answerText(message, indexByUrl)
   const refused = message.stopReason === 'refusal'
   const errorInfo = message.error ? friendlyError(message.error) : null
   const showTyping = streaming && text === '' && (message.blocks ?? []).length === 0
-  return h('div', { className: 'dsc-msg dsc-msg-assistant' },
+  const liveAnswer = streaming && message.status === 'streaming'
+  const canContinue = !streaming && isLast && canContinueReply(message)
+  const regenerate = () => {
+    if (streaming) return
+    void chatActions.regenerateMessage(message)
+  }
+  const onAnswerClick = (event) => {
+    const target = event?.target
+    const marker = target instanceof Element ? target.closest('[data-dsc-cite]') : null
+    if (marker === null) return
+    const index = Number(marker.getAttribute('data-dsc-cite'))
+    if (!Number.isInteger(index) || index < 1) return
+    setSourcesOpen(true)
+    setActiveSource(index)
+  }
+  return h('div', {
+    className: cx('dsc-msg dsc-msg-assistant', highlighted && 'is-highlighted'),
+    'data-message-id': message.id,
+    onClick: onAnswerClick,
+  },
     h('div', { className: 'dsc-msg-body' },
       h(ProcessPanel, { message, streaming }),
       refused
         ? h('div', { className: 'dsc-notice' }, h(Icon, { name: 'warning', size: 16 }), h('span', null, t('refused')))
         : null,
-      !refused && text !== ''
-        ? h(Markdown, { text, streaming: streaming && message.status === 'streaming' })
+      !refused && answer !== ''
+        ? h('div', { className: 'dsc-answer', onClick: onAnswerClick },
+            h(Markdown, { text: answer, streaming: liveAnswer, sources }),
+          )
         : null,
       showTyping ? h(TypingDots, null) : null,
       !streaming && message.status === 'stopped' && !refused
@@ -420,11 +567,17 @@ function AssistantMessage({ message, streaming, isLast }) {
               : null,
           )
         : null,
-      sources.length > 0
-        ? h('div', { className: 'dsc-sources' },
-            h('div', { className: 'dsc-sources-head' }, h(Icon, { name: 'link', size: 13 }), t('sourceCount', { count: sources.length })),
-            h('div', { className: 'dsc-source-list' }, sources.map((source, index) => h(SourceCard, { key: source.url, source, index }))),
-          )
+      sources.length > 0 && !refused
+        ? h(SourcePanel, {
+            sources,
+            messageId: message.id,
+            open: sourcesOpen,
+            activeIndex: activeSource,
+            onToggle: () => {
+              if (sourcesOpen) setActiveSource(null)
+              setSourcesOpen(!sourcesOpen)
+            },
+          })
         : null,
       !streaming
         ? h('div', { className: cx('dsc-msg-actions', isLast && 'is-last') },
@@ -440,6 +593,23 @@ function AssistantMessage({ message, streaming, isLast }) {
                   },
                 }, h(Icon, { name: copied ? 'check' : 'copy', size: 14 }), h('span', null, copied ? t('copied') : t('copy')))
               : null,
+            canRegenerate
+              ? h('button', {
+                  type: 'button', className: 'dsc-msg-action', title: t('regenerate'), 'aria-label': t('regenerate'),
+                  onClick: regenerate,
+                }, h(Icon, { name: 'refresh', size: 14 }), h('span', null, t('regenerate')))
+              : null,
+            canContinue
+              ? h('button', {
+                  type: 'button', className: 'dsc-msg-action', title: t('continueGenerating'), 'aria-label': t('continueGenerating'),
+                  onClick: () => { void chatActions.continueMessage(message) },
+                }, h(Icon, { name: 'continue', size: 14 }), h('span', null, t('continueGenerating')))
+              : null,
+            h('span', { className: 'dsc-msg-actions-spacer' }),
+            messageModelLabel(message) !== ''
+              ? h('span', { className: 'dsc-msg-model', title: t('modelLabel') }, messageModelLabel(message))
+              : null,
+            h(VersionNav, { message }),
             message.usage
               ? h('span', { className: 'dsc-usage' }, t('usage', {
                   input: message.usage.input_tokens ?? 0,
@@ -452,14 +622,115 @@ function AssistantMessage({ message, streaming, isLast }) {
   )
 }
 
-function UserMessage({ message }) {
-  const files = Array.isArray(message.files) ? message.files : []
+/**
+ * Inline editor for a historical question. It keeps the bubble's own look: the
+ * textarea has no border or background of its own, and the footer sits inside
+ * the same rounded surface instead of nesting a second input card.
+ */
+function UserMessageEditor({ message }) {
+  const t = useT()
+  const draft = useChat(state => state.editDraft)
+  const textareaRef = React.useRef(null)
+  const hasFiles = Array.isArray(message.files) && message.files.length > 0
+  React.useEffect(() => {
+    const node = textareaRef.current
+    if (!node) return
+    node.focus()
+    const end = node.value.length
+    try {
+      node.setSelectionRange(end, end)
+    } catch {
+      // Selection gestures are an enhancement; focus is what matters.
+    }
+  }, [])
+  React.useEffect(() => {
+    const node = textareaRef.current
+    if (!node) return
+    node.style.height = 'auto'
+    node.style.height = `${Math.min(node.scrollHeight, 260)}px`
+  }, [draft])
+  const save = () => {
+    if (draft.trim() === '' && !hasFiles) return
+    void chatActions.saveEditedMessage()
+  }
   return h('div', { className: 'dsc-msg dsc-msg-user' },
-    h('div', { className: 'dsc-user-bubble' },
-      files.length > 0
-        ? h('div', { className: 'dsc-user-files' }, files.map(file => h(AttachmentCard, { key: file.id, file, compact: true })))
-        : null,
-      message.content !== '' ? h('div', { className: 'dsc-user-text' }, message.content) : null,
+    h('div', { className: 'dsc-user-block' },
+      h('div', { className: 'dsc-user-bubble is-editing' },
+        hasFiles
+          ? h('div', { className: 'dsc-user-files' }, message.files.map(file => h(AttachmentCard, { key: file.id, file, compact: true })))
+          : null,
+        h('textarea', {
+          ref: textareaRef,
+          className: 'dsc-user-edit-input',
+          value: draft,
+          rows: 2,
+          placeholder: t('editMessage'),
+          'aria-label': t('editMessage'),
+          onChange: (event) => chatStore.set({ editDraft: event.target.value }),
+          onKeyDown: (event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault()
+              event.stopPropagation()
+              chatActions.cancelEditMessage()
+              return
+            }
+            if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+              event.preventDefault()
+              save()
+            }
+          },
+        }),
+        h('div', { className: 'dsc-user-edit-actions' },
+          h('span', { className: 'dsc-user-edit-hint' }, t('editHint')),
+          h('button', {
+            type: 'button', className: 'dsc-text-button',
+            onClick: () => chatActions.cancelEditMessage(),
+          }, t('cancel')),
+          h('button', {
+            type: 'button', className: 'dsc-primary-button is-small',
+            disabled: draft.trim() === '' && !hasFiles,
+            onClick: save,
+          }, t('editSave')),
+        ),
+      ),
+    ),
+  )
+}
+
+function UserMessage({ message, canEdit, highlighted }) {
+  const t = useT()
+  const [copied, setCopied] = React.useState(false)
+  const files = Array.isArray(message.files) ? message.files : []
+  const content = typeof message.content === 'string' ? message.content : ''
+  return h('div', { className: cx('dsc-msg dsc-msg-user', highlighted && 'is-highlighted'), 'data-message-id': message.id },
+    h('div', { className: 'dsc-user-block' },
+      h('div', { className: 'dsc-user-bubble' },
+        files.length > 0
+          ? h('div', { className: 'dsc-user-files' }, files.map(file => h(AttachmentCard, { key: file.id, file, compact: true })))
+          : null,
+        content !== '' ? h('div', { className: 'dsc-user-text' }, content) : null,
+      ),
+      h('div', { className: 'dsc-user-actions' },
+        content !== ''
+          ? h('button', {
+              type: 'button', className: 'dsc-msg-action', title: t('copy'), 'aria-label': t('copy'),
+              onClick: () => {
+                copyToClipboard(content).then(() => {
+                  setCopied(true)
+                  setTimeout(() => setCopied(false), 1600)
+                }).catch(() => chatStore.toast(t('copyFailed'), 'error'))
+              },
+            }, h(Icon, { name: copied ? 'check' : 'copy', size: 13 }), h('span', null, copied ? t('copied') : t('copy')))
+          : null,
+        canEdit
+          ? h('button', {
+              type: 'button', className: 'dsc-msg-action', title: t('edit'), 'aria-label': t('edit'),
+              onClick: () => chatActions.beginEditMessage(message),
+            }, h(Icon, { name: 'pencil', size: 13 }), h('span', null, t('edit')))
+          : null,
+        h('span', { className: 'dsc-msg-actions-spacer' }),
+        h(VersionNav, { message }),
+      ),
     ),
   )
 }
@@ -479,12 +750,36 @@ function Thread() {
   const activeId = useChat(state => state.activeId)
   const conversationLoading = useChat(state => state.conversationLoading)
   const conversationError = useChat(state => state.conversationError)
+  const editingId = useChat(state => state.editingId)
+  const focusMessage = useChat(state => state.focusMessage)
+  const [highlight, setHighlight] = React.useState(null)
   const ref = React.useRef(null)
   useAutoScroll(ref, [messages, activeId, streaming?.assistantId])
   React.useEffect(() => {
     const node = ref.current
     if (node) node.scrollTop = node.scrollHeight
   }, [activeId])
+  // Bring a searched or version-switched message into view and mark it briefly.
+  // The frame wait lets the new branch finish painting before measuring.
+  React.useEffect(() => {
+    if (focusMessage === null || typeof focusMessage.id !== 'string' || focusMessage.id === '') return undefined
+    const id = focusMessage.id
+    setHighlight(id)
+    let frame = 0
+    const find = () => {
+      const container = ref.current
+      if (!container) return
+      const selector = `[data-message-id="${id.replace(/["\\]/g, '\\$&')}"]`
+      const target = container.querySelector(selector)
+      if (target) target.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    }
+    frame = requestAnimationFrame(find)
+    const timer = setTimeout(() => setHighlight(null), 2200)
+    return () => {
+      if (frame !== 0) cancelAnimationFrame(frame)
+      clearTimeout(timer)
+    }
+  }, [focusMessage])
   if (conversationLoading) {
     return h('div', { className: 'dsc-thread dsc-thread-loading' }, h(Spinner, { size: 22 }))
   }
@@ -504,16 +799,25 @@ function Thread() {
   return h('div', { className: cx('dsc-thread', messages.length === 0 && 'is-empty'), ref, 'aria-label': tr('appTitle') },
     messages.length === 0
       ? h(EmptyState, null)
-      : h('div', { className: 'dsc-thread-inner' }, messages.map((message, index) => (
-          message.role === 'user'
-            ? h(UserMessage, { key: message.id, message })
-            : h(AssistantMessage, {
-                key: message.id,
-                message,
-                streaming: streaming?.assistantId === message.id,
-                isLast: index === messages.length - 1,
-              })
-        ))),
+      : h('div', { className: 'dsc-thread-inner' }, messages.map((message, index) => {
+          if (message.role === 'user') {
+            if (editingId === message.id) return h(UserMessageEditor, { key: message.id, message })
+            return h(UserMessage, {
+              key: message.id,
+              message,
+              canEdit: streaming === null,
+              highlighted: highlight === message.id,
+            })
+          }
+          return h(AssistantMessage, {
+            key: message.id,
+            message,
+            streaming: streaming?.assistantId === message.id,
+            isLast: index === messages.length - 1,
+            canRegenerate: streaming === null && index > 0 && messages[index - 1]?.role === 'user',
+            highlighted: highlight === message.id,
+          })
+        })),
   )
 }
 
@@ -531,6 +835,48 @@ function AuthBanner() {
   )
 }
 
+/** Active toggle tools as one-line chips above the input, click to turn off. */
+function ActiveToolChips() {
+  const t = useT()
+  const state = useChat(snapshot => snapshot)
+  const tools = activeChatTools(state)
+  if (tools.length === 0) return null
+  return h('div', { className: 'dsc-active-tools' },
+    tools.map(tool => h('button', {
+      key: tool.id,
+      type: 'button',
+      className: 'dsc-active-tool',
+      title: t(tool.hintKey),
+      onClick: () => tool.run(),
+    },
+      h(Icon, { name: tool.icon, size: 13 }),
+      h('span', null, t(tool.labelKey)),
+      h(Icon, { name: 'close', size: 11 }),
+    )),
+  )
+}
+
+/** Editor grows with the text up to this height, then scrolls internally. */
+const COMPOSER_MAX_HEIGHT = 220
+
+/**
+ * Whether one keydown should send the message.
+ *
+ * Two rules matter here and never change with the preference: an IME composing
+ * text owns Enter (it commits a candidate, it must not send), and in the
+ * default mode Enter needs no modifier. `ctrl-enter` flips the pair so Enter
+ * inserts a newline and Ctrl/Cmd+Enter sends.
+ */
+function composerKeySends(event, sendKey) {
+  if (event === null || typeof event !== 'object' || event.key !== 'Enter') return false
+  const native = event.nativeEvent ?? event
+  if (native.isComposing === true || event.isComposing === true || event.keyCode === 229) return false
+  if (sendKey === 'ctrl-enter') {
+    return (event.ctrlKey === true || event.metaKey === true) && event.shiftKey !== true && event.altKey !== true
+  }
+  return event.shiftKey !== true && event.altKey !== true && event.ctrlKey !== true && event.metaKey !== true
+}
+
 function Composer() {
   const t = useT()
   const draft = useChat(state => state.draft)
@@ -538,18 +884,23 @@ function Composer() {
   const streaming = useChat(state => state.streaming)
   const stopping = useChat(state => state.stopping)
   const auth = useChat(state => state.auth)
-  const settings = useChat(state => state.settings)
-  const modelName = useChat(state => state.bootData?.model?.name)
+  const sendKey = useChat(state => state.sendKey)
+  useChat(state => state.modelChoice)
+  const choice = currentModelChoice()
+  const unsupportedImages = !modelCapability(choice.model, 'vision')
+    && attachments.some(item => item.isImage && item.status !== 'error')
   const focusRequest = useChat(state => state.focusRequest)
   const filePickRequest = useChat(state => state.filePickRequest)
   const textareaRef = React.useRef(null)
   const fileRef = React.useRef(null)
   const [drag, setDrag] = React.useState(false)
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     const node = textareaRef.current
     if (!node) return
     node.style.height = 'auto'
-    node.style.height = `${Math.min(node.scrollHeight, 220)}px`
+    const next = Math.min(node.scrollHeight, COMPOSER_MAX_HEIGHT)
+    node.style.height = `${next}px`
+    node.style.overflowY = node.scrollHeight > COMPOSER_MAX_HEIGHT ? 'auto' : 'hidden'
   }, [draft])
   React.useEffect(() => {
     if (focusRequest === 0) return
@@ -573,13 +924,22 @@ function Composer() {
     }
     void chatActions.sendMessage()
   }
+  const onKeyDown = (event) => {
+    if (!composerKeySends(event, sendKey)) return
+    event.preventDefault()
+    if (isStreaming || !canSend) return
+    handleSend()
+  }
   return h('div', { className: 'dsc-composer-wrap' },
     h(AuthBanner, null),
     h('div', {
-      className: cx('dsc-composer', drag && 'is-drag'),
-      onDragOver: (event) => {
+      className: cx('dsc-composer', drag && 'is-drag', unsupportedImages && 'has-warning'),
+      onDragEnter: (event) => {
         event.preventDefault()
         if (!drag) setDrag(true)
+      },
+      onDragOver: (event) => {
+        event.preventDefault()
       },
       onDragLeave: (event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setDrag(false)
@@ -590,88 +950,92 @@ function Composer() {
         onFiles(event.dataTransfer?.files)
       },
     },
-      attachments.length > 0
-        ? h('div', { className: 'dsc-attach-rail' }, attachments.map(file => (
-            h(AttachmentCard, {
-              key: file.id, file,
-              onRemove: chatActions.removeAttachment,
-              onRetry: chatActions.retryAttachment,
-            })
-          )))
-        : null,
-      h('textarea', {
-        ref: textareaRef,
-        className: 'dsc-textarea',
-        value: draft,
-        rows: 1,
-        placeholder: t('composerPlaceholder'),
-        'aria-label': t('composerPlaceholder'),
-        onChange: (event) => chatStore.set({ draft: event.target.value }),
-        onPaste: (event) => {
-          const files = [...(event.clipboardData?.files ?? [])]
-          if (files.length > 0) {
-            event.preventDefault()
-            onFiles(files)
-          }
-        },
-        onKeyDown: (event) => {
-          if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
-            event.preventDefault()
-            if (!isStreaming && canSend) handleSend()
-          }
-        },
-      }),
-      h('div', { className: 'dsc-composer-tools' },
-        h('input', {
-          ref: fileRef,
-          type: 'file',
-          className: 'dsc-file-input',
-          multiple: true,
-          accept: ACCEPT,
-          onChange: (event) => {
-            onFiles(event.target.files)
-            event.target.value = ''
+      h('div', { className: 'dsc-composer-main' },
+        attachments.length > 0
+          ? h('div', { className: 'dsc-attach-rail' }, attachments.map(file => (
+              h(AttachmentCard, {
+                key: file.id, file,
+                onRemove: chatActions.removeAttachment,
+                onRetry: chatActions.retryAttachment,
+              })
+            )))
+          : null,
+        h('div', {
+          className: 'dsc-editor',
+          onClick: (event) => {
+            // Clicking the empty area around the caret line focuses the editor,
+            // like any chat composer. Buttons inside keep their own clicks.
+            if (event.target === event.currentTarget) textareaRef.current?.focus()
           },
-        }),
-        h('button', {
-          type: 'button', className: 'dsc-tool-button', title: t('attach'), 'aria-label': t('attach'),
-          onClick: () => fileRef.current?.click(),
-        }, h(Icon, { name: 'paperclip', size: 18 })),
-        h('button', {
-          type: 'button',
-          className: cx('dsc-mode-button', settings.thinking && 'is-active'),
-          title: t('deepThink'),
-          'aria-label': t('deepThink'),
-          'aria-pressed': settings.thinking,
-          onClick: chatActions.toggleThinking,
-        }, h(Icon, { name: 'brain', size: 16 }), h('span', { className: 'dsc-mode-label' }, t('deepThink'))),
-        h('button', {
-          type: 'button',
-          className: cx('dsc-mode-button', settings.search && 'is-active'),
-          title: t('webSearch'),
-          'aria-label': t('webSearch'),
-          'aria-pressed': settings.search,
-          onClick: chatActions.toggleSearch,
-        }, h(Icon, { name: 'globe', size: 16 }), h('span', { className: 'dsc-mode-label' }, t('webSearch'))),
-        h('span', { className: 'dsc-tool-spacer' }),
-        modelName ? h('span', { className: 'dsc-model-pill', title: t('modelNote') }, modelName) : null,
-        isStreaming
-          ? h('button', {
-              type: 'button',
-              className: 'dsc-stop-button',
-              title: t('stop'),
-              'aria-label': t('stop'),
-              disabled: stopping,
-              onClick: () => chatActions.requestStop(),
-            }, h(Icon, { name: 'stop', size: 15 }))
-          : h('button', {
-              type: 'button',
-              className: cx('dsc-send-button', !canSend && 'is-idle'),
-              title: t('send'),
-              'aria-label': t('send'),
-              'aria-disabled': !canSend,
-              onClick: handleSend,
-            }, h(Icon, { name: 'arrowUp', size: 17 })),
+        },
+          h('textarea', {
+            ref: textareaRef,
+            className: 'dsc-editor-field',
+            value: draft,
+            rows: 1,
+            placeholder: t('composerPlaceholder'),
+            'aria-label': t('composerPlaceholder'),
+            title: t(sendKey === 'ctrl-enter' ? 'newlineToSend' : 'enterToSend'),
+            spellCheck: 'false',
+            onChange: (event) => chatStore.set({ draft: event.target.value }),
+            onPaste: (event) => {
+              const files = [...(event.clipboardData?.files ?? [])]
+              if (files.length > 0) {
+                event.preventDefault()
+                onFiles(files)
+              }
+            },
+            onKeyDown,
+          }),
+        ),
+        unsupportedImages
+          ? h('div', { className: 'dsc-composer-warning' },
+              h(Icon, { name: 'warning', size: 14 }),
+              h('span', null, t('modelUnsupportedImage')),
+              h('button', {
+                type: 'button',
+                className: 'dsc-inline-button',
+                onClick: () => chatActions.selectModel('deepseek-flash'),
+              }, t('switchModel')),
+            )
+          : null,
+      ),
+      h('div', { className: 'dsc-composer-bar' },
+        h('div', { className: 'dsc-composer-left' },
+          h('input', {
+            ref: fileRef,
+            type: 'file',
+            className: 'dsc-file-input',
+            multiple: true,
+            accept: ACCEPT,
+            onChange: (event) => {
+              onFiles(event.target.files)
+              event.target.value = ''
+            },
+          }),
+          h(ToolsMenu, null),
+          h(ActiveToolChips, null),
+        ),
+        h('div', { className: 'dsc-composer-right' },
+          h(ModelMenu, null),
+          isStreaming
+            ? h('button', {
+                type: 'button',
+                className: 'dsc-stop-button',
+                title: t('stop'),
+                'aria-label': t('stop'),
+                disabled: stopping,
+                onClick: () => chatActions.requestStop(),
+              }, h(Icon, { name: 'stop', size: 15 }))
+            : h('button', {
+                type: 'button',
+                className: cx('dsc-send-button', !canSend && 'is-idle'),
+                title: t('send'),
+                'aria-label': t('send'),
+                'aria-disabled': !canSend,
+                onClick: handleSend,
+              }, h(Icon, { name: 'arrowUp', size: 17 })),
+        ),
       ),
       drag ? h('div', { className: 'dsc-drop-mask' }, h(Icon, { name: 'paperclip', size: 22 }), t('dropFiles')) : null,
     ),
@@ -679,7 +1043,19 @@ function Composer() {
   )
 }
 
-function ConversationItem({ conversation, active, renaming, onOpen, onRename, onDelete }) {
+/** Pointer position for a floating menu, falling back to the trigger's box. */
+function menuPoint(event) {
+  const rect = event?.currentTarget?.getBoundingClientRect?.()
+  const x = typeof event?.clientX === 'number' && event.clientX > 0
+    ? event.clientX
+    : (rect !== undefined && rect !== null ? rect.right - 8 : 48)
+  const y = typeof event?.clientY === 'number' && event.clientY > 0
+    ? event.clientY
+    : (rect !== undefined && rect !== null ? rect.bottom + 4 : 96)
+  return { x, y }
+}
+
+function ConversationItem({ conversation, active, renaming, onOpen, onRename, onMenu }) {
   const t = useT()
   const [value, setValue] = React.useState(conversation.title || '')
   const inputRef = React.useRef(null)
@@ -721,34 +1097,134 @@ function ConversationItem({ conversation, active, renaming, onOpen, onRename, on
       }),
     )
   }
+  const title = conversation.title || t('newChatTitle')
   return h('div', {
-    className: cx('dsc-chat-item', active && 'is-active'),
-    title: conversation.title || t('newChatTitle'),
+    className: cx('dsc-chat-item', active && 'is-active', conversation.pinned && 'is-pinned'),
+    title,
+    onContextMenu: (event) => {
+      event.preventDefault()
+      const point = menuPoint(event)
+      chatActions.openConversationMenu(conversation.id, point.x, point.y)
+    },
   },
     h('button', {
       type: 'button',
       className: 'dsc-chat-item-main',
       onClick: onOpen,
     },
-      h('span', { className: 'dsc-chat-item-title' }, conversation.title || t('newChatTitle')),
+      conversation.pinned
+        ? h('span', { className: 'dsc-chat-item-pin', 'aria-hidden': 'true' }, h(Icon, { name: 'pin', size: 11 }))
+        : null,
+      h('span', { className: 'dsc-chat-item-title' }, title),
       h('span', { className: 'dsc-chat-item-time' }, relativeTime(conversation.updatedAt, t)),
     ),
-    h('span', { className: 'dsc-chat-item-actions' },
+    h('button', {
+      type: 'button', className: 'dsc-chat-item-more', title: t('moreActions'), 'aria-label': t('moreActions'),
+      onClick: (event) => {
+        event.stopPropagation()
+        const point = menuPoint(event)
+        chatActions.openConversationMenu(conversation.id, point.x, point.y)
+      },
+    }, h(Icon, { name: 'more', size: 15 })),
+  )
+}
+
+function FolderSection({ folder, conversations, activeId, renamingId, renderItem }) {
+  const t = useT()
+  const collapsed = folder.collapsed === true
+  return h('div', { className: cx('dsc-folder', collapsed && 'is-collapsed') },
+    h('div', {
+      className: 'dsc-folder-head',
+      onContextMenu: (event) => {
+        event.preventDefault()
+        const point = menuPoint(event)
+        chatActions.openFolderMenu(folder.id, point.x, point.y)
+      },
+    },
       h('button', {
-        type: 'button', className: 'dsc-icon-button is-small', title: t('rename'), 'aria-label': t('rename'),
+        type: 'button', className: 'dsc-folder-toggle',
+        'aria-expanded': !collapsed,
+        title: folder.name,
+        onClick: () => chatActions.toggleFolder(folder.id),
+      },
+        h('span', { className: 'dsc-folder-chevron' }, h(Icon, { name: collapsed ? 'chevronRight' : 'chevronDown', size: 12 })),
+        h('span', { className: 'dsc-folder-icon' }, h(Icon, { name: 'folder', size: 14 })),
+        h('span', { className: 'dsc-folder-name' }, folder.name),
+        h('span', { className: 'dsc-folder-count' }, String(conversations.length)),
+      ),
+      h('button', {
+        type: 'button', className: 'dsc-chat-item-more', title: t('moreActions'), 'aria-label': t('moreActions'),
         onClick: (event) => {
           event.stopPropagation()
-          chatStore.set({ renamingId: conversation.id })
+          const point = menuPoint(event)
+          chatActions.openFolderMenu(folder.id, point.x, point.y)
         },
-      }, h(Icon, { name: 'pencil', size: 13 })),
-      h('button', {
-        type: 'button', className: 'dsc-icon-button is-small is-danger', title: t('delete'), 'aria-label': t('delete'),
-        onClick: (event) => {
-          event.stopPropagation()
-          chatActions.requestDeleteConversation(conversation.id, conversation.title)
-        },
-      }, h(Icon, { name: 'trash', size: 13 })),
+      }, h(Icon, { name: 'more', size: 15 })),
     ),
+    collapsed
+      ? null
+      : h('div', { className: 'dsc-folder-items' },
+          conversations.length === 0
+            ? h('div', { className: 'dsc-folder-empty' }, t('folderEmpty'))
+            : conversations.map(renderItem),
+        ),
+  )
+}
+
+/** Highlight the query inside a search snippet without rendering raw HTML. */
+function HighlightedSnippet({ text, query }) {
+  const needle = typeof query === 'string' ? query.trim() : ''
+  if (needle === '' || typeof text !== 'string') return text
+  const lower = text.toLowerCase()
+  const target = needle.toLowerCase()
+  const parts = []
+  let index = 0
+  for (;;) {
+    const found = lower.indexOf(target, index)
+    if (found < 0) break
+    if (found > index) parts.push(text.slice(index, found))
+    parts.push(h('mark', { key: `mark-${found}`, className: 'dsc-search-mark' }, text.slice(found, found + target.length)))
+    index = found + target.length
+  }
+  if (parts.length === 0) return text
+  if (index < text.length) parts.push(text.slice(index))
+  return parts
+}
+
+function SearchResults({ query, pending, results, error, activeId, onOpen }) {
+  const t = useT()
+  if (error !== '') {
+    return h('div', { className: 'dsc-list-empty' }, t('searchError', { message: error }))
+  }
+  if (pending) {
+    return h('div', { className: 'dsc-search-state' }, h(Spinner, { size: 14 }), t('searchSearching'))
+  }
+  if (results.length === 0) {
+    return h('div', { className: 'dsc-list-empty' }, t('searchEmpty'))
+  }
+  return h('div', { className: 'dsc-search-results' },
+    results.map(result => h('button', {
+      key: result.id,
+      type: 'button',
+      className: cx('dsc-search-result', result.id === activeId && 'is-active'),
+      onClick: () => onOpen(result),
+    },
+      h('span', { className: 'dsc-search-result-head' },
+        h('span', { className: 'dsc-search-result-title' }, result.title || t('newChatTitle')),
+        result.pinned
+          ? h('span', { className: 'dsc-search-result-badge', title: t('pinnedSection') }, h(Icon, { name: 'pin', size: 11 }))
+          : null,
+        result.archived
+          ? h('span', { className: 'dsc-search-result-badge', title: t('archiveTitle') }, h(Icon, { name: 'archive', size: 11 }))
+          : null,
+      ),
+      result.titleMatch && !result.snippet
+        ? h('span', { className: 'dsc-search-result-meta' }, relativeTime(result.updatedAt, t))
+        : null,
+      result.snippet
+        ? h('span', { className: 'dsc-search-result-snippet' }, h(HighlightedSnippet, { text: result.snippet, query }))
+        : null,
+    )),
   )
 }
 
@@ -869,14 +1345,36 @@ function SidebarResizer({ onDraggingChange }) {
 function Sidebar() {
   const t = useT()
   const conversations = useChat(state => state.conversations)
+  const folders = useChat(state => state.folders)
   const activeId = useChat(state => state.activeId)
   const renamingId = useChat(state => state.renamingId)
   const auth = useChat(state => state.auth)
   const [query, setQuery] = React.useState('')
-  const filtered = query.trim() === ''
-    ? conversations
-    : conversations.filter(item => (item.title || '').toLowerCase().includes(query.trim().toLowerCase()))
-  const groups = groupConversations(filtered, t)
+  const [search, setSearch] = React.useState({ query: '', pending: false, results: [], error: '' })
+  const searchSequence = React.useRef(0)
+  const searchRef = React.useRef(null)
+  React.useEffect(() => {
+    const text = query.trim()
+    if (text === '') {
+      searchSequence.current += 1
+      setSearch({ query: '', pending: false, results: [], error: '' })
+      return undefined
+    }
+    const sequence = ++searchSequence.current
+    setSearch(previous => ({ ...previous, query: text, pending: true, error: '' }))
+    // Local history is small: one short debounce and a Host-side scan is
+    // enough, so no separate search index or service is needed.
+    const timer = setTimeout(() => {
+      chatActions.searchHistory(text).then((data) => {
+        if (sequence !== searchSequence.current) return
+        setSearch({ query: text, pending: false, results: Array.isArray(data?.results) ? data.results : [], error: '' })
+      }).catch((error) => {
+        if (sequence !== searchSequence.current) return
+        setSearch({ query: text, pending: false, results: [], error: error instanceof Error ? error.message : String(error) })
+      })
+    }, 220)
+    return () => clearTimeout(timer)
+  }, [query])
   const closeOnMobile = () => {
     // Same breakpoint as the drawer presentation; between 769-1024px the
     // sidebar is still a column and selecting a conversation must not hide it.
@@ -895,6 +1393,35 @@ function Sidebar() {
     void chatActions.loadConversation(id)
     closeOnMobile()
   }
+  const renderConversation = conversation => h(ConversationItem, {
+    key: conversation.id,
+    conversation,
+    active: conversation.id === activeId,
+    renaming: renamingId === conversation.id,
+    onOpen: () => select(conversation.id),
+    onRename: (value) => {
+      if (value.trim() === conversation.title) {
+        chatStore.set({ renamingId: null })
+        return
+      }
+      void chatActions.renameConversation(conversation.id, value)
+    },
+  })
+  // Archived chats leave the normal list but stay searchable and manageable in
+  // the archive dialog. Pinned chats stay pinned even when they also belong to
+  // a folder: the pinned section is their only home until they are unpinned.
+  const groups = organizeSidebar(conversations, folders)
+  const pinned = groups.pinned
+  const loose = groups.loose
+  const folderItems = new Map(groups.folders.map(entry => [entry.folder.id, entry.conversations]))
+  const archivedCount = groups.archivedCount
+  const visibleCount = groups.pinned.length + groups.loose.length
+    + groups.folders.reduce((total, entry) => total + entry.conversations.length, 0)
+  const groupBlock = (key, label, items) => h('div', { className: 'dsc-chat-group', key },
+    h('div', { className: 'dsc-chat-group-label' }, label),
+    items.map(renderConversation),
+  )
+  const searching = query.trim() !== ''
   return h('aside', { className: 'dsc-sidebar-inner' },
     h('div', { className: 'dsc-sidebar-brand' },
       h('div', { className: 'dsc-brand-lockup' }, h(DeepSeekLockup, { height: 24 })),
@@ -907,39 +1434,86 @@ function Sidebar() {
       type: 'button', className: 'dsc-new-chat',
       onClick: () => { void chatActions.newChat(); closeOnMobile() },
     }, h(Icon, { name: 'plus', size: 15 }), h('span', null, t('newChat'))),
-    h('label', { className: 'dsc-search' },
+    h('div', {
+      className: 'dsc-search',
+      onMouseDown: (event) => {
+        // Keep the whole field clickable while letting the clear button win.
+        if (typeof event.target?.closest === 'function' && event.target.closest('button') !== null) return
+        searchRef.current?.focus()
+      },
+    },
       h(Icon, { name: 'search', size: 15 }),
       h('input', {
+        ref: searchRef,
         className: 'dsc-search-input',
         value: query,
         placeholder: t('searchChats'),
         'aria-label': t('searchChats'),
         onChange: (event) => setQuery(event.target.value),
+        onKeyDown: (event) => {
+          if (event.key === 'Escape' && query !== '') {
+            event.preventDefault()
+            setQuery('')
+          }
+        },
       }),
+      searching
+        ? h('button', {
+            type: 'button', className: 'dsc-search-clear', title: t('clear'), 'aria-label': t('clear'),
+            onMouseDown: (event) => event.preventDefault(),
+            onClick: () => { setQuery(''); searchRef.current?.focus() },
+          }, h(Icon, { name: 'close', size: 12 }))
+        : null,
     ),
     h('div', { className: 'dsc-chat-list' },
-      groups.length === 0
-        ? h('div', { className: 'dsc-list-empty' }, query.trim() === '' ? t('noChats') : t('searchEmpty'))
-        : groups.map(group => h('div', { className: 'dsc-chat-group', key: group.key },
-            h('div', { className: 'dsc-chat-group-label' }, group.label),
-            group.items.map(conversation => h(ConversationItem, {
-              key: conversation.id,
-              conversation,
-              active: conversation.id === activeId,
-              renaming: renamingId === conversation.id,
-              onOpen: () => select(conversation.id),
-              onRename: (value) => {
-                if (value.trim() === conversation.title) {
-                  chatStore.set({ renamingId: null })
-                  return
-                }
-                void chatActions.renameConversation(conversation.id, value)
-              },
-              onDelete: () => chatActions.requestDeleteConversation(conversation.id, conversation.title),
-            })),
-          )),
+      searching
+        ? h(SearchResults, {
+            query: search.query,
+            pending: search.pending,
+            results: search.results,
+            error: search.error,
+            activeId,
+            onOpen: (result) => {
+              void chatActions.openSearchResult(result)
+              closeOnMobile()
+            },
+          })
+        : h(React.Fragment, null,
+            pinned.length > 0 ? groupBlock('pinned', t('pinnedSection'), pinned) : null,
+            h('div', { className: 'dsc-list-toolbar' },
+              h('span', { className: 'dsc-list-toolbar-label' }, t('foldersSection')),
+              h('button', {
+                type: 'button', className: 'dsc-icon-button is-small', title: t('newFolder'),
+                'aria-label': t('newFolder'),
+                onClick: () => chatActions.requestFolderPrompt('create'),
+              }, h(Icon, { name: 'folderPlus', size: 14 })),
+            ),
+            folders.length > 0
+              ? h('div', { className: 'dsc-folder-list' }, folders.map(folder => h(FolderSection, {
+                  key: folder.id,
+                  folder,
+                  conversations: folderItems.get(folder.id) ?? [],
+                  activeId,
+                  renamingId,
+                  renderItem: renderConversation,
+                })))
+              : null,
+            loose.length > 0
+              ? (folders.length > 0
+                  ? groupBlock('unfiled', t('unfiled'), loose)
+                  : groupConversations(loose, t).map(group => groupBlock(group.key, group.label, group.items)))
+              : null,
+            visibleCount === 0 ? h('div', { className: 'dsc-list-empty' }, t('noChats')) : null,
+          ),
     ),
     h('div', { className: 'dsc-sidebar-foot' },
+      h('button', {
+        type: 'button', className: 'dsc-foot-action',
+        title: t('archiveManager'),
+        onClick: () => chatActions.openArchive(),
+      }, h(Icon, { name: 'archive', size: 16 }), h('span', null, t('archiveManager')),
+        archivedCount > 0 ? h('span', { className: 'dsc-foot-count' }, String(archivedCount)) : null,
+      ),
       h('button', {
         type: 'button', className: 'dsc-foot-action',
         title: t('chatSettings'),
@@ -1230,6 +1804,11 @@ function ChatRoot() {
   const handoff = useChat(state => state.handoff)
   const sidebarOpen = useChat(state => state.sidebarOpen)
   const sidebarWidth = useChat(state => state.sidebarWidth)
+  const menu = useChat(state => state.menu)
+  const folderPrompt = useChat(state => state.folderPrompt)
+  const moveChat = useChat(state => state.moveChat)
+  const folderAdd = useChat(state => state.folderAdd)
+  const archiveOpen = useChat(state => state.archiveOpen)
   const [resizing, setResizing] = React.useState(false)
   const rootRef = React.useRef(null)
   const sidebarRef = React.useRef(null)
@@ -1274,6 +1853,30 @@ function ChatRoot() {
           chatStore.set({ settingsOpen: false })
           return
         }
+        if (chatStore.state.menu !== null) {
+          chatActions.closeMenu()
+          return
+        }
+        if (chatStore.state.folderPrompt !== null) {
+          chatActions.closeFolderPrompt()
+          return
+        }
+        if (chatStore.state.moveChat !== null) {
+          chatActions.closeMoveChat()
+          return
+        }
+        if (chatStore.state.folderAdd !== null) {
+          chatActions.closeFolderAdd()
+          return
+        }
+        if (chatStore.state.archiveOpen === true) {
+          chatActions.closeArchive()
+          return
+        }
+        if (chatStore.state.editingId !== null) {
+          chatActions.cancelEditMessage()
+          return
+        }
         // On the narrow drawer presentation Escape dismisses the sidebar, the
         // same gesture as the native drawer.
         if (chatStore.state.sidebarOpen && typeof window !== 'undefined' && window.innerWidth <= 768) {
@@ -1286,8 +1889,8 @@ function ChatRoot() {
       if (!root) return
       // A dialog traps focus on its own; otherwise the surface and the shared
       // switch form one scope, so Tab never reaches the native Agent UI that
-      // stays mounted underneath.
-      const modal = root.querySelector('.dsc-modal, .dsc-confirm')
+      // stays mounted underneath. An open menu keeps focus among its items.
+      const modal = root.querySelector('.dsc-modal, .dsc-confirm, .dsc-menu')
       const scope = modal ?? root
       // The share switch is a fixed-position shell entry; its own buttons are
       // laid out inside it, so they carry an offsetParent while the pill does not.
@@ -1347,7 +1950,14 @@ function ChatRoot() {
         : h(BootView, { error: bootError, onRetry: () => { void chatActions.ensureBoot(true) } }),
     ),
     settingsOpen ? h(SettingsDialog, null) : null,
-    confirm !== null ? h(ConfirmDialog, null) : null,
     handoff !== null ? h(HandoffDialog, null) : null,
+    folderPrompt !== null ? h(FolderPromptDialog, null) : null,
+    moveChat !== null ? h(MoveChatDialog, null) : null,
+    folderAdd !== null ? h(FolderAddDialog, null) : null,
+    archiveOpen ? h(ArchiveDialog, null) : null,
+    // The confirmation sits on top of whichever surface raised it (the archive
+    // manager, a folder picker or the sidebar menu).
+    confirm !== null ? h(ConfirmDialog, null) : null,
+    menu !== null ? h(ContextMenu, null) : null,
   )
 }

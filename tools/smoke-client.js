@@ -33,6 +33,7 @@ const React = {
   useMemo(factory) { return factory() },
   useCallback(fn) { return fn },
   useRef(initial) { return { current: initial } },
+  memo(component) { return component },
 }
 
 function renderFunction(Component, props) {
@@ -102,8 +103,7 @@ function translate(key, vars) {
   return template.replace(/\{(\w+)\}/g, (match, name) => (vars[name] === undefined ? match : String(vars[name])))
 }
 
-function collectText(node, out = []) {
-  if (node === null || node === undefined || typeof node === 'boolean') return out
+function collectText(node, out = []) {  if (node === null || node === undefined || typeof node === 'boolean') return out
   if (typeof node === 'string' || typeof node === 'number') {
     out.push(String(node))
     return out
@@ -129,11 +129,62 @@ function collectText(node, out = []) {
   return out
 }
 
+function classNamesOf(node) {
+  const value = node?.props?.className
+  return typeof value === 'string' ? value.split(/\s+/).filter(Boolean) : []
+}
+
+function collectByClass(node, name, out = []) {
+  if (node === null || node === undefined || typeof node === 'boolean') return out
+  if (typeof node === 'string' || typeof node === 'number') return out
+  if (Array.isArray(node)) {
+    for (const child of node) collectByClass(child, name, out)
+    return out
+  }
+  if (typeof node === 'function') {
+    collectByClass(renderFunction(node, {}), name, out)
+    return out
+  }
+  if (typeof node !== 'object') return out
+  if (node.type === React.Fragment) {
+    collectByClass(node.props?.children, name, out)
+    return out
+  }
+  if (typeof node.type === 'function') {
+    collectByClass(renderFunction(node.type, node.props), name, out)
+    return out
+  }
+  if (classNamesOf(node).includes(name)) out.push(node)
+  collectByClass(node.props?.children, name, out)
+  return out
+}
+
+function collectionText(node) {
+  return collectText(node).join(' ').replace(/\s+/g, ' ').trim()
+}
+
 const bootstrap = {
-  version: 1,
+  version: 2,
   model: { id: 'deepseek-flash', name: 'DeepSeek V4.1 Flash' },
+  models: [
+    {
+      id: 'deepseek-flash', name: 'DeepSeek V4.1 Flash', shortName: 'V4.1 Flash',
+      descriptionKey: 'modelFlashDesc',
+      capabilities: { vision: true, documents: true, search: true, thinking: true, efforts: ['low', 'high', 'max'] },
+    },
+    {
+      id: 'deepseek-v4-pro', name: 'DeepSeek V4 Pro', shortName: 'V4 Pro',
+      descriptionKey: 'modelProDesc',
+      capabilities: { vision: false, documents: true, search: true, thinking: true, efforts: ['low', 'high', 'max'] },
+    },
+  ],
+  modelConfig: {
+    defaults: { model: 'deepseek-flash', effort: 'high' },
+    conversations: { c1: { model: 'deepseek-v4-pro', effort: 'max' } },
+  },
   settings: { authMode: 'auto', thinking: true, search: true, systemPrompt: '' },
   conversations: [{ id: 'c1', title: '测试对话', titleAuto: false, createdAt: 1, updatedAt: 2, messageCount: 2 }],
+  folders: [],
   auth: {
     ready: true, mode: 'auto', source: 'account',
     chatKeyConfigured: false, dshKeyConfigured: false, accountSignedIn: true, canStoreKey: true,
@@ -775,4 +826,549 @@ if (rollbackState.messages.length !== 0 || rollbackState.draft !== 'oops' || rol
   throw new Error('pre-stream rollback did not restore the composer')
 }
 console.log('ROLLBACK_OK')
+
+// ---- conversation organization: grouping, ordering and continuable answers ----
+console.log('ORGANIZE_START')
+const sidebarGroups = captured.organizeSidebar([
+  { id: 'c1', pinned: true, pinnedAt: 10, archived: false, folderId: null, updatedAt: 10 },
+  { id: 'c2', pinned: true, pinnedAt: 20, archived: false, folderId: 'f1', updatedAt: 20 },
+  { id: 'c3', pinned: false, archived: false, folderId: 'f1', updatedAt: 30 },
+  { id: 'c4', pinned: false, archived: false, folderId: null, updatedAt: 40 },
+  { id: 'c5', pinned: false, archived: true, folderId: null, updatedAt: 50 },
+], [{ id: 'f1', name: '工作', collapsed: false, createdAt: 1 }])
+if (sidebarGroups.pinned.map(item => item.id).join(',') !== 'c2,c1') throw new Error('pinned chats must follow activity order')
+if (sidebarGroups.folders[0].conversations.map(item => item.id).join(',') !== 'c3') throw new Error('folder contents are wrong')
+if (sidebarGroups.loose.map(item => item.id).join(',') !== 'c4') throw new Error('unfiled contents are wrong')
+if (sidebarGroups.archivedCount !== 1) throw new Error('archived chats must leave the list')
+const tiedGroups = captured.organizeSidebar([
+  { id: 'b', updatedAt: 5, pinned: false, archived: false, folderId: null },
+  { id: 'a', updatedAt: 5, pinned: false, archived: false, folderId: null },
+], [])
+if (tiedGroups.loose.map(item => item.id).join(',') !== 'a,b') throw new Error('equal activity timestamps must stay deterministic')
+if (captured.canContinueReply({ role: 'assistant', status: 'stopped', blocks: [{ type: 'text', text: 'half' }] }) !== true) throw new Error('a stopped answer with text must be continuable')
+if (captured.canContinueReply({ role: 'assistant', status: 'stopped', blocks: [{ type: 'text', text: '   ' }] }) !== false) throw new Error('an empty answer cannot be continued')
+if (captured.canContinueReply({ role: 'assistant', status: 'done', stopReason: 'end_turn', blocks: [{ type: 'text', text: 'full' }] }) !== false) throw new Error('a complete answer is not continuable')
+if (captured.canContinueReply({ role: 'assistant', status: 'error', prefix: false, blocks: [{ type: 'text', text: 'x' }] }) !== false) throw new Error('a tool-terminated answer cannot be continued')
+console.log('ORGANIZE_OK')
+
+// ---- new surfaces render without a browser ----
+captured.chatStore.set({
+  conversations: [
+    { id: 'c1', title: '测试对话', createdAt: 1, updatedAt: 9, pinned: true, pinnedAt: 5, archived: false, folderId: 'f1', messageCount: 2 },
+    { id: 'c2', title: '已归档对话', createdAt: 1, updatedAt: 2, pinned: false, archived: true, archivedAt: 9, folderId: null, messageCount: 4 },
+  ],
+  folders: [{ id: 'f1', name: '工作', collapsed: false, createdAt: 1 }],
+})
+const versionedUser = { ...userMessage, version: { index: 1, count: 2 } }
+const versionedAssistant = { ...assistant, version: { index: 2, count: 3 } }
+render('UserMessage-versioned', captured.UserMessage, { message: versionedUser, canEdit: true })
+render('AssistantMessage-versioned', captured.AssistantMessage, { message: versionedAssistant, streaming: false, isLast: true, canRegenerate: true })
+render('VersionNav', captured.VersionNav, { message: versionedAssistant })
+render('SearchResults', captured.SearchResults, {
+  query: 'alpha',
+  pending: false,
+  results: [{
+    id: 'c1', title: 'Alpha chat', snippet: '…an alpha match…', titleMatch: false,
+    onActivePath: true, pinned: true, archived: false, updatedAt: 2,
+  }],
+  error: '',
+  activeId: 'c1',
+  onOpen() {},
+})
+render('SearchResults-empty', captured.SearchResults, {
+  query: 'x', pending: false, results: [], error: '', activeId: null, onOpen() {},
+})
+captured.chatStore.set({ editingId: 'u1', editDraft: '你好\n第二行' })
+render('UserMessageEditor', captured.UserMessageEditor, { message: userMessage })
+captured.chatStore.set({ editingId: null, editDraft: '' })
+captured.chatStore.set({ menu: { kind: 'conversation', id: 'c1', x: 120, y: 140 } })
+render('ContextMenu-conversation', captured.ContextMenu)
+captured.chatStore.set({ menu: { kind: 'folder', id: 'f1', x: 120, y: 140 } })
+render('ContextMenu-folder', captured.ContextMenu)
+captured.chatStore.set({ menu: null, folderPrompt: { mode: 'create', id: null, draft: '', busy: false } })
+render('FolderPromptDialog', captured.FolderPromptDialog)
+captured.chatStore.set({ folderPrompt: { mode: 'rename', id: 'f1', draft: '工作', busy: false } })
+render('FolderPromptDialog-rename', captured.FolderPromptDialog)
+captured.chatStore.set({ folderPrompt: null, moveChat: { conversationId: 'c1', folderId: null, busy: false } })
+render('MoveChatDialog', captured.MoveChatDialog)
+captured.chatStore.set({ moveChat: null, folderAdd: { folderId: 'f1', name: '工作', selected: ['c1'], busy: false } })
+render('FolderAddDialog', captured.FolderAddDialog)
+captured.chatStore.set({ folderAdd: null, archiveOpen: true })
+render('ArchiveDialog', captured.ArchiveDialog)
+render('ChatRoot-archive', captured.ChatRoot)
+captured.chatStore.set({ archiveOpen: false })
+console.log('ORG_SURFACES_OK')
+
+// ---- edit, regenerate, continue, version switch and search jump ----
+const flowSettings = { authMode: 'auto', thinking: false, search: false, systemPrompt: '' }
+const originalUser = { id: 'u1', role: 'user', content: 'original', files: [], createdAt: 1 }
+const originalReply = {
+  id: 'a1', role: 'assistant', createdAt: 2, updatedAt: 2, status: 'done',
+  blocks: [{ type: 'text', text: 'old answer', citations: [] }], usage: { input_tokens: 1, output_tokens: 1 },
+}
+let lastStreamBody = null
+const ndjsonResponse = (lines) => {
+  const encoder = new TextEncoder()
+  return new Response(new ReadableStream({
+    start(controller) {
+      for (const line of lines) controller.enqueue(encoder.encode(`${JSON.stringify(line)}\n`))
+      controller.close()
+    },
+  }), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })
+}
+
+console.log('EDIT_FLOW_START')
+context.fetch = async (url, init) => {
+  if (!String(url).includes('/api/deepseek-chat/stream')) {
+    return new Response(JSON.stringify({ error: { message: `unexpected ${url}` } }), { status: 500 })
+  }
+  lastStreamBody = JSON.parse(init.body)
+  const messages = [
+    { id: 'u9', role: 'user', content: 'edited question', files: [], createdAt: 5, version: { index: 2, count: 2 } },
+    { id: 'a9', role: 'assistant', createdAt: 6, updatedAt: 6, model: 'deepseek-flash', thinking: false, search: false, status: 'streaming', blocks: [], prefix: true },
+  ]
+  return ndjsonResponse([
+    { type: 'start', conversationId: 'c1', userMessageId: 'u9', assistantMessageId: 'a9', title: 'Hi', messages },
+    { type: 'event', event: { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } } },
+    { type: 'event', event: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'new answer' } } },
+    {
+      type: 'done',
+      message: { id: 'a9', role: 'assistant', createdAt: 6, updatedAt: 7, model: 'deepseek-flash', thinking: false, search: false, status: 'done', blocks: [{ type: 'text', text: 'new answer', citations: [] }], version: { index: 1, count: 1 } },
+      conversation: { id: 'c1', title: 'Hi', titleAuto: false, createdAt: 1, updatedAt: 7, pinned: false, pinnedAt: null, archived: false, archivedAt: null, folderId: null, messageCount: 2 },
+    },
+  ])
+}
+captured.chatStore.set({
+  activeId: 'c1', messages: [originalUser, originalReply], streaming: null, editingId: 'u1', editDraft: 'edited question',
+  boot: 'ready', auth: readyAuth, settings: flowSettings, attachments: [], draft: '',
+})
+await captured.chatActions.saveEditedMessage()
+if (lastStreamBody === null || lastStreamBody.mode !== 'edit' || lastStreamBody.targetMessageId !== 'u1') {
+  throw new Error('editing must stream a branch for the edited message')
+}
+if (captured.chatStore.state.messages.map(item => item.id).join(',') !== 'u9,a9') throw new Error('editing must replace the visible branch')
+if (captured.chatStore.state.messages[0].version.count !== 2) throw new Error('the edited question must report its version position')
+if (captured.chatStore.state.messages[1].blocks[0].text !== 'new answer') throw new Error('the edited answer did not settle')
+if (captured.chatStore.state.editingId !== null) throw new Error('the editor must close after saving')
+console.log('EDIT_FLOW_OK')
+
+console.log('REGENERATE_FLOW_START')
+context.fetch = async (url, init) => {
+  lastStreamBody = JSON.parse(init.body)
+  const messages = [
+    { id: 'u1', role: 'user', content: 'original', files: [], createdAt: 1 },
+    { id: 'a7', role: 'assistant', createdAt: 8, updatedAt: 8, model: 'deepseek-flash', thinking: false, search: false, status: 'streaming', blocks: [], prefix: true, version: { index: 2, count: 2 } },
+  ]
+  return ndjsonResponse([
+    { type: 'start', conversationId: 'c1', userMessageId: 'u1', assistantMessageId: 'a7', title: 'Hi', messages },
+    { type: 'event', event: { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } } },
+    { type: 'event', event: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'regenerated' } } },
+    {
+      type: 'done',
+      message: { id: 'a7', role: 'assistant', createdAt: 8, updatedAt: 9, model: 'deepseek-flash', thinking: false, search: false, status: 'done', blocks: [{ type: 'text', text: 'regenerated', citations: [] }], version: { index: 2, count: 2 } },
+      conversation: { id: 'c1', title: 'Hi', titleAuto: false, createdAt: 1, updatedAt: 9, pinned: false, pinnedAt: null, archived: false, archivedAt: null, folderId: null, messageCount: 2 },
+    },
+  ])
+}
+captured.chatStore.set({ activeId: 'c1', messages: [originalUser, originalReply], streaming: null, editingId: null, editDraft: '', auth: readyAuth })
+await captured.chatActions.regenerateMessage(captured.chatStore.state.messages[1])
+if (lastStreamBody.mode !== 'regenerate' || lastStreamBody.targetMessageId !== 'a1') throw new Error('regeneration must target the answer')
+if (captured.chatStore.state.messages[1].version.count !== 2) throw new Error('the regenerated answer must report both versions')
+if (captured.chatStore.state.messages[1].blocks[0].text !== 'regenerated') throw new Error('the regenerated answer did not settle')
+console.log('REGENERATE_FLOW_OK')
+
+console.log('CONTINUE_FLOW_START')
+const stoppedReply = {
+  id: 'a1', role: 'assistant', createdAt: 2, updatedAt: 3, model: 'deepseek-flash', thinking: false, search: false,
+  status: 'stopped', stopReason: 'end_turn', blocks: [{ type: 'text', text: '半截', citations: [] }], prefix: true,
+}
+context.fetch = async (url, init) => {
+  lastStreamBody = JSON.parse(init.body)
+  if (lastStreamBody.model !== 'deepseek-v4-pro') throw new Error('a continuation must send the selected model')
+  if (captured.chatStore.state.messages[1].model !== 'deepseek-v4-pro') {
+    throw new Error('a continuation must update the answer model label before streaming')
+  }
+  const continuedReply = { ...stoppedReply, model: lastStreamBody.model, effort: lastStreamBody.effort }
+  return ndjsonResponse([
+    { type: 'start', conversationId: 'c1', userMessageId: 'u1', assistantMessageId: 'a1', title: 'Hi', messages: [originalUser, { ...continuedReply, status: 'streaming' }] },
+    { type: 'event', event: { type: 'content_block_start', index: 1, content_block: { type: 'text', text: '' } } },
+    { type: 'event', event: { type: 'content_block_delta', index: 1, delta: { type: 'text_delta', text: '继续' } } },
+    {
+      type: 'done',
+      message: { ...continuedReply, status: 'done', updatedAt: 9, continueCount: 1, blocks: [{ type: 'text', text: '半截', citations: [] }, { type: 'text', text: '继续', citations: [] }] },
+      conversation: { id: 'c1', title: 'Hi', titleAuto: false, createdAt: 1, updatedAt: 9, pinned: false, pinnedAt: null, archived: false, archivedAt: null, folderId: null, messageCount: 2 },
+    },
+  ])
+}
+captured.chatStore.set({
+  activeId: 'c1', messages: [originalUser, stoppedReply], streaming: null, auth: readyAuth,
+  modelChoice: { model: 'deepseek-v4-pro', effort: 'high' },
+})
+await captured.chatActions.continueMessage(captured.chatStore.state.messages[1])
+if (lastStreamBody.mode !== 'continue' || lastStreamBody.targetMessageId !== 'a1') throw new Error('continuation must target the cut-off answer')
+if (lastStreamBody.effort !== 'high') throw new Error('continuation must send the selected thinking effort')
+if (captured.chatStore.state.messages[1].model !== 'deepseek-v4-pro') throw new Error('the continued answer must keep the selected model label')
+if (captured.chatStore.state.messages.length !== 2) throw new Error('continuation must not add a turn')
+if (captured.chatStore.state.messages[1].blocks.map(block => block.text).join('') !== '半截继续') throw new Error('the continuation was not appended')
+if (captured.chatStore.state.messages[1].status !== 'done') throw new Error('the continued answer did not settle')
+console.log('CONTINUE_FLOW_OK')
+
+console.log('VERSION_FLOW_START')
+context.fetch = async (url, init) => {
+  const body = JSON.parse(init.body)
+  if (body.action !== 'version') throw new Error(`unexpected action ${body.action}`)
+  return new Response(JSON.stringify({
+    conversation: {
+      id: 'c1', title: 'Hi',
+      messages: [
+        { id: 'u2', role: 'user', content: 'older question', files: [], createdAt: 1, version: { index: 1, count: 2 } },
+        { id: 'a2', role: 'assistant', createdAt: 2, updatedAt: 2, status: 'done', blocks: [{ type: 'text', text: 'older answer', citations: [] }] },
+      ],
+    },
+    selectedId: 'u2',
+    summaries: [{ id: 'c1', title: 'Hi', updatedAt: 9, pinned: false, archived: false, folderId: null, messageCount: 2 }],
+    folders: [],
+  }), { status: 200, headers: { 'content-type': 'application/json' } })
+}
+captured.chatStore.set({ activeId: 'c1', messages: [originalUser, originalReply], streaming: null })
+await captured.chatActions.selectVersion('u9', -1)
+if (captured.chatStore.state.messages.map(item => item.id).join(',') !== 'u2,a2') throw new Error('a version switch must load the other branch')
+if (captured.chatStore.state.focusMessage?.id !== 'u2') throw new Error('a version switch must focus the selected message')
+console.log('VERSION_FLOW_OK')
+
+console.log('SEARCH_JUMP_START')
+context.fetch = async (url, init) => {
+  const body = JSON.parse(init.body)
+  if (body.action !== 'get' || body.focusMessageId !== 'a2') throw new Error('a search jump must focus the matched message')
+  return new Response(JSON.stringify({
+    conversation: {
+      id: 'c1', title: 'Hi',
+      messages: [
+        { id: 'u2', role: 'user', content: 'q', files: [], createdAt: 1 },
+        { id: 'a2', role: 'assistant', createdAt: 2, updatedAt: 2, status: 'done', blocks: [{ type: 'text', text: 'older answer', citations: [] }] },
+      ],
+    },
+    folders: [],
+  }), { status: 200, headers: { 'content-type': 'application/json' } })
+}
+captured.chatStore.set({ activeId: 'c1', messages: [originalUser, originalReply], streaming: null })
+await captured.chatActions.openSearchResult({ id: 'c1', messageId: 'a2', onActivePath: true })
+if (captured.chatStore.state.messages.map(item => item.id).join(',') !== 'u2,a2') throw new Error('a search jump must open the matching branch')
+if (captured.chatStore.state.focusMessage?.id !== 'a2') throw new Error('a search jump must focus the matching message')
+console.log('SEARCH_JUMP_OK')
+
+console.log('ORGANIZE_FLOW_START')
+context.fetch = async (url, init) => {
+  const body = JSON.parse(init.body)
+  if (body.action === 'pin') {
+    return new Response(JSON.stringify({
+      conversation: { id: 'c1', title: 'Hi', messages: [], pinned: true, pinnedAt: 5, updatedAt: 9, archived: false, folderId: null, messageCount: 1 },
+      summaries: [{ id: 'c1', title: 'Hi', updatedAt: 9, pinned: true, pinnedAt: 5, archived: false, folderId: null, messageCount: 1 }],
+      folders: [],
+    }), { status: 200, headers: { 'content-type': 'application/json' } })
+  }
+  if (body.action === 'folder.create') {
+    return new Response(JSON.stringify({
+      folder: { id: 'f9', name: '工作', collapsed: false, createdAt: 5 },
+      summaries: [],
+      folders: [{ id: 'f9', name: '工作', collapsed: false, createdAt: 5 }],
+    }), { status: 200, headers: { 'content-type': 'application/json' } })
+  }
+  throw new Error(`unexpected action ${body.action}`)
+}
+captured.chatStore.set({
+  conversations: [{ id: 'c1', title: 'Hi', updatedAt: 9, pinned: false, archived: false, folderId: null, messageCount: 1 }],
+  folders: [],
+  menu: { kind: 'conversation', id: 'c1', x: 10, y: 10 },
+})
+await captured.chatActions.setPinned('c1', true)
+if (captured.chatStore.state.conversations[0].pinned !== true) throw new Error('pinning did not update the summary')
+if (captured.chatStore.state.menu !== null) throw new Error('the menu must close after the action')
+captured.chatActions.requestFolderPrompt('create')
+captured.chatActions.updateFolderPrompt('工作')
+await captured.chatActions.submitFolderPrompt()
+if (captured.chatStore.state.folders.length !== 1 || captured.chatStore.state.folders[0].name !== '工作') throw new Error('folder creation did not reach the store')
+if (captured.chatStore.state.folderPrompt !== null) throw new Error('the folder prompt must close')
+console.log('ORGANIZE_FLOW_OK')
+// ---------------------------------------------------------------------------
+// Composer: one rounded container, a bare auto-growing editor, and the + menu.
+// ---------------------------------------------------------------------------
+console.log('COMPOSER_START')
+captured.chatStore.set({
+  open: true, boot: 'ready', messages: [], activeId: null, draft: '你好，世界', attachments: [],
+  settingsOpen: false, settings: { authMode: 'auto', thinking: true, search: true, systemPrompt: '' },
+  sendKey: 'enter', streaming: null, stopping: false, auth: readyAuth,
+  modelChoice: { model: 'deepseek-flash', effort: 'high' },
+})
+let composerTree = React.createElement(captured.Composer)
+if (collectByClass(composerTree, 'dsc-editor-field').length !== 1) throw new Error('the composer needs exactly one editor field')
+if (collectByClass(composerTree, 'dsc-textarea').length !== 0) throw new Error('the editor must not be the old bordered textarea')
+if (collectByClass(composerTree, 'dsc-tool-button').length !== 0) throw new Error('per-tool buttons must move into the + menu')
+if (collectByClass(composerTree, 'dsc-tools-trigger').length !== 1) throw new Error('the + menu trigger is missing')
+if (collectByClass(composerTree, 'dsc-model-trigger').length !== 1) throw new Error('the model trigger is missing')
+if (collectByClass(composerTree, 'dsc-active-tool').length !== 2) throw new Error('active search/thinking tools need chips')
+const editor = collectByClass(composerTree, 'dsc-editor-field')[0]
+if (typeof editor.props.onKeyDown !== 'function') throw new Error('the editor must own Enter handling')
+if (!String(editor.props.value).includes('你好')) throw new Error('the editor must show the draft')
+console.log('COMPOSER_STRUCTURE_OK')
+
+// Enter / Shift+Enter / IME / Ctrl+Enter preference.
+const key = overrides => ({ key: 'Enter', ...overrides })
+if (captured.composerKeySends(key({}), 'enter') !== true) throw new Error('Enter must send in the default mode')
+if (captured.composerKeySends(key({ shiftKey: true }), 'enter') !== false) throw new Error('Shift+Enter must insert a newline')
+if (captured.composerKeySends(key({ isComposing: true }), 'enter') !== false) throw new Error('an IME composition must never send')
+if (captured.composerKeySends(key({ nativeEvent: { isComposing: true } }), 'enter') !== false) throw new Error('a native IME composition must never send')
+if (captured.composerKeySends(key({ keyCode: 229 }), 'enter') !== false) throw new Error('keyCode 229 must never send')
+if (captured.composerKeySends(key({ ctrlKey: true }), 'ctrl-enter') !== true) throw new Error('Ctrl+Enter must send in the ctrl-enter mode')
+if (captured.composerKeySends(key({ metaKey: true }), 'ctrl-enter') !== true) throw new Error('Cmd+Enter must send on macOS')
+if (captured.composerKeySends(key({}), 'ctrl-enter') !== false) throw new Error('Enter must insert a newline in the ctrl-enter mode')
+if (captured.composerKeySends({ key: 'a' }, 'enter') !== false) throw new Error('other keys must not send')
+const eventOrder = []
+const dispatch = { key: 'Enter', preventDefault() { eventOrder.push('prevent') }, shiftKey: false }
+if (captured.composerKeySends(dispatch, 'enter') !== true) throw new Error('Enter dispatch must send')
+console.log('COMPOSER_KEYS_OK')
+
+// Unsupported image input is announced, not silently dropped.
+captured.chatStore.set({
+  modelChoice: { model: 'deepseek-v4-pro', effort: 'high' },
+  attachments: [{ id: 'img1', name: 'cat.png', size: 10, isImage: true, status: 'ready', fileId: 'f1', previewUrl: '' }],
+})
+composerTree = React.createElement(captured.Composer)
+if (collectByClass(composerTree, 'dsc-composer-warning').length !== 1) throw new Error('a model without vision must warn about images')
+if (!collectionText(collectByClass(composerTree, 'dsc-composer-warning')[0]).includes('不支持图片')) throw new Error('the image warning must explain the reason')
+captured.chatStore.set({
+  modelChoice: { model: 'deepseek-flash', effort: 'high' },
+  attachments: [{ id: 'img1', name: 'cat.png', size: 10, isImage: true, status: 'ready', fileId: 'f1', previewUrl: '' }],
+})
+composerTree = React.createElement(captured.Composer)
+if (collectByClass(composerTree, 'dsc-composer-warning').length !== 0) throw new Error('flash accepts images without a warning')
+captured.chatStore.set({ attachments: [] })
+console.log('COMPOSER_VISION_OK')
+
+// The tool registry is the one extension point; no fake entries exist.
+const toolIds = captured.chatToolDefinitions().map(tool => tool.id)
+if (toolIds.join(',') !== 'upload,web-search,deep-thinking') throw new Error(`unexpected tools: ${toolIds.join(',')}`)
+let ranCustomTool = 0
+const unregister = captured.registerChatTool({
+  id: 'test-tool', kind: 'action', icon: 'spark', labelKey: 'toolsMenu', hintKey: 'toolsMenu',
+  order: 5, run: () => { ranCustomTool += 1 },
+})
+if (captured.chatToolDefinitions()[0].id !== 'test-tool') throw new Error('a custom tool must respect its order')
+const customTool = captured.chatToolDefinitions()[0]
+customTool.run()
+if (ranCustomTool !== 1) throw new Error('a registered tool must run its action')
+unregister()
+if (captured.chatToolDefinitions().some(tool => tool.id === 'test-tool')) throw new Error('unregister must remove the tool')
+if (captured.chatToolDefinitions().length !== 3) throw new Error('only implemented tools may be registered')
+console.log('TOOLS_REGISTRY_OK')
+
+// Model helpers read the Host catalog and clamp to real tiers.
+if (captured.modelCatalog().length !== 2) throw new Error('the two real models must come from the Host')
+if (captured.modelById('deepseek-v4-pro').capabilities.vision !== false) throw new Error('v4-pro must be marked text-only')
+if (captured.modelCapability(captured.modelById('deepseek-flash'), 'vision') !== true) throw new Error('flash must be marked vision-capable')
+if (captured.modelEfforts(captured.modelById('deepseek-flash')).join(',') !== 'low,high,max') throw new Error('only real effort tiers may be offered')
+const chip = captured.modelChipLabel(captured.modelById('deepseek-v4-pro'), true, 'max')
+if (!chip.includes('V4 Pro') || !chip.includes('最高')) throw new Error(`unexpected model chip label: ${chip}`)
+captured.chatStore.set({ modelChoice: { model: 'deepseek-v4-pro', effort: 'max' }, modelConfig: bootstrap.modelConfig })
+const choice = captured.currentModelChoice()
+if (choice.model.id !== 'deepseek-v4-pro' || choice.effort !== 'max') throw new Error('the stored model choice must be used')
+captured.chatStore.set({ modelChoice: { model: 'retired-model', effort: 'ultra' }, models: [] })
+const fallbackChoice = captured.currentModelChoice()
+if (fallbackChoice.model.id !== 'deepseek-flash' || fallbackChoice.effort !== 'high') throw new Error('an unavailable model must fall back to the default one')
+if (captured.chatStore.state.models.length === 0) captured.chatStore.set({ models: bootstrap.models, modelConfig: bootstrap.modelConfig })
+console.log('MODEL_HELPERS_OK')
+
+// A blank chat writes the default; an open conversation writes its override.
+context.fetch = async (url, init) => {
+  if (String(url).includes('/api/deepseek-chat/model')) {
+    const body = JSON.parse(init.body)
+    const config = JSON.parse(JSON.stringify(bootstrap.modelConfig))
+    if (typeof body.conversationId === 'string') {
+      config.conversations[body.conversationId] = { model: body.model, effort: body.effort }
+    } else {
+      config.defaults = { model: body.model, effort: body.effort }
+    }
+    return new Response(JSON.stringify({ models: bootstrap.models, modelConfig: config }), {
+      status: 200, headers: { 'content-type': 'application/json' },
+    })
+  }
+  return new Response(JSON.stringify({ error: { message: `unexpected ${url}` } }), { status: 500 })
+}
+captured.chatStore.set({ activeId: null, models: bootstrap.models, modelConfig: bootstrap.modelConfig, modelChoice: { model: 'deepseek-flash', effort: 'high' } })
+captured.chatActions.selectModel('deepseek-v4-pro')
+await wait(40)
+if (captured.chatStore.state.modelChoice.model !== 'deepseek-v4-pro') throw new Error('selecting a model must reach the store')
+if (captured.chatStore.state.modelConfig.defaults.model !== 'deepseek-v4-pro') throw new Error('a blank chat must persist the default model')
+captured.chatActions.selectEffort('low')
+await wait(40)
+if (captured.chatStore.state.modelChoice.effort !== 'low') throw new Error('selecting an effort must reach the store')
+captured.chatStore.set({ activeId: 'c9', modelConfig: { defaults: { model: 'deepseek-flash', effort: 'high' }, conversations: {} } })
+captured.chatActions.selectModel('deepseek-v4-pro')
+await wait(40)
+if (captured.chatStore.state.modelConfig.conversations.c9?.model !== 'deepseek-v4-pro') throw new Error('an open conversation must persist its own model')
+console.log('MODEL_PERSIST_OK')
+
+// Per-conversation drafts survive a switch and a new chat.
+context.fetch = async (url) => {
+  if (String(url).includes('/api/deepseek-chat/conversation')) {
+    return new Response(JSON.stringify({ conversation: { id: 'c1', title: 't', messages: [] } }), {
+      status: 200, headers: { 'content-type': 'application/json' },
+    })
+  }
+  return new Response(JSON.stringify({ error: { message: `unexpected ${url}` } }), { status: 500 })
+}
+captured.chatStore.set({ activeId: 'c1', draft: 'first draft', attachments: [], streaming: null, conversationLoading: false })
+await captured.chatActions.newChat()
+if (captured.chatStore.state.draft !== '') throw new Error('a new chat starts with its own (empty) draft')
+captured.chatStore.set({ draft: 'second draft' })
+await captured.chatActions.loadConversation('c1')
+if (captured.chatStore.state.draft !== 'first draft') throw new Error(`switching back must restore the draft: ${captured.chatStore.state.draft}`)
+await captured.chatActions.newChat()
+if (captured.chatStore.state.draft !== 'second draft') throw new Error('new chat must restore its own draft')
+captured.chatStore.set({ draft: '', activeId: null })
+console.log('DRAFTS_OK')
+
+// A model the API no longer serves is recoverable: revert to the default and
+// keep the prompt, so the retry actually works.
+context.fetch = async (url) => {
+  if (String(url).includes('/api/deepseek-chat/conversation')) {
+    return new Response(JSON.stringify({ conversation: { id: 'c-fallback', title: 't', messages: [] } }), {
+      status: 200, headers: { 'content-type': 'application/json' },
+    })
+  }
+  if (String(url).includes('/api/deepseek-chat/stream')) {
+    return new Response(JSON.stringify({ error: { message: 'unsupported model', code: 'INVALID_MODEL', status: 400 } }), {
+      status: 400, headers: { 'content-type': 'application/json' },
+    })
+  }
+  if (String(url).includes('/api/deepseek-chat/model')) {
+    return new Response(JSON.stringify({
+      models: bootstrap.models,
+      modelConfig: { defaults: { model: 'deepseek-flash', effort: 'high' }, conversations: {} },
+    }), { status: 200, headers: { 'content-type': 'application/json' } })
+  }
+  return new Response(JSON.stringify({ error: { message: `unexpected ${url}` } }), { status: 500 })
+}
+captured.chatStore.set({
+  activeId: null, messages: [], draft: 'retry me', attachments: [], streaming: null, sending: false,
+  boot: 'ready', auth: readyAuth, settings: { authMode: 'auto', thinking: true, search: false, systemPrompt: '' },
+  modelChoice: { model: 'deepseek-v4-pro', effort: 'max' }, models: bootstrap.models,
+  modelConfig: { defaults: { model: 'deepseek-v4-pro', effort: 'max' }, conversations: {} },
+  toasts: [],
+})
+await captured.chatActions.sendMessage()
+await wait(30)
+if (captured.chatStore.state.modelChoice.model !== 'deepseek-flash') throw new Error('an unavailable model must fall back to flash')
+if (captured.chatStore.state.draft !== 'retry me') throw new Error('a rejected model request must keep the prompt')
+if (!captured.chatStore.state.toasts.some(toast => String(toast.message).includes('已切换回'))) throw new Error('the model fallback must be explained')
+console.log('MODEL_RECOVERY_OK')
+
+// ---------------------------------------------------------------------------
+// Sources: collapsed summary, numbered rows, citations tied to the same URLs.
+// ---------------------------------------------------------------------------
+console.log('SOURCES_START')
+const citation = (url, title) => ({ type: 'web_search_result_location', url, title, cited_text: '', encrypted_index: '' })
+const sourcedAssistant = {
+  id: 'a-src', role: 'assistant', status: 'done', createdAt: 1, updatedAt: 2, stopReason: 'end_turn',
+  blocks: [
+    { type: 'text', text: '第一段。', citations: [citation('https://a.test/1', '甲页面')] },
+    { type: 'text', text: '第二段。', citations: [citation('https://b.test/2', null)] },
+    {
+      type: 'web_search_tool_result', tool_use_id: 's1', kind: 'search',
+      content: [
+        { type: 'web_search_result', title: '丙页面', url: 'https://c.test/3', snippet: '丙摘要', site_name: '丙站' },
+        { type: 'web_search_result', title: '甲页面（搜索）', url: 'https://a.test/1', snippet: '甲摘要', site_name: '甲站' },
+        { type: 'web_search_result', title: '丁页面', url: 'https://d.test/4', snippet: '', site_name: null },
+      ],
+    },
+  ],
+}
+const sourceData = captured.collectMessageSources(sourcedAssistant)
+if (sourceData.sources.length !== 4) throw new Error(`sources must be deduplicated: ${sourceData.sources.length}`)
+if (sourceData.indexByUrl.get('https://a.test/1') !== 1) throw new Error('the first citation must be source 1')
+if (sourceData.indexByUrl.get('https://b.test/2') !== 2) throw new Error('the second citation must be source 2')
+if (sourceData.indexByUrl.get('https://c.test/3') !== 3) throw new Error('search hits follow the cited pages')
+if (sourceData.indexByUrl.get('https://d.test/4') !== 4) throw new Error('deduplication must not renumber later sources')
+if (sourceData.sources[0].snippet !== '甲摘要') throw new Error('a cited page must borrow its search snippet')
+if (sourceData.sources[1].title !== 'b.test') throw new Error('a missing citation title falls back to the hostname')
+const mergedAnswer = captured.answerText(sourcedAssistant, sourceData.indexByUrl)
+if (!mergedAnswer.includes(captured.citationMark(1)) || !mergedAnswer.includes(captured.citationMark(2))) throw new Error('answer text must carry the citation markers')
+const answerTree = React.createElement(captured.Markdown, { text: mergedAnswer, sources: sourceData.sources })
+const citeMarkers = collectByClass(answerTree, 'dsc-cite')
+if (citeMarkers.length !== 2) throw new Error(`both citations must render as markers: ${citeMarkers.length}`)
+if (citeMarkers[0].props['data-dsc-cite'] !== 1 || citeMarkers[0].props.href !== 'https://a.test/1') throw new Error('a citation marker must point at its own source')
+if (citeMarkers[1].props['data-dsc-cite'] !== 2 || citeMarkers[1].props.href !== 'https://b.test/2') throw new Error('citation markers must keep their URL')
+const assistantTree = React.createElement(captured.AssistantMessage, { message: sourcedAssistant, streaming: false, isLast: true })
+if (collectByClass(assistantTree, 'dsc-sources-toggle').length !== 1) throw new Error('the sources summary must exist')
+if (collectByClass(assistantTree, 'dsc-source-list').length !== 0) throw new Error('sources must start collapsed')
+const summaryText = collectionText(collectByClass(assistantTree, 'dsc-sources-toggle')[0])
+if (!summaryText.includes('来源 · 4')) throw new Error(`unexpected sources summary: ${summaryText}`)
+const openPanel = React.createElement(captured.SourcePanel, {
+  sources: sourceData.sources, messageId: 'a-src', open: true, activeIndex: 2, onToggle: () => {},
+})
+const rows = collectByClass(openPanel, 'dsc-source')
+if (rows.length !== 4) throw new Error(`expanded sources must list every row: ${rows.length}`)
+const listed = rows.map(row => collectionText(row))
+if (!listed[2].includes('丙页面')) throw new Error('the expanded list must show titles in order')
+if (listed[3].includes('丙摘要')) throw new Error('snippets must stay with their own source')
+const links = collectByClass(openPanel, 'dsc-source-link')
+if (links[0].props.href !== 'https://a.test/1' || links[3].props.href !== 'https://d.test/4') throw new Error('the expanded list must link the matching URLs')
+const emptyPanel = React.createElement(captured.SourcePanel, { sources: [], messageId: 'none', open: true, activeIndex: null, onToggle: () => {} })
+if (collectByClass(emptyPanel, 'dsc-sources-toggle').length !== 0) throw new Error('zero sources must render nothing')
+console.log('SOURCES_OK')
+
+// ---------------------------------------------------------------------------
+// Markdown: code highlighting, math, mermaid, tables, streaming.
+// ---------------------------------------------------------------------------
+console.log('RENDERING_START')
+const jsBlocks = captured.parseMarkdown('```js\nconst x = 1\nfunction f() {}\n```')
+if (jsBlocks.length !== 1 || jsBlocks[0].type !== 'code') throw new Error('a fenced block must parse as code')
+const codeTree = React.createElement(captured.Markdown, { text: '```js\nconst x = 1\nfunction f() {}\n```' })
+if (collectByClass(codeTree, 'dsc-code').length !== 1) throw new Error('a code block must render its surface')
+if (collectByClass(codeTree, 'dsc-tok-kw').length < 1) throw new Error('the code block must be syntax highlighted')
+if (collectionText(collectByClass(codeTree, 'dsc-code-lang')[0]) !== 'js') throw new Error('the code block must show its language')
+if (collectByClass(codeTree, 'dsc-code-copy').length !== 1) throw new Error('the code block must offer one-click copy')
+const longCode = '```text\n' + Array.from({ length: 200 }, (_, index) => `line ${index}`).join('\n') + '\n```'
+if (collectByClass(React.createElement(captured.Markdown, { text: longCode }), 'dsc-pre').length !== 1) throw new Error('a long block must keep one scroll container')
+
+const mathBlocks = captured.parseMarkdown('$$\\frac{1}{2}$$')
+if (mathBlocks.length !== 1 || mathBlocks[0].type !== 'math') throw new Error('display math must parse as a math block')
+const maths = [
+  '行内公式 $x^2 + y_1$ 结束。',
+  '价格 $5 和 $10，不是公式。',
+  '公式 \\(a+b\\) 也可以。',
+  '$$\n\\sum_{i=1}^{n} i\n$$',
+]
+const inlineTree = React.createElement(captured.Markdown, { text: maths[0] })
+if (collectByClass(inlineTree, 'dsc-math-inline').length !== 1) throw new Error('inline math must render')
+const priceTree = React.createElement(captured.Markdown, { text: maths[1] })
+if (collectByClass(priceTree, 'dsc-math-inline').length !== 0) throw new Error('currency must not be parsed as math')
+const parenTree = React.createElement(captured.Markdown, { text: maths[2] })
+if (collectByClass(parenTree, 'dsc-math-inline').length !== 1) throw new Error('\\( \\) math must render')
+const displayTree = React.createElement(captured.Markdown, { text: maths[3] })
+if (collectByClass(displayTree, 'dsc-math-block').length !== 1) throw new Error('display math must render as a block')
+for (const tex of ['\\frac{1}{2}', '\\sqrt[3]{x}', '\\begin{pmatrix}1&2\\\\3&4\\end{pmatrix}', '\\unknowncommand{x}', '\\left( \\frac{a}{b} \\right)']) {
+  const nodes = captured.latexToNodes(tex, { display: true })
+  if (!Array.isArray(nodes) || nodes.length === 0) throw new Error(`math must render: ${tex}`)
+}
+
+const mermaidBlocks = captured.parseMarkdown('```mermaid\ngraph TD\n  A[开始] --> B{判断}\n  B --> C[结束]\n```')
+if (mermaidBlocks.length !== 1 || mermaidBlocks[0].type !== 'mermaid') throw new Error('a mermaid fence must parse as a diagram')
+const diagramTree = React.createElement(captured.Markdown, { text: '```mermaid\ngraph TD\n  A[开始] --> B{判断}\n  B --> C[结束]\n```' })
+if (collectByClass(diagramTree, 'dsc-mermaid').length !== 1) throw new Error('a settled mermaid block must render a diagram')
+const streamingDiagram = React.createElement(captured.Markdown, {
+  text: '```mermaid\ngraph TD\n  A --> B', streaming: true,
+})
+if (collectByClass(streamingDiagram, 'dsc-diagram').length !== 1) throw new Error('a streaming diagram must render its source')
+if (collectByClass(streamingDiagram, 'dsc-mermaid').length !== 0) throw new Error('a streaming diagram must not re-layout on every chunk')
+const brokenDiagram = captured.parseMermaid('mindmap\n  root((x))')
+if (brokenDiagram.kind !== 'unknown') throw new Error('unsupported diagram syntax must be reported')
+
+const tableTree = React.createElement(captured.Markdown, { text: '| A | B |\n| --- | --- |\n| 1 | 2 |' })
+if (collectByClass(tableTree, 'dsc-table').length !== 1) throw new Error('tables must render')
+const quoteTree = React.createElement(captured.Markdown, { text: '> 引用 **重点**\n>\n> - 一\n> - 二' })
+if (collectByClass(quoteTree, 'dsc-quote').length !== 1) throw new Error('block quotes must render')
+if (collectByClass(quoteTree, 'dsc-list').length !== 1) throw new Error('lists inside quotes must render')
+console.log('RENDERING_OK')
+
 console.log('SMOKE_OK')
