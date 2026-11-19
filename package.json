@@ -1,9 +1,16 @@
 {
   "name": "@local/deepseek-chat-mode",
-  "version": "0.1.0",
+  "version": "0.1.0-beta.1",
   "private": true,
   "type": "module",
-  "description": "A native DeepSeek Chat mode for DeepSeek Harness, with deep thinking, web search, file upload, and persistent chat history.",
+  "description": "dsh-chat: a native DeepSeek Chat mode for DeepSeek Harness, with deep thinking, web search, file upload, and persistent chat history.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SamuelChung2010/dsh-chat.git"
+  },
+  "engines": {
+    "dsh": ">=0.2.2-rc.5"
+  },
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",

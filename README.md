@@ -1,6 +1,6 @@
-# DeepSeek Chat（DSH 插件）
+# dsh-chat（DSH 插件）
 
-在 DeepSeek Harness 中加入一个原生的 **DeepSeek Chat 模式**，与原生的 **Agent 模式**并列，通过顶部的 `Chat | Agent` 分段控件随时切换。Chat 使用 DeepSeek 官方面向应用开放的 API 能力，界面参考 DeepSeek App / 官方开源 Chat Demo。
+dsh-chat 在 DeepSeek Harness 中加入一个原生的 **DeepSeek Chat 模式**，与原生的 **Agent 模式**并列，通过顶部的 `Chat | Agent` 分段控件随时切换。Chat 使用 DeepSeek 官方面向应用开放的 API 能力，界面参考 DeepSeek App / 官方开源 Chat Demo。
 
 ## 打开方式
 
@@ -182,6 +182,7 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 
 ## 已知限制
 
+- 兼容性：本版本在 **DeepSeek Harness 0.2.2-rc.5**（Windows Desktop）上验证；`engines.dsh` 声明为 `>=0.2.2-rc.5`。Web 与 macOS 尚未验证。
 - 数学公式是面向聊天的 LaTeX 子集（不是完整 KaTeX）；`\begin{tikzcd}`、自定义宏等高级用法会以原文或灰色命令名显示。
 - Mermaid 支持流程图、时序图、饼图与基础类图；思维导图、甘特图等类型会显示错误说明并保留源代码。
 - 编辑/重新生成采用线性版本导航（`‹ 1 / 3 ›`）而不是完整的可视化分支树面板；被替换的分支仍保存并可切换回来。
@@ -210,4 +211,4 @@ node tools/check-mermaid.js        # Mermaid 解析、几何与错误回退
 
 测试覆盖：`tests/store.test.js`（v1→v2 迁移与备份、文件夹/置顶/归档、搜索、分支与版本切换）、`tests/protocol.test.js`（上下文构造与续写前缀）、`tests/conversation.test.js`（Host 路由与 send/edit/regenerate/continue 端到端）、`tests/workspace.test.js`（项目文件夹创建、工作区注册与交接）、`tests/model-config.test.js`、`tests/service-stream.test.js`、`tests/api.test.js`、`tests/profile.test.js`、`tests/host-entry.test.js`。
 
-安装：在 DSH 的 Plugins 页面选择本地目录，或由 Agent 使用 `plugin_manager install_bundle` 安装本目录。本机开发时 profile 里用 `link:` 指向本仓库即可。
+安装：在 DSH 的 Plugins 页面选择本地目录，或由 Agent 使用 `plugin_manager install_bundle` 安装本目录。发布包也可以使用 `.tgz` 直接安装；`.zip` 需先解压，安装目标为解压后的目录（DSH 不接受 `.zip` 文件本身）。本机开发时 profile 里用 `link:` 指向本仓库即可。
