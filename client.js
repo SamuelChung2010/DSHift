@@ -41,7 +41,6 @@ const DICT_ZH = {
   composerPlaceholder: '给 DeepSeek 发送消息',
   send: '发送',
   stop: '停止生成',
-  attach: '上传文件',
   deepThink: '深度思考',
   webSearch: '联网搜索',
   disclaimer: '内容由 AI 生成，请仔细甄别',
@@ -56,7 +55,6 @@ const DICT_ZH = {
   searchQueries: '搜索关键词',
   searchResults: '搜索结果',
   sources: '来源',
-  sourceCount: '来源 · {count}',
   viewAll: '查看全部',
   showLess: '收起',
   openPage: '打开网页',
@@ -111,7 +109,7 @@ const DICT_ZH = {
   modelLabel: '模型',
   modelName: 'DeepSeek V4.1 Flash',
   limitations: '限制',
-  limitationsText: '当前版本暂不支持 Mermaid 与数学公式渲染，代码块不做语法高亮。',
+  limitationsText: '数学公式为 LaTeX 子集，Mermaid 支持常见图表类型；代码高亮、表格与图片正常渲染，消息分支、编辑提问与回答版本切换均已支持。',
   close: '关闭',
   loading: '加载中…',
   loadFailed: '加载失败',
@@ -207,7 +205,6 @@ const DICT_ZH = {
   chatSettings: 'Chat 设置',
   openSettings: '打开设置',
   thinkingProcess: '思考过程',
-  modelNote: '模型由 DeepSeek Chat 服务端固定',
   switchToAgent: '切换到 Agent',
   switchToChat: '切换到 Chat',
   // ---- conversation organization ----
@@ -263,6 +260,60 @@ const DICT_ZH = {
   versionPrev: '上一个版本',
   versionNext: '下一个版本',
   versionLabel: '版本 {index} / {count}',
+  // Composer tools menu
+  toolsMenu: '工具',
+  uploadFiles: '上传图片或文件',
+  uploadFilesHint: 'PDF、Word、PPT、图片与文本',
+  webSearchHint: '从网络查找最新信息',
+  deepThinkHint: '先推理再回答，可调整思考强度',
+  toolOn: '已开启',
+  toolOff: '已关闭',
+  toolUploading: '正在上传',
+  toolUnavailable: '当前不可用',
+  deepSearchHint: '深度思考搜索：模型会在推理中搜索、打开网页并逐条求证',
+  quickSearchHint: '联网搜索：模型先搜索再作答，并附上引用来源',
+  pureThinkingHint: '仅深度思考：先推理，不访问网络',
+  toolSearchUnavailable: '当前模型不支持联网搜索',
+  toolThinkingUnavailable: '当前模型不支持深度思考',
+  modelFlashDesc: '快速响应，支持图片理解，适合日常对话',
+  modelProDesc: '推理能力更强，不支持图片理解；联网工具建议改用 Flash',
+  // Model selection
+  modelSelect: '选择模型',
+  switchModel: '切换模型',
+  modelMenuTitle: '模型',
+  modelCapabilities: '能力',
+  modelCapVision: '图片理解',
+  modelCapFiles: '文件解析',
+  modelCapSearch: '联网搜索',
+  modelCapThinking: '深度思考',
+  modelUnsupportedImage: '当前模型不支持图片理解，请切换到 DeepSeek V4.1 Flash。',
+  modelConfigFailed: '模型设置保存失败：{message}',
+  modelUnavailable: '该模型当前不可用，已切换回 DeepSeek V4.1 Flash，请重试。',
+  modelAppliedToChat: '仅对当前对话生效',
+  modelAppliedToDefault: '新对话默认使用',
+  thinkingEffort: '思考强度',
+  effortLow: '低',
+  effortHigh: '高',
+  effortMax: '最高',
+  effortLowHint: '更快，适合简单问题',
+  effortHighHint: '平衡速度与准确度',
+  effortMaxHint: '最充分，耗时更长',
+  effortNeedsThinking: '开启深度思考后可选择思考强度',
+  effortUnsupported: '当前模型不支持思考强度设置',
+  // Sources
+  sourceSummary: '来源 · {count}',
+  sourceDomainFallback: '网页',
+  citationOpen: '查看来源 {index}',
+  // Composer behaviour
+  composerHints: '输入与发送',
+  enterToSend: 'Enter 发送，Shift + Enter 换行',
+  enterToSendShort: 'Enter 发送',
+  newlineToSend: 'Ctrl + Enter 发送，Enter 换行',
+  sendKeyLabel: '发送键',
+  // Rendering
+  mermaidFailed: '图表渲染失败',
+  mathFailed: '公式渲染失败',
+  streamingDiagram: '生成完成后绘制图表',
 }
 
 const DICT_EN = {
@@ -298,7 +349,6 @@ const DICT_EN = {
   composerPlaceholder: 'Message DeepSeek',
   send: 'Send',
   stop: 'Stop generating',
-  attach: 'Upload files',
   deepThink: 'Deep thinking',
   webSearch: 'Web search',
   disclaimer: 'AI-generated content may be inaccurate. Please verify.',
@@ -313,7 +363,6 @@ const DICT_EN = {
   searchQueries: 'Search queries',
   searchResults: 'Search results',
   sources: 'Sources',
-  sourceCount: 'Sources · {count}',
   viewAll: 'View all',
   showLess: 'Show less',
   openPage: 'Open page',
@@ -368,7 +417,7 @@ const DICT_EN = {
   modelLabel: 'Model',
   modelName: 'DeepSeek V4.1 Flash',
   limitations: 'Limitations',
-  limitationsText: 'This version does not render Mermaid diagrams or math, and code blocks are not syntax-highlighted.',
+  limitationsText: 'Math uses a LaTeX subset and Mermaid covers common diagrams; code highlighting, tables and images render, and message branching, prompt editing and answer versions are supported.',
   close: 'Close',
   loading: 'Loading…',
   loadFailed: 'Could not load',
@@ -462,7 +511,6 @@ const DICT_EN = {
   chatSettings: 'Chat settings',
   openSettings: 'Open settings',
   thinkingProcess: 'Reasoning',
-  modelNote: 'The model is fixed by the DeepSeek Chat service',
   switchToAgent: 'Switch to Agent',
   switchToChat: 'Switch to Chat',
   // ---- conversation organization ----
@@ -518,6 +566,60 @@ const DICT_EN = {
   versionPrev: 'Previous version',
   versionNext: 'Next version',
   versionLabel: 'Version {index} / {count}',
+  // Composer tools menu
+  toolsMenu: 'Tools',
+  uploadFiles: 'Upload images or files',
+  uploadFilesHint: 'PDF, Word, PPT, images and text',
+  webSearchHint: 'Look up current information on the web',
+  deepThinkHint: 'Reason before answering; pick how hard it thinks',
+  toolOn: 'On',
+  toolOff: 'Off',
+  toolUploading: 'Uploading',
+  toolUnavailable: 'Unavailable',
+  deepSearchHint: 'Deep search: the model searches, opens pages and verifies while reasoning',
+  quickSearchHint: 'Web search: search first, then answer with cited sources',
+  pureThinkingHint: 'Thinking only: reason first, no network access',
+  toolSearchUnavailable: 'This model cannot search the web',
+  toolThinkingUnavailable: 'This model cannot think first',
+  modelFlashDesc: 'Fast everyday chat, reads images',
+  modelProDesc: 'Stronger reasoning, no image input; web tools prefer Flash',
+  // Model selection
+  modelSelect: 'Select model',
+  switchModel: 'Switch model',
+  modelMenuTitle: 'Model',
+  modelCapabilities: 'Capabilities',
+  modelCapVision: 'Images',
+  modelCapFiles: 'Files',
+  modelCapSearch: 'Web search',
+  modelCapThinking: 'Thinking',
+  modelUnsupportedImage: 'This model cannot read images. Switch to DeepSeek V4.1 Flash.',
+  modelConfigFailed: 'Could not save the model setting: {message}',
+  modelUnavailable: 'That model is unavailable. Switched back to DeepSeek V4.1 Flash; please retry.',
+  modelAppliedToChat: 'Applies to this conversation',
+  modelAppliedToDefault: 'Default for new conversations',
+  thinkingEffort: 'Thinking effort',
+  effortLow: 'Low',
+  effortHigh: 'High',
+  effortMax: 'Max',
+  effortLowHint: 'Faster, for simple questions',
+  effortHighHint: 'Balanced speed and quality',
+  effortMaxHint: 'Most thorough, slower',
+  effortNeedsThinking: 'Turn on deep thinking to choose an effort',
+  effortUnsupported: 'This model has no effort setting',
+  // Sources
+  sourceSummary: 'Sources · {count}',
+  sourceDomainFallback: 'Web',
+  citationOpen: 'Open source {index}',
+  // Composer behaviour
+  composerHints: 'Input and sending',
+  enterToSend: 'Enter to send, Shift + Enter for a new line',
+  enterToSendShort: 'Enter to send',
+  newlineToSend: 'Ctrl + Enter to send, Enter for a new line',
+  sendKeyLabel: 'Send key',
+  // Rendering
+  mermaidFailed: 'Diagram failed to render',
+  mathFailed: 'Formula failed to render',
+  streamingDiagram: 'Diagram appears when the answer finishes',
 }
 
 /* ---- 20-store.js ---- */
@@ -638,6 +740,14 @@ const chatStore = {
     bootData: null,
     auth: null,
     settings: { authMode: 'auto', thinking: false, search: false, systemPrompt: '' },
+    // Model catalog and preferences, filled from the Host bootstrap. The
+    // fallback keeps the composer usable while an older Host half answers.
+    models: [],
+    modelConfig: null,
+    modelChoice: { model: 'deepseek-flash', effort: 'high' },
+    // Composer send key: "enter" (Enter sends) or "ctrl-enter" (Ctrl/Cmd+Enter
+    // sends). A browser preference, stored next to the layout settings.
+    sendKey: stored.sendKey === 'ctrl-enter' ? 'ctrl-enter' : 'enter',
     conversations: [],
     folders: [],
     workspaces: [],
@@ -976,19 +1086,16 @@ function streamLocale() {
   return appCtx?.locale.getSnapshot().active === 'zh' ? 'zh' : 'en'
 }
 
-function currentModelId() {
-  return chatStore.state.bootData?.model?.id ?? 'deepseek-flash'
-}
-
 /** A fresh assistant placeholder for an optimistic branch. */
-function makeReplyPlaceholder(settings) {
+function makeReplyPlaceholder(settings, choice = currentModelChoice()) {
   const now = Date.now()
   return {
     id: uid(),
     role: 'assistant',
     createdAt: now,
     updatedAt: now,
-    model: currentModelId(),
+    model: choice.model.id,
+    effort: choice.effort,
     thinking: settings.thinking === true,
     search: settings.search === true,
     status: 'streaming',
@@ -1147,6 +1254,8 @@ async function ensureBoot(force = false) {
         bootData: data,
         auth: data.auth,
         settings: data.settings,
+        models: Array.isArray(data.models) && data.models.length > 0 ? data.models : chatStore.state.models,
+        modelConfig: data.modelConfig ?? chatStore.state.modelConfig,
         conversations: data.conversations ?? [],
         folders: Array.isArray(data.folders) ? data.folders : [],
         workspaces: Array.isArray(data.workspaces) ? data.workspaces : [],
@@ -1165,6 +1274,7 @@ async function ensureBoot(force = false) {
         chatStore.set({ activeId: null, messages: [] })
         writeStored({ activeId: null })
       }
+      applyModelConfigFor(chatStore.state.activeId)
       return data
     } catch (error) {
       chatStore.set({ boot: 'error', bootError: error instanceof Error ? error.message : String(error) })
@@ -1190,9 +1300,13 @@ async function loadConversation(id, { quiet = false, focusMessageId = '' } = {})
     chatStore.toast(tr('sendingWait'), 'warning')
     return
   }
+  // Keep the text this conversation was leaving behind, then load the target's
+  // own draft instead of starting from an empty field.
+  stashDraft()
   clearComposer()
   const sequence = ++conversationLoadSequence
   chatStore.set({ activeId: id, conversationLoading: true, conversationError: '', editingId: null, editDraft: '' })
+  applyModelConfigFor(id)
   writeStored({ activeId: id })
   try {
     const body = { action: 'get', id }
@@ -1207,6 +1321,7 @@ async function loadConversation(id, { quiet = false, focusMessageId = '' } = {})
     }
     if (Array.isArray(data.folders)) patch.folders = data.folders
     chatStore.set(patch)
+    restoreDraft(id)
   } catch (error) {
     if (sequence !== conversationLoadSequence) return
     const message = error instanceof Error ? error.message : String(error)
@@ -1268,6 +1383,7 @@ async function newChat() {
     chatStore.toast(tr('sendingWait'), 'warning')
     return
   }
+  stashDraft()
   clearComposer()
   chatStore.set({
     activeId: null,
@@ -1281,6 +1397,8 @@ async function newChat() {
     greetingIndex: pickGreetingIndex(chatStore.state.greetingIndex),
     focusRequest: chatStore.state.focusRequest + 1,
   })
+  applyModelConfigFor(null)
+  restoreDraft(null)
   writeStored({ activeId: null })
 }
 
@@ -1300,6 +1418,7 @@ async function createConversation() {
     editDraft: '',
     focusMessage: null,
   })
+  applyModelConfigFor(data.conversation.id)
   writeStored({ activeId: data.conversation.id })
   return data.conversation.id
 }
@@ -1333,6 +1452,7 @@ function requestDeleteConversation(id, title) {
           })
           if (chatStore.state.activeId === id) {
             clearComposer()
+            forgetDraft(id)
             chatStore.set({
               activeId: null,
               messages: [],
@@ -1682,6 +1802,120 @@ function toggleSearch() {
   const next = !before.search
   chatStore.set({ settings: { ...before, search: next } })
   void saveSettings({ search: next }, { rollback: before })
+}
+
+/* ------------------------------------------------------------------------- */
+/* Model preference                                                          */
+/* ------------------------------------------------------------------------- */
+
+/**
+ * Point the composer at the model configuration of one conversation.
+ * `id === null` is the blank new-chat page, which uses the Host defaults.
+ * The raw ids are stored; the model menu normalises them against the catalog,
+ * so an id this Host no longer serves can never break the composer.
+ */
+function applyModelConfigFor(id) {
+  const config = chatStore.state.modelConfig
+  const override = id !== null && config?.conversations?.[id] !== undefined ? config.conversations[id] : null
+  const model = override?.model ?? config?.defaults?.model ?? 'deepseek-flash'
+  const effort = override?.effort ?? config?.defaults?.effort ?? 'high'
+  chatStore.set({ modelChoice: { model, effort } })
+}
+
+/**
+ * Persist one model/effort change. A blank chat updates the default for new
+ * conversations; an open conversation stores its own override. The UI updates
+ * first and rolls back when the Host rejects the write.
+ */
+async function saveModelChoice(patch) {
+  const before = chatStore.state.modelChoice
+  const conversationId = chatStore.state.activeId
+  chatStore.set({ modelChoice: { ...before, ...patch } })
+  try {
+    const data = await hostJson('/api/deepseek-chat/model', {
+      action: 'set',
+      ...(conversationId === null ? {} : { conversationId }),
+      ...patch,
+    })
+    if (data?.modelConfig !== undefined) {
+      chatStore.set({
+        modelConfig: data.modelConfig,
+        models: Array.isArray(data.models) && data.models.length > 0 ? data.models : chatStore.state.models,
+      })
+    }
+    return true
+  } catch (error) {
+    if (error?.status === 404) {
+      // An older Host half has no model route; keep the local choice and make
+      // no promise about persistence instead of alarming the user.
+      return false
+    }
+    chatStore.set({ modelChoice: before })
+    chatStore.toast(tr('modelConfigFailed', {
+      message: error instanceof Error ? error.message : String(error),
+    }), 'error')
+    return false
+  }
+}
+
+function selectModel(modelId) {
+  const model = modelCatalog().find(item => item.id === modelId)
+  if (model === undefined) return
+  const efforts = modelEfforts(model)
+  const current = chatStore.state.modelChoice
+  const effort = efforts.includes(current.effort) ? current.effort : (efforts.includes('high') ? 'high' : efforts[0])
+  void saveModelChoice({ model: model.id, effort })
+}
+
+function selectEffort(effort) {
+  const { efforts } = currentModelChoice()
+  if (!efforts.includes(effort)) return
+  void saveModelChoice({ effort })
+}
+
+/**
+ * A request that names a model this API no longer serves is recoverable: fall
+ * back to the default model so the retry button does the useful thing instead
+ * of failing again.
+ */
+function recoverUnavailableModel(payload) {
+  if (payload?.code !== 'INVALID_MODEL') return false
+  const fallback = modelCatalog().find(model => model.id === 'deepseek-flash') ?? modelCatalog()[0]
+  if (fallback !== undefined) void saveModelChoice({ model: fallback.id, effort: 'high' })
+  chatStore.toast(tr('modelUnavailable'), 'warning')
+  return true
+}
+
+/** Composer send key preference; browser-only, so it never needs the Host. */
+function setSendKey(mode) {
+  const next = mode === 'ctrl-enter' ? 'ctrl-enter' : 'enter'
+  chatStore.set({ sendKey: next })
+  writeStored({ sendKey: next })
+}
+
+/* ------------------------------------------------------------------------- */
+/* Per-conversation drafts                                                   */
+/* ------------------------------------------------------------------------- */
+
+/**
+ * Unsent text for each conversation, so switching chats or pressing "New chat"
+ * does not throw away half-written prompts. Attachments are deliberately not
+ * kept: their upload streams are aborted on a switch.
+ */
+const draftStash = new Map()
+
+function stashDraft() {
+  draftStash.set(chatStore.state.activeId ?? '__new__', chatStore.state.draft)
+}
+
+function restoreDraft(id) {
+  const key = id ?? '__new__'
+  if (!draftStash.has(key)) return
+  chatStore.set({ draft: draftStash.get(key) ?? '' })
+}
+
+function forgetDraft(id) {
+  draftStash.delete(id ?? '__new__')
 }
 
 async function saveKey(key) {
@@ -2106,7 +2340,8 @@ async function runTurnStream({
             ? { ...item.message }
             : { ...current, status: 'error', error: item.error ?? { message: info.text }, updatedAt: Date.now() }
           finish()
-          chatStore.toast(info.text, 'error')
+          const recovered = recoverUnavailableModel(item.error)
+          if (!recovered) chatStore.toast(info.text, 'error')
           if (info.action === 'settings') chatStore.set({ settingsOpen: true })
           return
         }
@@ -2131,15 +2366,16 @@ async function runTurnStream({
     } else {
       const payloadInfo = error?.payload ?? { message: error instanceof Error ? error.message : String(error) }
       const info = friendlyError(payloadInfo, payloadInfo.message)
+      const recovered = recoverUnavailableModel(payloadInfo)
       if (!started) {
         restore()
-        chatStore.toast(info.text, 'error')
+        if (!recovered) chatStore.toast(info.text, 'error')
         if (info.action === 'settings') chatStore.set({ settingsOpen: true })
         return
       }
       current = { ...current, status: 'error', error: payloadInfo, updatedAt: Date.now() }
       finish()
-      chatStore.toast(info.text, 'error')
+      if (!recovered) chatStore.toast(info.text, 'error')
       if (info.action === 'settings') chatStore.set({ settingsOpen: true })
     }
   } finally {
@@ -2174,6 +2410,11 @@ async function sendMessage() {
   const readyFiles = state.attachments.filter(item => item.status === 'ready' && item.fileId)
   const sentAttachments = state.attachments.filter(item => item.status === 'ready' && item.fileId)
   if (text === '' && readyFiles.length === 0) return
+  const choice = currentModelChoice()
+  if (!modelCapability(choice.model, 'vision') && readyFiles.some(item => item.isImage)) {
+    chatStore.toast(tr('modelUnsupportedImage'), 'warning')
+    return
+  }
   if (sendInFlight) return
   markSendInFlight(true)
 
@@ -2206,7 +2447,7 @@ async function sendMessage() {
     })),
     createdAt: now,
   }
-  const reply = makeReplyPlaceholder(state.settings)
+  const reply = makeReplyPlaceholder(state.settings, choice)
   const previousMessages = chatStore.state.messages
   const messages = [...previousMessages, userMessage, reply]
   chatStore.set({
@@ -2217,6 +2458,8 @@ async function sendMessage() {
     focusRequest: chatStore.state.focusRequest + 1,
   })
   writeStored({ activeId: conversationId })
+  forgetDraft(conversationId)
+  forgetDraft(null)
   await runTurnStream({
     conversationId,
     payload: {
@@ -2225,6 +2468,8 @@ async function sendMessage() {
       files: userMessage.files,
       thinking: reply.thinking,
       search: reply.search,
+      model: reply.model,
+      effort: reply.effort,
       locale: streamLocale(),
     },
     assistant: reply,
@@ -2653,6 +2898,9 @@ const chatActions = {
   saveSettings,
   toggleThinking,
   toggleSearch,
+  selectModel,
+  selectEffort,
+  setSendKey,
   saveKey,
   clearKey,
   addFiles,
@@ -2675,7 +2923,45 @@ const chatActions = {
 }
 
 /* ---- 30-markdown.js ---- */
-const INLINE_PATTERN = /(`[^`\n]+`|\*\*[^*\n]+\*\*|__[^_\n]+__|\*[^*\n]+\*|_[^_\n]+_|~~[^~\n]+~~|\[[^\]\n]+\]\([^)\s]+\)|https?:\/\/[^\s<>()]+)/g
+/**
+ * Markdown renderer for chat answers.
+ *
+ * It is deliberately small and safe: the parser produces a plain block tree,
+ * every string reaches the DOM as a React child (never as HTML), and the three
+ * heavyweight pieces live in their own modules:
+ * - `highlightCode` (31-highlight.js) tokenizes fenced code,
+ * - `LatexInline` / `LatexBlock` (32-math.js) render TeX,
+ * - `MermaidDiagram` (33-mermaid.js) draws diagrams.
+ *
+ * Streaming is handled by keeping block identity stable: a completed block
+ * renders the same element on every chunk, so React.memo can skip it while only
+ * the growing tail is re-rendered.
+ */
+
+/** Zero-width sentinel that carries a citation number inside the answer text. */
+const CITATION_MARK = '\u0000dsc-cite:'
+
+function citationMark(index) {
+  return `${CITATION_MARK}${index}\u0000`
+}
+
+const INLINE_PATTERN = new RegExp([
+  '`[^`\\n]+`', // inline code
+  '\\*\\*[^*\\n]+\\*\\*', // bold
+  '__[^_\\n]+__',
+  '\\*[^*\\n]+\\*', // italic
+  '_[^_\\n]+_',
+  '~~[^~\\n]+~~', // strikethrough
+  '!\\[[^\\]\\n]*\\]\\([^)\\s]+\\)', // image
+  '\\[[^\\]\\n]+\\]\\([^)\\s]+\\)', // link
+  '\\$\\$[^$\\n]+\\$\\$', // display math kept inline by a sloppy model
+  '\\$[^$\\n]+\\$', // inline math
+  '\\\\\\([\\s\\S]{1,300}?\\\\\\)', // \( \) inline math
+  '\\u0000dsc-cite:\\d+\\u0000', // citation marker
+  'https?:\\/\\/[^\\s<>()]+', // bare URL
+].join('|'), 'g')
+
+const CITE_TOKEN = /^\u0000dsc-cite:(\d+)\u0000$/
 
 function safeHref(value) {
   const url = typeof value === 'string' ? value.trim() : ''
@@ -2689,7 +2975,38 @@ function safeHref(value) {
   }
 }
 
-function renderInline(text, keyPrefix = 'i') {
+/** Unescape the few escapes that matter in prose; math has its own rules. */
+function unescapeText(value) {
+  return value.replace(/\\([$_*[\]()#%&])/g, '$1')
+}
+
+/**
+ * Whether a `$...$` candidate is really math.
+ *
+ * Currency is the reason this exists: `$5 and $10` must stay text. A candidate
+ * is math when it is tight (no padding), not a plain number, and either uses a
+ * TeX control sequence / operator, or is a short ASCII expression embedded in
+ * text (`设 $x$ 为`). Anything containing CJK punctuation or prose fails.
+ */
+function looksLikeInlineMath(token, source, index) {
+  if (token.startsWith('$$')) return true
+  const body = token.slice(1, -1)
+  if (body === '' || body.length > 300) return false
+  if (/^\s|\s$/.test(body)) return false
+  if (/^[\d.,]+$/.test(body)) return false
+  const before = index > 0 ? source[index - 1] : ''
+  const after = source[index + token.length] ?? ''
+  if (before === '\\') return false
+  if (after !== '' && /[\d]/.test(after)) return false
+  if (/[A-Za-z0-9]/.test(before)) return false
+  if (/[\\^_{}=<>+\-*/!|]/.test(body)) return true
+  if (/[α-ωΑ-Ω]/.test(body)) return true
+  if (!/^[\sA-Za-z0-9()[\].,:;' ]+$/.test(body)) return false
+  return /[A-Za-z]/.test(body)
+}
+
+/** Inline rendering: strong/em/code/link/math/citation in one pass. */
+function renderInline(text, keyPrefix = 'i', context = {}) {
   const source = typeof text === 'string' ? text : String(text ?? '')
   const nodes = []
   let last = 0
@@ -2698,24 +3015,67 @@ function renderInline(text, keyPrefix = 'i') {
   // lastIndex reset by the nested call and re-match the same token forever.
   const pattern = new RegExp(INLINE_PATTERN.source, 'g')
   while ((match = pattern.exec(source)) !== null) {
-    if (match.index > last) nodes.push(source.slice(last, match.index))
+    if (match.index > last) nodes.push(unescapeText(source.slice(last, match.index)))
     const token = match[0]
     const key = `${keyPrefix}-${match.index}`
-    if (token.startsWith('`') && token.endsWith('`')) {
+    const citation = token.match(CITE_TOKEN)
+    if (citation !== null) {
+      const index = Number(citation[1])
+      const sourceEntry = context.sources?.[index - 1]
+      const href = sourceEntry === undefined ? null : safeHref(sourceEntry.url)
+      if (href !== null) {
+        nodes.push(h('a', {
+          key,
+          className: 'dsc-cite',
+          href,
+          target: '_blank',
+          rel: 'noreferrer noopener',
+          'data-dsc-cite': index,
+          title: tr('citationOpen', { index }),
+        }, String(index)))
+      }
+    } else if (token.startsWith('`') && token.endsWith('`')) {
       nodes.push(h('code', { className: 'dsc-inline-code', key }, token.slice(1, -1)))
+    } else if (token.startsWith('\\(')) {
+      nodes.push(h(LatexInline, { key, tex: token.slice(2, -2) }))
+    } else if (token.startsWith('$')) {
+      if (token.startsWith('$$') && token.endsWith('$$') && token.length > 4) {
+        // A display formula written inside a paragraph: a span keeps the
+        // document valid while the block styles still lay it out on its own.
+        nodes.push(h('span', { key, className: 'dsc-math dsc-math-block' }, latexToNodes(token.slice(2, -2), { display: true })))
+      } else if (looksLikeInlineMath(token, source, match.index)) {
+        nodes.push(h(LatexInline, { key, tex: token.slice(1, -1) }))
+      } else {
+        nodes.push(token)
+      }
     } else if ((token.startsWith('**') && token.endsWith('**')) || (token.startsWith('__') && token.endsWith('__'))) {
-      nodes.push(h('strong', { key }, renderInline(token.slice(2, -2), key)))
+      nodes.push(h('strong', { key }, renderInline(token.slice(2, -2), key, context)))
     } else if ((token.startsWith('*') && token.endsWith('*') && token.length > 2) || (token.startsWith('_') && token.endsWith('_') && token.length > 2)) {
-      nodes.push(h('em', { key }, renderInline(token.slice(1, -1), key)))
+      nodes.push(h('em', { key }, renderInline(token.slice(1, -1), key, context)))
     } else if (token.startsWith('~~') && token.endsWith('~~')) {
-      nodes.push(h('del', { key }, renderInline(token.slice(2, -2), key)))
+      nodes.push(h('del', { key }, renderInline(token.slice(2, -2), key, context)))
+    } else if (token.startsWith('![')) {
+      const image = token.match(/^!\[([^\]]*)\]\(([^)]+)\)$/)
+      const src = image ? safeHref(image[2]) : null
+      if (image && src !== null) {
+        nodes.push(h('img', {
+          key,
+          className: 'dsc-image',
+          src,
+          alt: image[1],
+          loading: 'lazy',
+          referrerPolicy: 'no-referrer',
+        }))
+      } else {
+        nodes.push(token)
+      }
     } else if (token.startsWith('[')) {
       const link = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/)
       const href = link ? safeHref(link[2]) : null
       if (link && href !== null) {
         nodes.push(h('a', {
           key, href, target: '_blank', rel: 'noreferrer noopener', className: 'dsc-link',
-        }, renderInline(link[1], key)))
+        }, renderInline(link[1], key, context)))
       } else {
         nodes.push(token)
       }
@@ -2735,7 +3095,7 @@ function renderInline(text, keyPrefix = 'i') {
     }
     last = match.index + token.length
   }
-  if (last < source.length) nodes.push(source.slice(last))
+  if (last < source.length) nodes.push(unescapeText(source.slice(last)))
   return nodes
 }
 
@@ -2757,6 +3117,15 @@ function isBlockStart(line) {
     || /^\s{0,3}([-*_])(?:\s*\1){2,}\s*$/.test(line)
     || /^\s*([-*+]|\d+[.)])\s+/.test(line)
     || /^\s*\|.*\|\s*$/.test(line)
+    || /^\s*\$\$/.test(line)
+}
+
+/** Recognise an opening display-math delimiter. */
+function displayMathDelimiter(line) {
+  const trimmed = line.trim()
+  if (!trimmed.startsWith('$$') && !trimmed.startsWith('\\[')) return null
+  if (trimmed.startsWith('$$')) return { open: '$$', close: '$$', rest: trimmed.slice(2) }
+  return { open: '\\[', close: '\\]', rest: trimmed.slice(2) }
 }
 
 function parseMarkdown(source) {
@@ -2780,7 +3149,50 @@ function parseMarkdown(source) {
         index += 1
       }
       if (index < lines.length) index += 1
-      blocks.push({ type: 'code', lang, text: body.join('\n') })
+      const text = body.join('\n')
+      blocks.push(normalizeCodeLang(lang) === 'mermaid'
+        ? { type: 'mermaid', text }
+        : { type: 'code', lang, text })
+      continue
+    }
+    // Display math: `$$ ... $$` or `\[ ... \]`, on one line or across lines.
+    const opening = displayMathDelimiter(line)
+    if (opening !== null) {
+      const single = opening.rest.trimEnd()
+      if (single.endsWith(opening.close)) {
+        blocks.push({ type: 'math', text: single.slice(0, -opening.close.length).trim() })
+        index += 1
+        continue
+      }
+      const body = opening.rest === '' ? [] : [opening.rest]
+      index += 1
+      let closed = false
+      while (index < lines.length) {
+        const current = lines[index]
+        const trimmed = current.trim()
+        if (trimmed === opening.close) {
+          closed = true
+          index += 1
+          break
+        }
+        if (trimmed.length > opening.close.length && trimmed.endsWith(opening.close)) {
+          const before = trimmed.slice(0, -opening.close.length).trimEnd()
+          if (before !== '') body.push(before)
+          closed = true
+          index += 1
+          break
+        }
+        body.push(current)
+        index += 1
+      }
+      const text = body.join('\n').trim()
+      if (!closed) {
+        // No closer anywhere below: this was not display math after all (a
+        // stray "$$" in prose must not swallow the rest of the answer).
+        blocks.push({ type: 'paragraph', text: [line, ...body].join('\n') })
+        continue
+      }
+      if (text !== '') blocks.push({ type: 'math', text })
       continue
     }
     const heading = line.match(/^\s{0,3}(#{1,6})\s+(.*)$/)
@@ -2838,47 +3250,90 @@ function parseMarkdown(source) {
   return blocks
 }
 
-function copyText(text) {
-  if (globalThis.navigator?.clipboard?.writeText) {
-    return globalThis.navigator.clipboard.writeText(text)
-  }
-  return Promise.reject(new Error('clipboard unavailable'))
+/** Token type to CSS class. A static table keeps the class names auditable. */
+const TOKEN_CLASS = {
+  kw: 'dsc-tok-kw',
+  str: 'dsc-tok-str',
+  num: 'dsc-tok-num',
+  com: 'dsc-tok-com',
+  fn: 'dsc-tok-fn',
+  type: 'dsc-tok-type',
+  op: 'dsc-tok-op',
+  attr: 'dsc-tok-attr',
+  tag: 'dsc-tok-tag',
+  var: 'dsc-tok-var',
+  meta: 'dsc-tok-meta',
 }
 
-function CodeBlock({ lang, text }) {
+/** Code block with language label, token colouring, copy and internal scroll. */
+const CodeBlock = React.memo(function CodeBlock({ lang, text }) {
   const [copied, setCopied] = React.useState(false)
+  const canonical = normalizeCodeLang(lang)
+  const label = lang.trim() === '' ? 'text' : lang.trim()
+  const tokens = React.useMemo(() => highlightCode(text, canonical), [text, canonical])
   return h('div', { className: 'dsc-code' },
     h('div', { className: 'dsc-code-head' },
-      h('span', { className: 'dsc-code-lang' }, lang || 'text'),
+      h('span', { className: 'dsc-code-lang' }, label),
       h('button', {
         type: 'button',
         className: 'dsc-code-copy',
+        title: tr('copy'),
+        'aria-label': tr('copy'),
         onClick: () => {
-          copyText(text).then(() => {
+          copyToClipboard(text).then(() => {
             setCopied(true)
             setTimeout(() => setCopied(false), 1600)
-          }).catch(() => {})
+          }).catch(() => chatStore.toast(tr('copyFailed'), 'error'))
         },
       }, h(Icon, { name: copied ? 'check' : 'copy', size: 14 }), h('span', null, copied ? tr('copied') : tr('copy'))),
     ),
-    h('pre', { className: 'dsc-pre' }, h('code', null, text)),
+    h('pre', { className: 'dsc-pre' },
+      h('code', { className: 'dsc-code-body' }, tokens.map((token, tokenIndex) => {
+        const tokenClass = TOKEN_CLASS[token.type]
+        return tokenClass === undefined
+          ? token.text
+          : h('span', { key: tokenIndex, className: tokenClass }, token.text)
+      })),
+    ),
   )
+})
+
+function renderBlocks(blocks, context, keyPrefix = 'b') {
+  return blocks.map((block, index) => renderBlock(block, `${keyPrefix}-${index}`, context, index === blocks.length - 1))
 }
 
-function renderBlock(block, index) {
-  const key = `b-${index}`
+function renderBlock(block, key, context = {}, isLast = false) {
   if (block.type === 'paragraph') {
-    return h('p', { className: 'dsc-paragraph', key }, renderInline(block.text, key))
+    return h('p', { className: 'dsc-paragraph', key }, renderInline(block.text, key, context))
   }
   if (block.type === 'heading') {
     const tag = `h${Math.min(6, Math.max(1, block.level))}`
-    return h(tag, { className: 'dsc-heading', key }, renderInline(block.text, key))
+    return h(tag, { className: 'dsc-heading', key }, renderInline(block.text, key, context))
+  }
+  if (block.type === 'math') {
+    return h(LatexBlock, { key, tex: block.text })
+  }
+  if (block.type === 'mermaid') {
+    // While the answer is still streaming the diagram is drawn from partial
+    // text and would re-layout on every chunk; show the source instead and
+    // draw once the block is settled.
+    if (context.streaming && isLast) {
+      return h('div', { className: 'dsc-diagram is-streaming', key },
+        h(CodeBlock, { lang: 'mermaid', text: block.text }),
+        h('span', { className: 'dsc-diagram-note' }, tr('streamingDiagram')),
+      )
+    }
+    return h(MermaidDiagram, { key, source: block.text })
   }
   if (block.type === 'code') {
     return h(CodeBlock, { key, lang: block.lang, text: block.text })
   }
   if (block.type === 'quote') {
-    return h('blockquote', { className: 'dsc-quote', key }, renderInline(block.text, key))
+    const inner = parseMarkdown(block.text)
+    return h('blockquote', { className: 'dsc-quote', key },
+      inner.length === 0
+        ? renderInline(block.text, key, context)
+        : renderBlocks(inner, context, `${key}-q`))
   }
   if (block.type === 'hr') {
     return h('hr', { className: 'dsc-hr', key })
@@ -2886,26 +3341,3052 @@ function renderBlock(block, index) {
   if (block.type === 'list') {
     const tag = block.ordered ? 'ol' : 'ul'
     return h(tag, { className: 'dsc-list', key }, block.items.map((item, itemIndex) => (
-      h('li', { key: `${key}-${itemIndex}` }, renderInline(item, `${key}-${itemIndex}`))
+      h('li', { key: `${key}-${itemIndex}` }, renderInline(item, `${key}-${itemIndex}`, context))
     )))
   }
   if (block.type === 'table') {
     return h('div', { className: 'dsc-table-wrap', key }, h('table', { className: 'dsc-table' },
-      h('thead', null, h('tr', null, block.header.map((cell, cellIndex) => h('th', { key: cellIndex }, renderInline(cell, `${key}-h-${cellIndex}`))))),
+      h('thead', null, h('tr', null, block.header.map((cell, cellIndex) => h('th', { key: cellIndex }, renderInline(cell, `${key}-h-${cellIndex}`, context))))),
       h('tbody', null, block.rows.map((row, rowIndex) => h('tr', { key: rowIndex }, row.map((cell, cellIndex) => (
-        h('td', { key: cellIndex }, renderInline(cell, `${key}-${rowIndex}-${cellIndex}`))
+        h('td', { key: cellIndex }, renderInline(cell, `${key}-${rowIndex}-${cellIndex}`, context))
       ))))),
     ))
   }
   return null
 }
 
-function Markdown({ text, className = '', streaming = false }) {
+function Markdown({ text, className = '', streaming = false, sources = [] }) {
+  const context = React.useMemo(() => ({ streaming, sources }), [streaming, sources])
   const blocks = React.useMemo(() => parseMarkdown(text), [text])
   return h('div', { className: `dsc-md ${className}`.trim() },
-    blocks.map(renderBlock),
+    renderBlocks(blocks, context),
     streaming ? h('span', { className: 'dsc-caret', 'aria-hidden': 'true' }) : null,
   )
+}
+
+/* ---- 31-highlight.js ---- */
+// Syntax tokenizer for chat code blocks.
+//
+// highlightCode(source, lang) returns plain { type, text } objects whose
+// concatenated text is exactly `source`, so a renderer emits one text node per
+// token. The scan is single-pass: at each position the earliest construct
+// (comment, string, number, ...) is consumed and gaps stay plain. Nothing here
+// builds HTML, evaluates input or touches the DOM.
+
+const HIGHLIGHT_MAX_LENGTH = 400 * 1024
+const HIGHLIGHT_MAX_REGEX = 1000
+const CODE_OPERATORS = '+-*/%=!<>&|^~?:.,;()[]{}#@'
+const CODE_REGEX_PREV_CHARS = '(,=:[!&|?{};'
+const CODE_REGEX_WORDS = codeWordSet('return case throw typeof delete void new in of instanceof yield await do else')
+const CODE_JSX_WORDS = codeWordSet('return case default else do yield await throw')
+const CODE_YAML_CONSTANTS = codeWordSet('true false yes no on off null')
+const CODE_NUMBER_RE = /(?:0[xX][\da-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|(?:\d[\d_]*(?:\.[\d_]*)?|\.\d[\d_]*)(?:[eE][+-]?\d[\d_]*)?)(?:(?:i|f|u)(?:8|16|32|64|128|size)|[uUlL]{1,3}|[fnjm])?/y
+const CODE_IDENT_RE = /[\p{L}_$][\p{L}\p{N}_$]*/uy
+const CODE_WORD_RE = /[\p{L}_$][\p{L}\p{N}_.$-]*/uy
+const CODE_DECORATOR_RE = /@[\w$.]+/y
+const CODE_AT_RULE_RE = /@[\w-]+/y
+const CODE_CLI_FLAG_RE = /-{1,2}[A-Za-z][\w-]*/y
+const CODE_CMDLET_RE = /[A-Za-z][A-Za-z0-9]*-[A-Za-z][A-Za-z0-9]+/y
+const CODE_CSS_HASH_RE = /#[\w-]+/y
+const CODE_CSS_CUSTOM_RE = /--[\w-]+/y
+const CODE_ANCHOR_RE = /[&*!][^\s,[\]{}]*/y
+const CODE_TAG_NAME_RE = /[A-Za-z][\w:.-]*/y
+const CODE_ATTR_NAME_RE = /[^\s"'=<>`/{}\n]+/y
+const CODE_MD_LINK_RE = /\[([^\]\n]{1,200})\]\(([^()\s]{1,500})\)/y
+
+function codeWordSet(source) {
+  return new Set(source.trim().split(/\s+/))
+}
+
+const javascriptDef = {
+  keywords: codeWordSet(`break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof let new return switch throw try typeof var void while with yield async await of static get set from as`),
+  literals: codeWordSet('true false null undefined NaN Infinity'),
+  types: codeWordSet('Array ArrayBuffer BigInt Boolean DataView Date Error Function Intl JSON Map Math Number Object Promise Proxy RangeError ReferenceError Reflect RegExp Set String Symbol SyntaxError TypeError URIError WeakMap WeakSet'),
+  variables: codeWordSet('this super arguments'),
+  lineComments: ['//'], blockComments: [['/*', '*/']], strings: ['"', "'", '`'],
+  flags: { template: true, regex: true, jsx: true, stringKeys: true, keyColon: true, upperType: true, decorators: true },
+}
+
+const cppDef = {
+  keywords: codeWordSet(`alignas alignof and and_eq asm auto bitand bitor bool break case catch char char8_t char16_t char32_t class compl concept const consteval constexpr constinit const_cast continue co_await co_return co_yield decltype default delete do double dynamic_cast else enum explicit export extern false float for friend goto if inline int long mutable namespace new noexcept not not_eq nullptr operator or or_eq private protected public register reinterpret_cast requires return short signed sizeof static static_assert static_cast struct switch template this thread_local throw true try typedef typeid typename union unsigned using virtual void volatile wchar_t while xor xor_eq`),
+  literals: codeWordSet('true false nullptr NULL'),
+  types: codeWordSet('bool char char8_t char16_t char32_t double float int long short signed unsigned void wchar_t size_t ssize_t ptrdiff_t int8_t int16_t int32_t int64_t uint8_t uint16_t uint32_t uint64_t string wstring vector map set unordered_map unordered_set pair unique_ptr shared_ptr weak_ptr optional variant'),
+  lineComments: ['//'], blockComments: [['/*', '*/']], strings: ['"'], chars: ["'"],
+  prefixes: /(?:u8|u|U|L)/y,
+  flags: { preprocessor: true, upperType: true, keyColon: true },
+}
+
+const CODE_LANG_DEFS = {
+  javascript: javascriptDef,
+  typescript: {
+    ...javascriptDef,
+    keywords: new Set([...javascriptDef.keywords, ...codeWordSet('abstract accessor asserts declare enum global implements infer interface intrinsic is keyof module namespace override private protected public readonly satisfies type unique using')]),
+    types: new Set([...javascriptDef.types, ...codeWordSet('any bigint boolean never number object string symbol unknown void')]),
+  },
+  json: {
+    keywords: codeWordSet('true false null'),
+    lineComments: ['//'], blockComments: [['/*', '*/']], strings: ['"'],
+    flags: { stringKeys: true },
+  },
+  css: {
+    keywords: codeWordSet('important inherit initial unset revert'),
+    blockComments: [['/*', '*/']], strings: ['"', "'"],
+    units: /(?:px|em|rem|ex|ch|vh|vw|vmin|vmax|fr|deg|rad|turn|s|ms|%)/y,
+    flags: { keyColon: true, hashColor: true, cssCustom: true, atRule: true },
+  },
+  python: {
+    keywords: codeWordSet('and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield match case'),
+    literals: codeWordSet('True False None Ellipsis NotImplemented'), types: codeWordSet('bool bytearray bytes complex dict float frozenset int list object range set str tuple type'), variables: codeWordSet('self cls'),
+    lineComments: ['#'], strings: ['"', "'"], triple: ['"""', "'''"], prefixes: /[rRbBuUfF]{1,2}/y,
+    flags: { stringKeys: true, keyColon: true, decorators: true, upperType: true },
+  },
+  bash: {
+    keywords: codeWordSet('if then else elif fi for while until do done case esac function in select time coproc return exit break continue local export readonly declare unset shift source alias trap wait'),
+    literals: codeWordSet('true false'),
+    commands: codeWordSet('echo printf read cd pwd ls cp mv rm mkdir rmdir touch cat grep egrep sed awk find xargs sort uniq head tail cut tr wc chmod chown ps kill curl wget git npm pnpm node python python3 pip docker make sudo apt brew systemctl tar gzip unzip ssh scp'),
+    lineComments: ['#'], strings: ['"', "'"],
+    flags: { dollarVars: true, cliFlags: true, envVars: true },
+  },
+  powershell: {
+    keywords: codeWordSet('begin break catch class continue data define do dynamicparam else elseif end enum exit filter finally for foreach from function hidden if in param process return static switch throw trap try until using var while workflow'),
+    lineComments: ['#'], blockComments: [['<#', '#>']], strings: ['"', "'"], escape: '`',
+    flags: { dollarVars: true, cliFlags: true, cmdlet: true, doubleEscaped: true },
+  },
+  sql: {
+    keywords: codeWordSet('select from where insert into values update delete set create table alter drop index view join inner left right full outer on as and or not is like between exists in union all distinct group by order having limit offset top asc desc case when then else end begin commit rollback transaction grant revoke primary key foreign references unique check default constraint add column rename procedure function trigger return if while declare cursor fetch next'),
+    literals: codeWordSet('true false null'),
+    types: codeWordSet('bigint binary bit blob boolean char date datetime decimal double float int integer interval json money nchar numeric nvarchar real smallint text time timestamp tinyint uuid varchar varbinary'),
+    lineComments: ['--'], blockComments: [['/*', '*/']], strings: ["'", '"'], escape: '',
+    flags: { caseInsensitive: true, doubleEscaped: true },
+  },
+  java: {
+    keywords: codeWordSet('abstract assert break case catch class const continue default do else enum extends final finally for goto if implements import instanceof interface native new package private protected public return static strictfp super switch synchronized this throw throws transient try volatile while var record sealed permits yield'),
+    literals: codeWordSet('true false null'), types: codeWordSet('boolean byte char double float int long short void String Object Integer Long Double Float Boolean Character Byte Short List Map Set ArrayList HashMap HashSet Optional Stream'), variables: codeWordSet('this super'),
+    lineComments: ['//'], blockComments: [['/*', '*/']], strings: ['"'], chars: ["'"], triple: ['"""'],
+    flags: { decorators: true, upperType: true },
+  },
+  csharp: {
+    keywords: codeWordSet('abstract as base break case catch checked class const continue default delegate do else enum event explicit extern finally fixed for foreach goto if implicit in interface internal is lock namespace new operator out override params private protected public readonly ref return sealed sizeof stackalloc static struct switch this throw try typeof uint ulong unchecked unsafe ushort using virtual void volatile while add async await dynamic get global init partial record remove required set value var when where yield'),
+    literals: codeWordSet('true false null'), types: codeWordSet('Boolean Byte Char DateTime Decimal Double Int16 Int32 Int64 Object SByte Single String UInt16 UInt32 UInt64 Void List Dictionary HashSet Task Guid Exception'),
+    lineComments: ['//'], blockComments: [['/*', '*/']], strings: ['"'], chars: ["'"], triple: ['"""'],
+    prefixes: /(?:@\$|\$@|@|\$)/y,
+    flags: { preprocessor: true, upperType: true },
+  },
+  cpp: cppDef,
+  c: cppDef,
+  go: {
+    keywords: codeWordSet('break case chan const continue default defer else fallthrough for func go goto if import interface map package range return select struct switch type var'),
+    literals: codeWordSet('true false nil iota'),
+    types: codeWordSet('bool byte complex64 complex128 error float32 float64 int int8 int16 int32 int64 rune string uint uint8 uint16 uint32 uint64 uintptr any comparable'),
+    lineComments: ['//'], blockComments: [['/*', '*/']], strings: ['"'], chars: ["'"],
+    flags: { rawBacktick: true, upperType: true },
+  },
+  rust: {
+    keywords: codeWordSet('as async await break const continue crate dyn else enum extern fn for if impl in let loop match mod move mut pub ref return static struct super trait type unsafe use where while yield'),
+    literals: codeWordSet('true false'),
+    types: codeWordSet('bool char f32 f64 i8 i16 i32 i64 i128 isize str u8 u16 u32 u64 u128 usize String Vec Option Result Box HashMap'), variables: codeWordSet('self Self super crate'),
+    lineComments: ['//'], blockComments: [['/*', '*/']], strings: ['"'], chars: ["'"],
+    flags: { rustLifetimes: true, rustAttributes: true, upperType: true },
+  },
+  kotlin: {
+    keywords: codeWordSet('as break class continue do else false for fun if in interface is null object package return super this throw true try typealias typeof val var when while by catch constructor delegate dynamic field file finally get import init param property receiver set setparam where actual abstract annotation companion const crossinline data enum expect external final infix inline inner internal lateinit noinline open operator out override private protected public reified sealed suspend tailrec vararg'),
+    literals: codeWordSet('true false null'), types: codeWordSet('Any Boolean Byte Char Double Float Int Long Nothing Short String Unit Array List Map Set'), variables: codeWordSet('this super it'),
+    lineComments: ['//'], blockComments: [['/*', '*/']], strings: ['"'], chars: ["'"], triple: ['"""'],
+    flags: { decorators: true, upperType: true },
+  },
+  yaml: { scanner: 'yaml' },
+  markup: { scanner: 'markup' },
+  markdown: { scanner: 'markdown' },
+  diff: { scanner: 'diff' },
+  text: { plain: true },
+  // Diagram fences are detected by the markdown parser; leave their source as is.
+  mermaid: { plain: true },
+}
+
+const CODE_LANG_ALIASES = {
+  js: 'javascript', jsx: 'javascript', mjs: 'javascript', cjs: 'javascript', ts: 'typescript', tsx: 'typescript', mts: 'typescript', cts: 'typescript',
+  py: 'python', python3: 'python', sh: 'bash', shell: 'bash', zsh: 'bash', ps1: 'powershell', pwsh: 'powershell', yml: 'yaml',
+  c: 'c', h: 'c', 'c++': 'cpp', cc: 'cpp', hpp: 'cpp', hxx: 'cpp', cs: 'csharp', 'c#': 'csharp', rs: 'rust', golang: 'go', kt: 'kotlin', kts: 'kotlin',
+  html: 'markup', htm: 'markup', xml: 'markup', svg: 'markup', vue: 'markup', svelte: 'markup', xhtml: 'markup', jsonc: 'json', json5: 'json', md: 'markdown',
+  patch: 'diff', txt: 'text', plain: 'text', plaintext: 'text', none: 'text',
+}
+
+/** Canonical language id for a fence info string; unknown languages become 'text'. */
+function normalizeCodeLang(lang) {
+  if (typeof lang !== 'string') return 'text'
+  let id = lang.trim().toLowerCase()
+  if (id.startsWith('language-')) id = id.slice('language-'.length)
+  id = id.split(/[\s,;]+/)[0] || ''
+  id = id.replace(/^[`~{.\[]+/, '').replace(/[`~}\]]+$/, '')
+  if (id === '') return 'text'
+  if (Object.prototype.hasOwnProperty.call(CODE_LANG_ALIASES, id)) return CODE_LANG_ALIASES[id]
+  return Object.prototype.hasOwnProperty.call(CODE_LANG_DEFS, id) ? id : 'text'
+}
+
+function codeEndOfLine(source, index) {
+  const next = source.indexOf('\n', index)
+  return next === -1 ? source.length : next
+}
+
+function codeOnlyWhitespace(source, start, end) {
+  return !/[^ \t\r]/.test(source.slice(start, end))
+}
+
+function codeNextIndex(source, index) {
+  while (index < source.length && /\s/.test(source[index])) index += 1
+  return index
+}
+
+function codeIsKeyString(source, index) {
+  const next = codeNextIndex(source, index)
+  return source[next] === ':' && source[next + 1] !== ':'
+}
+
+function codeIsDigit(ch) {
+  return ch >= '0' && ch <= '9'
+}
+
+/** Shared sink: turns (type, start, end) spans into ordered tokens with gaps as plain text. */
+function codeTokenSink(source, tokens) {
+  let plainStart = 0
+  const push = (type, start, end) => {
+    if (end <= start) return
+    if (start > plainStart) tokens.push({ type: '', text: source.slice(plainStart, start) })
+    tokens.push({ type, text: source.slice(start, end) })
+    plainStart = end
+  }
+  const finish = () => {
+    if (plainStart < source.length) tokens.push({ type: '', text: source.slice(plainStart) })
+    return tokens
+  }
+  return { push, finish }
+}
+
+/** Scan a quoted run from its opening delimiter; unterminated runs stop at EOL/EOF. */
+function readCodeQuoted(source, start, quote, options) {
+  const escape = options.escape === undefined ? '\\' : options.escape
+  let index = start + quote.length
+  while (index < source.length) {
+    const ch = source[index]
+    if (escape !== '' && ch === escape) { index += 2; continue }
+    if (options.double && ch === quote[0] && source[index + 1] === quote[0]) { index += 2; continue }
+    if (quote.length === 1 && ch === '\n' && !options.multiline) return index
+    if (source.startsWith(quote, index)) return index + quote.length
+    index += 1
+  }
+  return index
+}
+
+/** Skip a `${...}` expression inside a template literal. */
+function scanTemplateExpression(source, start) {
+  let index = start
+  let depth = 1
+  while (index < source.length) {
+    const ch = source[index]
+    if (ch === '\\') index += 2
+    else if (ch === "'" || ch === '"') index = readCodeQuoted(source, index, ch, { multiline: false })
+    else if (ch === '`') index = scanTemplateLiteral(source, index)
+    else if (ch === '{') { depth += 1; index += 1 } else if (ch === '}') {
+      depth -= 1
+      if (depth === 0) return index + 1
+      index += 1
+    } else index += 1
+  }
+  return index
+}
+
+function scanTemplateLiteral(source, start) {
+  let index = start + 1
+  while (index < source.length) {
+    const ch = source[index]
+    if (ch === '\\') index += 2
+    else if (ch === '`') return index + 1
+    else if (ch === '$' && source[index + 1] === '{') index = scanTemplateExpression(source, index + 2)
+    else index += 1
+  }
+  return index
+}
+
+/** Detect a string/char/template at `index`; returns { type, end } or null. */
+function readCodeString(source, index, def) {
+  const flags = def.flags || {}
+  let quoteStart = index
+  let prefix = ''
+  if (def.prefixes !== undefined) {
+    def.prefixes.lastIndex = index
+    const match = def.prefixes.exec(source)
+    const after = index + (match === null ? 0 : match[0].length)
+    const triple = def.triple !== undefined && def.triple.some(quote => source.startsWith(quote, after))
+    if (match !== null && match.index === index && (triple || (def.strings !== undefined && def.strings.includes(source[after])))) {
+      prefix = match[0]
+      quoteStart = after
+    }
+  }
+  const ch = source[quoteStart]
+  if (ch === undefined) return null
+  if (flags.rustLifetimes && ch === "'" && prefix === '') {
+    const lifetime = /^'[A-Za-z_][A-Za-z0-9_]*/y
+    lifetime.lastIndex = quoteStart
+    const match = lifetime.exec(source)
+    if (match !== null && source[quoteStart + match[0].length] !== "'") return { type: 'var', end: quoteStart + match[0].length }
+  }
+  if (def.triple !== undefined) {
+    for (const quote of def.triple) {
+      if (source.startsWith(quote, quoteStart)) {
+        return { type: 'str', end: readCodeQuoted(source, quoteStart, quote, { multiline: true, escape: def.escape === undefined ? '\\' : def.escape }) }
+      }
+    }
+  }
+  if (flags.template && ch === '`') return { type: 'str', end: scanTemplateLiteral(source, quoteStart) }
+  if (flags.rawBacktick && ch === '`') {
+    const close = source.indexOf('`', quoteStart + 1)
+    return { type: 'str', end: close === -1 ? source.length : close + 1 }
+  }
+  const quoted = def.strings !== undefined && def.strings.includes(ch)
+  const character = def.chars !== undefined && def.chars.includes(ch)
+  if (!quoted && !character) return null
+  const verbatim = prefix.includes('@')
+  return {
+    type: 'str',
+    end: readCodeQuoted(source, quoteStart, ch, {
+      multiline: false,
+      escape: verbatim ? '' : (def.escape === undefined ? '\\' : def.escape),
+      double: verbatim || Boolean(flags.doubleEscaped),
+    }),
+  }
+}
+
+function readCodeComment(source, index, def) {
+  for (const marker of def.lineComments || []) {
+    if (source.startsWith(marker, index)) return codeEndOfLine(source, index)
+  }
+  for (const pair of def.blockComments || []) {
+    if (source.startsWith(pair[0], index)) {
+      const close = source.indexOf(pair[1], index + pair[0].length)
+      return close === -1 ? source.length : close + pair[1].length
+    }
+  }
+  return -1
+}
+
+/** Conservative JS regex literal reader: returns -1 when this cannot be a regex. */
+function readCodeRegex(source, start) {
+  let index = start + 1
+  let inClass = false
+  while (index < source.length) {
+    const ch = source[index]
+    if (ch === '\n') return -1
+    if (ch === '\\') index += 2
+    else {
+      if (ch === '[') inClass = true
+      else if (ch === ']') inClass = false
+      else if (ch === '/' && !inClass) {
+        index += 1
+        while (index < source.length && /[a-z]/i.test(source[index])) index += 1
+        return index
+      }
+      index += 1
+    }
+    if (index - start > HIGHLIGHT_MAX_REGEX) return -1
+  }
+  return -1
+}
+
+function readRustAttribute(source, index) {
+  let cursor = index + 1
+  if (source[cursor] === '!') cursor += 1
+  if (source[cursor] !== '[') return -1
+  let depth = 0
+  while (cursor < source.length) {
+    const ch = source[cursor]
+    if (ch === '[') depth += 1
+    else if (ch === ']') {
+      depth -= 1
+      if (depth === 0) return cursor + 1
+    } else if (ch === '"' || ch === "'") {
+      cursor = readCodeQuoted(source, cursor, ch, { multiline: false })
+      continue
+    }
+    cursor += 1
+  }
+  return source.length
+}
+
+/** Read one JSX-ish tag; parts is null when the `<` is a comparison instead. */
+function readJsxTag(source, start) {
+  let index = start + 1
+  const closing = source[index] === '/'
+  if (closing) index += 1
+  CODE_TAG_NAME_RE.lastIndex = index
+  const name = CODE_TAG_NAME_RE.exec(source)
+  if (name === null || name.index !== index) return { parts: null, end: start + 1 }
+  const parts = [['op', start, start + 1]]
+  if (closing) parts.push(['op', start + 1, index])
+  parts.push(['tag', index, index + name[0].length])
+  index += name[0].length
+  let newlines = 0
+  while (index < source.length) {
+    const ch = source[index]
+    if (ch === '\n' && (newlines += 1) > 12) return { parts: null, end: index }
+    if (ch === '>') { parts.push(['op', index, index + 1]); return { parts, end: index + 1 } }
+    if (ch === '/' && source[index + 1] === '>') { parts.push(['op', index, index + 2]); return { parts, end: index + 2 } }
+    if (/\s|=/.test(ch)) { index += 1; continue }
+    if (ch === '"' || ch === "'") {
+      const end = readCodeQuoted(source, index, ch, { multiline: false })
+      parts.push(['str', index, end])
+      index = end
+      continue
+    }
+    if (ch === '{') {
+      let depth = 0
+      while (index < source.length) {
+        const inner = source[index]
+        if (inner === '"' || inner === "'") { index = readCodeQuoted(source, index, inner, { multiline: false }); continue }
+        if (inner === '{') depth += 1
+        else if (inner === '}') {
+          depth -= 1
+          if (depth === 0) { index += 1; break }
+        }
+        index += 1
+      }
+      continue
+    }
+    CODE_ATTR_NAME_RE.lastIndex = index
+    const attribute = CODE_ATTR_NAME_RE.exec(source)
+    if (attribute === null || attribute.index !== index) { index += 1; continue }
+    parts.push(['attr', index, index + attribute[0].length])
+    index += attribute[0].length
+  }
+  return { parts: null, end: source.length }
+}
+
+function classifyCodeWord(word, source, end, def, prevChar) {
+  const flags = def.flags || {}
+  const lookup = flags.caseInsensitive ? word.toLowerCase() : word
+  if (def.types !== undefined && def.types.has(lookup)) return 'type'
+  if (def.literals !== undefined && def.literals.has(lookup)) return 'num'
+  if (def.keywords !== undefined && def.keywords.has(lookup)) return 'kw'
+  if (def.variables !== undefined && def.variables.has(word)) return 'var'
+  if (def.commands !== undefined && def.commands.has(lookup)) return 'fn'
+  if (prevChar === '.') return 'attr'
+  const next = codeNextIndex(source, end)
+  const nextChar = source[next] || ''
+  if (nextChar === '(') return 'fn'
+  if (nextChar === ':' && source[next + 1] !== ':' && flags.keyColon) return 'attr'
+  if (flags.envVars && nextChar === '=' && /^[A-Z_][A-Z0-9_]*$/.test(word)) return 'var'
+  if (flags.upperType && /^[A-Z][a-z]/.test(word)) return 'type'
+  return word[0] === '$' ? 'var' : ''
+}
+
+/** Shared scanner for the brace-and-semicolon style languages. */
+function scanGeneric(source, def) {
+  const tokens = []
+  const length = source.length
+  const flags = def.flags || {}
+  const sink = codeTokenSink(source, tokens)
+  const push = sink.push
+  let index = 0
+  let lineStart = 0
+  let jsxResume = 0
+  let prevChar = ''
+  let prevWord = ''
+  let prevToken = ''
+  const emit = (type, end, token) => {
+    push(type, index, end)
+    prevChar = source[end - 1] || ''
+    prevWord = ''
+    prevToken = token || ''
+    index = end
+  }
+
+  while (index < length) {
+    const ch = source[index]
+    if (ch === '\n') { index += 1; lineStart = index; continue }
+    if (ch === ' ' || ch === '\t' || ch === '\r') { index += 1; continue }
+
+    // Whole-line meta constructs.
+    if (ch === '#' && index === 0 && source[1] === '!') { emit('meta', codeEndOfLine(source, index), 'meta'); continue }
+    if (flags.preprocessor && ch === '#' && codeOnlyWhitespace(source, lineStart, index)) {
+      emit('meta', codeEndOfLine(source, index), 'meta')
+      continue
+    }
+    if (flags.rustAttributes && ch === '#') {
+      const end = readRustAttribute(source, index)
+      if (end > index) { emit('meta', end, 'meta'); continue }
+    }
+
+    const comment = readCodeComment(source, index, def)
+    if (comment !== -1) { push('com', index, comment); index = comment; continue }
+
+    const string = readCodeString(source, index, def)
+    if (string !== null) {
+      emit(flags.stringKeys && codeIsKeyString(source, string.end) ? 'attr' : string.type, string.end, 'string')
+      continue
+    }
+
+    if (codeIsDigit(ch) || (ch === '.' && codeIsDigit(source[index + 1]))) {
+      CODE_NUMBER_RE.lastIndex = index
+      const number = CODE_NUMBER_RE.exec(source)
+      if (number !== null && number.index === index) {
+        let end = index + number[0].length
+        if (def.units !== undefined) {
+          def.units.lastIndex = end
+          const unit = def.units.exec(source)
+          if (unit !== null && unit.index === end) end += unit[0].length
+        }
+        emit('num', end, 'number')
+        continue
+      }
+    }
+
+    if (flags.dollarVars && ch === '$') {
+      let end = index + 1
+      if (source[end] === '{') {
+        end += 1
+        let depth = 1
+        while (end < length) {
+          if (source[end] === '{') depth += 1
+          else if (source[end] === '}') {
+            depth -= 1
+            if (depth === 0) { end += 1; break }
+          }
+          end += 1
+        }
+      } else {
+        while (end < length && /[\w:?$#@*!-]/.test(source[end])) end += 1
+      }
+      emit('var', end, 'variable')
+      continue
+    }
+
+    if (ch === '@' && (flags.decorators || flags.atRule)) {
+      const pattern = flags.atRule ? CODE_AT_RULE_RE : CODE_DECORATOR_RE
+      pattern.lastIndex = index
+      const match = pattern.exec(source)
+      if (match !== null && match.index === index) { emit('meta', index + match[0].length, 'meta'); continue }
+    }
+
+    if (flags.cliFlags && ch === '-' && /[A-Za-z]/.test(source[index + 1] || '')
+      && (index === 0 || /[\s([{|&;]/.test(source[index - 1]))) {
+      CODE_CLI_FLAG_RE.lastIndex = index
+      const flag = CODE_CLI_FLAG_RE.exec(source)
+      if (flag !== null && flag.index === index) { emit('attr', index + flag[0].length, 'flag'); continue }
+    }
+
+    if (flags.cssCustom && ch === '-' && source[index + 1] === '-') {
+      CODE_CSS_CUSTOM_RE.lastIndex = index
+      const custom = CODE_CSS_CUSTOM_RE.exec(source)
+      if (custom !== null && custom.index === index) { emit('var', index + custom[0].length, 'variable'); continue }
+    }
+
+    if (flags.hashColor && ch === '#') {
+      CODE_CSS_HASH_RE.lastIndex = index
+      const hash = CODE_CSS_HASH_RE.exec(source)
+      if (hash !== null && hash.index === index) {
+        emit(/^#[\da-fA-F]{3,8}$/.test(hash[0]) ? 'num' : 'var', index + hash[0].length, 'hash')
+        continue
+      }
+    }
+
+    if (flags.jsx && ch === '<' && index >= jsxResume) {
+      const allowed = prevToken === '=>' || CODE_JSX_WORDS.has(prevWord)
+        || CODE_REGEX_PREV_CHARS.includes(prevChar) || prevChar === ''
+      if (allowed) {
+        const tag = readJsxTag(source, index)
+        if (tag.parts !== null) {
+          for (const part of tag.parts) push(part[0], part[1], part[2])
+          prevChar = '>'
+          prevWord = ''
+          prevToken = '>'
+          index = tag.end
+          continue
+        }
+        // A failed tag scan consumed this region without a tag; do not retry
+        // inside it, which would make malformed JSX quadratic.
+        jsxResume = tag.end
+      }
+    }
+
+    if (ch === '/' && flags.regex) {
+      const allowed = prevChar === '' || prevToken === '=>'
+        || CODE_REGEX_WORDS.has(prevWord) || CODE_REGEX_PREV_CHARS.includes(prevChar)
+      if (allowed) {
+        const end = readCodeRegex(source, index)
+        if (end !== -1) { emit('str', end, 'regex'); continue }
+      }
+    }
+
+    if (flags.cmdlet) {
+      CODE_CMDLET_RE.lastIndex = index
+      const cmdlet = CODE_CMDLET_RE.exec(source)
+      if (cmdlet !== null && cmdlet.index === index && /[\s(]/.test(source[index + cmdlet[0].length] || ' ')) {
+        emit('fn', index + cmdlet[0].length, 'cmdlet')
+        continue
+      }
+    }
+
+    CODE_IDENT_RE.lastIndex = index
+    const ident = CODE_IDENT_RE.exec(source)
+    if (ident !== null && ident.index === index) {
+      const word = ident[0]
+      const end = index + word.length
+      const type = classifyCodeWord(word, source, end, def, prevChar)
+      if (type !== '') push(type, index, end)
+      prevChar = word[word.length - 1]
+      prevWord = flags.caseInsensitive ? word.toLowerCase() : word
+      prevToken = word
+      index = end
+      continue
+    }
+
+    if (CODE_OPERATORS.includes(ch)) {
+      let end = index + 1
+      while (end < length && CODE_OPERATORS.includes(source[end])) end += 1
+      emit('op', end, source.slice(index, end))
+      continue
+    }
+    index += 1
+  }
+  return sink.finish()
+}
+
+function scanMarkup(source) {
+  const tokens = []
+  const length = source.length
+  const { push, finish } = codeTokenSink(source, tokens)
+  let index = 0
+
+  while (index < length) {
+    if (source[index] !== '<') { index += 1; continue }
+    let type = ''
+    let end = -1
+    if (source.startsWith('<!--', index)) {
+      const close = source.indexOf('-->', index + 4)
+      type = 'com'
+      end = close === -1 ? length : close + 3
+    } else if (source.startsWith('<![CDATA[', index)) {
+      const close = source.indexOf(']]>', index + 9)
+      type = 'meta'
+      end = close === -1 ? length : close + 3
+    } else if (source.startsWith('<!', index) || source.startsWith('<?', index)) {
+      const close = source.indexOf('>', index + 2)
+      type = 'meta'
+      end = close === -1 ? length : close + 1
+    }
+    if (type !== '') { push(type, index, end); index = end; continue }
+
+    let cursor = index + 1
+    const closing = source[cursor] === '/'
+    if (closing) cursor += 1
+    CODE_TAG_NAME_RE.lastIndex = cursor
+    const name = CODE_TAG_NAME_RE.exec(source)
+    if (name === null || name.index !== cursor) { index += 1; continue }
+    push('op', index, index + 1)
+    if (closing) push('op', index + 1, cursor)
+    const nameEnd = cursor + name[0].length
+    push('tag', cursor, nameEnd)
+    let attrs = nameEnd
+    while (attrs < length) {
+      const ch = source[attrs]
+      if (ch === '>') { push('op', attrs, attrs + 1); attrs += 1; break }
+      if (ch === '/' && source[attrs + 1] === '>') { push('op', attrs, attrs + 2); attrs += 2; break }
+      if (ch === ' ' || ch === '\t' || ch === '\r' || ch === '\n') { attrs += 1; continue }
+      if (ch === '=') {
+        push('op', attrs, attrs + 1)
+        attrs += 1
+        while (attrs < length && /\s/.test(source[attrs])) attrs += 1
+        if (source[attrs] === '"' || source[attrs] === "'") {
+          const valueEnd = readCodeQuoted(source, attrs, source[attrs], { multiline: false })
+          push('str', attrs, valueEnd)
+          attrs = valueEnd
+          continue
+        }
+        let valueEnd = attrs
+        while (valueEnd < length && !/[\s>]/.test(source[valueEnd])
+          && !(source[valueEnd] === '/' && source[valueEnd + 1] === '>')) valueEnd += 1
+        if (valueEnd > attrs) push('str', attrs, valueEnd)
+        attrs = valueEnd
+        continue
+      }
+      if (ch === '"' || ch === "'") {
+        const valueEnd = readCodeQuoted(source, attrs, ch, { multiline: false })
+        push('str', attrs, valueEnd)
+        attrs = valueEnd
+        continue
+      }
+      if (ch === '{') {
+        let depth = 0
+        while (attrs < length) {
+          const inner = source[attrs]
+          if (inner === '"' || inner === "'") { attrs = readCodeQuoted(source, attrs, inner, { multiline: false }); continue }
+          if (inner === '{') depth += 1
+          else if (inner === '}') {
+            depth -= 1
+            if (depth === 0) { attrs += 1; break }
+          }
+          attrs += 1
+        }
+        continue
+      }
+      CODE_ATTR_NAME_RE.lastIndex = attrs
+      const attribute = CODE_ATTR_NAME_RE.exec(source)
+      if (attribute !== null && attribute.index === attrs) {
+        push('attr', attrs, attrs + attribute[0].length)
+        attrs += attribute[0].length
+        continue
+      }
+      attrs += 1
+    }
+    index = attrs
+  }
+  return finish()
+}
+
+function scanYamlInline(source, start, end, push) {
+  let index = start
+  while (index < end) {
+    const ch = source[index]
+    if (ch === ' ' || ch === '\t') { index += 1; continue }
+    if (ch === '#') { push('com', index, end); return }
+    if (ch === '"' || ch === "'") {
+      const close = Math.min(readCodeQuoted(source, index, ch, { multiline: false, double: ch === "'" }), end)
+      push('str', index, close)
+      index = close
+      continue
+    }
+    if (ch === '&' || ch === '*' || ch === '!') {
+      CODE_ANCHOR_RE.lastIndex = index
+      const anchor = CODE_ANCHOR_RE.exec(source)
+      if (anchor !== null && anchor.index === index && index + anchor[0].length <= end) {
+        push('meta', index, index + anchor[0].length)
+        index += anchor[0].length
+        continue
+      }
+    }
+    if (ch === '~') { push('num', index, index + 1); index += 1; continue }
+    if ('[]{},:?'.includes(ch) || (ch === '-' && source[index + 1] === ' ')) {
+      push('op', index, index + 1)
+      index += 1
+      continue
+    }
+    if (codeIsDigit(ch) || (ch === '.' && codeIsDigit(source[index + 1]))) {
+      CODE_NUMBER_RE.lastIndex = index
+      const number = CODE_NUMBER_RE.exec(source)
+      if (number !== null && number.index === index && number[0] !== '') {
+        const numberEnd = index + number[0].length
+        if (!/[A-Za-z_$]/.test(source[numberEnd] || '')) { push('num', index, numberEnd); index = numberEnd; continue }
+      }
+    }
+    CODE_WORD_RE.lastIndex = index
+    const word = CODE_WORD_RE.exec(source)
+    if (word !== null && word.index === index) {
+      const wordEnd = index + word[0].length
+      if (CODE_YAML_CONSTANTS.has(word[0].toLowerCase()) && (wordEnd === end || /[\s,\]}]]/.test(source[wordEnd] || ''))) {
+        push('num', index, wordEnd)
+      }
+      index = wordEnd
+      continue
+    }
+    index += 1
+  }
+}
+
+function scanYaml(source) {
+  const tokens = []
+  const length = source.length
+  const { push, finish } = codeTokenSink(source, tokens)
+  let index = 0
+  let blockIndent = -1
+
+  while (index < length) {
+    const lineEnd = codeEndOfLine(source, index)
+    const line = source.slice(index, lineEnd)
+    if (line.trim() === '') { index = lineEnd + 1; continue }
+    const indent = /^[ \t]*/.exec(line)[0].length
+    if (blockIndent >= 0) {
+      if (indent > blockIndent) { index = lineEnd + 1; continue }
+      blockIndent = -1
+    }
+    if (/^(?:---|\.\.\.)\s*$/.test(line)) { push('meta', index, lineEnd); index = lineEnd + 1; continue }
+    let cursor = index
+    const list = /^([ \t]*)(-[ \t]+)/.exec(line)
+    if (list !== null) {
+      const dashStart = index + list[1].length
+      push('op', dashStart, dashStart + 1)
+      cursor = index + list[0].length
+    }
+    const key = /^([^\s:#][^:\n]*?):(?=[ \t]|$)/.exec(source.slice(cursor, lineEnd))
+    if (key !== null) {
+      const keyEnd = cursor + key[1].length
+      push('attr', cursor, keyEnd)
+      push('op', keyEnd, keyEnd + 1)
+      cursor = keyEnd + 1
+    }
+    scanYamlInline(source, cursor, lineEnd, push)
+    if (/[|>][-+]?\s*(?:#.*)?$/.test(source.slice(cursor, lineEnd).trim())) blockIndent = indent
+    index = lineEnd + 1
+  }
+  return finish()
+}
+
+function scanMarkdownInline(source, start, end, push) {
+  let index = start
+  while (index < end) {
+    const ch = source[index]
+    if (ch === '`') {
+      const close = source.indexOf('`', index + 1)
+      if (close !== -1 && close < end) { push('str', index, close + 1); index = close + 1 } else index += 1
+    } else if (ch === '[') {
+      CODE_MD_LINK_RE.lastIndex = index
+      const link = CODE_MD_LINK_RE.exec(source)
+      if (link !== null && link.index === index && index + link[0].length <= end) {
+        const labelEnd = index + 1 + link[1].length
+        push('op', index, index + 1)
+        push('op', labelEnd, labelEnd + 2)
+        const urlEnd = labelEnd + 2 + link[2].length
+        push('str', labelEnd + 2, urlEnd)
+        push('op', urlEnd, urlEnd + 1)
+        index += link[0].length
+      } else index += 1
+    } else if (ch === '*' || ch === '_' || ch === '~') {
+      let next = index + 1
+      while (next < end && source[next] === ch) next += 1
+      if (next - index <= 3) { push('op', index, next); index = next } else index += 1
+    } else index += 1
+  }
+}
+
+function scanMarkdown(source) {
+  const tokens = []
+  const length = source.length
+  const { push, finish } = codeTokenSink(source, tokens)
+  let index = 0
+  let fence = ''
+
+  while (index < length) {
+    const lineEnd = codeEndOfLine(source, index)
+    const line = source.slice(index, lineEnd)
+    const fenceMatch = /^([ \t]*)(```+|~~~+)/.exec(line)
+    const heading = /^([ \t]{0,3})(#{1,6})([ \t]+)/.exec(line)
+    const quote = /^([ \t]*)(>)[ \t]?/.exec(line)
+    const list = /^([ \t]*)([-*+]|\d+[.)])([ \t]+)/.exec(line)
+    if (fence !== '') {
+      if (fenceMatch !== null && fenceMatch[2][0] === fence[0] && fenceMatch[2].length >= fence.length) {
+        push('meta', index + fenceMatch[1].length, lineEnd)
+        fence = ''
+      }
+      index = lineEnd + 1
+      continue
+    }
+    if (fenceMatch !== null) {
+      push('meta', index + fenceMatch[1].length, lineEnd)
+      fence = fenceMatch[2]
+    } else if (/^[ \t]{0,3}(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,})$/.test(line)) {
+      push('meta', index, lineEnd)
+    } else if (heading !== null) {
+      const markerStart = index + heading[1].length
+      push('meta', markerStart, markerStart + heading[2].length)
+      scanMarkdownInline(source, index + heading[0].length, lineEnd, push)
+    } else if (quote !== null) {
+      const markerStart = index + quote[1].length
+      push('op', markerStart, markerStart + 1)
+      scanMarkdownInline(source, index + quote[0].length, lineEnd, push)
+    } else if (list !== null) {
+      const markerStart = index + list[1].length
+      push('op', markerStart, markerStart + list[2].length)
+      scanMarkdownInline(source, index + list[0].length, lineEnd, push)
+    } else scanMarkdownInline(source, index, lineEnd, push)
+    index = lineEnd + 1
+  }
+  return finish()
+}
+
+function scanDiff(source) {
+  const tokens = []
+  const length = source.length
+  const { push, finish } = codeTokenSink(source, tokens)
+  let index = 0
+  while (index < length) {
+    const lineEnd = codeEndOfLine(source, index)
+    const line = source.slice(index, lineEnd)
+    if (line !== '' && (/^(?:diff |index |\+\+\+|---|@@|new file|deleted file|similarity |rename )/.test(line) || /^[+-]/.test(line))) {
+      push('meta', index, lineEnd)
+    }
+    index = lineEnd + 1
+  }
+  return finish()
+}
+
+/** Tokenize `code` for a language id or alias. Never throws. */
+function highlightCode(code, lang) {
+  const source = typeof code === 'string' ? code : String(code ?? '')
+  const id = normalizeCodeLang(lang)
+  if (id === 'text') return [{ type: '', text: source }]
+  const def = CODE_LANG_DEFS[id]
+  if (def === undefined || def.plain === true) return [{ type: '', text: source }]
+  try {
+    const limit = Math.min(source.length, HIGHLIGHT_MAX_LENGTH)
+    const head = limit === source.length ? source : source.slice(0, limit)
+    let tokens
+    if (def.scanner === 'markup') tokens = scanMarkup(head)
+    else if (def.scanner === 'yaml') tokens = scanYaml(head)
+    else if (def.scanner === 'markdown') tokens = scanMarkdown(head)
+    else if (def.scanner === 'diff') tokens = scanDiff(head)
+    else tokens = scanGeneric(head, def)
+    if (limit < source.length) tokens.push({ type: '', text: source.slice(limit) })
+    return tokens
+  } catch {
+    return [{ type: '', text: source }]
+  }
+}
+
+/** Same tokens as highlightCode, split into rows at newlines for diff-style UI. */
+function highlightLines(code, lang) {
+  const source = typeof code === 'string' ? code : String(code ?? '')
+  const rows = [[]]
+  let row = rows[0]
+  for (const token of highlightCode(source, lang)) {
+    const parts = token.text.split('\n')
+    for (let index = 0; index < parts.length; index += 1) {
+      if (index > 0) { row = []; rows.push(row) }
+      if (parts[index] !== '') row.push({ type: token.type, text: parts[index] })
+    }
+  }
+  return rows
+}
+
+/* ---- 32-math.js ---- */
+// 32-math.js — dependency-free LaTeX math renderer for chat answers.
+//
+// Concatenated into the plugin bundle, so: no imports or exports and no
+// top-level side effects. Output is React elements only; source text is passed
+// as children, never as HTML, so model output cannot inject markup.
+//
+// Pipeline: lexMath() -> parseLatex() (plain AST) -> latexToNodes() (React).
+// Unknown commands render as muted text; unbalanced braces and runaway nesting
+// degrade to text instead of failing.
+
+const MATH_MAX_SOURCE = 20000
+const MATH_MAX_DEPTH = 64
+
+// kind -> class name for a plain math character
+const MATH_CHAR_CLASSES = {
+  var: 'dsc-math-var', num: 'dsc-math-num', op: 'dsc-math-op',
+  delim: 'dsc-math-delim', text: 'dsc-math-text',
+}
+
+const MATH_GREEK = {
+  alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', varepsilon: 'ε',
+  zeta: 'ζ', eta: 'η', theta: 'θ', vartheta: 'ϑ', iota: 'ι', kappa: 'κ',
+  varkappa: 'ϰ', lambda: 'λ', mu: 'μ', nu: 'ν', xi: 'ξ', omicron: 'ο', pi: 'π',
+  rho: 'ρ', varrho: 'ϱ', sigma: 'σ', varsigma: 'ς', tau: 'τ', upsilon: 'υ',
+  phi: 'φ', varphi: 'φ', chi: 'χ', psi: 'ψ', omega: 'ω',
+}
+const MATH_UPPER_GREEK = {
+  Alpha: 'Α', Beta: 'Β', Gamma: 'Γ', Delta: 'Δ', Epsilon: 'Ε', Zeta: 'Ζ',
+  Eta: 'Η', Theta: 'Θ', Iota: 'Ι', Kappa: 'Κ', Lambda: 'Λ', Mu: 'Μ', Nu: 'Ν',
+  Xi: 'Ξ', Omicron: 'Ο', Pi: 'Π', Rho: 'Ρ', Sigma: 'Σ', Tau: 'Τ',
+  Upsilon: 'Υ', Phi: 'Φ', Chi: 'Χ', Psi: 'Ψ', Omega: 'Ω',
+}
+const MATH_SYMBOLS = {
+  pm: '±', mp: '∓', times: '×', div: '÷', cdot: '⋅', ast: '∗', star: '⋆', circ: '∘', bullet: '•',
+  le: '≤', leq: '≤', ge: '≥', geq: '≥', ne: '≠', neq: '≠', approx: '≈', equiv: '≡', sim: '∼',
+  simeq: '≃', cong: '≅', propto: '∝', to: '→', rightarrow: '→', leftarrow: '←',
+  leftrightarrow: '↔', Rightarrow: '⇒', Leftarrow: '⇐', Leftrightarrow: '⇔', mapsto: '↦',
+  infty: '∞', partial: '∂', nabla: '∇', forall: '∀', exists: '∃', in: '∈', notin: '∉',
+  subset: '⊂', subseteq: '⊆', supset: '⊃', supseteq: '⊇', cup: '∪', cap: '∩',
+  emptyset: '∅', varnothing: '∅', neg: '¬', lnot: '¬', land: '∧', lor: '∨',
+  angle: '∠', perp: '⊥', parallel: '∥', ldots: '…', cdots: '⋯', dots: '…',
+  prime: '′', hbar: 'ℏ', ell: 'ℓ', Re: 'ℜ', Im: 'ℑ', aleph: 'ℵ',
+}
+
+const MATH_DELIMITER_SYMBOLS = {
+  langle: '⟨', rangle: '⟩', lvert: '|', rvert: '|', lVert: '‖', rVert: '‖',
+  vert: '|', Vert: '‖', '|': '‖', lfloor: '⌊', rfloor: '⌋', lceil: '⌈',
+  rceil: '⌉', lbrace: '{', rbrace: '}', lbrack: '[', rbrack: ']',
+  backslash: '\\', uparrow: '↑', downarrow: '↓', updownarrow: '↕',
+  Uparrow: '⇑', Downarrow: '⇓', Updownarrow: '⇕',
+}
+
+const MATH_ESCAPES = {
+  '{': '{', '}': '}', '%': '%', '$': '$', '&': '&', '#': '#', '_': '_',
+}
+
+// command name -> em width (negative values pull the following text left)
+const MATH_SPACES = {
+  ',': 0.1667, ':': 0.2222, ';': 0.2778, '!': -0.1667, ' ': 0.3333,
+  quad: 1, qquad: 2,
+}
+
+const MATH_FONTS = {
+  mathrm: 'rm', mathbf: 'bf', mathit: 'it', mathsf: 'sf',
+  mathtt: 'tt', mathcal: 'cal', mathscr: 'cal', mathbb: 'bb',
+}
+
+const MATH_ACCENTS = {
+  hat: 'hat', widehat: 'hat', bar: 'bar', vec: 'vec', dot: 'dot',
+  ddot: 'ddot', tilde: 'tilde', widetilde: 'tilde',
+  overline: 'overline', underline: 'underline',
+}
+
+const MATH_ACCENT_MARKS = {
+  hat: 'ˆ', bar: '¯', vec: '→', dot: '˙', ddot: '¨', tilde: '˜',
+}
+
+// Glyphs of large operators and function names; the sets below decide layout.
+const MATH_BIG = {
+  sum: '∑', prod: '∏', coprod: '∐', bigcup: '⋃', bigcap: '⋂', bigoplus: '⨁',
+  int: '∫', iint: '∬', oint: '∮',
+  lim: 'lim', max: 'max', min: 'min', sup: 'sup', inf: 'inf',
+  log: 'log', ln: 'ln', exp: 'exp', sin: 'sin', cos: 'cos', tan: 'tan',
+  arcsin: 'arcsin', det: 'det', gcd: 'gcd',
+}
+// Limits stack above/below the glyph in display mode.
+const MATH_BIG_LIMITS = new Set(['sum', 'prod', 'coprod', 'bigcup', 'bigcap', 'bigoplus', 'lim', 'max', 'min', 'sup', 'inf'])
+// Function names stay upright and text-sized instead of using big-operator size.
+const MATH_BIG_FUNCTIONS = new Set(['lim', 'max', 'min', 'sup', 'inf', 'log', 'ln', 'exp', 'sin', 'cos', 'tan', 'arcsin', 'det', 'gcd'])
+
+// \big-family prefixes: accepted, rendered as a scaled plain delimiter
+const MATH_BIG_DELIMITERS = {
+  big: 1.2, Big: 1.5, bigg: 1.9, Bigg: 2.4,
+  bigl: 1.2, bigr: 1.2, Bigl: 1.5, Bigr: 1.5,
+  biggl: 1.9, biggr: 1.9, Biggl: 2.4, Biggr: 2.4,
+  bigm: 1.2, Bigm: 1.5, biggm: 1.9, Biggm: 2.4,
+}
+
+// environment name -> delimiter pair (null / empty string means none)
+const MATH_ENV_DELIMITERS = {
+  matrix: null, aligned: null, align: null, alignat: null,
+  gathered: null, gather: null, split: null, array: null,
+  pmatrix: { left: '(', right: ')' }, bmatrix: { left: '[', right: ']' },
+  Bmatrix: { left: '{', right: '}' }, vmatrix: { left: '|', right: '|' },
+  Vmatrix: { left: '‖', right: '‖' }, cases: { left: '{', right: '' },
+}
+const MATH_IGNORED = new Set([
+  'displaystyle', 'textstyle', 'scriptstyle', 'scriptscriptstyle',
+  'limits', 'nolimits', 'nonumber', 'notag',
+])
+// stop sets drive the recursive row parser
+const MATH_STOP_GROUP = { close: true }
+const MATH_STOP_ARGUMENT = { close: true, align: true, rowbreak: true, right: true, end: true }
+const MATH_STOP_ENV = { align: true, rowbreak: true, end: true }
+const MATH_STOP_RIGHT = { right: true }
+const MATH_STOP_INDEX = { close: true, char: ']' }
+
+// ---------------------------------------------------------------------------
+// Lexer: source string -> flat token list
+// ---------------------------------------------------------------------------
+
+function lexMath(source) {
+  const tokens = []
+  let index = 0
+  while (index < source.length) {
+    const char = source[index]
+    if (char === '\\') {
+      index += 1
+      if (index >= source.length) break
+      const next = source[index]
+      if (/[A-Za-z]/.test(next)) {
+        let name = ''
+        while (index < source.length && /[A-Za-z]/.test(source[index])) {
+          name += source[index]
+          index += 1
+        }
+        tokens.push({ type: 'command', name })
+        continue
+      }
+      index += 1
+      if (next === '\\') {
+        tokens.push({ type: 'rowbreak' })
+        continue
+      }
+      tokens.push({ type: 'command', name: next })
+      continue
+    }
+    if (char === '{') {
+      tokens.push({ type: 'open' })
+      index += 1
+      continue
+    }
+    if (char === '}') {
+      tokens.push({ type: 'close' })
+      index += 1
+      continue
+    }
+    if (char === '^') {
+      tokens.push({ type: 'sup' })
+      index += 1
+      continue
+    }
+    if (char === '_') {
+      tokens.push({ type: 'sub' })
+      index += 1
+      continue
+    }
+    if (char === '&') {
+      tokens.push({ type: 'align' })
+      index += 1
+      continue
+    }
+    if (char === '~') {
+      tokens.push({ type: 'space', size: 0.3333 })
+      index += 1
+      continue
+    }
+    if (/\s/.test(char)) {
+      tokens.push({ type: 'space', size: 0 })
+      index += 1
+      continue
+    }
+    tokens.push({ type: 'char', value: char })
+    index += 1
+  }
+  return tokens
+}
+
+function mathClassifyChar(char) {
+  if ('0123456789.'.includes(char)) return 'num'
+  if (/[A-Za-z]/.test(char)) return 'var'
+  if (/[\u0370-\u03ff\u1d00-\u1fff]/.test(char)) return 'var'
+  if ('()[]|'.includes(char)) return 'delim'
+  if ('+-*/=<>!?,;:\'"%@#$&'.includes(char)) return 'op'
+  return 'text'
+}
+
+// Reconstruct readable source-ish text for a token; used by the depth guard,
+// raw \text arguments and error-tolerant renderings.
+function mathCommandText(name) {
+  if (MATH_ESCAPES[name] !== undefined) return MATH_ESCAPES[name]
+  if (MATH_SPACES[name] !== undefined) return ' '
+  return '\\' + name
+}
+
+function mathTokenText(token) {
+  if (token.type === 'char') return token.value
+  if (token.type === 'command') return mathCommandText(token.name)
+  if (token.type === 'open') return '{'
+  if (token.type === 'close') return '}'
+  if (token.type === 'sup') return '^'
+  if (token.type === 'sub') return '_'
+  if (token.type === 'space') return ' '
+  if (token.type === 'align') return '&'
+  if (token.type === 'rowbreak') return '\\\\'
+  return ''
+}
+
+// ---------------------------------------------------------------------------
+// Parser: flat tokens -> plain AST
+// ---------------------------------------------------------------------------
+
+function mathTokenStops(token, stop) {
+  if (stop === undefined || stop === null) return false
+  if (token.type === 'close' && stop.close === true) return true
+  if (token.type === 'align' && stop.align === true) return true
+  if (token.type === 'rowbreak' && stop.rowbreak === true) return true
+  if (token.type === 'char' && stop.char !== undefined && token.value === stop.char) return true
+  if (token.type === 'command' && stop.right === true && token.name === 'right') return true
+  if (token.type === 'command' && stop.end === true && token.name === 'end') return true
+  return false
+}
+
+function mathSkipSpaces(state) {
+  while (state.index < state.tokens.length && state.tokens[state.index].type === 'space') {
+    state.index += 1
+  }
+}
+
+function mathReadLiteralGroup(state) {
+  // state.index already points past the opening brace. The source is capped at
+  // MATH_MAX_SOURCE, so keeping every character here stays small.
+  let level = 1
+  let text = ''
+  while (state.index < state.tokens.length) {
+    const token = state.tokens[state.index]
+    if (token.type === 'open') level += 1
+    if (token.type === 'close') {
+      level -= 1
+      if (level === 0) {
+        state.index += 1
+        break
+      }
+    }
+    text += mathTokenText(token)
+    state.index += 1
+  }
+  return text
+}
+
+function mathReadLiteralAtom(state) {
+  const token = state.tokens[state.index]
+  if (token === undefined) return null
+  if (token.type === 'open') {
+    state.index += 1
+    return { type: 'text', value: mathReadLiteralGroup(state) }
+  }
+  state.index += 1
+  return { type: 'text', value: mathTokenText(token) }
+}
+
+function parseMathGroup(state, depth) {
+  // state.index points at the opening brace
+  state.index += 1
+  if (depth > MATH_MAX_DEPTH) return { type: 'text', value: mathReadLiteralGroup(state) }
+  const items = parseMathRow(state, depth + 1, MATH_STOP_GROUP)
+  const close = state.tokens[state.index]
+  if (close !== undefined && close.type === 'close') state.index += 1
+  return { type: 'group', items }
+}
+
+function parseMathArgument(state, depth) {
+  const token = state.tokens[state.index]
+  if (token === undefined) return null
+  if (mathTokenStops(token, MATH_STOP_ARGUMENT)) return null
+  return parseMathAtom(state, depth)
+}
+
+// Read a raw {...} argument for \text / \operatorname / environment names.
+function mathReadRawGroup(state) {
+  const token = state.tokens[state.index]
+  if (token === undefined || token.type !== 'open') return ''
+  state.index += 1
+  let level = 1
+  let text = ''
+  while (state.index < state.tokens.length) {
+    const current = state.tokens[state.index]
+    if (current.type === 'open') level += 1
+    if (current.type === 'close') {
+      level -= 1
+      if (level === 0) {
+        state.index += 1
+        break
+      }
+    }
+    if (current.type === 'rowbreak') text += '\n'
+    else if (current.type === 'command') text += mathCommandText(current.name)
+    else text += mathTokenText(current)
+    state.index += 1
+  }
+  return text
+}
+
+function mathReadRawText(state) {
+  const token = state.tokens[state.index]
+  if (token === undefined) return ''
+  if (token.type === 'open') return mathReadRawGroup(state)
+  state.index += 1
+  return mathTokenText(token)
+}
+
+function mathReadDelimiter(state) {
+  mathSkipSpaces(state)
+  const token = state.tokens[state.index]
+  if (token === undefined) return null
+  if (token.type === 'char') {
+    state.index += 1
+    return token.value === '.' ? null : token.value
+  }
+  if (token.type === 'command') {
+    state.index += 1
+    if (MATH_DELIMITER_SYMBOLS[token.name] !== undefined) return MATH_DELIMITER_SYMBOLS[token.name]
+    if (MATH_ESCAPES[token.name] !== undefined) return MATH_ESCAPES[token.name]
+    // Not a delimiter: keep the command name visible instead of dropping it.
+    return mathCommandText(token.name)
+  }
+  return null
+}
+
+function parseMathRow(state, depth, stop) {
+  const items = []
+  while (state.index < state.tokens.length) {
+    const token = state.tokens[state.index]
+    if (mathTokenStops(token, stop)) break
+    if (token.type === 'space') {
+      state.index += 1
+      if (token.size > 0) items.push({ type: 'space', size: token.size })
+      continue
+    }
+    if (token.type === 'close') {
+      // A stray '}' (unbalanced braces) must stay visible rather than vanish.
+      state.index += 1
+      mathPushChar(items, '}', 'text')
+      continue
+    }
+    if (token.type === 'align') {
+      state.index += 1
+      mathPushChar(items, '&', 'op')
+      continue
+    }
+    if (token.type === 'rowbreak') {
+      state.index += 1
+      items.push({ type: 'rowbreak' })
+      continue
+    }
+    if (token.type === 'sup' || token.type === 'sub') {
+      // Script with no preceding atom: attach it to an empty base.
+      state.index += 1
+      const argument = parseMathArgument(state, depth + 1)
+      const base = mathTakeLastAtom(items)
+      items.push(mathMakeScripted(base, token.type === 'sub' ? argument : null, token.type === 'sup' ? argument : null))
+      continue
+    }
+    const before = state.index
+    const atom = parseMathAtom(state, depth)
+    if (atom === null) {
+      if (state.index === before) state.index += 1
+      continue
+    }
+    const scripted = parseMathScripts(state, depth, atom)
+    if (scripted.type === 'char') mathPushChar(items, scripted.value, scripted.kind)
+    else items.push(scripted)
+  }
+  return items
+}
+
+function mathPushChar(items, value, kind) {
+  const last = items[items.length - 1]
+  if (last !== undefined && last.type === 'run' && last.kind === kind) {
+    last.value += value
+    return
+  }
+  items.push({ type: 'run', kind, value })
+}
+
+function mathTakeLastAtom(items) {
+  if (items.length === 0) return null
+  const index = items.length - 1
+  const last = items[index]
+  if (last.type === 'run') {
+    if (last.value.length > 1) {
+      items[index] = { type: 'run', kind: last.kind, value: last.value.slice(0, -1) }
+      return { type: 'char', value: last.value.slice(-1), kind: last.kind }
+    }
+    items.pop()
+    return { type: 'char', value: last.value, kind: last.kind }
+  }
+  items.pop()
+  return last
+}
+
+function mathMakeScripted(base, sub, sup) {
+  if (sub === null && sup === null) return base
+  if (base !== null && base.type === 'bigop') {
+    return { ...base, sub: base.sub || sub, sup: base.sup || sup }
+  }
+  return { type: 'scripts', base, sub, sup }
+}
+
+function parseMathScripts(state, depth, atom) {
+  let base = atom
+  let sub = null
+  let sup = null
+  while (state.index < state.tokens.length) {
+    const token = state.tokens[state.index]
+    if (token.type !== 'sup' && token.type !== 'sub') break
+    state.index += 1
+    const argument = parseMathArgument(state, depth + 1)
+    if (token.type === 'sup' && sup === null) {
+      sup = argument
+      continue
+    }
+    if (token.type === 'sub' && sub === null) {
+      sub = argument
+      continue
+    }
+    // Repeated x^a^b is invalid LaTeX; keep both scripts by nesting them.
+    base = mathMakeScripted(base, sub, sup)
+    sub = null
+    sup = null
+    if (token.type === 'sup') sup = argument
+    else sub = argument
+  }
+  return mathMakeScripted(base, sub, sup)
+}
+
+function parseMathAtom(state, depth) {
+  if (depth > MATH_MAX_DEPTH) return mathReadLiteralAtom(state)
+  const token = state.tokens[state.index]
+  if (token === undefined) return null
+  if (token.type === 'open') return parseMathGroup(state, depth)
+  if (token.type === 'char') {
+    state.index += 1
+    return { type: 'char', value: token.value, kind: mathClassifyChar(token.value) }
+  }
+  if (token.type === 'command') {
+    state.index += 1
+    return parseMathCommand(state, token.name, depth + 1)
+  }
+  return null
+}
+
+function parseMathCommand(state, name, depth) {
+  if (MATH_IGNORED.has(name)) return null
+  if (name === 'frac' || name === 'dfrac' || name === 'tfrac') {
+    const num = parseMathArgument(state, depth)
+    const den = parseMathArgument(state, depth)
+    return { type: 'frac', num, den, style: name === 'dfrac' ? 'display' : name === 'tfrac' ? 'text' : 'auto' }
+  }
+  if (name === 'binom') {
+    const top = parseMathArgument(state, depth)
+    const bottom = parseMathArgument(state, depth)
+    return { type: 'binom', top, bottom }
+  }
+  if (name === 'sqrt') {
+    let index = null
+    mathSkipSpaces(state)
+    const next = state.tokens[state.index]
+    if (next !== undefined && next.type === 'char' && next.value === '[') {
+      state.index += 1
+      index = { type: 'group', items: parseMathRow(state, depth + 1, MATH_STOP_INDEX) }
+      const close = state.tokens[state.index]
+      if (close !== undefined && close.type === 'char' && close.value === ']') state.index += 1
+    }
+    return { type: 'sqrt', index, body: parseMathArgument(state, depth) }
+  }
+  if (name === 'left') return parseMathLeftRight(state, depth)
+  if (name === 'begin') return parseMathEnvironment(state, depth)
+  if (MATH_BIG_DELIMITERS[name] !== undefined) {
+    const glyph = mathReadDelimiter(state)
+    if (glyph === null) return null
+    return { type: 'delimiter', glyph, size: MATH_BIG_DELIMITERS[name] }
+  }
+  if (MATH_SPACES[name] !== undefined) return { type: 'space', size: MATH_SPACES[name] }
+  if (MATH_GREEK[name] !== undefined) return { type: 'char', value: MATH_GREEK[name], kind: 'var' }
+  if (MATH_UPPER_GREEK[name] !== undefined) return { type: 'char', value: MATH_UPPER_GREEK[name], kind: 'text' }
+  if (MATH_DELIMITER_SYMBOLS[name] !== undefined) return { type: 'char', value: MATH_DELIMITER_SYMBOLS[name], kind: 'delim' }
+  if (MATH_SYMBOLS[name] !== undefined) return { type: 'char', value: MATH_SYMBOLS[name], kind: 'op' }
+  if (MATH_ESCAPES[name] !== undefined) {
+    return { type: 'char', value: MATH_ESCAPES[name], kind: mathClassifyChar(MATH_ESCAPES[name]) }
+  }
+  if (name === 'text') return { type: 'text', value: mathReadRawText(state) }
+  if (name === 'operatorname') {
+    // Parsed as math so spacing commands inside it still work; the "op"
+    // variant below renders the result upright.
+    return { type: 'font', variant: 'op', body: parseMathArgument(state, depth) }
+  }
+  if (MATH_FONTS[name] !== undefined) {
+    return { type: 'font', variant: MATH_FONTS[name], body: parseMathArgument(state, depth) }
+  }
+  if (MATH_ACCENTS[name] !== undefined) {
+    return { type: 'accent', kind: MATH_ACCENTS[name], body: parseMathArgument(state, depth) }
+  }
+  if (MATH_BIG[name] !== undefined) {
+    return {
+      type: 'bigop', name, glyph: MATH_BIG[name], sub: null, sup: null,
+      limits: MATH_BIG_LIMITS.has(name), large: !MATH_BIG_FUNCTIONS.has(name),
+    }
+  }
+  return { type: 'unknown', name }
+}
+
+function parseMathLeftRight(state, depth) {
+  const left = mathReadDelimiter(state)
+  if (state.tokens[state.index] === undefined) throw new Error('Unmatched \\left')
+  const items = parseMathRow(state, depth + 1, MATH_STOP_RIGHT)
+  const token = state.tokens[state.index]
+  if (token === undefined || token.type !== 'command' || token.name !== 'right') {
+    throw new Error('Unmatched \\left')
+  }
+  state.index += 1
+  const right = mathReadDelimiter(state)
+  return { type: 'delimited', left, right, items }
+}
+
+function parseMathEnvironment(state, depth) {
+  mathSkipSpaces(state)
+  const envName = state.tokens[state.index] !== undefined && state.tokens[state.index].type === 'open'
+    ? mathReadRawGroup(state).trim()
+    : ''
+  // \begin{array}{cc}: the column spec is accepted and ignored.
+  if (envName === 'array' && state.tokens[state.index] !== undefined && state.tokens[state.index].type === 'open') {
+    mathReadRawGroup(state)
+  }
+  const rows = []
+  let cells = []
+  let guard = 0
+  while (state.index < state.tokens.length && guard < 4096) {
+    guard += 1
+    const token = state.tokens[state.index]
+    if (token.type === 'command' && token.name === 'end') break
+    const items = parseMathRow(state, depth + 1, MATH_STOP_ENV)
+    const next = state.tokens[state.index]
+    const hasMore = next !== undefined && !(next.type === 'command' && next.name === 'end')
+    if (items.length > 0 || hasMore) cells.push({ type: 'group', items })
+    if (!hasMore) break
+    if (next.type === 'align') {
+      state.index += 1
+      continue
+    }
+    if (next.type === 'rowbreak') {
+      state.index += 1
+      rows.push(cells)
+      cells = []
+      continue
+    }
+    break
+  }
+  if (cells.length > 0) rows.push(cells)
+  if (rows.length === 0) rows.push([])
+  const endToken = state.tokens[state.index]
+  if (endToken !== undefined && endToken.type === 'command' && endToken.name === 'end') {
+    state.index += 1
+    mathSkipSpaces(state)
+    if (state.tokens[state.index] !== undefined && state.tokens[state.index].type === 'open') mathReadRawGroup(state)
+  }
+  return { type: 'matrix', env: envName, rows }
+}
+
+function parseLatex(source) {
+  if (typeof source !== 'string') throw new TypeError('LaTeX source must be a string')
+  if (source.length > MATH_MAX_SOURCE) return { type: 'plain', source }
+  const state = { tokens: lexMath(source), index: 0 }
+  return { type: 'row', items: parseMathRow(state, 0, null), source }
+}
+
+// ---------------------------------------------------------------------------
+// Renderer: plain AST -> React elements
+// ---------------------------------------------------------------------------
+
+function mathCharClass(kind, context) {
+  const variant = context.variant
+  if (variant === 'rm' || variant === 'bb' || variant === 'sf' || variant === 'tt') {
+    if (kind === 'op') return 'dsc-math-op'
+    if (kind === 'delim') return 'dsc-math-delim'
+    return 'dsc-math-text'
+  }
+  if (variant === 'op') return 'dsc-math-op'
+  if (variant === 'cal') return 'dsc-math-var'
+  return MATH_CHAR_CLASSES[kind] || 'dsc-math-text'
+}
+
+function mathCharStyle(context) {
+  const variant = context.variant
+  if (variant === 'bf') return { fontWeight: '700' }
+  if (variant === 'sf') return { fontFamily: 'sans-serif' }
+  if (variant === 'tt') return { fontFamily: 'monospace' }
+  if (variant === 'cal') return { fontStyle: 'italic' }
+  return undefined
+}
+
+function mathRenderChars(kind, value, context, key) {
+  return h('span', { className: mathCharClass(kind, context), key, style: mathCharStyle(context) }, value)
+}
+
+function mathRenderItems(items, context, keyPrefix) {
+  return items.map((item, index) => renderMathNode(item, context, `${keyPrefix}-${index}`))
+}
+
+// Render an argument (group or single atom) as a child array.
+function mathRenderContent(value, context, key) {
+  if (value === null || value === undefined) return []
+  if (value.type === 'group') return mathRenderItems(value.items, context, key)
+  return [renderMathNode(value, context, key)]
+}
+
+function mathRenderSpace(size, key) {
+  if (size < 0) {
+    return h('span', {
+      className: 'dsc-math-space',
+      key,
+      style: { display: 'inline-block', width: '0em', marginLeft: `${size.toFixed(4)}em` },
+    })
+  }
+  return h('span', {
+    className: 'dsc-math-space',
+    key,
+    style: { display: 'inline-block', width: `${size.toFixed(4)}em` },
+  })
+}
+
+function mathRenderFrac(node, context, key) {
+  const childContext = node.style === 'display'
+    ? { ...context, display: true }
+    : node.style === 'text'
+      ? { ...context, display: false }
+      : context
+  return h('span', { className: 'dsc-math-frac', key },
+    h('span', { className: 'dsc-math-frac-num' }, mathRenderContent(node.num, childContext, `${key}-n`)),
+    h('span', { className: 'dsc-math-frac-den' }, mathRenderContent(node.den, childContext, `${key}-d`)),
+  )
+}
+
+function mathRenderBinom(node, context, key) {
+  // A binomial is a one-column matrix wrapped in taller-than-text parentheses.
+  const grid = mathRenderMatrix({ type: 'matrix', env: 'matrix', rows: [[node.top], [node.bottom]] }, context, key)
+  const parenStyle = { fontSize: '1.5em', lineHeight: 1 }
+  return h('span', { key, style: { display: 'inline-flex', alignItems: 'center' } },
+    h('span', { className: 'dsc-math-delim', key: `${key}-l`, style: parenStyle }, '('),
+    grid,
+    h('span', { className: 'dsc-math-delim', key: `${key}-r`, style: parenStyle }, ')'),
+  )
+}
+
+function mathRenderSqrt(node, context, key) {
+  return h('span', { className: 'dsc-math-sqrt', key },
+    node.index === null
+      ? null
+      // The stylesheet draws the radical with ::before; order puts the index on
+      // its left where TeX puts it (the CSS margin tucks it into the radical).
+      : h('span', { className: 'dsc-math-sqrt-index', style: { order: -1 } }, mathRenderContent(node.index, context, `${key}-i`)),
+    h('span', { className: 'dsc-math-sqrt-body' }, mathRenderContent(node.body, context, `${key}-b`)),
+  )
+}
+
+function mathRenderBig(node, context, key) {
+  const glyph = h('span', {
+    className: node.large ? 'dsc-math-big' : 'dsc-math-op',
+    key: `${key}-g`,
+  }, node.glyph)
+  const supContent = node.sup === null ? null : mathRenderContent(node.sup, context, `${key}-p`)
+  const subContent = node.sub === null ? null : mathRenderContent(node.sub, context, `${key}-s`)
+  if (node.limits && context.display === true && (supContent !== null || subContent !== null)) {
+    // The glyph stays in normal flow so the stack's baseline is the operator's
+    // baseline: text after \sum still lines up with the operator. The limits are
+    // drawn above/below it and the padding reserves their vertical room.
+    const limitStyle = {
+      position: 'absolute',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      fontSize: '0.72em',
+      lineHeight: 1.05,
+      whiteSpace: 'nowrap',
+    }
+    const stacked = {
+      display: 'inline-block',
+      position: 'relative',
+      textAlign: 'center',
+      lineHeight: 1,
+      padding: '0.8em 0.3em',
+    }
+    return h('span', { key, style: stacked },
+      supContent === null ? null : h('span', { className: 'dsc-math-sup', key: `${key}-p`, style: { ...limitStyle, top: 0 } }, supContent),
+      glyph,
+      subContent === null ? null : h('span', { className: 'dsc-math-sub', key: `${key}-s`, style: { ...limitStyle, bottom: 0 } }, subContent),
+    )
+  }
+  const sup = supContent === null ? null : h('span', { className: 'dsc-math-sup', key: `${key}-p` }, supContent)
+  const sub = subContent === null ? null : h('span', { className: 'dsc-math-sub', key: `${key}-s` }, subContent)
+  if (sup === null && sub === null) return glyph
+  // Inline limits stay to the right, stacked vertically like x_i^2.
+  const scriptStyle = sup !== null && sub !== null
+    ? {
+      display: 'inline-flex',
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+      lineHeight: '1.02',
+      verticalAlign: 'middle',
+    }
+    : undefined
+  return h('span', { key }, glyph, h('span', { className: 'dsc-math-script', style: scriptStyle }, sup, sub))
+}
+
+function mathRenderScripted(node, context, key) {
+  const base = node.base === null ? null : renderMathNode(node.base, context, `${key}-b`)
+  const sup = node.sup === null
+    ? null
+    : h('span', { className: 'dsc-math-sup', key: `${key}-p` }, mathRenderContent(node.sup, context, `${key}-p`))
+  const sub = node.sub === null
+    ? null
+    : h('span', { className: 'dsc-math-sub', key: `${key}-s` }, mathRenderContent(node.sub, context, `${key}-s`))
+  // x_i^2 needs the two scripts stacked; x^2 / x_i can rely on the class rules.
+  const stacked = sup !== null && sub !== null
+  const scriptStyle = stacked
+    ? {
+      display: 'inline-flex',
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+      lineHeight: '1.02',
+      verticalAlign: 'middle',
+    }
+    : undefined
+  return h('span', { key }, base, h('span', { className: 'dsc-math-script', style: scriptStyle }, sup, sub))
+}
+
+function mathEstimateHeight(value, context) {
+  if (value === null || value === undefined) return 1
+  if (value.type === 'group') {
+    let height = 1
+    for (const item of value.items) height = Math.max(height, mathEstimateHeight(item, context))
+    return height
+  }
+  if (value.type === 'frac' || value.type === 'binom') return 2.35
+  if (value.type === 'sqrt') return mathEstimateHeight(value.body, context) + 0.2
+  if (value.type === 'matrix') return Math.max(1, value.rows.length * 1.15)
+  if (value.type === 'scripts') {
+    return Math.max(
+      1.15,
+      mathEstimateHeight(value.base, context),
+      mathEstimateHeight(value.sup, context),
+      mathEstimateHeight(value.sub, context),
+    )
+  }
+  if (value.type === 'bigop') return context.display && value.limits ? 2.8 : 1.15
+  if (value.type === 'delimited') {
+    let height = 1
+    for (const item of value.items) height = Math.max(height, mathEstimateHeight(item, context))
+    return height + 0.15
+  }
+  if (value.type === 'accent') return mathEstimateHeight(value.body, context) + 0.25
+  if (value.type === 'font') return mathEstimateHeight(value.body, context)
+  return 1
+}
+
+function mathRenderDelimiters(left, right, scale, key) {
+  const style = scale > 1.05 ? { fontSize: `${scale.toFixed(2)}em`, lineHeight: 1 } : undefined
+  return [
+    left === null ? null : h('span', { className: 'dsc-math-delim', key: `${key}-l`, style }, left),
+    right === null ? null : h('span', { className: 'dsc-math-delim', key: `${key}-r`, style }, right),
+  ]
+}
+
+function mathRenderDelimited(node, context, key) {
+  const content = mathRenderItems(node.items, context, `${key}-c`)
+  const height = Math.max(1, Math.min(3.2, mathEstimateHeight({ type: 'group', items: node.items }, context)))
+  const [left, right] = mathRenderDelimiters(node.left, node.right, height, key)
+  return h('span', { key, style: { display: 'inline-flex', alignItems: 'center' } },
+    left,
+    h('span', { className: 'dsc-math-row' }, content),
+    right,
+  )
+}
+
+function mathRenderMatrix(node, context, key) {
+  const rows = node.rows.length === 0 ? [[]] : node.rows
+  const grid = h('span', { className: 'dsc-math-matrix', key: `${key}-m` },
+    rows.map((row, rowIndex) => (
+      h('span', { className: 'dsc-math-matrix-row', key: `${key}-r${rowIndex}` },
+        row.map((cell, cellIndex) => (
+          h('span', { className: 'dsc-math-matrix-cell', key: `${key}-c${rowIndex}-${cellIndex}` },
+            mathRenderContent(cell, context, `${key}-c${rowIndex}-${cellIndex}`))
+        )),
+      )
+    )),
+  )
+  const spec = MATH_ENV_DELIMITERS[node.env] || null
+  if (spec === null) return grid
+  const scale = Math.max(1, Math.min(3.2, 0.95 + rows.length * 0.45))
+  const [left, right] = mathRenderDelimiters(spec.left || null, spec.right || null, scale, key)
+  return h('span', { key, style: { display: 'inline-flex', alignItems: 'center' } }, left, grid, right)
+}
+
+function mathRenderAccent(node, context, key) {
+  const content = mathRenderContent(node.body, context, `${key}-a`)
+  if (node.kind === 'overline' || node.kind === 'underline') {
+    const overline = node.kind === 'overline'
+    const style = {
+      display: 'inline-block',
+      lineHeight: 1.1,
+      paddingTop: overline ? '0.08em' : '0',
+      paddingBottom: overline ? '0' : '0.08em',
+    }
+    if (overline) style.borderTop = '1px solid currentColor'
+    else style.borderBottom = '1px solid currentColor'
+    return h('span', { key, style }, content)
+  }
+  const mark = MATH_ACCENT_MARKS[node.kind] || 'ˆ'
+  return h('span', {
+    key,
+    style: {
+      display: 'inline-flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      verticalAlign: 'middle',
+      lineHeight: '1.05',
+    },
+  },
+  h('span', { key: `${key}-m`, style: { fontSize: '0.75em', lineHeight: 1, height: '0.5em' } }, mark),
+  h('span', { className: 'dsc-math-row', style: { lineHeight: 1.1 } }, content),
+  )
+}
+
+function renderMathNode(node, context, key) {
+  if (node === null || node === undefined) return null
+  if (node.type === 'run' || node.type === 'char') return mathRenderChars(node.kind, node.value, context, key)
+  if (node.type === 'text') return h('span', { className: 'dsc-math-text', key, style: { whiteSpace: 'pre' } }, node.value)
+  if (node.type === 'group') return h('span', { className: 'dsc-math-row', key }, mathRenderItems(node.items, context, key))
+  if (node.type === 'space') return mathRenderSpace(node.size, key)
+  if (node.type === 'frac') return mathRenderFrac(node, context, key)
+  if (node.type === 'binom') return mathRenderBinom(node, context, key)
+  if (node.type === 'sqrt') return mathRenderSqrt(node, context, key)
+  if (node.type === 'bigop') return mathRenderBig(node, context, key)
+  if (node.type === 'scripts') return mathRenderScripted(node, context, key)
+  if (node.type === 'delimited') return mathRenderDelimited(node, context, key)
+  if (node.type === 'delimiter') {
+    return h('span', { className: 'dsc-math-delim', key, style: { fontSize: `${node.size.toFixed(2)}em` } }, node.glyph)
+  }
+  if (node.type === 'matrix') return mathRenderMatrix(node, context, key)
+  if (node.type === 'accent') return mathRenderAccent(node, context, key)
+  if (node.type === 'font') {
+    return h('span', { className: 'dsc-math-row', key },
+      mathRenderContent(node.body, { ...context, variant: node.variant }, key))
+  }
+  if (node.type === 'unknown') {
+    return h('span', { className: 'dsc-math-text', key, style: { opacity: 0.65 } }, '\\' + node.name)
+  }
+  if (node.type === 'rowbreak') return h('span', { className: 'dsc-math-text', key }, '\\\\')
+  return null
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+function latexToNodes(source, { display = false } = {}) {
+  const text = typeof source === 'string' ? source : source === null || source === undefined ? '' : String(source)
+  if (text.trim() === '') return []
+  try {
+    if (text.length > MATH_MAX_SOURCE) return [h('span', { className: 'dsc-math-text', key: 'm' }, text)]
+    const ast = parseLatex(text)
+    if (ast.type === 'plain') return [h('span', { className: 'dsc-math-text', key: 'm' }, ast.source)]
+    const context = { display: display === true, variant: null }
+    return [h('span', { className: 'dsc-math-row', key: 'm' }, mathRenderItems(ast.items, context, 'm'))]
+  } catch (error) {
+    // Rendering problems must never drop the formula: show its source instead.
+    return [h('span', { className: 'dsc-math-error', key: 'm', title: tr('mathFailed') }, text)]
+  }
+}
+
+function LatexInline({ tex }) {
+  const nodes = React.useMemo(() => latexToNodes(tex, { display: false }), [tex])
+  return h('span', { className: 'dsc-math dsc-math-inline' }, nodes)
+}
+
+function LatexBlock({ tex }) {
+  const nodes = React.useMemo(() => latexToNodes(tex, { display: true }), [tex])
+  return h('div', { className: 'dsc-math dsc-math-block' }, nodes)
+}
+
+/* ---- 33-mermaid.js ---- */
+/* Dependency-free Mermaid renderer.
+ *
+ * parseMermaid(source)  -> plain model data (flowchart / sequence / pie / class)
+ * mermaidLayout(source) -> pure geometry { width, height, nodes, edges, texts, ... }
+ * MermaidDiagram(...)   -> React elements (inline SVG, no raw HTML, no eval)
+ *
+ * Everything is linear-time over the source, capped, and safe for untrusted text:
+ * labels are truncated, numbers are finite, and SVG text is always escaped by React.
+ */
+const MERMAID_MAX_SOURCE = 200000
+const MERMAID_MAX_NODES = 400
+const MERMAID_MAX_EDGES = 800
+const MERMAID_MAX_PARTICIPANTS = 40
+const MERMAID_MAX_MESSAGES = 200
+const MERMAID_MAX_SLICES = 12
+const MERMAID_MAX_LABEL = 120
+const MERMAID_MAX_LINES = 10
+const MERMAID_TEXT_WIDTH = 7.2
+const MERMAID_DEFAULT_WIDTH = 720
+const MERMAID_PAD = 32
+const MERMAID_DIRECTIONS = { TD: 'TD', TB: 'TD', BT: 'BT', LR: 'LR', RL: 'RL' }
+const MERMAID_FLOW_IGNORE = /^(?:classDef|class|style|linkStyle|click|link|direction|accTitle|accDescr)\b/i
+const MERMAID_CLASS_IGNORE = /^(?:direction|note|hide|show|style|cssClass|click|title|accTitle|accDescr)\b/i
+const MERMAID_CLASS_RELATION = /^\s*([A-Za-z_][\w.]*)\s*(?:"[^"]*"\s*)?(<\|--|--\|>|<\|\.\.|\.\.\|>|<--|-->|<\.\.|\.\.>|\*--|--\*|o--|--o|--|\.\.)\s*([A-Za-z_][\w.]*)\s*(?::\s*([\s\S]*))?$/
+const MERMAID_FLOW_SHAPES = [
+  ['[[', ']]', 'subroutine'], ['((', '))', 'circle'], ['[(', ')]', 'cylinder'],
+  ['[/', '/]', 'parallelogram'], ['[\\', '\\]', 'parallelogram'], ['{{', '}}', 'hexagon'],
+  ['>', ']', 'asymmetric'], ['[', ']', 'rect'], ['(', ')', 'rounded'], ['{', '}', 'diamond'],
+]
+
+// ---------- small value helpers ----------
+function mermaidSafeText(value) {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'string') return value
+  try {
+    return String(value)
+  } catch {
+    return ''
+  }
+}
+function mermaidNum(value, fallback = 0) {
+  const number = typeof value === 'number' ? value : Number(value)
+  return Number.isFinite(number) ? number : fallback
+}
+function mermaidRound(value, fallback = 0) {
+  const number = Math.max(-1e7, Math.min(1e7, mermaidNum(value, fallback)))
+  return Math.round(number * 100) / 100
+}
+function mermaidClamp(value, min, max) {
+  const number = mermaidNum(value, min)
+  return number < min ? min : (number > max ? max : number)
+}
+function mermaidClip(value, limit = MERMAID_MAX_LABEL) {
+  const text = mermaidSafeText(value).replace(/\s+/g, ' ').trim()
+  if (text.length <= limit) return text
+  return limit <= 1 ? '\u2026' : `${text.slice(0, limit - 1)}\u2026`
+}
+function mermaidErrorMessage(error) {
+  if (error === null || error === undefined) return 'diagram could not be rendered'
+  return mermaidClip(typeof error === 'string' ? error : error.message || error, 200) || 'diagram could not be rendered'
+}
+function mermaidLimitError(message) {
+  const error = new Error(message)
+  error.mermaidLimit = true
+  return error
+}
+function mermaidDirection(value) {
+  return MERMAID_DIRECTIONS[typeof value === 'string' ? value.toUpperCase() : ''] || 'TD'
+}
+function mermaidLabelLines(raw) {
+  let text = mermaidSafeText(raw).trim()
+  if (text.length >= 2 && ((text[0] === '"' && text[text.length - 1] === '"') || (text[0] === "'" && text[text.length - 1] === "'"))) text = text.slice(1, -1).trim()
+  const lines = []
+  for (const piece of text.split(/<\s*br\s*\/?\s*>/i)) {
+    const line = mermaidClip(piece, MERMAID_MAX_LABEL)
+    if (line !== '') lines.push(line)
+    if (lines.length >= MERMAID_MAX_LINES) break
+  }
+  return lines.length > 0 ? lines : ['']
+}
+function mermaidNodeSize(lines, minWidth = 90, maxWidth = 260, baseHeight = 40, lineHeight = 18) {
+  let chars = 0
+  for (const line of lines) chars = Math.max(chars, line.length)
+  return { w: mermaidClamp(mermaidRound(chars * MERMAID_TEXT_WIDTH + 24), minWidth, maxWidth), h: mermaidRound(baseHeight + lineHeight * Math.max(0, lines.length - 1)) }
+}
+function mermaidWrapText(value, width = 34, maxLines = 4) {
+  const words = mermaidClip(value, MERMAID_MAX_LABEL).split(' ').filter(word => word !== '')
+  const lines = []
+  let current = ''
+  for (const word of words) {
+    if (current === '') current = word
+    else if (current.length + word.length + 1 <= width) current += ` ${word}`
+    else {
+      lines.push(current)
+      current = word
+      if (lines.length >= maxLines - 1) break
+    }
+  }
+  if (lines.length < maxLines && current !== '') lines.push(current)
+  if (lines.length === 0) lines.push('')
+  return lines.map(line => mermaidClip(line, width))
+}
+// Splits on a separator that is outside brackets and double quotes.
+function mermaidSplitTopLevel(text, separator) {
+  const parts = []
+  let buffer = ''
+  let depth = 0
+  let quoted = false
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index]
+    if (quoted) { buffer += char; quoted = char !== '"'; continue }
+    if (char === '"' && depth > 0) { quoted = true; buffer += char; continue }
+    if (char === '[' || char === '(' || char === '{') { depth += 1; buffer += char; continue }
+    if (char === ']' || char === ')' || char === '}') { depth = depth > 0 ? depth - 1 : 0; buffer += char; continue }
+    if (depth === 0 && char === separator) { parts.push(buffer); buffer = ''; continue }
+    buffer += char
+  }
+  parts.push(buffer)
+  return parts
+}
+
+// ---------- flowchart parser ----------
+// Index-based on purpose: slicing the remainder per character would be quadratic.
+function mermaidMatchFlowOp(text, start) {
+  const char = text[start]
+  const second = text[start + 1]
+  if (char === '-') {
+    if (second === undefined) return null
+    if (second === '>') return { op: '->', style: 'solid', arrow: true }
+    if (second === '.') {
+      let index = start + 1
+      while (text[index] === '.') index += 1
+      if (text.startsWith('->', index)) return { op: text.slice(start, index + 2), style: 'dotted', arrow: true }
+      if (text[index] === '-' && text[index + 1] !== '>') index += 1
+      return { op: text.slice(start, index), style: 'dotted', arrow: false }
+    }
+    if (second === '-') {
+      let index = start + 1
+      while (text[index] === '-') index += 1
+      if (text[index] === '>') return { op: text.slice(start, index + 1), style: 'solid', arrow: true }
+      return { op: text.slice(start, index), style: 'solid', arrow: false }
+    }
+    return null
+  }
+  if (char === '.') {
+    let index = start + 1
+    while (text[index] === '.') index += 1
+    if (text.startsWith('->', index)) return { op: text.slice(start, index + 2), style: 'dotted', arrow: true }
+    return { op: text.slice(start, index), style: 'dotted', arrow: false }
+  }
+  if (char === '=') {
+    let index = start + 1
+    while (text[index] === '=') index += 1
+    if (index === start + 1) return null
+    if (text[index] === '>') return { op: text.slice(start, index + 1), style: 'thick', arrow: true }
+    return { op: text.slice(start, index), style: 'thick', arrow: false }
+  }
+  return null
+}
+function mermaidScanFlowStatement(text) {
+  const parts = []
+  let buffer = ''
+  let depth = 0
+  let quoted = false
+  let index = 0
+  while (index < text.length) {
+    const char = text[index]
+    if (quoted) {
+      buffer += char
+      if (char === '"') quoted = false
+      index += 1
+      continue
+    }
+    if (char === '"' && depth > 0) { quoted = true; buffer += char; index += 1; continue }
+    if (char === '[' || char === '(' || char === '{') { depth += 1; buffer += char; index += 1; continue }
+    if (char === ']' || char === ')' || char === '}') { if (depth > 0) depth -= 1; buffer += char; index += 1; continue }
+    if (depth === 0) {
+      const operation = mermaidMatchFlowOp(text, index)
+      if (operation !== null) {
+        parts.push({ type: 'text', value: buffer }, { type: 'op', value: operation.op, style: operation.style, arrow: operation.arrow })
+        buffer = ''
+        index += operation.op.length
+        continue
+      }
+    }
+    buffer += char
+    index += 1
+  }
+  parts.push({ type: 'text', value: buffer })
+  return parts
+}
+function mermaidParseFlowNode(piece) {
+  let value = mermaidSafeText(piece).trim()
+  if (value === '') return null
+  const classMarker = value.indexOf(':::')
+  if (classMarker > 0) value = value.slice(0, classMarker).trim()
+  if (value === '') return null
+  let id = ''
+  let index = 0
+  while (index < value.length) {
+    const char = value[index]
+    if ('"\'[(<{])}>| \t'.includes(char)) break
+    id += char
+    index += 1
+  }
+  if (id === '') {
+    const fallback = mermaidClip(value, 64)
+    return fallback === '' ? null : { id: fallback, shape: 'rect', lines: [fallback], explicit: true }
+  }
+  const rest = value.slice(index).trim()
+  let shape = 'rect'
+  let label = ''
+  for (const entry of MERMAID_FLOW_SHAPES) {
+    if (rest.length < entry[0].length + entry[1].length) continue
+    if (!rest.startsWith(entry[0]) || !rest.endsWith(entry[1])) continue
+    label = rest.slice(entry[0].length, rest.length - entry[1].length)
+    shape = entry[2]
+    break
+  }
+  return { id: mermaidClip(id, 64), shape, lines: mermaidLabelLines(label === '' ? id : label), explicit: label !== '' }
+}
+function mermaidFlowNode(model, spec, group) {
+  const existing = model.nodeIndex.get(spec.id)
+  if (existing !== undefined) {
+    if (spec.explicit === true && existing.explicit !== true) {
+      existing.explicit = true
+      existing.shape = spec.shape
+      existing.lines = spec.lines
+    }
+    if (group !== null && existing.group === null) existing.group = group.id
+    return existing
+  }
+  if (model.nodes.length >= MERMAID_MAX_NODES) {
+    throw mermaidLimitError(`diagram is too large: more than ${MERMAID_MAX_NODES} flowchart nodes`)
+  }
+  const node = { id: spec.id, shape: spec.shape, lines: spec.lines, explicit: spec.explicit === true, group: group === null ? null : group.id }
+  model.nodeIndex.set(spec.id, node)
+  model.nodes.push(node)
+  return node
+}
+function mermaidFlowTargets(piece, model, group) {
+  const targets = []
+  for (const part of mermaidSplitTopLevel(piece, '&')) {
+    const spec = mermaidParseFlowNode(part)
+    if (spec !== null) targets.push(mermaidFlowNode(model, spec, group))
+  }
+  return targets
+}
+function mermaidApplyFlowStatement(statement, model, group) {
+  const parts = mermaidScanFlowStatement(statement)
+  if (parts.length === 0 || parts[0].type !== 'text') return
+  let sources = mermaidFlowTargets(parts[0].value, model, group)
+  let index = 1
+  while (index < parts.length) {
+    const operation = parts[index]
+    const targetPart = parts[index + 1]
+    if (operation.type !== 'op') { index += 1; continue }
+    if (targetPart === undefined || targetPart.type !== 'text') { index += 1; continue }
+    let rawTarget = targetPart.value
+    let label = ''
+    const pipe = /^\s*\|([^|]*)\|/.exec(rawTarget)
+    if (pipe !== null) { label = mermaidClip(pipe[1], MERMAID_MAX_LABEL); rawTarget = rawTarget.slice(pipe[0].length) }
+    let effective = operation
+    let nextIndex = index + 2
+    // A -- label --> B: a bare text between a line and an arrow is the edge label.
+    const nextOperation = parts[index + 2]
+    const afterNext = parts[index + 3]
+    const candidate = rawTarget.trim()
+    if (pipe === null && operation.arrow === false && nextOperation !== undefined && nextOperation.type === 'op'
+      && nextOperation.arrow === true && afterNext !== undefined && afterNext.type === 'text'
+      && candidate !== '' && !/[\[\](){}<>"']/.test(candidate)) {
+      label = mermaidClip(candidate, MERMAID_MAX_LABEL)
+      rawTarget = afterNext.value
+      effective = { style: nextOperation.style === 'solid' ? operation.style : nextOperation.style, arrow: true }
+      nextIndex = index + 4
+    }
+    const targets = mermaidFlowTargets(rawTarget, model, group)
+    if (sources.length > 0 && targets.length > 0) {
+      if (model.edges.length + sources.length * targets.length > MERMAID_MAX_EDGES) {
+        throw mermaidLimitError(`diagram is too large: more than ${MERMAID_MAX_EDGES} flowchart edges`)
+      }
+      for (const from of sources) {
+        for (const to of targets) {
+          model.edges.push({ from: from.id, to: to.id, label, dashed: effective.style === 'dotted', thick: effective.style === 'thick', arrow: effective.arrow === true })
+        }
+      }
+    }
+    if (targets.length > 0) sources = targets
+    index = nextIndex
+  }
+}
+function mermaidFlowGroup(model, declaration) {
+  const raw = mermaidSafeText(declaration).trim()
+  let id = raw === '' ? `group-${model.groups.length + 1}` : raw
+  let title = id
+  const match = /^([^\s\[\]{}()"']+)([\s\S]*)$/.exec(raw)
+  if (match !== null) {
+    id = match[1]
+    const rest = match[2].trim()
+    if (rest.length >= 2 && rest.startsWith('[') && rest.endsWith(']')) title = rest.slice(1, -1)
+    else if (rest !== '') title = rest
+  }
+  let key = id
+  let suffix = 1
+  while (model.groupIndex.has(key)) { key = `${id}-${suffix}`; suffix += 1 }
+  const group = { id: key, title: mermaidClip(mermaidLabelLines(title).join(' '), 80) || 'group', depth: 0, members: [] }
+  model.groupIndex.set(key, group)
+  return group
+}
+function mermaidParseFlowchart(lines, headerIndex, direction, headerTail) {
+  const model = { kind: 'flowchart', direction, nodes: [], nodeIndex: new Map(), edges: [], groups: [], groupIndex: new Map() }
+  const statements = []
+  for (const piece of mermaidSplitTopLevel(headerTail || '', ';')) if (piece.trim() !== '') statements.push(piece)
+  for (let index = headerIndex + 1; index < lines.length; index += 1) {
+    const line = lines[index]
+    if (line.trim() === '' || line.trim().startsWith('%%')) continue
+    for (const piece of mermaidSplitTopLevel(line, ';')) if (piece.trim() !== '') statements.push(piece)
+  }
+  const stack = []
+  for (const statement of statements) {
+    const line = statement.trim()
+    if (line === '') continue
+    const groupMatch = /^subgraph\b\s*([\s\S]*)$/i.exec(line)
+    if (groupMatch !== null) {
+      if (model.groups.length < 60) {
+        const group = mermaidFlowGroup(model, groupMatch[1])
+        group.depth = stack.length
+        model.groups.push(group)
+        stack.push(group)
+      }
+      continue
+    }
+    if (/^end$/i.test(line)) { stack.pop(); continue }
+    if (MERMAID_FLOW_IGNORE.test(line)) continue
+    mermaidApplyFlowStatement(line, model, stack.length > 0 ? stack[stack.length - 1] : null)
+  }
+  if (model.nodes.length === 0) return { kind: 'unknown', error: 'flowchart contains no nodes' }
+  for (const node of model.nodes) {
+    if (node.group === null) continue
+    const group = model.groupIndex.get(node.group)
+    if (group !== undefined) group.members.push(node.id)
+  }
+  return model
+}
+
+// ---------- sequence parser ----------
+function mermaidSequenceParticipant(model, declaration) {
+  const value = mermaidSafeText(declaration).trim()
+  if (value === '') return null
+  let id = value
+  let label = value
+  const asMatch = /^([\s\S]*?)\s+as\s+([\s\S]+)$/i.exec(value)
+  if (asMatch !== null) { id = asMatch[1].trim(); label = asMatch[2].trim() }
+  id = mermaidClip(id, 64)
+  if (id === '') return null
+  const existing = model.participantIndex.get(id)
+  if (existing !== undefined) return existing
+  if (model.participants.length >= MERMAID_MAX_PARTICIPANTS) {
+    throw mermaidLimitError(`diagram is too large: more than ${MERMAID_MAX_PARTICIPANTS} participants`)
+  }
+  const lines = mermaidLabelLines(label === '' ? id : label)
+  const participant = { id, label: lines.join(' '), lines }
+  model.participantIndex.set(id, participant)
+  model.participants.push(participant)
+  return participant
+}
+function mermaidSequenceMessage(model, line, order) {
+  const colon = line.indexOf(':')
+  const head = colon >= 0 ? line.slice(0, colon) : line
+  const text = colon >= 0 ? mermaidClip(line.slice(colon + 1), MERMAID_MAX_LABEL) : ''
+  const arrowMatch = /-{1,2}(?:>>|>|x|\))/.exec(head)
+  if (arrowMatch === null) return null
+  const token = arrowMatch[0]
+  let from = head.slice(0, arrowMatch.index).trim()
+  let to = head.slice(arrowMatch.index + token.length).trim()
+  if (from.endsWith('+') || from.endsWith('-') || from.endsWith('!')) from = from.slice(0, -1)
+  if (to.startsWith('+') || to.startsWith('-') || to.startsWith('!')) to = to.slice(1)
+  from = from.trim()
+  to = to.trim()
+  if (from === '' || to === '') return null
+  mermaidSequenceParticipant(model, from)
+  mermaidSequenceParticipant(model, to)
+  if (model.messages.length >= MERMAID_MAX_MESSAGES) {
+    throw mermaidLimitError(`diagram is too large: more than ${MERMAID_MAX_MESSAGES} messages`)
+  }
+  return {
+    type: 'message', from: mermaidClip(from, 64), to: mermaidClip(to, 64), text,
+    dashed: token.startsWith('--'), marker: token.endsWith('x') ? 'cross' : 'chevron', order,
+  }
+}
+function mermaidParseSequence(lines, headerIndex) {
+  const model = { kind: 'sequence', title: '', autonumber: false, participants: [], participantIndex: new Map(), messages: [], notes: [], frames: [], items: [] }
+  const stack = []
+  let order = 0
+  for (let index = headerIndex + 1; index < lines.length; index += 1) {
+    const line = lines[index].trim()
+    if (line === '' || line.startsWith('%%')) continue
+    if (/^autonumber\b/i.test(line)) { model.autonumber = true; continue }
+    if (/^title\b/i.test(line)) { model.title = mermaidClip(line.slice(5), MERMAID_MAX_LABEL); continue }
+    const participantMatch = /^(?:participant|actor)\s+([\s\S]+)$/i.exec(line)
+    if (participantMatch !== null) { mermaidSequenceParticipant(model, participantMatch[1]); continue }
+    const noteMatch = /^note\s+(over|left of|right of)\s+([^:]+):\s*([\s\S]*)$/i.exec(line)
+    if (noteMatch !== null) {
+      const targets = noteMatch[2].split(',').map(piece => mermaidClip(piece, 64)).filter(target => target !== '')
+      if (targets.length === 0) continue
+      for (const target of targets) mermaidSequenceParticipant(model, target)
+      const note = { type: 'note', position: noteMatch[1].toLowerCase(), targets, text: mermaidClip(noteMatch[3], MERMAID_MAX_LABEL), order }
+      model.notes.push(note)
+      model.items.push(note)
+      order += 1
+      continue
+    }
+    const frameMatch = /^(loop|alt|opt|par|rect|critical|break)\b\s*([\s\S]*)$/i.exec(line)
+    if (frameMatch !== null) {
+      stack.push({ kind: frameMatch[1].toLowerCase(), label: mermaidClip(frameMatch[2], 80), start: order, dividers: [], depth: stack.length })
+      continue
+    }
+    if (/^else\b/i.test(line)) {
+      const frame = stack.length > 0 ? stack[stack.length - 1] : null
+      if (frame !== null) frame.dividers.push({ label: mermaidClip(line.slice(4), 80), order })
+      continue
+    }
+    if (/^end$/i.test(line)) {
+      const frame = stack.pop()
+      if (frame !== undefined) frame.end = order
+      if (frame !== undefined && frame.end > frame.start) model.frames.push(frame)
+      continue
+    }
+    const message = mermaidSequenceMessage(model, line, order)
+    if (message !== null) { model.messages.push(message); model.items.push(message); order += 1 }
+  }
+  if (model.participants.length === 0) return { kind: 'unknown', error: 'sequence diagram contains no participants' }
+  model.frames.sort((left, right) => left.depth - right.depth)
+  return model
+}
+
+// ---------- pie parser ----------
+function mermaidParsePie(lines, headerIndex, headerTail) {
+  const model = { kind: 'pie', title: '', showData: false, slices: [], omitted: 0 }
+  const header = mermaidSafeText(headerTail)
+  const headerTitle = /title\s+([\s\S]+)$/i.exec(header)
+  if (headerTitle !== null) model.title = mermaidClip(headerTitle[1], MERMAID_MAX_LABEL)
+  if (/\bshowData\b/i.test(header)) model.showData = true
+  for (let index = headerIndex + 1; index < lines.length; index += 1) {
+    const line = lines[index].trim()
+    if (line === '' || line.startsWith('%%')) continue
+    if (/^title\b/i.test(line)) { model.title = mermaidClip(line.slice(5), MERMAID_MAX_LABEL); continue }
+    if (/^showData\b/i.test(line)) { model.showData = true; continue }
+    let match = /^"([^"]*)"\s*:\s*(-?\d+(?:\.\d+)?)\s*$/.exec(line)
+    if (match === null) match = /^([^:"]+?)\s*:\s*(-?\d+(?:\.\d+)?)\s*$/.exec(line)
+    if (match === null) continue
+    const value = Number(match[2])
+    if (!Number.isFinite(value) || value <= 0) continue
+    if (model.slices.length >= MERMAID_MAX_SLICES) { model.omitted += 1; continue }
+    model.slices.push({ label: mermaidClip(match[1], 60) || 'slice', value })
+  }
+  if (model.slices.length === 0) return { kind: 'unknown', error: 'pie chart contains no positive values' }
+  return model
+}
+
+// ---------- class diagram parser ----------
+function mermaidClassNode(model, rawName) {
+  const name = mermaidClip(mermaidSafeText(rawName).replace(/:::\w+$/, ''), 64)
+  if (name === '') return null
+  const existing = model.nodeIndex.get(name)
+  if (existing !== undefined) return existing
+  if (model.nodes.length >= MERMAID_MAX_NODES) throw mermaidLimitError(`diagram is too large: more than ${MERMAID_MAX_NODES} classes`)
+  const node = { id: name, title: name, members: [], explicit: false }
+  model.nodeIndex.set(name, node)
+  model.nodes.push(node)
+  return node
+}
+function mermaidClassMember(node, rawText) {
+  if (node === null) return
+  const text = mermaidClip(mermaidSafeText(rawText).replace(/;$/, ''), MERMAID_MAX_LABEL)
+  if (text === '' || node.members.length >= 30) return
+  node.members.push(text)
+}
+function mermaidClassRelation(left, right, token, label) {
+  const markerLeft = token.startsWith('<') || token.startsWith('*') || token.startsWith('o')
+  const markerRight = token.endsWith('>') || token.endsWith('*') || token.endsWith('o')
+  const hollow = token.includes('|')
+  const diamond = token.includes('*') || token.includes('o')
+  let layoutFrom = left
+  let layoutTo = right
+  let arrowAt = 'to'
+  if (hollow) {
+    layoutFrom = markerLeft ? left : right
+    layoutTo = markerLeft ? right : left
+    arrowAt = 'from'
+  } else if (markerLeft) {
+    arrowAt = 'from'
+  }
+  return {
+    type: 'class-relation', left, right, layoutFrom, layoutTo, arrowAt,
+    marker: markerLeft || markerRight ? (hollow ? 'hollow' : (diamond ? 'diamond' : 'chevron')) : 'none',
+    dashed: token.includes('..'), label: mermaidClip(label, MERMAID_MAX_LABEL),
+  }
+}
+function mermaidParseClassDiagram(lines, headerIndex) {
+  const model = { kind: 'class', direction: 'TD', nodes: [], nodeIndex: new Map(), edges: [] }
+  let body = null
+  for (let index = headerIndex + 1; index < lines.length; index += 1) {
+    const line = lines[index].trim()
+    if (line === '' || line.startsWith('%%')) continue
+    const directionMatch = /^direction\s+(TD|TB|BT|LR|RL)\s*$/i.exec(line)
+    if (directionMatch !== null) { model.direction = mermaidDirection(directionMatch[1]); continue }
+    if (body !== null) {
+      if (line === '}') { body = null; continue }
+      if (line.endsWith('}')) { mermaidClassMember(body, line.slice(0, -1).trim()); body = null; continue }
+      mermaidClassMember(body, line)
+      continue
+    }
+    if (MERMAID_CLASS_IGNORE.test(line)) continue
+    const classMatch = /^class\s+([^\s{}]+)\s*([\s\S]*)$/i.exec(line)
+    if (classMatch !== null) {
+      const node = mermaidClassNode(model, classMatch[1])
+      if (node !== null) node.explicit = true
+      const rest = classMatch[2].trim()
+      const openIndex = rest.indexOf('{')
+      if (openIndex >= 0) {
+        const inner = rest.slice(openIndex + 1)
+        const closeIndex = inner.lastIndexOf('}')
+        const content = closeIndex >= 0 ? inner.slice(0, closeIndex) : inner
+        for (const piece of mermaidSplitTopLevel(content, ';')) mermaidClassMember(node, piece.trim())
+        if (closeIndex < 0) body = node
+      }
+      continue
+    }
+    const relation = MERMAID_CLASS_RELATION.exec(line)
+    if (relation !== null) {
+      const left = mermaidClassNode(model, relation[1])
+      const right = mermaidClassNode(model, relation[3])
+      if (left === null || right === null) continue
+      if (model.edges.length >= MERMAID_MAX_EDGES) {
+        throw mermaidLimitError(`diagram is too large: more than ${MERMAID_MAX_EDGES} class relations`)
+      }
+      model.edges.push(mermaidClassRelation(left.id, right.id, relation[2], relation[4] || ''))
+      continue
+    }
+    const memberLine = /^([^\s:]+)\s*:\s*([\s\S]+)$/.exec(line)
+    if (memberLine !== null) mermaidClassMember(mermaidClassNode(model, memberLine[1]), memberLine[2])
+  }
+  if (model.nodes.length === 0) return { kind: 'unknown', error: 'class diagram contains no classes' }
+  return model
+}
+
+// ---------- parse entry point ----------
+function parseMermaid(source) {
+  const text = typeof source === 'string' ? source : mermaidSafeText(source)
+  if (text.trim() === '') return { kind: 'unknown', error: 'diagram source is empty' }
+  if (text.length > MERMAID_MAX_SOURCE) return { kind: 'unknown', error: `diagram source is too large (limit ${MERMAID_MAX_SOURCE} characters)` }
+  try {
+    const lines = text.replace(/\r\n?/g, '\n').split('\n')
+    let headerIndex = -1
+    let header = ''
+    for (let index = 0; index < lines.length; index += 1) {
+      const line = lines[index].trim()
+      if (line === '' || line.startsWith('%%')) continue
+      header = line
+      headerIndex = index
+      break
+    }
+    if (headerIndex < 0) return { kind: 'unknown', error: 'diagram source contains no content' }
+    const keywordMatch = /^([A-Za-z][\w-]*)/.exec(header)
+    if (keywordMatch === null) return { kind: 'unknown', error: 'diagram header is not recognized' }
+    const keyword = keywordMatch[1].toLowerCase()
+    if (keyword === 'flowchart' || keyword === 'graph') {
+      const headerMatch = /^(?:flowchart|graph)\s*([A-Za-z]{2})?/.exec(header)
+      const direction = mermaidDirection(headerMatch === null ? '' : headerMatch[1])
+      return mermaidParseFlowchart(lines, headerIndex, direction, header.slice(headerMatch === null ? keyword.length : headerMatch[0].length))
+    }
+    if (keyword === 'sequencediagram') return mermaidParseSequence(lines, headerIndex)
+    if (keyword === 'pie') return mermaidParsePie(lines, headerIndex, header.slice(3))
+    if (keyword === 'classdiagram' || keyword === 'classdiagram-v2') return mermaidParseClassDiagram(lines, headerIndex)
+    return { kind: 'unknown', error: `unsupported diagram type: ${keyword}` }
+  } catch (error) {
+    return { kind: 'unknown', error: mermaidErrorMessage(error) }
+  }
+}
+
+// ---------- shared layered graph engine ----------
+function mermaidRankNodes(nodes, edges, indexById) {
+  const count = nodes.length
+  const adjacency = Array.from({ length: count }, () => [])
+  const indegree = new Array(count).fill(0)
+  for (const edge of edges) {
+    const from = indexById.get(edge.from)
+    const to = indexById.get(edge.to)
+    if (from === undefined || to === undefined || from === to) continue
+    adjacency[from].push(to)
+    indegree[to] += 1
+  }
+  const order = []
+  const queue = []
+  for (let index = 0; index < count; index += 1) if (indegree[index] === 0) queue.push(index)
+  for (let head = 0; head < queue.length; head += 1) {
+    const current = queue[head]
+    order.push(current)
+    for (const next of adjacency[current]) {
+      indegree[next] -= 1
+      if (indegree[next] === 0) queue.push(next)
+    }
+  }
+  const ordered = new Set(order)
+  for (let index = 0; index < count; index += 1) if (!ordered.has(index)) order.push(index)
+  const rank = new Array(count).fill(0)
+  for (const current of order) {
+    const nextRank = rank[current] + 1
+    if (nextRank > count) continue
+    for (const next of adjacency[current]) if (rank[next] < nextRank) rank[next] = nextRank
+  }
+  return rank
+}
+function mermaidLayeredLayout(nodes, edges, direction, sizes) {
+  const count = nodes.length
+  const indexById = new Map()
+  nodes.forEach((node, index) => indexById.set(node.id, index))
+  const rank = mermaidRankNodes(nodes, edges, indexById)
+  const usedRanks = []
+  const seenRanks = new Set()
+  for (const value of rank) if (!seenRanks.has(value)) { seenRanks.add(value); usedRanks.push(value) }
+  usedRanks.sort((left, right) => left - right)
+  const rankToLayer = new Map()
+  usedRanks.forEach((value, index) => rankToLayer.set(value, index))
+  const layers = usedRanks.map(() => [])
+  nodes.forEach((node, index) => layers[rankToLayer.get(rank[index]) || 0].push(index))
+  const horizontal = direction === 'LR' || direction === 'RL'
+  const reverse = direction === 'BT' || direction === 'RL'
+  const primaryGap = horizontal ? 80 : 58
+  const crossGap = horizontal ? 30 : 36
+  const dims = nodes.map(node => sizes.get(node.id) || { w: 120, h: 40 })
+  const layerPrimary = layers.map(layer => layer.reduce((max, index) => Math.max(max, horizontal ? dims[index].w : dims[index].h), 0))
+  const layerCross = layers.map((layer) => {
+    let total = 0
+    layer.forEach((index, position) => { total += (horizontal ? dims[index].h : dims[index].w) + (position > 0 ? crossGap : 0) })
+    return total
+  })
+  let maxCross = 0
+  for (const value of layerCross) maxCross = Math.max(maxCross, value)
+  const primaryStarts = []
+  let primary = 0
+  layers.forEach((layer, layerIndex) => {
+    if (layerIndex > 0) primary += primaryGap
+    primaryStarts.push(primary)
+    primary += layerPrimary[layerIndex]
+  })
+  const contentPrimary = primary
+  const positionInLayer = new Array(count).fill(0)
+  const crossOffsets = layers.map((layer, layerIndex) => {
+    let offset = (maxCross - layerCross[layerIndex]) / 2
+    return layer.map((index) => {
+      positionInLayer[index] = layer.indexOf(index)
+      const current = offset
+      offset += (horizontal ? dims[index].h : dims[index].w) + crossGap
+      return current
+    })
+  })
+  const placed = nodes.map((node, index) => {
+    const dim = dims[index]
+    const cross = crossOffsets[rankToLayer.get(rank[index]) || 0][positionInLayer[index]]
+    const start = primaryStarts[rankToLayer.get(rank[index]) || 0]
+    let x = horizontal ? start : cross
+    let y = horizontal ? cross : start
+    if (reverse) {
+      if (horizontal) x = contentPrimary - start - dim.w
+      else y = contentPrimary - start - dim.h
+    }
+    return {
+      id: node.id, shape: node.shape, lines: node.lines, title: node.title, members: node.members, group: node.group,
+      explicit: node.explicit, x: mermaidRound(x), y: mermaidRound(y), w: dim.w, h: dim.h,
+    }
+  })
+  return { nodes: placed, contentW: horizontal ? contentPrimary : maxCross, contentH: horizontal ? maxCross : contentPrimary }
+}
+
+// ---------- edge / marker geometry ----------
+function mermaidHeadPath(kind, x, y, dx, dy) {
+  const length = Math.hypot(dx, dy)
+  if (!Number.isFinite(length) || length < 0.001) return null
+  const ux = dx / length
+  const uy = dy / length
+  const r = mermaidRound
+  if (kind === 'cross') {
+    return `M ${r(x - 5)} ${r(y - 5)} L ${r(x + 5)} ${r(y + 5)} M ${r(x + 5)} ${r(y - 5)} L ${r(x - 5)} ${r(y + 5)}`
+  }
+  if (kind === 'hollow' || kind === 'diamond') {
+    const size = 11
+    const half = size * (kind === 'hollow' ? 0.62 : 0.42)
+    const normalX = -uy * half
+    const normalY = ux * half
+    if (kind === 'hollow') {
+      const baseX = x - ux * size
+      const baseY = y - uy * size
+      return `M ${r(x)} ${r(y)} L ${r(baseX + normalX)} ${r(baseY + normalY)} L ${r(baseX - normalX)} ${r(baseY - normalY)} Z`
+    }
+    const midX = x - ux * size * 0.5
+    const midY = y - uy * size * 0.5
+    const baseX = x - ux * size
+    const baseY = y - uy * size
+    return `M ${r(x)} ${r(y)} L ${r(midX + normalX)} ${r(midY + normalY)} L ${r(baseX)} ${r(baseY)} L ${r(midX - normalX)} ${r(midY - normalY)} Z`
+  }
+  const size = 8
+  const half = size * 0.62
+  const baseX = x - ux * size
+  const baseY = y - uy * size
+  const normalX = -uy * half
+  const normalY = ux * half
+  return `M ${r(baseX + normalX)} ${r(baseY + normalY)} L ${r(x)} ${r(y)} L ${r(baseX - normalX)} ${r(baseY - normalY)}`
+}
+// Marker colours are owned by the stylesheet. A static table keeps the class
+// names visible to tools/check-classes.js instead of building them from a
+// string prefix.
+const MERMAID_MARKER_CLASS = {
+  hollow: 'dsc-mermaid-edge-hollow',
+  diamond: 'dsc-mermaid-edge-diamond',
+  cross: 'dsc-mermaid-edge-cross',
+}
+
+function mermaidMarker(kind, x, y, dx, dy) {
+  if (kind === 'none') return null
+  const d = mermaidHeadPath(kind, x, y, dx, dy)
+  if (d === null) return null
+  const markerClass = MERMAID_MARKER_CLASS[kind]
+  const suffix = markerClass === undefined ? '' : ` ${markerClass}`
+  return { d, className: `dsc-mermaid-edge-arrow${suffix}`, fill: 'none' }
+}
+function mermaidSelfEdgeGeometry(node, markerKind) {
+  const startX = node.x + node.w * 0.35
+  const endX = node.x + node.w * 0.65
+  const top = node.y
+  // Keep the loop inside the viewBox: the top layer starts at the pad offset.
+  const lift = Math.max(16, Math.min(44, top - 4))
+  const d = `M ${mermaidRound(startX)} ${mermaidRound(top)} C ${mermaidRound(startX + 26)} ${mermaidRound(top - lift)} ${mermaidRound(endX + 26)} ${mermaidRound(top - lift)} ${mermaidRound(endX)} ${mermaidRound(top)}`
+  return {
+    d, marker: mermaidMarker(markerKind, endX, top, 0, 1),
+    labelX: mermaidRound((startX + endX) / 2 + 34), labelY: mermaidRound(Math.max(8, top - lift + 12)), labelAnchor: 'start',
+  }
+}
+function mermaidGraphEdgeGeometry(from, to, direction, options) {
+  const markerKind = options && options.marker ? options.marker : 'none'
+  const dashed = Boolean(options && options.dashed)
+  const thick = Boolean(options && options.thick)
+  if (from.id === to.id) return { ...mermaidSelfEdgeGeometry(from, markerKind), dashed, thick }
+  const horizontal = direction === 'LR' || direction === 'RL'
+  const r = mermaidRound
+  let sx = 0
+  let sy = 0
+  let tx = 0
+  let ty = 0
+  let tangentX = 1
+  let tangentY = 0
+  let labelX = 0
+  let labelY = 0
+  let path = ''
+  if (horizontal && Math.abs(from.x - to.x) < 1) {
+    const down = to.y >= from.y
+    sx = from.x + from.w / 2; sy = down ? from.y + from.h : from.y
+    tx = to.x + to.w / 2; ty = down ? to.y : to.y + to.h
+    const dy = ty - sy
+    if (Math.abs(dy) < 1) return null
+    path = `M ${r(sx)} ${r(sy)} L ${r(tx)} ${r(ty)}`
+    tangentY = dy >= 0 ? 1 : -1
+    labelX = (sx + tx) / 2 + 10; labelY = (sy + ty) / 2
+  } else if (horizontal) {
+    const forward = direction !== 'RL'
+    sx = forward ? from.x + from.w : from.x; sy = from.y + from.h / 2
+    tx = forward ? to.x : to.x + to.w; ty = to.y + to.h / 2
+    const dx = tx - sx
+    if (Math.abs(dx) < 1) return null
+    const sign = dx >= 0 ? 1 : -1
+    const bend = Math.max(18, Math.abs(dx) * 0.45)
+    path = `M ${r(sx)} ${r(sy)} C ${r(sx + bend * sign)} ${r(sy)} ${r(tx - bend * sign)} ${r(ty)} ${r(tx)} ${r(ty)}`
+    tangentX = sign; tangentY = 0
+    labelX = (sx + tx) / 2; labelY = (sy + ty) / 2 - 10
+  } else if (Math.abs(from.y - to.y) < 1) {
+    const right = to.x >= from.x
+    sx = right ? from.x + from.w : from.x; sy = from.y + from.h / 2
+    tx = right ? to.x : to.x + to.w; ty = to.y + to.h / 2
+    const dx = tx - sx
+    if (Math.abs(dx) < 1) return null
+    path = `M ${r(sx)} ${r(sy)} L ${r(tx)} ${r(ty)}`
+    tangentX = dx >= 0 ? 1 : -1; tangentY = 0
+    labelX = (sx + tx) / 2; labelY = (sy + ty) / 2 - 10
+  } else {
+    const down = direction !== 'BT'
+    sx = from.x + from.w / 2; sy = down ? from.y + from.h : from.y
+    tx = to.x + to.w / 2; ty = down ? to.y : to.y + to.h
+    const dy = ty - sy
+    if (Math.abs(dy) < 1) return null
+    const sign = dy >= 0 ? 1 : -1
+    const bend = Math.max(18, Math.abs(dy) * 0.45)
+    path = `M ${r(sx)} ${r(sy)} C ${r(sx)} ${r(sy + bend * sign)} ${r(tx)} ${r(ty - bend * sign)} ${r(tx)} ${r(ty)}`
+    tangentX = 0; tangentY = sign
+    labelX = (sx + tx) / 2; labelY = (sy + ty) / 2 - 10
+  }
+  return {
+    d: path, marker: mermaidMarker(markerKind, tx, ty, tangentX, tangentY), dashed, thick,
+    labelX: r(labelX), labelY: r(labelY), labelAnchor: 'middle',
+  }
+}
+
+// ---------- centered layout helpers ----------
+function mermaidCenterOffsets(placed, clusters, requestedWidth) {
+  let minX = 0
+  let minY = 0
+  let maxX = placed.contentW
+  let maxY = placed.contentH
+  for (const node of placed.nodes) {
+    minX = Math.min(minX, node.x); minY = Math.min(minY, node.y)
+    maxX = Math.max(maxX, node.x + node.w); maxY = Math.max(maxY, node.y + node.h)
+  }
+  for (const cluster of clusters) {
+    minX = Math.min(minX, cluster.x); minY = Math.min(minY, cluster.y)
+    maxX = Math.max(maxX, cluster.x + cluster.w); maxY = Math.max(maxY, cluster.y + cluster.h)
+  }
+  const contentW = Math.max(1, maxX - minX)
+  const contentH = Math.max(1, maxY - minY)
+  const width = Math.max(requestedWidth, contentW + MERMAID_PAD * 2)
+  const height = Math.max(120, contentH + MERMAID_PAD * 2)
+  return { width, height, offsetX: (width - contentW) / 2 - minX, offsetY: (height - contentH) / 2 - minY }
+}
+function mermaidPolygonShape(shape) {
+  return shape === 'diamond' || shape === 'asymmetric' || shape === 'hexagon' || shape === 'parallelogram'
+}
+function mermaidPolygonPoints(node) {
+  const r = mermaidRound
+  const x = node.x
+  const y = node.y
+  const w = node.w
+  const h = node.h
+  const cx = x + w / 2
+  const cy = y + h / 2
+  if (node.shape === 'diamond') return `${r(cx)},${r(y)} ${r(x + w)},${r(cy)} ${r(cx)},${r(y + h)} ${r(x)},${r(cy)}`
+  if (node.shape === 'asymmetric') {
+    return `${r(x + 10)},${r(y)} ${r(x + w)},${r(cy)} ${r(x + 10)},${r(y + h)} ${r(x)},${r(y + h)} ${r(x)},${r(y)}`
+  }
+  if (node.shape === 'hexagon') {
+    return `${r(x + 12)},${r(y)} ${r(x + w - 12)},${r(y)} ${r(x + w)},${r(cy)} ${r(x + w - 12)},${r(y + h)} ${r(x + 12)},${r(y + h)} ${r(x)},${r(cy)}`
+  }
+  return `${r(x + 12)},${r(y)} ${r(x + w)},${r(y)} ${r(x + w - 12)},${r(y + h)} ${r(x)},${r(y + h)}`
+}
+
+// ---------- flowchart layout ----------
+function mermaidLayoutFlowchart(model, requestedWidth) {
+  const sizes = new Map()
+  for (const node of model.nodes) sizes.set(node.id, mermaidNodeSize(node.lines))
+  const placed = mermaidLayeredLayout(model.nodes, model.edges, model.direction, sizes)
+  const nodeGeom = new Map()
+  for (const node of placed.nodes) nodeGeom.set(node.id, node)
+  const clusters = []
+  for (const group of model.groups) {
+    if (group.members.length === 0) continue
+    let minX = Infinity
+    let minY = Infinity
+    let maxX = -Infinity
+    let maxY = -Infinity
+    for (const id of group.members) {
+      const node = nodeGeom.get(id)
+      if (node === undefined) continue
+      minX = Math.min(minX, node.x); minY = Math.min(minY, node.y)
+      maxX = Math.max(maxX, node.x + node.w); maxY = Math.max(maxY, node.y + node.h)
+    }
+    if (!Number.isFinite(minX)) continue
+    clusters.push({ id: group.id, shape: 'rect', className: 'dsc-mermaid-cluster', title: group.title, depth: group.depth, x: minX - 16, y: minY - 26, w: maxX - minX + 32, h: maxY - minY + 40 })
+  }
+  clusters.sort((left, right) => left.depth - right.depth)
+  const offsets = mermaidCenterOffsets(placed, clusters, requestedWidth)
+  const nodes = placed.nodes.map((node) => {
+    const result = { ...node, x: mermaidRound(node.x + offsets.offsetX), y: mermaidRound(node.y + offsets.offsetY), className: 'dsc-mermaid-node' }
+    if (mermaidPolygonShape(node.shape)) result.points = mermaidPolygonPoints(result)
+    return result
+  })
+  const nodeMap = new Map()
+  for (const node of nodes) nodeMap.set(node.id, node)
+  const clusterShapes = clusters.map(cluster => ({ ...cluster, x: mermaidRound(cluster.x + offsets.offsetX), y: mermaidRound(cluster.y + offsets.offsetY) }))
+  const texts = []
+  for (const cluster of clusterShapes) {
+    if (cluster.title !== '') texts.push({ text: mermaidClip(cluster.title, 80), x: mermaidRound(cluster.x + 10), y: mermaidRound(cluster.y + 15), textAnchor: 'start', className: 'dsc-mermaid-cluster-label' })
+  }
+  for (const node of nodes) {
+    const fitted = Math.max(6, Math.floor((node.w - 18) / MERMAID_TEXT_WIDTH))
+    const lines = node.lines.map(line => mermaidClip(line, fitted))
+    const startY = node.y + node.h / 2 - ((lines.length - 1) * 18) / 2
+    lines.forEach((line, index) => texts.push({ text: line, x: mermaidRound(node.x + node.w / 2), y: mermaidRound(startY + index * 18), textAnchor: 'middle', className: 'dsc-mermaid-node-label' }))
+  }
+  const edges = []
+  for (const edge of model.edges) {
+    const from = nodeMap.get(edge.from)
+    const to = nodeMap.get(edge.to)
+    if (from === undefined || to === undefined) continue
+    const geometry = mermaidGraphEdgeGeometry(from, to, model.direction, { marker: edge.arrow ? 'chevron' : 'none', dashed: edge.dashed, thick: edge.thick })
+    if (geometry === null) continue
+    edges.push({ ...edge, ...geometry })
+    if (edge.label !== '') texts.push({ text: mermaidClip(edge.label), x: geometry.labelX, y: geometry.labelY, textAnchor: geometry.labelAnchor, className: 'dsc-mermaid-edge-label' })
+  }
+  return {
+    kind: 'flowchart', direction: model.direction, width: mermaidRound(offsets.width), height: mermaidRound(offsets.height),
+    nodes, edges, texts, clusters: clusterShapes, frames: [], notes: [], lifelines: [], legend: [], rules: [],
+  }
+}
+
+// ---------- class diagram layout ----------
+function mermaidClassSize(node) {
+  let chars = node.title.length
+  for (const member of node.members) chars = Math.max(chars, member.length)
+  return { w: mermaidClamp(mermaidRound(chars * MERMAID_TEXT_WIDTH + 30), 130, 300), h: mermaidRound(Math.max(44, 34 + node.members.length * 18)) }
+}
+function mermaidLayoutClassDiagram(model, requestedWidth) {
+  const sizes = new Map()
+  for (const node of model.nodes) sizes.set(node.id, mermaidClassSize(node))
+  const rankEdges = model.edges.map(edge => ({ from: edge.layoutFrom, to: edge.layoutTo }))
+  const placed = mermaidLayeredLayout(model.nodes, rankEdges, model.direction, sizes)
+  const offsets = mermaidCenterOffsets(placed, [], requestedWidth)
+  const nodes = placed.nodes.map(node => ({
+    ...node, x: mermaidRound(node.x + offsets.offsetX), y: mermaidRound(node.y + offsets.offsetY), className: 'dsc-mermaid-node',
+  }))
+  const nodeMap = new Map()
+  for (const node of nodes) nodeMap.set(node.id, node)
+  const texts = []
+  for (const node of nodes) {
+    const fitted = Math.max(8, Math.floor((node.w - 22) / MERMAID_TEXT_WIDTH))
+    texts.push({
+      text: mermaidClip(node.title, fitted), x: mermaidRound(node.x + node.w / 2), y: mermaidRound(node.y + 19),
+      textAnchor: 'middle', className: 'dsc-mermaid-node-label dsc-mermaid-class-title',
+    })
+    node.members.forEach((member, index) => {
+      texts.push({
+        text: mermaidClip(member, fitted), x: mermaidRound(node.x + 12), y: mermaidRound(node.y + 40 + index * 18),
+        textAnchor: 'start', className: 'dsc-mermaid-node-label dsc-mermaid-class-member',
+      })
+    })
+  }
+  const edges = []
+  for (const relation of model.edges) {
+    const left = nodeMap.get(relation.layoutFrom)
+    const right = nodeMap.get(relation.layoutTo)
+    if (left === undefined || right === undefined) continue
+    const arrowAtFrom = relation.arrowAt === 'from'
+    const geometry = mermaidGraphEdgeGeometry(arrowAtFrom ? right : left, arrowAtFrom ? left : right, model.direction, { marker: relation.marker, dashed: relation.dashed })
+    if (geometry === null) continue
+    edges.push({ ...relation, ...geometry })
+    if (relation.label !== '') texts.push({ text: mermaidClip(relation.label), x: geometry.labelX, y: geometry.labelY, textAnchor: geometry.labelAnchor, className: 'dsc-mermaid-edge-label' })
+  }
+  return {
+    kind: 'class', direction: model.direction, width: mermaidRound(offsets.width), height: mermaidRound(offsets.height),
+    nodes, edges, texts, clusters: [], frames: [], notes: [], lifelines: [], legend: [], rules: [],
+  }
+}
+
+// ---------- sequence layout ----------
+function mermaidLayoutSequenceDiagram(model, requestedWidth) {
+  const pad = 40
+  const participants = model.participants
+  const count = participants.length
+  const boxes = participants.map((participant) => {
+    const lines = mermaidLabelLines(participant.label)
+    return { lines, ...mermaidNodeSize(lines, 100, 240, 40, 16) }
+  })
+  let maxBoxWidth = 100
+  let maxBoxHeight = 40
+  for (const box of boxes) { maxBoxWidth = Math.max(maxBoxWidth, box.w); maxBoxHeight = Math.max(maxBoxHeight, box.h) }
+  const columnStep = maxBoxWidth + 34
+  const edgePad = Math.max(pad, maxBoxWidth / 2 + 14)
+  const titleSpace = model.title === '' ? 0 : 30
+  const width = Math.max(requestedWidth, 360, edgePad * 2 + (count - 1) * columnStep)
+  const columns = participants.map((participant, index) => (count === 1 ? width / 2 : edgePad + (index * (width - edgePad * 2)) / (count - 1)))
+  const columnOf = (id) => {
+    for (let index = 0; index < participants.length; index += 1) if (participants[index].id === id) return columns[index]
+    return null
+  }
+  const headerY = pad + titleSpace
+  const headerH = maxBoxHeight
+  let maxDepth = 0
+  for (const frame of model.frames) maxDepth = Math.max(maxDepth, frame.depth + 1)
+  const startY = headerY + headerH + 42 + maxDepth * 14
+  const yAt = order => startY + order * 54
+  const nodes = []
+  const texts = []
+  const lifelines = []
+  if (model.title !== '') texts.push({ text: model.title, x: mermaidRound(width / 2), y: mermaidRound(pad + 10), textAnchor: 'middle', className: 'dsc-mermaid-title' })
+  participants.forEach((participant, index) => {
+    const box = boxes[index]
+    nodes.push({ id: participant.id, shape: 'rect', className: 'dsc-mermaid-node', x: mermaidRound(columns[index] - box.w / 2), y: headerY, w: box.w, h: headerH })
+    const labelStart = headerY + headerH / 2 - ((box.lines.length - 1) * 16) / 2
+    box.lines.forEach((line, lineIndex) => texts.push({
+      text: mermaidClip(line, MERMAID_MAX_LABEL), x: mermaidRound(columns[index]), y: mermaidRound(labelStart + lineIndex * 16),
+      textAnchor: 'middle', className: 'dsc-mermaid-node-label',
+    }))
+  })
+  const lastOrder = model.items.length - 1
+  const lifelineBottom = lastOrder >= 0 ? yAt(lastOrder) + 44 : headerY + headerH + 66
+  const height = Math.max(lifelineBottom + pad, headerY + headerH + 120)
+  participants.forEach((participant, index) => lifelines.push({
+    d: `M ${mermaidRound(columns[index])} ${mermaidRound(headerY + headerH)} L ${mermaidRound(columns[index])} ${mermaidRound(lifelineBottom)}`,
+    className: 'dsc-mermaid-edge dsc-mermaid-lifeline', dash: '4 4',
+  }))
+  const frames = []
+  for (const frame of model.frames) {
+    if (frame.end <= frame.start) continue
+    // Outer frames get the highest label band so nested frames never poke out.
+    const top = yAt(frame.start) - 22 - (maxDepth - frame.depth) * 12
+    const bottom = yAt(frame.end - 1) + 26 - frame.depth * 4
+    const x = MERMAID_PAD - 10 + frame.depth * 8
+    const frameWidth = width - 2 * x
+    if (frameWidth <= 40) continue
+    const frameY = Math.max(headerY + headerH + 8, top)
+    frames.push({
+      id: `frame-${frame.kind}-${frame.start}`, shape: 'rect', className: 'dsc-mermaid-frame',
+      x: mermaidRound(x), y: mermaidRound(frameY), w: mermaidRound(frameWidth), h: mermaidRound(Math.max(48, bottom - frameY)),
+    })
+    texts.push({
+      text: mermaidClip(frame.label === '' ? frame.kind : `${frame.kind} ${frame.label}`, 100),
+      x: mermaidRound(x + 10), y: mermaidRound(frameY + 15), textAnchor: 'start', className: 'dsc-mermaid-frame-label',
+    })
+    for (const divider of frame.dividers) {
+      if (divider.label === '' || divider.order < frame.start || divider.order >= frame.end) continue
+      texts.push({ text: `[${mermaidClip(divider.label, 80)}]`, x: mermaidRound(x + 10), y: mermaidRound(yAt(divider.order) - 32), textAnchor: 'start', className: 'dsc-mermaid-frame-label' })
+    }
+  }
+  const notes = []
+  for (const note of model.notes) {
+    const lines = mermaidWrapText(note.text, 34, 4)
+    let chars = 0
+    for (const line of lines) chars = Math.max(chars, line.length)
+    const noteWidth = mermaidClamp(mermaidRound(chars * MERMAID_TEXT_WIDTH + 26), 120, 300)
+    const noteHeight = mermaidRound(16 + lines.length * 18)
+    const firstX = columnOf(note.targets[0])
+    if (firstX === null) continue
+    let x = firstX - noteWidth / 2
+    if (note.position === 'left of') x = firstX - 14 - noteWidth
+    else if (note.position === 'right of') x = firstX + 14
+    else if (note.targets.length > 1) {
+      const secondX = columnOf(note.targets[1])
+      if (secondX !== null) x = (firstX + secondX) / 2 - noteWidth / 2
+    }
+    x = mermaidClamp(x, 8, Math.max(8, width - noteWidth - 8))
+    const noteY = mermaidClamp(yAt(note.order) - noteHeight / 2, headerY + headerH + 8, Math.max(headerY + headerH + 8, lifelineBottom - noteHeight))
+    notes.push({ id: `note-${note.order}`, shape: 'rect', className: 'dsc-mermaid-note', x: mermaidRound(x), y: mermaidRound(noteY), w: noteWidth, h: noteHeight })
+    const textStart = noteY + noteHeight / 2 - ((lines.length - 1) * 18) / 2
+    lines.forEach((line, index) => texts.push({
+      text: line, x: mermaidRound(x + noteWidth / 2), y: mermaidRound(textStart + index * 18),
+      textAnchor: 'middle', className: 'dsc-mermaid-note-label',
+    }))
+  }
+  const messages = []
+  for (const message of model.messages) {
+    const fromX = columnOf(message.from)
+    const toX = columnOf(message.to)
+    if (fromX === null || toX === null) continue
+    const y = mermaidRound(yAt(message.order))
+    if (fromX === toX) {
+      const edgeX = mermaidRound(fromX + 4)
+      messages.push({
+        ...message, x: mermaidRound(fromX), y,
+        d: `M ${edgeX} ${mermaidRound(y - 6)} C ${mermaidRound(fromX + 44)} ${mermaidRound(y - 30)} ${mermaidRound(fromX + 44)} ${mermaidRound(y + 30)} ${edgeX} ${mermaidRound(y + 6)}`,
+        marker: mermaidMarker(message.marker, edgeX, y + 6, -1, 0),
+      })
+      if (message.text !== '') texts.push({ text: mermaidClip(message.text), x: mermaidRound(fromX + 52), y, textAnchor: 'start', className: 'dsc-mermaid-edge-label' })
+    } else {
+      messages.push({
+        ...message, x: mermaidRound(fromX), y, d: `M ${mermaidRound(fromX)} ${y} L ${mermaidRound(toX)} ${y}`,
+        marker: mermaidMarker(message.marker, toX, y, toX >= fromX ? 1 : -1, 0),
+      })
+      if (message.text !== '') texts.push({ text: mermaidClip(message.text), x: mermaidRound((fromX + toX) / 2), y: mermaidRound(y - 12), textAnchor: 'middle', className: 'dsc-mermaid-edge-label' })
+    }
+  }
+  return {
+    kind: 'sequence', direction: 'LR', width: mermaidRound(width), height: mermaidRound(height),
+    nodes, edges: messages, messages, participants, texts, clusters: [], frames, notes, lifelines, legend: [], rules: [],
+  }
+}
+
+// ---------- pie layout ----------
+function mermaidLayoutPieChart(model, requestedWidth) {
+  const pad = 36
+  const slices = model.slices
+  let total = 0
+  for (const slice of slices) total += slice.value
+  if (!Number.isFinite(total) || total <= 0) return null
+  const radius = 128
+  const rows = slices.map(slice => {
+    const percent = (slice.value / total) * 100
+    return { slice, percent: Math.round(percent * 10) / 10, label: `${slice.label}  ${slice.value} (${Math.round(percent)}%)` }
+  })
+  let legendChars = 0
+  for (const row of rows) legendChars = Math.max(legendChars, row.label.length)
+  const legendWidth = mermaidClamp(mermaidRound(legendChars * MERMAID_TEXT_WIDTH + 54), 150, 340)
+  const sideBySide = requestedWidth >= 520
+  const titleHeight = model.title === '' ? 0 : 36
+  const pieBox = radius * 2
+  const contentW = sideBySide ? pieBox + 30 + legendWidth : Math.max(pieBox, legendWidth)
+  const contentH = sideBySide ? Math.max(pieBox, rows.length * 26) : pieBox + 30 + rows.length * 26
+  const width = Math.max(requestedWidth, contentW + pad * 2)
+  const height = contentH + titleHeight + pad * 2
+  const contentLeft = (width - contentW) / 2
+  const centerX = sideBySide ? contentLeft + radius : width / 2
+  const centerY = sideBySide ? pad + titleHeight + contentH / 2 : pad + titleHeight + radius
+  const nodes = []
+  const legend = []
+  const texts = []
+  let angle = -Math.PI / 2
+  rows.forEach((row, index) => {
+    const style = { '--dsc-slice': `var(--dsc-mermaid-c${(index % 8) + 1})` }
+    const sweep = (row.slice.value / total) * Math.PI * 2
+    const start = angle
+    angle += sweep
+    if (sweep >= Math.PI * 2 - 1e-6) {
+      nodes.push({ id: `slice-${index}`, shape: 'ellipse', className: 'dsc-mermaid-slice', cx: mermaidRound(centerX), cy: mermaidRound(centerY), rx: radius, ry: radius, style, fill: 'var(--dsc-slice, currentColor)' })
+    } else {
+      const x1 = centerX + radius * Math.cos(start)
+      const y1 = centerY + radius * Math.sin(start)
+      const x2 = centerX + radius * Math.cos(angle)
+      const y2 = centerY + radius * Math.sin(angle)
+      const largeArc = sweep > Math.PI ? 1 : 0
+      nodes.push({
+        id: `slice-${index}`, shape: 'slice', className: 'dsc-mermaid-slice',
+        d: `M ${mermaidRound(centerX)} ${mermaidRound(centerY)} L ${mermaidRound(x1)} ${mermaidRound(y1)} A ${radius} ${radius} 0 ${largeArc} 1 ${mermaidRound(x2)} ${mermaidRound(y2)} Z`,
+        style, fill: 'var(--dsc-slice, currentColor)',
+      })
+    }
+    const legendX = sideBySide ? contentLeft + pieBox + 30 : width / 2 - legendWidth / 2
+    const legendTop = sideBySide ? pad + titleHeight + Math.max(0, (contentH - rows.length * 26) / 2) : pad + titleHeight + pieBox + 30
+    const legendY = legendTop + index * 26
+    legend.push({
+      id: `legend-${index}`, shape: 'rect', className: 'dsc-mermaid-slice dsc-mermaid-legend-swatch',
+      x: mermaidRound(legendX), y: mermaidRound(legendY), w: 12, h: 12, rx: 2, style, fill: 'var(--dsc-slice, currentColor)',
+    })
+    texts.push({ text: mermaidClip(row.label, 80), x: mermaidRound(legendX + 20), y: mermaidRound(legendY + 6), textAnchor: 'start', className: 'dsc-mermaid-legend-label' })
+  })
+  if (model.title !== '') texts.push({ text: model.title, x: mermaidRound(width / 2), y: mermaidRound(pad + 10), textAnchor: 'middle', className: 'dsc-mermaid-title' })
+  return {
+    kind: 'pie', direction: '', width: mermaidRound(width), height: mermaidRound(height), nodes, edges: [],
+    slices: rows.map(row => ({ label: row.slice.label, value: row.slice.value, percent: row.percent, percentText: `${Math.round(row.percent)}%` })),
+    omitted: model.omitted, texts, clusters: [], frames: [], notes: [], lifelines: [], legend, rules: [],
+  }
+}
+
+// ---------- layout entry point ----------
+function mermaidLayout(source, options = {}) {
+  const settings = options !== null && typeof options === 'object' ? options : {}
+  const requestedWidth = mermaidClamp(mermaidNum(settings.width, MERMAID_DEFAULT_WIDTH), 240, 2400)
+  const model = parseMermaid(source)
+  if (model === null || model === undefined || model.kind === 'unknown') {
+    return { kind: 'unknown', error: (model && model.error) || 'unsupported diagram' }
+  }
+  try {
+    if (model.kind === 'flowchart') return mermaidLayoutFlowchart(model, requestedWidth)
+    if (model.kind === 'sequence') return mermaidLayoutSequenceDiagram(model, requestedWidth)
+    if (model.kind === 'pie') {
+      const layout = mermaidLayoutPieChart(model, requestedWidth)
+      return layout === null ? { kind: 'unknown', error: 'pie chart contains no positive values' } : layout
+    }
+    if (model.kind === 'class') return mermaidLayoutClassDiagram(model, requestedWidth)
+    return { kind: 'unknown', error: `unsupported diagram type: ${mermaidClip(model.kind, 40)}` }
+  } catch (error) {
+    return { kind: 'unknown', error: mermaidErrorMessage(error) }
+  }
+}
+
+// ---------- React rendering ----------
+function mermaidRenderShape(shape, key) {
+  const props = { key, className: shape.className || 'dsc-mermaid-node', 'vector-effect': 'non-scaling-stroke' }
+  if (shape.style !== undefined) props.style = shape.style
+  if (shape.fill !== undefined) props.fill = shape.fill
+  if (shape.shape === 'slice') {
+    props.d = shape.d
+    return h('path', props)
+  }
+  if (shape.shape === 'ellipse' || shape.shape === 'circle') {
+    props.cx = shape.cx === undefined ? mermaidRound(shape.x + shape.w / 2) : shape.cx
+    props.cy = shape.cy === undefined ? mermaidRound(shape.y + shape.h / 2) : shape.cy
+    props.rx = shape.rx === undefined ? mermaidRound(shape.w / 2) : shape.rx
+    props.ry = shape.ry === undefined ? mermaidRound(shape.h / 2) : shape.ry
+    return h('ellipse', props)
+  }
+  if (mermaidPolygonShape(shape.shape) && typeof shape.points === 'string') {
+    props.points = shape.points
+    return h('polygon', props)
+  }
+  props.x = shape.x
+  props.y = shape.y
+  props.width = shape.w
+  props.height = shape.h
+  props.rx = shape.rx === undefined ? 8 : shape.rx
+  return h('rect', props)
+}
+function MermaidDiagram({ source, title } = {}) {
+  const raw = typeof source === 'string' ? source : mermaidSafeText(source)
+  const layout = React.useMemo(() => {
+    try { return mermaidLayout(raw, { width: MERMAID_DEFAULT_WIDTH }) } catch (error) { return { kind: 'unknown', error: mermaidErrorMessage(error) } }
+  }, [raw])
+  const caption = typeof title === 'string' ? mermaidClip(title, MERMAID_MAX_LABEL) : ''
+  const firstLine = mermaidClip(raw.replace(/\r\n?/g, '\n').split('\n').find(line => line.trim() !== '') || '', MERMAID_MAX_LABEL)
+  const ariaLabel = mermaidClip(caption !== '' ? caption : (firstLine || tr('mermaidFailed')), MERMAID_MAX_LABEL)
+  if (!layout || layout.kind === 'unknown' || mermaidNum(layout.width) <= 0 || mermaidNum(layout.height) <= 0) {
+    const message = layout && typeof layout.error === 'string' ? layout.error : 'render failed'
+    return h('figure', { className: 'dsc-mermaid dsc-mermaid-failed' },
+      h('div', { className: 'dsc-mermaid-error' },
+        h('div', { className: 'dsc-mermaid-error-line' }, h(Icon, { name: 'warning', size: 16 }), h('span', { className: 'dsc-mermaid-error-text' }, `${tr('mermaidFailed')}: ${message}`)),
+        h('pre', { className: 'dsc-mermaid-source dsc-pre' }, raw)))
+  }
+  const children = []
+  const addShapes = (list, prefix) => (list || []).forEach((shape, index) => children.push(mermaidRenderShape(shape, `${prefix}-${index}`)))
+  addShapes(layout.clusters, 'c')
+  addShapes(layout.frames, 'f')
+  for (const lifeline of layout.lifelines || []) {
+    children.push(h('path', { key: `l-${children.length}`, d: lifeline.d, className: lifeline.className || 'dsc-mermaid-edge dsc-mermaid-lifeline', fill: 'none', strokeDasharray: lifeline.dash || '4 4', 'vector-effect': 'non-scaling-stroke' }))
+  }
+  addShapes(layout.notes, 'o')
+  for (const edge of layout.edges || []) {
+    const dashed = edge.dashed === true
+    const classes = `dsc-mermaid-edge${dashed ? ' dsc-mermaid-edge-dashed' : ''}${edge.thick === true ? ' dsc-mermaid-edge-thick' : ''}`
+    children.push(h('path', { key: `e-${children.length}`, d: edge.d, className: classes, fill: 'none', strokeDasharray: dashed ? '6 4' : undefined, 'vector-effect': 'non-scaling-stroke' }))
+    if (edge.marker) {
+      children.push(h('path', { key: `m-${children.length}`, d: edge.marker.d, className: edge.marker.className, fill: edge.marker.fill === undefined ? 'none' : edge.marker.fill, 'vector-effect': 'non-scaling-stroke' }))
+    }
+  }
+  addShapes(layout.nodes, 'n')
+  addShapes(layout.legend, 'g')
+  for (const entry of layout.texts || []) {
+    children.push(h('text', { key: `t-${children.length}`, x: entry.x, y: entry.y, className: entry.className || 'dsc-mermaid-node-label', textAnchor: entry.textAnchor || 'middle', dominantBaseline: 'middle', 'vector-effect': 'non-scaling-stroke' }, entry.text))
+  }
+  return h('figure', { className: 'dsc-mermaid' },
+    h('div', { className: 'dsc-mermaid-figure' },
+      h('svg', {
+        className: 'dsc-mermaid-svg', xmlns: 'http://www.w3.org/2000/svg', width: mermaidRound(layout.width), height: mermaidRound(layout.height),
+        viewBox: `0 0 ${mermaidRound(layout.width)} ${mermaidRound(layout.height)}`, role: 'img', 'aria-label': ariaLabel,
+        preserveAspectRatio: 'xMidYMid meet', focusable: 'false',
+      }, children)),
+    caption !== '' ? h('figcaption', { className: 'dsc-mermaid-caption' }, caption) : null)
 }
 
 /* ---- 40-icons.js ---- */
@@ -3085,6 +6566,139 @@ function Icon({ name, size = 18, className = '' }) {
   return h(Component, { size, className })
 }
 
+/* ---- 43-popover.js ---- */
+/**
+ * Popover plumbing shared by the composer tool menu and the model menu.
+ *
+ * A composer popover lives next to the input, at the bottom of the window, so
+ * the default side is "above the trigger"; when the window is too short the
+ * hook flips it below, and either way the panel's height is clamped so it never
+ * runs past the viewport edge. Keyboard behaviour is the WAI-ARIA menu pattern:
+ * Arrow keys move through the items, Home/End jump, Escape and Tab close.
+ */
+
+const POPOVER_GAP = 8
+/** Space a flipped panel must leave for the trigger line. */
+const POPOVER_PREFERRED = 180
+
+function popoverItemSelector() {
+  return '[role="menuitem"],[role="menuitemradio"],[role="menuitemcheckbox"],.dsc-popover-item'
+}
+
+/**
+ * Close a popover on any pointer press outside its panel and trigger.
+ * Runs in the capture phase so a press on another control still closes this
+ * one before that control handles the click.
+ */
+function useOutsideDismiss(open, onClose, panelRef, triggerRef) {
+  const closeRef = React.useRef(onClose)
+  closeRef.current = onClose
+  React.useEffect(() => {
+    if (!open) return undefined
+    const onPointerDown = (event) => {
+      const target = event?.target
+      if (!(target instanceof Node)) return
+      if (panelRef.current?.contains(target)) return
+      if (triggerRef.current?.contains(target)) return
+      closeRef.current()
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [open, panelRef, triggerRef])
+}
+
+/**
+ * Keep a popover on the side with room for it and clamp its height to the
+ * viewport. Re-measures on resize and on any layout scroll (the thread above
+ * the composer scrolls independently of the window).
+ * @returns `{ placement, maxHeight }` - "top" opens above the trigger.
+ */
+function usePopupPlacement(open, triggerRef, panelRef) {
+  const [layout, setLayout] = React.useState({ placement: 'top', maxHeight: null })
+  React.useLayoutEffect(() => {
+    if (!open) return () => {}
+    const update = () => {
+      const trigger = triggerRef.current
+      const panel = panelRef.current
+      if (!trigger || !panel) return
+      const rect = trigger.getBoundingClientRect()
+      const viewport = window.innerHeight || 0
+      const natural = panel.offsetHeight || panel.scrollHeight || 0
+      const spaceAbove = rect.top - POPOVER_GAP - 8
+      const spaceBelow = viewport - rect.bottom - POPOVER_GAP - 8
+      const placement = spaceAbove >= Math.min(natural, POPOVER_PREFERRED) || spaceAbove >= spaceBelow
+        ? 'top'
+        : 'bottom'
+      const available = placement === 'top' ? spaceAbove : spaceBelow
+      const maxHeight = available > 120 ? Math.min(available, 520) : null
+      setLayout((current) => (
+        current.placement === placement && current.maxHeight === maxHeight
+          ? current
+          : { placement, maxHeight }
+      ))
+    }
+    update()
+    window.addEventListener('resize', update)
+    // Capture scroll events from the scrolling thread as well as the window.
+    window.addEventListener('scroll', update, true)
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(update) : null
+    if (observer && panelRef.current) observer.observe(panelRef.current)
+    return () => {
+      window.removeEventListener('resize', update)
+      window.removeEventListener('scroll', update, true)
+      observer?.disconnect()
+    }
+  }, [open, panelRef, triggerRef])
+  return layout
+}
+
+function popoverItems(container) {
+  if (!container || typeof container.querySelectorAll !== 'function') return []
+  return [...container.querySelectorAll(popoverItemSelector())].filter(item => (
+    item.disabled !== true && item.getAttribute?.('aria-disabled') !== 'true'
+  ))
+}
+
+/** Move keyboard focus to the open panel's first (or last) enabled item. */
+function focusMenuItem(container, edge = 'first') {
+  const items = popoverItems(container)
+  if (items.length === 0) return
+  const target = edge === 'last' ? items[items.length - 1] : items[0]
+  target.focus?.({ preventScroll: false })
+}
+
+/**
+ * Key handler for one popover panel.
+ * ArrowUp/Down wrap through items, Home/End jump, Escape closes, Tab closes and
+ * lets the browser move focus naturally.
+ */
+function handleMenuKeyDown(event, { container, onClose, trigger }) {
+  if (event.key === 'Escape') {
+    event.stopPropagation()
+    event.preventDefault()
+    onClose()
+    trigger?.current?.focus?.()
+    return
+  }
+  if (event.key === 'Tab') {
+    // Close, but do not prevent default: Tab must keep moving focus.
+    onClose()
+    return
+  }
+  if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp' && event.key !== 'Home' && event.key !== 'End') return
+  const items = popoverItems(container)
+  if (items.length === 0) return
+  event.preventDefault()
+  const active = document.activeElement
+  const index = items.indexOf(active)
+  let next
+  if (event.key === 'Home') next = items[0]
+  else if (event.key === 'End') next = items[items.length - 1]
+  else if (event.key === 'ArrowDown') next = items[(index + 1) % items.length]
+  else next = items[(index - 1 + items.length) % items.length]
+  next.focus?.({ preventScroll: false })
+}
+
 /* ---- 45-brand.js ---- */
 /**
  * Official DeepSeek brand artwork for the Chat sidebar.
@@ -3131,6 +6745,434 @@ function DeepSeekLockup({ height = 24, className = '' }) {
   }, DEEPSEEK_LOCKUP.paths.map((d, index) => h('path', { key: index, d, fill: 'currentColor' })))
 }
 
+/* ---- 47-model.js ---- */
+/**
+ * Model selection for Chat mode.
+ *
+ * The catalog comes from the Host (`bootstrap.models`), which is the only place
+ * that knows which ids the DeepSeek Messages API actually accepts and what each
+ * model can do. The browser never guesses a model list: when an older Host does
+ * not publish one, only the flash model is offered, because that is the model
+ * that Host sends.
+ *
+ * `chatStore.state.modelChoice` holds the selection for the active
+ * conversation; per-conversation overrides and the defaults live on the Host.
+ */
+
+/** The single model an older Host always sends. */
+const FALLBACK_MODELS = [
+  {
+    id: 'deepseek-flash',
+    name: 'DeepSeek V4.1 Flash',
+    shortName: 'V4.1 Flash',
+    descriptionKey: 'modelFlashDesc',
+    capabilities: { vision: true, documents: true, search: true, thinking: true, efforts: ['low', 'high', 'max'] },
+  },
+]
+
+const EFFORT_ORDER = ['low', 'high', 'max']
+const EFFORT_LABEL = { low: 'effortLow', high: 'effortHigh', max: 'effortMax' }
+const EFFORT_HINT = { low: 'effortLowHint', high: 'effortHighHint', max: 'effortMaxHint' }
+const CAPABILITY_KEYS = [
+  { key: 'vision', label: 'modelCapVision' },
+  { key: 'documents', label: 'modelCapFiles' },
+  { key: 'search', label: 'modelCapSearch' },
+  { key: 'thinking', label: 'modelCapThinking' },
+]
+
+function modelCatalog() {
+  const models = chatStore.state.models
+  return Array.isArray(models) && models.length > 0 ? models : FALLBACK_MODELS
+}
+
+function modelById(id) {
+  const models = modelCatalog()
+  return models.find(model => model.id === id) ?? models[0]
+}
+
+function modelCapability(model, key) {
+  return model?.capabilities?.[key] === true
+}
+
+function modelEfforts(model) {
+  const efforts = model?.capabilities?.efforts
+  const list = Array.isArray(efforts) ? efforts.filter(item => EFFORT_ORDER.includes(item)) : []
+  return list.length > 0 ? list : (modelCapability(model, 'thinking') ? EFFORT_ORDER : [])
+}
+
+/** Short label for the composer chip; the full name is kept for the menu. */
+function modelChipLabel(model, thinking, effort) {
+  const name = model?.shortName || model?.name || ''
+  if (!thinking) return name
+  const labelKey = EFFORT_LABEL[effort]
+  return labelKey === undefined ? name : `${name} · ${tr(labelKey)}`
+}
+
+/**
+ * The model recorded on one reply, for the message footer. Old replies may name
+ * a model that is no longer in the catalog, in which case the raw id is the
+ * honest label.
+ */
+function messageModelLabel(message) {
+  if (typeof message?.model !== 'string' || message.model === '') return ''
+  const model = modelById(message.model)
+  const name = model?.shortName || model?.name || message.model
+  if (message.thinking !== true) return name
+  const labelKey = EFFORT_LABEL[message.effort]
+  return labelKey === undefined ? name : `${name} · ${tr(labelKey)}`
+}
+
+/**
+ * The effective model/effort of the composer. Falls back to the first catalog
+ * entry when the stored choice names a model this Host no longer offers.
+ */
+function currentModelChoice() {
+  const choice = chatStore.state.modelChoice ?? {}
+  const model = modelById(choice.model)
+  const efforts = modelEfforts(model)
+  const effort = efforts.includes(choice.effort) ? choice.effort : (efforts.includes('high') ? 'high' : efforts[efforts.length - 1])
+  return { model, efforts, effort }
+}
+
+/**
+ * Model menu: a compact list of the real API models plus the thinking-effort
+ * control for the selected one. It opens above the composer, right-aligned to
+ * its chip, and is fully operable from the keyboard.
+ */
+function ModelMenu() {
+  const t = useT()
+  const models = modelCatalog()
+  const choice = currentModelChoice()
+  const thinking = useChat(state => state.settings.thinking)
+  const activeId = useChat(state => state.activeId)
+  const [open, setOpen] = React.useState(false)
+  const triggerRef = React.useRef(null)
+  const panelRef = React.useRef(null)
+  const layout = usePopupPlacement(open, triggerRef, panelRef)
+  useOutsideDismiss(open, () => setOpen(false), panelRef, triggerRef)
+  React.useEffect(() => {
+    if (!open) return
+    // Focus the selected model row so Arrow keys start from the current choice.
+    const panel = panelRef.current
+    const selected = panel?.querySelector?.(`[data-model="${choice.model.id}"]`)
+    selected?.focus?.({ preventScroll: false })
+  }, [open])
+  const close = () => setOpen(false)
+  const onKeyDown = event => handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef })
+  const scope = activeId === null ? t('modelAppliedToDefault') : t('modelAppliedToChat')
+  return h('div', { className: 'dsc-model-control' },
+    h('button', {
+      ref: triggerRef,
+      type: 'button',
+      className: cx('dsc-model-trigger', open && 'is-open'),
+      'aria-haspopup': 'menu',
+      'aria-expanded': open,
+      title: t('modelSelect'),
+      onClick: () => setOpen(value => !value),
+      onKeyDown: (event) => {
+        if (event.key === 'Escape' && open) {
+          event.preventDefault()
+          setOpen(false)
+          return
+        }
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          event.preventDefault()
+          setOpen(true)
+        }
+      },
+    },
+      h('span', { className: 'dsc-model-name' }, modelChipLabel(choice.model, thinking, choice.effort)),
+      h(Icon, { name: 'chevronDown', size: 12 }),
+    ),
+    open
+      ? h('div', {
+          ref: panelRef,
+          className: 'dsc-popover dsc-model-menu',
+          role: 'menu',
+          'aria-label': t('modelSelect'),
+          'data-placement': layout.placement,
+          style: layout.maxHeight === null ? undefined : { maxHeight: `${layout.maxHeight}px` },
+          onKeyDown,
+        },
+        h('div', { className: 'dsc-popover-title' }, t('modelMenuTitle')),
+        h('div', { className: 'dsc-model-list' },
+          models.map(model => {
+            const selected = model.id === choice.model.id
+            return h('button', {
+              key: model.id,
+              type: 'button',
+              role: 'menuitemradio',
+              'aria-checked': selected,
+              'data-model': model.id,
+              className: cx('dsc-popover-item dsc-model-option', selected && 'is-selected'),
+              onClick: () => { chatActions.selectModel(model.id); close() },
+            },
+              h('span', { className: 'dsc-popover-item-main' },
+                h('span', { className: 'dsc-popover-item-title' }, model.name),
+                model.descriptionKey !== undefined
+                  ? h('span', { className: 'dsc-popover-item-desc' }, t(model.descriptionKey))
+                  : null,
+              ),
+              selected ? h(Icon, { name: 'check', size: 15 }) : null,
+            )
+          }),
+        ),
+        h('div', { className: 'dsc-popover-sep' }),
+        h('div', { className: 'dsc-effort' },
+          h('div', { className: 'dsc-effort-head' },
+            h('span', { className: 'dsc-popover-label' }, t('thinkingEffort')),
+            h('span', { className: 'dsc-effort-active' }, h(Icon, { name: 'brain', size: 12 }), thinking ? t('toolOn') : t('toolOff')),
+          ),
+          thinking && choice.efforts.length > 0
+            ? h('div', { className: 'dsc-effort-options', role: 'group', 'aria-label': t('thinkingEffort') },
+                choice.efforts.map(effort => h('button', {
+                  key: effort,
+                  type: 'button',
+                  role: 'menuitemradio',
+                  'aria-checked': choice.effort === effort,
+                  className: cx('dsc-effort-option', choice.effort === effort && 'is-selected'),
+                  title: t(EFFORT_HINT[effort] ?? 'thinkingEffort'),
+                  onClick: () => chatActions.selectEffort(effort),
+                }, t(EFFORT_LABEL[effort]))),
+              )
+            : h('p', { className: 'dsc-popover-hint' },
+                thinking ? t('effortUnsupported') : t('effortNeedsThinking')),
+          thinking && EFFORT_HINT[choice.effort] !== undefined
+            ? h('p', { className: 'dsc-popover-hint' }, t(EFFORT_HINT[choice.effort]))
+            : null,
+        ),
+        h('div', { className: 'dsc-popover-sep' }),
+        h('div', { className: 'dsc-model-meta' },
+          h('div', { className: 'dsc-model-caps', 'aria-label': t('modelCapabilities') },
+            CAPABILITY_KEYS.map(item => h('span', {
+              key: item.key,
+              className: cx('dsc-model-cap', !modelCapability(choice.model, item.key) && 'is-off'),
+              title: `${t(item.label)}：${modelCapability(choice.model, item.key) ? t('toolOn') : t('toolOff')}`,
+            },
+              h(Icon, { name: modelCapability(choice.model, item.key) ? 'check' : 'close', size: 11 }),
+              t(item.label),
+            )),
+          ),
+          h('p', { className: 'dsc-popover-hint' }, scope),
+        ),
+      )
+      : null,
+  )
+}
+
+/* ---- 48-tools.js ---- */
+/**
+ * The composer's "+" tools menu.
+ *
+ * Every Chat capability that is not a plain setting is defined once, here, as a
+ * small descriptor. The menu, the active-tool chips above the input and future
+ * entry points all read the same list, so adding a tool (image generation, deep
+ * research, document generation, code execution, ...) never means touching the
+ * composer or the menu markup again:
+ *
+ *   registerChatTool({
+ *     id: 'image-generation',
+ *     kind: 'action',                 // or "toggle" for an on/off capability
+ *     icon: 'image',
+ *     labelKey: 'toolImageGen',
+ *     hintKey: 'toolImageGenHint',
+ *     run: () => chatActions.openImageGeneration(),
+ *   })
+ *
+ * Tools that are not implemented yet must NOT be registered: the menu only ever
+ * shows entries that do something.
+ */
+
+const EXTRA_CHAT_TOOLS = []
+
+/** The tools that already work, in menu order. */
+const BUILTIN_CHAT_TOOLS = [
+  {
+    id: 'upload',
+    kind: 'action',
+    icon: 'paperclip',
+    labelKey: 'uploadFiles',
+    hintKey: 'uploadFilesHint',
+    order: 10,
+    run: () => chatActions.requestFilePicker(),
+  },
+  {
+    id: 'web-search',
+    kind: 'toggle',
+    icon: 'globe',
+    labelKey: 'webSearch',
+    hintKey: 'webSearchHint',
+    order: 20,
+    available: () => {
+      const { model } = currentModelChoice()
+      return modelCapability(model, 'search') ? { enabled: true } : { enabled: false, reasonKey: 'toolSearchUnavailable' }
+    },
+    active: state => state.settings.search === true,
+    run: () => chatActions.toggleSearch(),
+  },
+  {
+    id: 'deep-thinking',
+    kind: 'toggle',
+    icon: 'brain',
+    labelKey: 'deepThink',
+    hintKey: 'deepThinkHint',
+    order: 30,
+    available: () => {
+      const { model } = currentModelChoice()
+      return modelCapability(model, 'thinking') ? { enabled: true } : { enabled: false, reasonKey: 'toolThinkingUnavailable' }
+    },
+    active: state => state.settings.thinking === true,
+    run: () => chatActions.toggleThinking(),
+  },
+]
+
+/** Add one tool to the composer menu; returns its unregister function. */
+function registerChatTool(definition) {
+  if (definition === null || typeof definition !== 'object' || typeof definition.id !== 'string' || definition.id === '') {
+    throw new Error('deepseek-chat: a tool needs a stable id')
+  }
+  if (typeof definition.run !== 'function') throw new Error('deepseek-chat: a tool needs run()')
+  const entry = { order: 100, kind: 'action', ...definition }
+  EXTRA_CHAT_TOOLS.push(entry)
+  return () => {
+    const index = EXTRA_CHAT_TOOLS.indexOf(entry)
+    if (index >= 0) EXTRA_CHAT_TOOLS.splice(index, 1)
+  }
+}
+
+/** All registered tools in stable display order. */
+function chatToolDefinitions() {
+  return [...BUILTIN_CHAT_TOOLS, ...EXTRA_CHAT_TOOLS].sort((left, right) => (left.order ?? 100) - (right.order ?? 100))
+}
+
+/**
+ * Tools that currently render as an active chip in the composer: only stateful
+ * tools whose state is on. Plain actions never take permanent space.
+ */
+function activeChatTools(state) {
+  return chatToolDefinitions().filter(tool => tool.kind === 'toggle' && tool.active?.(state) === true)
+}
+
+function toolAvailability(tool, state) {
+  try {
+    const result = tool.available?.(state)
+    return result ?? { enabled: true }
+  } catch {
+    return { enabled: false, reasonKey: 'toolUnavailable' }
+  }
+}
+
+function ToolMenuItem({ tool, state, index, onClose }) {
+  const t = useT()
+  const availability = toolAvailability(tool, state)
+  const enabled = availability.enabled !== false
+  const active = tool.kind === 'toggle' && tool.active?.(state) === true
+  const uploading = tool.id === 'upload' && state.attachments.some(item => item.status === 'uploading')
+  const role = tool.kind === 'toggle' ? 'menuitemcheckbox' : 'menuitem'
+  const description = enabled
+    ? t(tool.hintKey ?? tool.labelKey)
+    : t(availability.reasonKey ?? 'toolUnavailable')
+  return h('button', {
+    type: 'button',
+    role,
+    className: cx('dsc-popover-item', active && 'is-active', !enabled && 'is-disabled'),
+    'aria-checked': tool.kind === 'toggle' ? active : undefined,
+    'aria-disabled': enabled ? undefined : 'true',
+    'data-tool': tool.id,
+    'data-index': index,
+    disabled: !enabled,
+    title: description,
+    onClick: () => {
+      if (!enabled) return
+      tool.run()
+      if (tool.kind === 'action') onClose()
+    },
+  },
+    h('span', { className: 'dsc-popover-item-icon' }, h(Icon, { name: tool.icon, size: 18 })),
+    h('span', { className: 'dsc-popover-item-main' },
+      h('span', { className: 'dsc-popover-item-title' }, t(tool.labelKey)),
+      h('span', { className: cx('dsc-popover-item-desc', !enabled && 'is-warn') }, description),
+    ),
+    tool.kind === 'toggle'
+      ? h('span', { className: cx('dsc-switch', active && 'is-on'), 'aria-hidden': 'true' }, h('span', { className: 'dsc-switch-thumb' }))
+      : uploading
+        ? h('span', { className: 'dsc-popover-item-state' }, t('toolUploading'))
+        : null,
+  )
+}
+
+function ToolsMenu() {
+  const t = useT()
+  const state = useChat(snapshot => snapshot)
+  const [open, setOpen] = React.useState(false)
+  const triggerRef = React.useRef(null)
+  const panelRef = React.useRef(null)
+  const layout = usePopupPlacement(open, triggerRef, panelRef)
+  useOutsideDismiss(open, () => setOpen(false), panelRef, triggerRef)
+  React.useEffect(() => {
+    if (!open) return
+    // Opening the menu hands the keyboard to its first item, so a mouse click
+    // and then an arrow key continue in the same place.
+    focusMenuItem(panelRef.current, 'first')
+  }, [open])
+  const tools = chatToolDefinitions()
+  const toolsState = state
+  const anyActive = tools.some(tool => tool.kind === 'toggle' && tool.active?.(toolsState) === true)
+  const close = () => setOpen(false)
+  return h('div', { className: 'dsc-tools' },
+    h('button', {
+      ref: triggerRef,
+      type: 'button',
+      className: cx('dsc-tools-trigger', open && 'is-open', anyActive && 'has-active'),
+      title: t('toolsMenu'),
+      'aria-label': t('toolsMenu'),
+      'aria-haspopup': 'menu',
+      'aria-expanded': open,
+      onClick: () => setOpen(value => !value),
+      onKeyDown: (event) => {
+        if (event.key === 'Escape' && open) {
+          event.preventDefault()
+          setOpen(false)
+          return
+        }
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          event.preventDefault()
+          setOpen(true)
+        }
+      },
+    }, h(Icon, { name: 'plus', size: 19 })),
+    open
+      ? h('div', {
+          ref: panelRef,
+          className: 'dsc-popover dsc-tools-menu',
+          role: 'menu',
+          'aria-label': t('toolsMenu'),
+          'data-placement': layout.placement,
+          style: layout.maxHeight === null ? undefined : { maxHeight: `${layout.maxHeight}px` },
+          onKeyDown: event => handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef }),
+        },
+        h('div', { className: 'dsc-popover-title' }, t('toolsMenu')),
+        tools.map((tool, index) => h(ToolMenuItem, {
+          key: tool.id,
+          tool,
+          index,
+          state: toolsState,
+          onClose: close,
+        })),
+        toolsState.settings.search || toolsState.settings.thinking
+          ? h('p', {
+              className: 'dsc-popover-hint dsc-tools-hint',
+            }, toolsState.settings.search && toolsState.settings.thinking
+              ? t('deepSearchHint')
+              : toolsState.settings.search
+                ? t('quickSearchHint')
+                : t('pureThinkingHint'))
+          : null,
+      )
+      : null,
+  )
+}
+
 /* ---- 50-components.js ---- */
 function cx(...values) {
   return values.filter(Boolean).join(' ')
@@ -3161,6 +7203,18 @@ function hostnameOf(url) {
   }
 }
 
+/**
+ * Every source of one answer, deduplicated by URL and numbered once.
+ *
+ * Cited pages come first, in the order the model cited them, so the numbering
+ * inside the answer matches the list; search hits the model did not cite follow
+ * in tool order. Deduplication is by URL only: a URL keeps the number it got on
+ * its first appearance, which is what keeps the in-text citation map stable
+ * after a reload (the stored blocks are replayed in the same order).
+ *
+ * @returns `{ sources, indexByUrl }`; `indexByUrl` maps a URL to its 1-based
+ * citation number.
+ */
 function collectMessageSources(message) {
   const cited = new Map()
   const found = new Map()
@@ -3199,9 +7253,21 @@ function collectMessageSources(message) {
       }
     }
   }
-  // When the answer cites specific pages, show those as its sources. Search
-  // hits remain available in the process timeline above.
-  return [...(cited.size > 0 ? cited : found).values()]
+  const sources = [...cited.values()]
+  for (const source of found.values()) {
+    const target = cited.get(source.url)
+    if (target !== undefined) {
+      // A cited page may also be in the search results: borrow the richer
+      // display metadata without changing its number.
+      if (target.snippet === '' && source.snippet !== '') target.snippet = source.snippet
+      if (target.siteName === '' && source.siteName !== '') target.siteName = source.siteName
+      if (source.title && (target.title === '' || target.title === hostnameOf(target.url))) target.title = source.title
+      continue
+    }
+    sources.push(source)
+  }
+  const indexByUrl = new Map(sources.map((source, index) => [source.url, index + 1]))
+  return { sources, indexByUrl }
 }
 
 function messageText(message) {
@@ -3209,6 +7275,27 @@ function messageText(message) {
     .filter(block => block.type === 'text')
     .map(block => block.text)
     .join('')
+}
+
+/**
+ * Answer text with citation markers appended where the model cited a source.
+ *
+ * The API ends a text block at each citation, so the marker belongs at the end
+ * of that block. Markers are only added for URLs present in the source list,
+ * which keeps the numbering in the answer and in the footer identical.
+ */
+function answerText(message, indexByUrl) {
+  const parts = []
+  for (const block of message.blocks ?? []) {
+    if (block.type !== 'text') continue
+    const marks = new Set()
+    for (const citation of block.citations ?? []) {
+      const index = indexByUrl.get(citation.url)
+      if (index !== undefined) marks.add(index)
+    }
+    parts.push(block.text + [...marks].map(citationMark).join(''))
+  }
+  return parts.join('')
 }
 
 /**
@@ -3357,20 +7444,70 @@ function AttachmentCard({ file, onRemove, onRetry, compact = false }) {
   )
 }
 
-function SourceCard({ source, index }) {
+function SourceRow({ source, index, active }) {
+  const t = useT()
   const href = safeHref(source.url)
   if (href === null) return null
-  return h('a', {
-    className: 'dsc-source', href, target: '_blank', rel: 'noreferrer noopener',
-    title: source.title,
+  const site = source.siteName || hostnameOf(source.url) || t('sourceDomainFallback')
+  return h('li', {
+    className: cx('dsc-source', active && 'is-target'),
+    'data-source-index': index,
   },
-    h('span', { className: 'dsc-source-index' }, String(index + 1)),
-    h('span', { className: 'dsc-source-body' },
+    h('span', { className: 'dsc-source-index' }, String(index)),
+    h('a', {
+      className: 'dsc-source-link',
+      href,
+      target: '_blank',
+      rel: 'noreferrer noopener',
+      title: source.title,
+    },
       h('span', { className: 'dsc-source-title' }, source.title),
-      h('span', { className: 'dsc-source-meta' }, source.siteName || hostnameOf(source.url)),
+      h('span', { className: 'dsc-source-meta' }, site),
       source.snippet ? h('span', { className: 'dsc-source-snippet' }, source.snippet) : null,
     ),
-    h(Icon, { name: 'external', size: 13 }),
+    h(Icon, { name: 'external', size: 12 }),
+  )
+}
+
+/**
+ * The answer's sources as one compact footer.
+ *
+ * Collapsed by default: a single "Sources · 15" line, so fifteen citations no
+ * longer push the answer off the page. Expanding shows a numbered, scrollable
+ * list; a citation marker in the answer expands the list and highlights its row.
+ */
+function SourcePanel({ sources, messageId, open, onToggle, activeIndex }) {
+  const t = useT()
+  const listRef = React.useRef(null)
+  React.useEffect(() => {
+    if (!open || activeIndex === null) return
+    const node = listRef.current?.querySelector?.(`[data-source-index="${activeIndex}"]`)
+    node?.scrollIntoView?.({ block: 'nearest' })
+  }, [open, activeIndex])
+  if (sources.length === 0) return null
+  const listId = `dsc-sources-${messageId}`
+  return h('div', { className: cx('dsc-sources', open && 'is-open') },
+    h('button', {
+      type: 'button',
+      className: 'dsc-sources-toggle',
+      'aria-expanded': open,
+      'aria-controls': listId,
+      onClick: onToggle,
+    },
+      h(Icon, { name: 'link', size: 13 }),
+      h('span', { className: 'dsc-sources-count' }, t('sourceSummary', { count: sources.length })),
+      h(Icon, { name: open ? 'chevronDown' : 'chevronRight', size: 12 }),
+    ),
+    open
+      ? h('ol', { className: 'dsc-source-list', id: listId, ref: listRef },
+          sources.map((source, index) => h(SourceRow, {
+            key: `${source.url}-${index}`,
+            source,
+            index: index + 1,
+            active: activeIndex === index + 1,
+          })),
+        )
+      : null,
   )
 }
 
@@ -3552,24 +7689,43 @@ function VersionNav({ message }) {
 function AssistantMessage({ message, streaming, isLast, canRegenerate, highlighted }) {
   const t = useT()
   const [copied, setCopied] = React.useState(false)
+  const [sourcesOpen, setSourcesOpen] = React.useState(false)
+  const [activeSource, setActiveSource] = React.useState(null)
   const text = messageText(message)
-  const sources = collectMessageSources(message)
+  const { sources, indexByUrl } = collectMessageSources(message)
+  const answer = answerText(message, indexByUrl)
   const refused = message.stopReason === 'refusal'
   const errorInfo = message.error ? friendlyError(message.error) : null
   const showTyping = streaming && text === '' && (message.blocks ?? []).length === 0
+  const liveAnswer = streaming && message.status === 'streaming'
   const canContinue = !streaming && isLast && canContinueReply(message)
   const regenerate = () => {
     if (streaming) return
     void chatActions.regenerateMessage(message)
   }
-  return h('div', { className: cx('dsc-msg dsc-msg-assistant', highlighted && 'is-highlighted'), 'data-message-id': message.id },
+  const onAnswerClick = (event) => {
+    const target = event?.target
+    const marker = target instanceof Element ? target.closest('[data-dsc-cite]') : null
+    if (marker === null) return
+    const index = Number(marker.getAttribute('data-dsc-cite'))
+    if (!Number.isInteger(index) || index < 1) return
+    setSourcesOpen(true)
+    setActiveSource(index)
+  }
+  return h('div', {
+    className: cx('dsc-msg dsc-msg-assistant', highlighted && 'is-highlighted'),
+    'data-message-id': message.id,
+    onClick: onAnswerClick,
+  },
     h('div', { className: 'dsc-msg-body' },
       h(ProcessPanel, { message, streaming }),
       refused
         ? h('div', { className: 'dsc-notice' }, h(Icon, { name: 'warning', size: 16 }), h('span', null, t('refused')))
         : null,
-      !refused && text !== ''
-        ? h(Markdown, { text, streaming: streaming && message.status === 'streaming' })
+      !refused && answer !== ''
+        ? h('div', { className: 'dsc-answer', onClick: onAnswerClick },
+            h(Markdown, { text: answer, streaming: liveAnswer, sources }),
+          )
         : null,
       showTyping ? h(TypingDots, null) : null,
       !streaming && message.status === 'stopped' && !refused
@@ -3587,11 +7743,17 @@ function AssistantMessage({ message, streaming, isLast, canRegenerate, highlight
               : null,
           )
         : null,
-      sources.length > 0
-        ? h('div', { className: 'dsc-sources' },
-            h('div', { className: 'dsc-sources-head' }, h(Icon, { name: 'link', size: 13 }), t('sourceCount', { count: sources.length })),
-            h('div', { className: 'dsc-source-list' }, sources.map((source, index) => h(SourceCard, { key: source.url, source, index }))),
-          )
+      sources.length > 0 && !refused
+        ? h(SourcePanel, {
+            sources,
+            messageId: message.id,
+            open: sourcesOpen,
+            activeIndex: activeSource,
+            onToggle: () => {
+              if (sourcesOpen) setActiveSource(null)
+              setSourcesOpen(!sourcesOpen)
+            },
+          })
         : null,
       !streaming
         ? h('div', { className: cx('dsc-msg-actions', isLast && 'is-last') },
@@ -3620,6 +7782,9 @@ function AssistantMessage({ message, streaming, isLast, canRegenerate, highlight
                 }, h(Icon, { name: 'continue', size: 14 }), h('span', null, t('continueGenerating')))
               : null,
             h('span', { className: 'dsc-msg-actions-spacer' }),
+            messageModelLabel(message) !== ''
+              ? h('span', { className: 'dsc-msg-model', title: t('modelLabel') }, messageModelLabel(message))
+              : null,
             h(VersionNav, { message }),
             message.usage
               ? h('span', { className: 'dsc-usage' }, t('usage', {
@@ -3846,6 +8011,48 @@ function AuthBanner() {
   )
 }
 
+/** Active toggle tools as one-line chips above the input, click to turn off. */
+function ActiveToolChips() {
+  const t = useT()
+  const state = useChat(snapshot => snapshot)
+  const tools = activeChatTools(state)
+  if (tools.length === 0) return null
+  return h('div', { className: 'dsc-active-tools' },
+    tools.map(tool => h('button', {
+      key: tool.id,
+      type: 'button',
+      className: 'dsc-active-tool',
+      title: t(tool.hintKey),
+      onClick: () => tool.run(),
+    },
+      h(Icon, { name: tool.icon, size: 13 }),
+      h('span', null, t(tool.labelKey)),
+      h(Icon, { name: 'close', size: 11 }),
+    )),
+  )
+}
+
+/** Editor grows with the text up to this height, then scrolls internally. */
+const COMPOSER_MAX_HEIGHT = 220
+
+/**
+ * Whether one keydown should send the message.
+ *
+ * Two rules matter here and never change with the preference: an IME composing
+ * text owns Enter (it commits a candidate, it must not send), and in the
+ * default mode Enter needs no modifier. `ctrl-enter` flips the pair so Enter
+ * inserts a newline and Ctrl/Cmd+Enter sends.
+ */
+function composerKeySends(event, sendKey) {
+  if (event === null || typeof event !== 'object' || event.key !== 'Enter') return false
+  const native = event.nativeEvent ?? event
+  if (native.isComposing === true || event.isComposing === true || event.keyCode === 229) return false
+  if (sendKey === 'ctrl-enter') {
+    return (event.ctrlKey === true || event.metaKey === true) && event.shiftKey !== true && event.altKey !== true
+  }
+  return event.shiftKey !== true && event.altKey !== true && event.ctrlKey !== true && event.metaKey !== true
+}
+
 function Composer() {
   const t = useT()
   const draft = useChat(state => state.draft)
@@ -3853,18 +8060,23 @@ function Composer() {
   const streaming = useChat(state => state.streaming)
   const stopping = useChat(state => state.stopping)
   const auth = useChat(state => state.auth)
-  const settings = useChat(state => state.settings)
-  const modelName = useChat(state => state.bootData?.model?.name)
+  const sendKey = useChat(state => state.sendKey)
+  useChat(state => state.modelChoice)
+  const choice = currentModelChoice()
+  const unsupportedImages = !modelCapability(choice.model, 'vision')
+    && attachments.some(item => item.isImage && item.status !== 'error')
   const focusRequest = useChat(state => state.focusRequest)
   const filePickRequest = useChat(state => state.filePickRequest)
   const textareaRef = React.useRef(null)
   const fileRef = React.useRef(null)
   const [drag, setDrag] = React.useState(false)
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     const node = textareaRef.current
     if (!node) return
     node.style.height = 'auto'
-    node.style.height = `${Math.min(node.scrollHeight, 220)}px`
+    const next = Math.min(node.scrollHeight, COMPOSER_MAX_HEIGHT)
+    node.style.height = `${next}px`
+    node.style.overflowY = node.scrollHeight > COMPOSER_MAX_HEIGHT ? 'auto' : 'hidden'
   }, [draft])
   React.useEffect(() => {
     if (focusRequest === 0) return
@@ -3888,13 +8100,22 @@ function Composer() {
     }
     void chatActions.sendMessage()
   }
+  const onKeyDown = (event) => {
+    if (!composerKeySends(event, sendKey)) return
+    event.preventDefault()
+    if (isStreaming || !canSend) return
+    handleSend()
+  }
   return h('div', { className: 'dsc-composer-wrap' },
     h(AuthBanner, null),
     h('div', {
-      className: cx('dsc-composer', drag && 'is-drag'),
-      onDragOver: (event) => {
+      className: cx('dsc-composer', drag && 'is-drag', unsupportedImages && 'has-warning'),
+      onDragEnter: (event) => {
         event.preventDefault()
         if (!drag) setDrag(true)
+      },
+      onDragOver: (event) => {
+        event.preventDefault()
       },
       onDragLeave: (event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setDrag(false)
@@ -3905,88 +8126,92 @@ function Composer() {
         onFiles(event.dataTransfer?.files)
       },
     },
-      attachments.length > 0
-        ? h('div', { className: 'dsc-attach-rail' }, attachments.map(file => (
-            h(AttachmentCard, {
-              key: file.id, file,
-              onRemove: chatActions.removeAttachment,
-              onRetry: chatActions.retryAttachment,
-            })
-          )))
-        : null,
-      h('textarea', {
-        ref: textareaRef,
-        className: 'dsc-textarea',
-        value: draft,
-        rows: 1,
-        placeholder: t('composerPlaceholder'),
-        'aria-label': t('composerPlaceholder'),
-        onChange: (event) => chatStore.set({ draft: event.target.value }),
-        onPaste: (event) => {
-          const files = [...(event.clipboardData?.files ?? [])]
-          if (files.length > 0) {
-            event.preventDefault()
-            onFiles(files)
-          }
-        },
-        onKeyDown: (event) => {
-          if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
-            event.preventDefault()
-            if (!isStreaming && canSend) handleSend()
-          }
-        },
-      }),
-      h('div', { className: 'dsc-composer-tools' },
-        h('input', {
-          ref: fileRef,
-          type: 'file',
-          className: 'dsc-file-input',
-          multiple: true,
-          accept: ACCEPT,
-          onChange: (event) => {
-            onFiles(event.target.files)
-            event.target.value = ''
+      h('div', { className: 'dsc-composer-main' },
+        attachments.length > 0
+          ? h('div', { className: 'dsc-attach-rail' }, attachments.map(file => (
+              h(AttachmentCard, {
+                key: file.id, file,
+                onRemove: chatActions.removeAttachment,
+                onRetry: chatActions.retryAttachment,
+              })
+            )))
+          : null,
+        h('div', {
+          className: 'dsc-editor',
+          onClick: (event) => {
+            // Clicking the empty area around the caret line focuses the editor,
+            // like any chat composer. Buttons inside keep their own clicks.
+            if (event.target === event.currentTarget) textareaRef.current?.focus()
           },
-        }),
-        h('button', {
-          type: 'button', className: 'dsc-tool-button', title: t('attach'), 'aria-label': t('attach'),
-          onClick: () => fileRef.current?.click(),
-        }, h(Icon, { name: 'paperclip', size: 18 })),
-        h('button', {
-          type: 'button',
-          className: cx('dsc-mode-button', settings.thinking && 'is-active'),
-          title: t('deepThink'),
-          'aria-label': t('deepThink'),
-          'aria-pressed': settings.thinking,
-          onClick: chatActions.toggleThinking,
-        }, h(Icon, { name: 'brain', size: 16 }), h('span', { className: 'dsc-mode-label' }, t('deepThink'))),
-        h('button', {
-          type: 'button',
-          className: cx('dsc-mode-button', settings.search && 'is-active'),
-          title: t('webSearch'),
-          'aria-label': t('webSearch'),
-          'aria-pressed': settings.search,
-          onClick: chatActions.toggleSearch,
-        }, h(Icon, { name: 'globe', size: 16 }), h('span', { className: 'dsc-mode-label' }, t('webSearch'))),
-        h('span', { className: 'dsc-tool-spacer' }),
-        modelName ? h('span', { className: 'dsc-model-pill', title: t('modelNote') }, modelName) : null,
-        isStreaming
-          ? h('button', {
-              type: 'button',
-              className: 'dsc-stop-button',
-              title: t('stop'),
-              'aria-label': t('stop'),
-              disabled: stopping,
-              onClick: () => chatActions.requestStop(),
-            }, h(Icon, { name: 'stop', size: 15 }))
-          : h('button', {
-              type: 'button',
-              className: cx('dsc-send-button', !canSend && 'is-idle'),
-              title: t('send'),
-              'aria-label': t('send'),
-              'aria-disabled': !canSend,
-              onClick: handleSend,
-            }, h(Icon, { name: 'arrowUp', size: 17 })),
+        },
+          h('textarea', {
+            ref: textareaRef,
+            className: 'dsc-editor-field',
+            value: draft,
+            rows: 1,
+            placeholder: t('composerPlaceholder'),
+            'aria-label': t('composerPlaceholder'),
+            title: t(sendKey === 'ctrl-enter' ? 'newlineToSend' : 'enterToSend'),
+            spellCheck: 'false',
+            onChange: (event) => chatStore.set({ draft: event.target.value }),
+            onPaste: (event) => {
+              const files = [...(event.clipboardData?.files ?? [])]
+              if (files.length > 0) {
+                event.preventDefault()
+                onFiles(files)
+              }
+            },
+            onKeyDown,
+          }),
+        ),
+        unsupportedImages
+          ? h('div', { className: 'dsc-composer-warning' },
+              h(Icon, { name: 'warning', size: 14 }),
+              h('span', null, t('modelUnsupportedImage')),
+              h('button', {
+                type: 'button',
+                className: 'dsc-inline-button',
+                onClick: () => chatActions.selectModel('deepseek-flash'),
+              }, t('switchModel')),
+            )
+          : null,
+      ),
+      h('div', { className: 'dsc-composer-bar' },
+        h('div', { className: 'dsc-composer-left' },
+          h('input', {
+            ref: fileRef,
+            type: 'file',
+            className: 'dsc-file-input',
+            multiple: true,
+            accept: ACCEPT,
+            onChange: (event) => {
+              onFiles(event.target.files)
+              event.target.value = ''
+            },
+          }),
+          h(ToolsMenu, null),
+          h(ActiveToolChips, null),
+        ),
+        h('div', { className: 'dsc-composer-right' },
+          h(ModelMenu, null),
+          isStreaming
+            ? h('button', {
+                type: 'button',
+                className: 'dsc-stop-button',
+                title: t('stop'),
+                'aria-label': t('stop'),
+                disabled: stopping,
+                onClick: () => chatActions.requestStop(),
+              }, h(Icon, { name: 'stop', size: 15 }))
+            : h('button', {
+                type: 'button',
+                className: cx('dsc-send-button', !canSend && 'is-idle'),
+                title: t('send'),
+                'aria-label': t('send'),
+                'aria-disabled': !canSend,
+                onClick: handleSend,
+              }, h(Icon, { name: 'arrowUp', size: 17 })),
+        ),
       ),
       drag ? h('div', { className: 'dsc-drop-mask' }, h(Icon, { name: 'paperclip', size: 22 }), t('dropFiles')) : null,
     ),
@@ -4947,7 +9172,10 @@ function SettingsDialog() {
   const t = useT()
   const auth = useChat(state => state.auth)
   const settings = useChat(state => state.settings)
+  const sendKey = useChat(state => state.sendKey)
   const bootData = useChat(state => state.bootData)
+  const defaultModelId = useChat(state => state.modelConfig?.defaults?.model ?? 'deepseek-flash')
+  const models = useChat(state => state.models)
   const [keyInput, setKeyInput] = React.useState('')
   const [prompt, setPrompt] = React.useState(settings.systemPrompt)
   const [savingKey, setSavingKey] = React.useState(false)
@@ -5074,6 +9302,23 @@ function SettingsDialog() {
             h(Switch, { checked: settings.search, onChange: () => chatActions.toggleSearch(), label: t('defaultSearch') }),
           ),
         ),
+        h(SettingsSection, { title: t('composerHints') },
+          h('div', { className: 'dsc-field' },
+            h('span', { className: 'dsc-field-label' }, t('sendKeyLabel')),
+            h('div', { className: 'dsc-segment', role: 'group', 'aria-label': t('sendKeyLabel') },
+              [['enter', 'enterToSendShort'], ['ctrl-enter', 'newlineToSend']].map(([value, key]) => (
+                h('button', {
+                  key: value,
+                  type: 'button',
+                  className: cx('dsc-segment-button', sendKey === value && 'is-active'),
+                  'aria-pressed': sendKey === value,
+                  onClick: () => chatActions.setSendKey(value),
+                }, t(key))
+              )),
+            ),
+            h('p', { className: 'dsc-field-hint' }, t(sendKey === 'ctrl-enter' ? 'newlineToSend' : 'enterToSend')),
+          ),
+        ),
         h(SettingsSection, { title: t('systemPrompt') },
           h('textarea', {
             className: 'dsc-textarea dsc-prompt',
@@ -5102,7 +9347,7 @@ function SettingsDialog() {
         h(SettingsSection, { title: t('about') },
           h('div', { className: 'dsc-about-row' },
             h('span', null, t('modelLabel')),
-            h('strong', null, bootData?.model?.name ?? t('modelName')),
+            h('strong', null, (models.find(model => model.id === defaultModelId) ?? { name: t('modelName') }).name),
           ),
           h('p', { className: 'dsc-field-hint' }, t('aboutText')),
           h('p', { className: 'dsc-field-hint' }, `${t('limitations')}：${t('limitationsText')}`),
@@ -5697,6 +9942,53 @@ const CHAT_CSS = `
   --dsc-mono: var(--ds-font-family-code, 'SF Mono', Consolas, 'Liberation Mono', monospace);
   --dsc-ease: var(--ds-ease-in-out, cubic-bezier(0.4, 0, 0.2, 1));
   --dsc-fast: var(--ds-transition-duration-fast, 0.1s);
+  /* Syntax colours: one light palette, overridden below for the dark theme.
+     They are the only fixed colours in this stylesheet; everything else is
+     derived from the Harness theme tokens. */
+  --dsc-hl-kw: #8b3fd6;
+  --dsc-hl-str: #0f766e;
+  --dsc-hl-num: #b45309;
+  --dsc-hl-com: #7b8494;
+  --dsc-hl-fn: #1d4ed8;
+  --dsc-hl-type: #a21caf;
+  --dsc-hl-op: #52606d;
+  --dsc-hl-attr: #b91c1c;
+  --dsc-hl-tag: #0e7490;
+  --dsc-hl-var: #9333ea;
+  --dsc-hl-meta: #64748b;
+  --dsc-math-bg: color-mix(in srgb, var(--dsc-text) 3%, transparent);
+  --dsc-mermaid-line: color-mix(in srgb, var(--dsc-text) 38%, transparent);
+  --dsc-mermaid-fill: color-mix(in srgb, var(--dsc-link) 8%, var(--dsc-layer));
+  --dsc-mermaid-c1: #4f7cff;
+  --dsc-mermaid-c2: #19a97b;
+  --dsc-mermaid-c3: #f0a02e;
+  --dsc-mermaid-c4: #e0567a;
+  --dsc-mermaid-c5: #8b5cf6;
+  --dsc-mermaid-c6: #0ea5b7;
+  --dsc-mermaid-c7: #c2410c;
+  --dsc-mermaid-c8: #64748b;
+}
+/* Dark syntax palette: same hues, lifted for a dark surface. */
+body[data-ds-dark-theme] .dsc-root {
+  --dsc-hl-kw: #c0a2ff;
+  --dsc-hl-str: #6ee7b7;
+  --dsc-hl-num: #fbbf24;
+  --dsc-hl-com: #8b95a5;
+  --dsc-hl-fn: #93c5fd;
+  --dsc-hl-type: #f0abfc;
+  --dsc-hl-op: #cbd5e1;
+  --dsc-hl-attr: #fca5a5;
+  --dsc-hl-tag: #67e8f9;
+  --dsc-hl-var: #d8b4fe;
+  --dsc-hl-meta: #94a3b8;
+  --dsc-mermaid-c1: #7da2ff;
+  --dsc-mermaid-c2: #4ade9e;
+  --dsc-mermaid-c3: #fbbf60;
+  --dsc-mermaid-c4: #f38ba8;
+  --dsc-mermaid-c5: #b39cff;
+  --dsc-mermaid-c6: #4dd4e6;
+  --dsc-mermaid-c7: #fb923c;
+  --dsc-mermaid-c8: #94a3b8;
 }
 /* The shell entries are siblings of the Chat surface, so they carry their own
    root: display:contents keeps them out of the layout while custom
@@ -6533,8 +10825,10 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
 .dsc-attach-action:hover { background: var(--dsc-hover); color: var(--dsc-text); }
 .dsc-attach-rail { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 2px 8px; }
 
-/* ---------- reasoning / process ---------- */
-.dsc-process { margin: 0 0 12px; }
+/* ---------- reasoning / process ----------
+   Reasoning is a quiet, secondary layer: muted text, a thin rail, and a
+   collapsed body. The answer below it stays the loudest thing in the message. */
+.dsc-process { margin: 0 0 9px; }
 .dsc-process-head {
   display: flex;
   align-items: center;
@@ -6565,7 +10859,7 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   animation: dsc-shimmer 2.4s linear infinite;
 }
 @keyframes dsc-shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
-.dsc-process-body { padding: 6px 0 4px 4px; }
+.dsc-process-body { padding: 4px 0 2px 14px; border-left: 1px solid var(--dsc-border); margin-left: 2px; }
 .dsc-think-block {
   margin: 2px 0 10px;
   padding: 2px 0 2px 12px;
@@ -6573,7 +10867,7 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   color: var(--dsc-muted);
   font-size: 13.2px;
   line-height: 1.72;
-  max-height: 380px;
+  max-height: 320px;
   overflow-y: auto;
 }
 .dsc-think-block.is-active { border-left-color: var(--dsc-brand-soft-strong); }
@@ -6640,6 +10934,15 @@ h3.dsc-heading { font-size: 16.5px; }
 h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-link { color: var(--dsc-link); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--dsc-link) 32%, transparent); }
 .dsc-link:hover { border-bottom-color: var(--dsc-link); }
+.dsc-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 12px 0;
+  border: 1px solid var(--dsc-border);
+  border-radius: 10px;
+  background: var(--dsc-layer2);
+}
 .dsc-inline-code {
   padding: 1.5px 5px;
   border-radius: 5px;
@@ -6677,8 +10980,24 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   font-size: 11.4px;
 }
 .dsc-code-copy:hover { background: var(--dsc-hover); color: var(--dsc-text); }
-.dsc-pre { margin: 0; padding: 13px 14px; overflow-x: auto; font-size: 12.7px; line-height: 1.66; }
+.dsc-pre { margin: 0; padding: 13px 14px; max-height: 520px; overflow: auto; font-size: 12.7px; line-height: 1.66; }
 .dsc-pre code { font-family: var(--dsc-mono); white-space: pre; }
+.dsc-code-body { display: block; }
+.dsc-tok-kw { color: var(--dsc-hl-kw); font-weight: 550; }
+.dsc-tok-str { color: var(--dsc-hl-str); }
+.dsc-tok-num { color: var(--dsc-hl-num); }
+.dsc-tok-com { color: var(--dsc-hl-com); font-style: italic; }
+.dsc-tok-fn { color: var(--dsc-hl-fn); }
+.dsc-tok-type { color: var(--dsc-hl-type); }
+.dsc-tok-op { color: var(--dsc-hl-op); }
+.dsc-tok-attr { color: var(--dsc-hl-attr); }
+.dsc-tok-tag { color: var(--dsc-hl-tag); }
+.dsc-tok-var { color: var(--dsc-hl-var); }
+.dsc-tok-meta { color: var(--dsc-hl-meta); }
+.dsc-answer { margin-top: 2px; }
+.dsc-answer .dsc-md { font-size: 15.1px; }
+.dsc-diagram { margin: 13px 0; }
+.dsc-diagram-note { display: block; margin-top: 4px; font-size: 11px; color: var(--dsc-muted); }
 .dsc-quote { margin: 12px 0; padding: 2px 14px; border-left: 3px solid var(--dsc-brand-soft-strong); color: var(--dsc-muted); white-space: pre-wrap; }
 .dsc-list { margin: 8px 0 12px; padding-left: 22px; }
 .dsc-list li { margin: 3px 0; }
@@ -6701,31 +11020,55 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 }
 @keyframes dsc-blink { 50% { opacity: 0; } }
 
-/* ---------- sources ---------- */
-.dsc-sources { margin-top: 16px; }
-.dsc-sources-head { display: flex; align-items: center; gap: 5px; margin-bottom: 7px; font-size: 11.9px; font-weight: 600; color: var(--dsc-muted); }
-.dsc-source-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+/* ---------- sources ----------
+   Collapsed by default: one compact line instead of a wall of cards. The
+   expanded list is a single numbered column with its own scroll area. */
+.dsc-sources { margin-top: 14px; }
+.dsc-sources-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 8px;
+  margin-left: -2px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--dsc-muted);
+  font-size: 11.9px;
+  font-weight: 600;
+}
+.dsc-sources-toggle:hover { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-sources-count { white-space: nowrap; }
+.dsc-source-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 4px;
+  max-height: 264px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--dsc-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--dsc-layer) 70%, var(--dsc-bg));
+}
 .dsc-source {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  padding: 8px 9px;
-  border: 1px solid var(--dsc-border);
-  border-radius: 10px;
-  background: var(--dsc-layer);
-  color: var(--dsc-text);
-  text-decoration: none;
   min-width: 0;
-  transition: border-color var(--dsc-fast) ease, background var(--dsc-fast) ease;
+  padding: 7px 8px;
+  border-radius: 8px;
+  transition: background var(--dsc-fast) ease;
 }
-.dsc-source:hover { border-color: var(--dsc-border-strong); background: color-mix(in srgb, var(--dsc-layer) 60%, var(--dsc-layer2)); }
+.dsc-source:hover { background: var(--dsc-hover); }
+.dsc-source.is-target { background: var(--dsc-brand-soft); }
 .dsc-source-index {
-  width: 18px;
-  height: 18px;
-  border-radius: 6px;
+  width: 17px;
+  height: 17px;
+  border-radius: 5px;
   background: var(--dsc-brand-soft);
   color: var(--dsc-link);
-  font-size: 10.4px;
+  font-size: 10.2px;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -6733,27 +11076,205 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   flex: none;
   margin-top: 1px;
 }
-.dsc-source-body { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 1px; }
+.dsc-source-link {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+  color: var(--dsc-text);
+  text-decoration: none;
+}
 .dsc-source-title {
-  font-size: 12px;
+  font-size: 12.4px;
   font-weight: 550;
   line-height: 1.42;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.dsc-source-meta { font-size: 10.5px; color: var(--dsc-muted); }
+.dsc-source:hover .dsc-source-title { color: var(--dsc-link); }
+.dsc-source-meta {
+  font-size: 10.6px;
+  color: var(--dsc-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .dsc-source-snippet {
-  font-size: 11px;
+  margin-top: 1px;
+  font-size: 11.2px;
   color: var(--dsc-muted);
   line-height: 1.5;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.dsc-source .dsc-icon { color: var(--dsc-muted); margin-top: 2px; }
+.dsc-source .dsc-icon { color: var(--dsc-muted); margin-top: 3px; flex: none; }
+/* In-text citation marker: small, monochrome, never competes with prose. */
+.dsc-cite {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 15px;
+  height: 15px;
+  margin: 0 1px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--dsc-brand-soft);
+  color: var(--dsc-link);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  vertical-align: 0.32em;
+}
+.dsc-cite:hover { background: var(--dsc-brand-soft-strong); }
+
+/* ---------- math ----------
+   A compact TeX renderer (32-math.js) emits typed spans; the Harness page
+   already loads the KaTeX font faces, so math text picks them up when present
+   and falls back to a serif face otherwise. */
+.dsc-math {
+  font-family: 'KaTeX_Main', 'Cambria Math', 'Times New Roman', serif;
+  font-size: 1.03em;
+  line-height: 1.4;
+  color: var(--dsc-text);
+}
+.dsc-math-inline { display: inline; white-space: nowrap; }
+.dsc-math-block {
+  display: block;
+  margin: 12px 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: 8px;
+  background: var(--dsc-math-bg);
+  text-align: center;
+}
+.dsc-math-row { display: inline-flex; align-items: baseline; flex-wrap: wrap; column-gap: 0.12em; row-gap: 0.42em; }
+.dsc-math-block .dsc-math-row { justify-content: center; }
+/* Tall constructs centre on the math axis instead of hanging from their
+   numerator/radical baseline. */
+.dsc-math-frac,
+.dsc-math-sqrt,
+.dsc-math-matrix { align-self: center; }
+.dsc-math-var { font-style: italic; font-family: 'KaTeX_Math', 'Cambria Math', 'Times New Roman', serif; }
+.dsc-math-num,
+.dsc-math-op,
+.dsc-math-text { font-style: normal; }
+.dsc-math-op { padding: 0 0.14em; }
+.dsc-math-text { white-space: pre; }
+.dsc-math-big { font-size: 1.45em; line-height: 1; vertical-align: -0.12em; padding: 0 0.05em; }
+.dsc-math-delim { font-style: normal; font-family: 'KaTeX_Size1', 'KaTeX_Main', 'Cambria Math', serif; }
+.dsc-math-frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 0.18em;
+  font-size: 0.95em;
+  line-height: 1.18;
+}
+.dsc-math-frac-num { padding: 0 0.22em 2px; border-bottom: 1px solid currentColor; }
+.dsc-math-frac-den { padding: 2px 0.22em 0; }
+.dsc-math-sqrt { display: inline-flex; align-items: flex-start; vertical-align: middle; margin: 0 0.08em; }
+.dsc-math-sqrt::before { content: '√'; font-size: 1.18em; line-height: 1; }
+.dsc-math-sqrt-body { padding: 0 0.16em 0 0.06em; border-top: 1px solid currentColor; margin-top: 0.14em; }
+.dsc-math-sqrt-index { font-size: 0.6em; line-height: 1; margin-right: -0.28em; margin-top: -0.1em; align-self: flex-start; }
+/* A lone script rises or sinks from the wrapper; stacked scripts are laid out
+   by the renderer with inline flex styles. */
+.dsc-math-script { display: inline-flex; flex-direction: column; align-items: flex-start; vertical-align: middle; font-size: 0.72em; line-height: 1.08; }
+.dsc-math-script:has(> .dsc-math-sup:only-child) { vertical-align: 0.42em; }
+.dsc-math-script:has(> .dsc-math-sub:only-child) { vertical-align: -0.18em; }
+.dsc-math-sup,
+.dsc-math-sub { line-height: 1.05; }
+.dsc-math-sup { align-self: flex-start; }
+.dsc-math-sub { align-self: flex-start; }
+.dsc-math-matrix {
+  display: inline-grid;
+  grid-auto-flow: row;
+  grid-auto-columns: auto;
+  justify-items: center;
+  align-items: baseline;
+  column-gap: 0.9em;
+  row-gap: 0.22em;
+  vertical-align: middle;
+  padding: 0 0.28em;
+}
+.dsc-math-matrix-row { display: contents; }
+.dsc-math-matrix-cell { text-align: center; padding: 0 0.08em; }
+.dsc-math-space { flex: none; }
+.dsc-math-error {
+  font-family: var(--dsc-mono);
+  font-size: 0.9em;
+  color: var(--dsc-warn);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ---------- Mermaid diagrams ----------
+   The diagram is a self-contained React SVG (no HTML injection). Colours come
+   from theme variables so light and dark share one drawing. */
+.dsc-mermaid {
+  margin: 14px 0;
+  padding: 10px;
+  border: 1px solid var(--dsc-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--dsc-layer) 82%, var(--dsc-bg));
+}
+.dsc-mermaid-figure { overflow-x: auto; overflow-y: hidden; }
+.dsc-mermaid-svg { display: block; width: 100%; height: auto; max-height: 560px; color: var(--dsc-text); }
+.dsc-mermaid-caption,
+.dsc-mermaid-title {
+  margin: 6px 2px 0;
+  font-size: 11.4px;
+  color: var(--dsc-muted);
+  text-align: center;
+}
+.dsc-mermaid-node {
+  fill: var(--dsc-mermaid-fill);
+  stroke: var(--dsc-mermaid-line);
+  stroke-width: 1.2;
+}
+.dsc-mermaid-node-label { fill: var(--dsc-text); font-size: 13px; font-family: var(--dsc-font); }
+.dsc-mermaid-edge { fill: none; stroke: var(--dsc-mermaid-line); stroke-width: 1.4; }
+.dsc-mermaid-edge-label { fill: var(--dsc-muted); font-size: 11.5px; font-family: var(--dsc-font); }
+.dsc-mermaid-edge-dashed { stroke-dasharray: 5 4; }
+.dsc-mermaid-edge-thick { stroke-width: 2.4; }
+.dsc-mermaid-edge-cross { stroke: var(--dsc-error); }
+.dsc-mermaid-edge-arrow { fill: var(--dsc-mermaid-line); stroke: none; }
+.dsc-mermaid-edge-hollow { fill: var(--dsc-layer); stroke: var(--dsc-mermaid-line); stroke-width: 1.2; }
+.dsc-mermaid-edge-diamond { fill: var(--dsc-mermaid-line); stroke: none; }
+.dsc-mermaid-cluster {
+  fill: color-mix(in srgb, var(--dsc-text) 2.5%, transparent);
+  stroke: var(--dsc-border-strong);
+  stroke-dasharray: 4 4;
+  rx: 12;
+}
+.dsc-mermaid-cluster-label { fill: var(--dsc-muted); font-size: 11.5px; font-weight: 600; font-family: var(--dsc-font); }
+.dsc-mermaid-lifeline { stroke: var(--dsc-border-strong); stroke-dasharray: 3 4; }
+.dsc-mermaid-frame { fill: none; stroke: var(--dsc-border-strong); }
+.dsc-mermaid-frame-label { fill: var(--dsc-muted); font-size: 10.6px; font-weight: 650; letter-spacing: 0.04em; font-family: var(--dsc-font); }
+.dsc-mermaid-note {
+  fill: color-mix(in srgb, var(--dsc-warn) 9%, var(--dsc-layer));
+  stroke: color-mix(in srgb, var(--dsc-warn) 32%, transparent);
+}
+.dsc-mermaid-note-label { fill: var(--dsc-text); font-size: 11.5px; font-family: var(--dsc-font); }
+.dsc-mermaid-slice { fill: var(--dsc-slice, var(--dsc-mermaid-c1)); stroke: var(--dsc-layer); stroke-width: 1; }
+.dsc-mermaid-legend-swatch { fill: var(--dsc-slice, var(--dsc-mermaid-c1)); }
+.dsc-mermaid-legend-label { fill: var(--dsc-muted); font-size: 11px; font-family: var(--dsc-font); }
+.dsc-mermaid-class-title { fill: var(--dsc-text); font-size: 12.5px; font-weight: 600; font-family: var(--dsc-font); }
+.dsc-mermaid-class-member { fill: var(--dsc-muted); font-size: 11.2px; font-family: var(--dsc-mono); }
+.dsc-mermaid-caption { text-align: center; }
+/* Error fallback keeps the source: a failed diagram is still readable text. */
+.dsc-mermaid-failed { border-color: color-mix(in srgb, var(--dsc-warn) 26%, var(--dsc-border)); }
+.dsc-mermaid-error { margin: 0 0 8px; padding: 7px 9px; border-radius: 8px; background: color-mix(in srgb, var(--dsc-warn) 8%, transparent); color: var(--dsc-warn); }
+.dsc-mermaid-error-line { font-size: 12px; font-weight: 600; }
+.dsc-mermaid-error-text { margin-top: 2px; font-size: 11.4px; line-height: 1.5; opacity: 0.85; }
+.dsc-mermaid-source { margin: 0; max-height: 260px; overflow: auto; padding: 9px 10px; border-radius: 8px; background: var(--dsc-code-bg); }
+.dsc-mermaid-source code { font-family: var(--dsc-mono); font-size: 11.8px; white-space: pre; }
 
 /* ---------- message actions / notices ---------- */
 .dsc-msg-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin-top: 7px; opacity: 0; transition: opacity var(--dsc-fast) ease; }
@@ -6774,6 +11295,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 }
 .dsc-msg-action:hover { background: var(--dsc-hover); color: var(--dsc-text); }
 .dsc-usage { font-size: 10.8px; color: var(--dsc-muted); margin-left: 6px; }
+.dsc-msg-model { font-size: 10.8px; color: var(--dsc-muted); margin-left: 6px; white-space: nowrap; }
 .dsc-notice {
   display: flex;
   align-items: flex-start;
@@ -6832,11 +11354,16 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   font-size: 12.2px;
 }
 .dsc-auth-banner span { flex: 1; }
+/* One rounded surface owns the border. The textarea inside is a bare,
+   transparent field: a text input must never draw a second rectangle (or a
+   browser focus outline) inside this container. Focus feedback lives on the
+   container so it keeps the rounded shape and stays visible for keyboard
+   users. */
 .dsc-composer {
   position: relative;
   max-width: 788px;
   margin: 0 auto;
-  padding: 10px 12px 8px;
+  padding: 8px 10px 8px 14px;
   border: 1px solid var(--dsc-border-strong);
   border-radius: 24px;
   background: var(--dsc-layer);
@@ -6847,7 +11374,100 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   border-color: color-mix(in srgb, var(--dsc-brand) 45%, var(--dsc-border-strong));
   box-shadow: 0 0 0 3px var(--dsc-brand-soft), var(--dsc-shadow-soft);
 }
+/* The editor itself never draws a ring; the whole rounded container does, and
+   keyboard focus gets the stronger tint. */
+.dsc-composer:has(.dsc-editor-field:focus-visible) {
+  border-color: var(--dsc-brand);
+  box-shadow: 0 0 0 3px var(--dsc-brand-soft-strong), var(--dsc-shadow-soft);
+}
 .dsc-composer.is-drag { border-color: var(--dsc-brand); }
+.dsc-composer.has-warning { border-color: color-mix(in srgb, var(--dsc-warn) 42%, var(--dsc-border-strong)); }
+.dsc-composer-main { display: flex; flex-direction: column; min-width: 0; }
+.dsc-editor { position: relative; display: flex; min-width: 0; }
+.dsc-editor-field {
+  display: block;
+  width: 100%;
+  min-height: 30px;
+  max-height: 220px;
+  margin: 0;
+  padding: 6px 2px 4px;
+  border: 0 !important;
+  border-radius: 0;
+  outline: 0 !important;
+  box-shadow: none !important;
+  appearance: none;
+  -webkit-appearance: none;
+  resize: none;
+  overflow-y: hidden;
+  background: transparent;
+  color: var(--dsc-text);
+  font-family: inherit;
+  font-size: 15.2px;
+  line-height: 1.6;
+}
+.dsc-editor-field::placeholder { color: var(--dsc-muted); }
+.dsc-editor-field:focus,
+.dsc-editor-field:focus-visible {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.dsc-composer-warning {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 2px 2px 0;
+  color: var(--dsc-warn);
+  font-size: 11.8px;
+  line-height: 1.45;
+}
+.dsc-composer-warning .dsc-inline-button { color: var(--dsc-warn); }
+.dsc-composer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 34px;
+  margin-top: 2px;
+}
+.dsc-composer-left { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
+.dsc-composer-right { display: flex; align-items: center; gap: 6px; flex: none; }
+.dsc-active-tools { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.dsc-active-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid color-mix(in srgb, var(--dsc-brand) 18%, transparent);
+  border-radius: 999px;
+  background: var(--dsc-brand-soft);
+  color: var(--dsc-link);
+  font-size: 11.8px;
+  font-weight: 550;
+}
+.dsc-active-tool:hover { background: var(--dsc-brand-soft-strong); }
+.dsc-active-tool .dsc-icon:last-child { opacity: 0.62; }
+.dsc-model-control { position: relative; display: flex; }
+.dsc-model-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 210px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dsc-muted);
+  font-size: 12.1px;
+  font-weight: 550;
+  white-space: nowrap;
+}
+.dsc-model-trigger:hover,
+.dsc-model-trigger.is-open { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-model-name { overflow: hidden; text-overflow: ellipsis; }
 .dsc-textarea {
   display: block;
   width: 100%;
@@ -6862,54 +11482,147 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   line-height: 1.62;
 }
 .dsc-textarea::placeholder { color: var(--dsc-muted); }
-.dsc-composer-tools { display: flex; align-items: center; gap: 3px; margin-top: 2px; }
 .dsc-file-input { display: none; }
-.dsc-tool-button {
-  width: 33px;
-  height: 33px;
-  border: 1px solid transparent;
-  border-radius: 9px;
+.dsc-tools { position: relative; display: flex; }
+.dsc-tools-trigger {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--dsc-border);
+  border-radius: 999px;
   background: transparent;
   color: var(--dsc-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   flex: none;
-  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease;
-}
-.dsc-tool-button:hover { background: var(--dsc-hover); color: var(--dsc-text); }
-.dsc-mode-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 29px;
-  padding: 0 9px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--dsc-muted);
-  font-size: 12.3px;
-  font-weight: 520;
-  white-space: nowrap;
   transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
 }
-.dsc-mode-button:hover { background: var(--dsc-hover); color: var(--dsc-text); }
-.dsc-mode-button.is-active {
-  background: var(--dsc-brand-soft);
-  border-color: color-mix(in srgb, var(--dsc-brand) 16%, transparent);
-  color: var(--dsc-link);
+.dsc-tools-trigger:hover { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-tools-trigger.is-open { background: var(--dsc-active); color: var(--dsc-text); }
+.dsc-tools-trigger.has-active::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--dsc-link);
+  box-shadow: 0 0 0 1.5px var(--dsc-layer);
 }
-.dsc-tool-spacer { flex: 1; }
-.dsc-model-pill {
-  max-width: 190px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding: 0 8px;
+
+/* ---------- popovers (tools + model) ----------
+   Shared shell: rounded surface, quiet border, internal scroll, and a side
+   that the placement hook flips when the composer sits too low in the window. */
+.dsc-popover {
+  position: absolute;
+  z-index: 24;
+  bottom: calc(100% + 8px);
+  left: 0;
+  padding: 6px;
+  border: 1px solid var(--dsc-border-strong);
+  border-radius: 14px;
+  background: var(--dsc-layer);
+  box-shadow: var(--dsc-shadow);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: dsc-pop 0.12s ease;
+}
+.dsc-popover[data-placement='bottom'] { bottom: auto; top: calc(100% + 8px); }
+.dsc-tools-menu { width: 274px; max-width: calc(100vw - 40px); }
+.dsc-model-menu { left: auto; right: 0; width: 306px; max-width: calc(100vw - 40px); }
+@keyframes dsc-pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.dsc-popover-title {
+  padding: 4px 10px 6px;
+  font-size: 10.9px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dsc-muted);
+}
+.dsc-popover-sep { height: 1px; margin: 5px 4px; background: var(--dsc-border); }
+.dsc-popover-label { font-size: 11.6px; font-weight: 600; color: var(--dsc-text); }
+.dsc-popover-hint { margin: 4px 0 0; font-size: 11.1px; line-height: 1.5; color: var(--dsc-muted); }
+.dsc-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 9px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--dsc-text);
+  text-align: left;
+  font-size: 13px;
+}
+.dsc-popover-item:hover:not(.is-disabled) { background: var(--dsc-hover); }
+.dsc-popover-item.is-active { background: color-mix(in srgb, var(--dsc-link) 7%, transparent); }
+.dsc-popover-item.is-disabled { cursor: default; color: var(--dsc-muted); }
+.dsc-popover-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 8px;
+  background: var(--dsc-layer2);
+  color: var(--dsc-muted);
+  flex: none;
+}
+.dsc-popover-item.is-active .dsc-popover-item-icon { background: var(--dsc-brand-soft); color: var(--dsc-link); }
+.dsc-popover-item-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.dsc-popover-item-title { font-size: 12.9px; font-weight: 560; }
+.dsc-popover-item-desc { font-size: 11px; line-height: 1.45; color: var(--dsc-muted); }
+.dsc-popover-item-desc.is-warn { color: var(--dsc-warn); }
+.dsc-popover-item-state { font-size: 10.8px; color: var(--dsc-muted); flex: none; }
+.dsc-popover-item .dsc-switch { flex: none; }
+.dsc-popover-item .dsc-switch-thumb { width: 16px; height: 16px; }
+.dsc-popover-item .dsc-switch.is-on .dsc-switch-thumb { transform: translateX(14px); }
+/* model list */
+.dsc-model-list { display: flex; flex-direction: column; gap: 2px; }
+.dsc-model-option { align-items: flex-start; }
+.dsc-model-option .dsc-popover-item-main { gap: 2px; }
+.dsc-model-option.is-selected { background: var(--dsc-brand-soft); }
+.dsc-model-option.is-selected .dsc-popover-item-title { color: var(--dsc-link); }
+.dsc-model-option > .dsc-icon { margin-top: 5px; color: var(--dsc-link); flex: none; }
+/* effort control */
+.dsc-effort { padding: 3px 4px 2px; }
+.dsc-effort-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 6px; }
+.dsc-effort-active { display: inline-flex; align-items: center; gap: 4px; color: var(--dsc-muted); font-size: 10.8px; }
+.dsc-effort-options {
+  display: flex;
+  gap: 2px;
+  margin-top: 6px;
+  padding: 3px;
+  border: 1px solid var(--dsc-border);
+  border-radius: 9px;
+  background: var(--dsc-layer2);
+}
+.dsc-effort-option {
+  flex: 1;
+  height: 28px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
   color: var(--dsc-muted);
   font-size: 11.8px;
-  font-weight: 500;
+  font-weight: 550;
 }
+.dsc-effort-option:hover { color: var(--dsc-text); }
+.dsc-effort-option.is-selected {
+  background: var(--dsc-layer);
+  color: var(--dsc-text);
+  box-shadow: 0 1px 3px rgba(9, 12, 20, 0.12);
+}
+.dsc-model-meta { padding: 2px 10px 4px; }
+.dsc-model-caps { display: flex; flex-wrap: wrap; gap: 4px 8px; padding: 2px 0 3px; }
+.dsc-model-cap { display: inline-flex; align-items: center; gap: 3px; font-size: 10.7px; color: var(--dsc-muted); }
+.dsc-model-cap .dsc-icon { color: var(--dsc-success); }
+.dsc-model-cap.is-off { opacity: 0.62; }
+.dsc-model-cap.is-off .dsc-icon { color: var(--dsc-warn); }
+.dsc-tools-hint { margin-top: 5px; padding: 6px 6px 2px; border-top: 1px solid var(--dsc-border); }
 .dsc-send-button {
   width: 33px;
   height: 33px;
@@ -7244,14 +11957,12 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   /* Narrow content column: shrink the whole control, keep both labels. */
   .dsc-modeswitch { --dsc-nav-width: 208px; --dsc-nav-height: 36px; font-size: 12.6px; }
   .dsc-modeswitch-item { font-size: 12.6px; }
-  .dsc-source-list { grid-template-columns: 1fr; }
   .dsc-greeting { font-size: clamp(23px, 5.6vw, 28px); }
   .dsc-empty { padding-bottom: 3vh; }
 }
 @media (max-width: 620px) {
-  .dsc-mode-label { display: none; }
-  .dsc-mode-button { width: 30px; padding: 0; justify-content: center; }
-  .dsc-model-pill { display: none; }
+  .dsc-model-trigger { max-width: 132px; }
+  .dsc-active-tool span { display: none; }
   .dsc-header-title { display: none; }
   .dsc-thread { padding: 16px 12px 8px; }
   .dsc-composer-wrap { padding: 4px 10px 8px; }
@@ -7263,6 +11974,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   .dsc-msg-action { width: 27px; padding: 0; justify-content: center; }
   .dsc-msg-action span { display: none; }
   .dsc-md { font-size: 14.4px; }
+  .dsc-answer { font-size: 14.5px; }
   .dsc-modal-backdrop { padding: 10px; }
   .dsc-modal { max-height: 94vh; border-radius: 14px; }
   .dsc-modal-body { padding: 14px 14px 16px; }
@@ -7355,6 +12067,35 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     SIDEBAR_MAX,
     SIDEBAR_DEFAULT,
     DICTS: { zh: DICT_ZH, en: DICT_EN },
+    // Composer and model/tools surfaces.
+    composerKeySends,
+    collectMessageSources,
+    answerText,
+    citationMark,
+    SourcePanel,
+    SourceRow,
+    ToolsMenu,
+    ModelMenu,
+    chatToolDefinitions,
+    activeChatTools,
+    registerChatTool,
+    modelCatalog,
+    modelById,
+    modelCapability,
+    modelEfforts,
+    modelChipLabel,
+    currentModelChoice,
+    // Rendering helpers, so the checks can exercise them without a browser.
+    highlightCode,
+    highlightLines,
+    normalizeCodeLang,
+    parseLatex,
+    latexToNodes,
+    LatexInline,
+    LatexBlock,
+    parseMermaid,
+    mermaidLayout,
+    MermaidDiagram,
   })
 }
 

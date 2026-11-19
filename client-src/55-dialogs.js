@@ -38,7 +38,10 @@ function SettingsDialog() {
   const t = useT()
   const auth = useChat(state => state.auth)
   const settings = useChat(state => state.settings)
+  const sendKey = useChat(state => state.sendKey)
   const bootData = useChat(state => state.bootData)
+  const defaultModelId = useChat(state => state.modelConfig?.defaults?.model ?? 'deepseek-flash')
+  const models = useChat(state => state.models)
   const [keyInput, setKeyInput] = React.useState('')
   const [prompt, setPrompt] = React.useState(settings.systemPrompt)
   const [savingKey, setSavingKey] = React.useState(false)
@@ -165,6 +168,23 @@ function SettingsDialog() {
             h(Switch, { checked: settings.search, onChange: () => chatActions.toggleSearch(), label: t('defaultSearch') }),
           ),
         ),
+        h(SettingsSection, { title: t('composerHints') },
+          h('div', { className: 'dsc-field' },
+            h('span', { className: 'dsc-field-label' }, t('sendKeyLabel')),
+            h('div', { className: 'dsc-segment', role: 'group', 'aria-label': t('sendKeyLabel') },
+              [['enter', 'enterToSendShort'], ['ctrl-enter', 'newlineToSend']].map(([value, key]) => (
+                h('button', {
+                  key: value,
+                  type: 'button',
+                  className: cx('dsc-segment-button', sendKey === value && 'is-active'),
+                  'aria-pressed': sendKey === value,
+                  onClick: () => chatActions.setSendKey(value),
+                }, t(key))
+              )),
+            ),
+            h('p', { className: 'dsc-field-hint' }, t(sendKey === 'ctrl-enter' ? 'newlineToSend' : 'enterToSend')),
+          ),
+        ),
         h(SettingsSection, { title: t('systemPrompt') },
           h('textarea', {
             className: 'dsc-textarea dsc-prompt',
@@ -193,7 +213,7 @@ function SettingsDialog() {
         h(SettingsSection, { title: t('about') },
           h('div', { className: 'dsc-about-row' },
             h('span', null, t('modelLabel')),
-            h('strong', null, bootData?.model?.name ?? t('modelName')),
+            h('strong', null, (models.find(model => model.id === defaultModelId) ?? { name: t('modelName') }).name),
           ),
           h('p', { className: 'dsc-field-hint' }, t('aboutText')),
           h('p', { className: 'dsc-field-hint' }, `${t('limitations')}：${t('limitationsText')}`),

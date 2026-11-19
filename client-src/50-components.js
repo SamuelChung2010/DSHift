@@ -27,6 +27,18 @@ function hostnameOf(url) {
   }
 }
 
+/**
+ * Every source of one answer, deduplicated by URL and numbered once.
+ *
+ * Cited pages come first, in the order the model cited them, so the numbering
+ * inside the answer matches the list; search hits the model did not cite follow
+ * in tool order. Deduplication is by URL only: a URL keeps the number it got on
+ * its first appearance, which is what keeps the in-text citation map stable
+ * after a reload (the stored blocks are replayed in the same order).
+ *
+ * @returns `{ sources, indexByUrl }`; `indexByUrl` maps a URL to its 1-based
+ * citation number.
+ */
 function collectMessageSources(message) {
   const cited = new Map()
   const found = new Map()
@@ -65,9 +77,21 @@ function collectMessageSources(message) {
       }
     }
   }
-  // When the answer cites specific pages, show those as its sources. Search
-  // hits remain available in the process timeline above.
-  return [...(cited.size > 0 ? cited : found).values()]
+  const sources = [...cited.values()]
+  for (const source of found.values()) {
+    const target = cited.get(source.url)
+    if (target !== undefined) {
+      // A cited page may also be in the search results: borrow the richer
+      // display metadata without changing its number.
+      if (target.snippet === '' && source.snippet !== '') target.snippet = source.snippet
+      if (target.siteName === '' && source.siteName !== '') target.siteName = source.siteName
+      if (source.title && (target.title === '' || target.title === hostnameOf(target.url))) target.title = source.title
+      continue
+    }
+    sources.push(source)
+  }
+  const indexByUrl = new Map(sources.map((source, index) => [source.url, index + 1]))
+  return { sources, indexByUrl }
 }
 
 function messageText(message) {
@@ -75,6 +99,27 @@ function messageText(message) {
     .filter(block => block.type === 'text')
     .map(block => block.text)
     .join('')
+}
+
+/**
+ * Answer text with citation markers appended where the model cited a source.
+ *
+ * The API ends a text block at each citation, so the marker belongs at the end
+ * of that block. Markers are only added for URLs present in the source list,
+ * which keeps the numbering in the answer and in the footer identical.
+ */
+function answerText(message, indexByUrl) {
+  const parts = []
+  for (const block of message.blocks ?? []) {
+    if (block.type !== 'text') continue
+    const marks = new Set()
+    for (const citation of block.citations ?? []) {
+      const index = indexByUrl.get(citation.url)
+      if (index !== undefined) marks.add(index)
+    }
+    parts.push(block.text + [...marks].map(citationMark).join(''))
+  }
+  return parts.join('')
 }
 
 /**
@@ -223,20 +268,70 @@ function AttachmentCard({ file, onRemove, onRetry, compact = false }) {
   )
 }
 
-function SourceCard({ source, index }) {
+function SourceRow({ source, index, active }) {
+  const t = useT()
   const href = safeHref(source.url)
   if (href === null) return null
-  return h('a', {
-    className: 'dsc-source', href, target: '_blank', rel: 'noreferrer noopener',
-    title: source.title,
+  const site = source.siteName || hostnameOf(source.url) || t('sourceDomainFallback')
+  return h('li', {
+    className: cx('dsc-source', active && 'is-target'),
+    'data-source-index': index,
   },
-    h('span', { className: 'dsc-source-index' }, String(index + 1)),
-    h('span', { className: 'dsc-source-body' },
+    h('span', { className: 'dsc-source-index' }, String(index)),
+    h('a', {
+      className: 'dsc-source-link',
+      href,
+      target: '_blank',
+      rel: 'noreferrer noopener',
+      title: source.title,
+    },
       h('span', { className: 'dsc-source-title' }, source.title),
-      h('span', { className: 'dsc-source-meta' }, source.siteName || hostnameOf(source.url)),
+      h('span', { className: 'dsc-source-meta' }, site),
       source.snippet ? h('span', { className: 'dsc-source-snippet' }, source.snippet) : null,
     ),
-    h(Icon, { name: 'external', size: 13 }),
+    h(Icon, { name: 'external', size: 12 }),
+  )
+}
+
+/**
+ * The answer's sources as one compact footer.
+ *
+ * Collapsed by default: a single "Sources · 15" line, so fifteen citations no
+ * longer push the answer off the page. Expanding shows a numbered, scrollable
+ * list; a citation marker in the answer expands the list and highlights its row.
+ */
+function SourcePanel({ sources, messageId, open, onToggle, activeIndex }) {
+  const t = useT()
+  const listRef = React.useRef(null)
+  React.useEffect(() => {
+    if (!open || activeIndex === null) return
+    const node = listRef.current?.querySelector?.(`[data-source-index="${activeIndex}"]`)
+    node?.scrollIntoView?.({ block: 'nearest' })
+  }, [open, activeIndex])
+  if (sources.length === 0) return null
+  const listId = `dsc-sources-${messageId}`
+  return h('div', { className: cx('dsc-sources', open && 'is-open') },
+    h('button', {
+      type: 'button',
+      className: 'dsc-sources-toggle',
+      'aria-expanded': open,
+      'aria-controls': listId,
+      onClick: onToggle,
+    },
+      h(Icon, { name: 'link', size: 13 }),
+      h('span', { className: 'dsc-sources-count' }, t('sourceSummary', { count: sources.length })),
+      h(Icon, { name: open ? 'chevronDown' : 'chevronRight', size: 12 }),
+    ),
+    open
+      ? h('ol', { className: 'dsc-source-list', id: listId, ref: listRef },
+          sources.map((source, index) => h(SourceRow, {
+            key: `${source.url}-${index}`,
+            source,
+            index: index + 1,
+            active: activeIndex === index + 1,
+          })),
+        )
+      : null,
   )
 }
 
@@ -418,24 +513,43 @@ function VersionNav({ message }) {
 function AssistantMessage({ message, streaming, isLast, canRegenerate, highlighted }) {
   const t = useT()
   const [copied, setCopied] = React.useState(false)
+  const [sourcesOpen, setSourcesOpen] = React.useState(false)
+  const [activeSource, setActiveSource] = React.useState(null)
   const text = messageText(message)
-  const sources = collectMessageSources(message)
+  const { sources, indexByUrl } = collectMessageSources(message)
+  const answer = answerText(message, indexByUrl)
   const refused = message.stopReason === 'refusal'
   const errorInfo = message.error ? friendlyError(message.error) : null
   const showTyping = streaming && text === '' && (message.blocks ?? []).length === 0
+  const liveAnswer = streaming && message.status === 'streaming'
   const canContinue = !streaming && isLast && canContinueReply(message)
   const regenerate = () => {
     if (streaming) return
     void chatActions.regenerateMessage(message)
   }
-  return h('div', { className: cx('dsc-msg dsc-msg-assistant', highlighted && 'is-highlighted'), 'data-message-id': message.id },
+  const onAnswerClick = (event) => {
+    const target = event?.target
+    const marker = target instanceof Element ? target.closest('[data-dsc-cite]') : null
+    if (marker === null) return
+    const index = Number(marker.getAttribute('data-dsc-cite'))
+    if (!Number.isInteger(index) || index < 1) return
+    setSourcesOpen(true)
+    setActiveSource(index)
+  }
+  return h('div', {
+    className: cx('dsc-msg dsc-msg-assistant', highlighted && 'is-highlighted'),
+    'data-message-id': message.id,
+    onClick: onAnswerClick,
+  },
     h('div', { className: 'dsc-msg-body' },
       h(ProcessPanel, { message, streaming }),
       refused
         ? h('div', { className: 'dsc-notice' }, h(Icon, { name: 'warning', size: 16 }), h('span', null, t('refused')))
         : null,
-      !refused && text !== ''
-        ? h(Markdown, { text, streaming: streaming && message.status === 'streaming' })
+      !refused && answer !== ''
+        ? h('div', { className: 'dsc-answer', onClick: onAnswerClick },
+            h(Markdown, { text: answer, streaming: liveAnswer, sources }),
+          )
         : null,
       showTyping ? h(TypingDots, null) : null,
       !streaming && message.status === 'stopped' && !refused
@@ -453,11 +567,17 @@ function AssistantMessage({ message, streaming, isLast, canRegenerate, highlight
               : null,
           )
         : null,
-      sources.length > 0
-        ? h('div', { className: 'dsc-sources' },
-            h('div', { className: 'dsc-sources-head' }, h(Icon, { name: 'link', size: 13 }), t('sourceCount', { count: sources.length })),
-            h('div', { className: 'dsc-source-list' }, sources.map((source, index) => h(SourceCard, { key: source.url, source, index }))),
-          )
+      sources.length > 0 && !refused
+        ? h(SourcePanel, {
+            sources,
+            messageId: message.id,
+            open: sourcesOpen,
+            activeIndex: activeSource,
+            onToggle: () => {
+              if (sourcesOpen) setActiveSource(null)
+              setSourcesOpen(!sourcesOpen)
+            },
+          })
         : null,
       !streaming
         ? h('div', { className: cx('dsc-msg-actions', isLast && 'is-last') },
@@ -486,6 +606,9 @@ function AssistantMessage({ message, streaming, isLast, canRegenerate, highlight
                 }, h(Icon, { name: 'continue', size: 14 }), h('span', null, t('continueGenerating')))
               : null,
             h('span', { className: 'dsc-msg-actions-spacer' }),
+            messageModelLabel(message) !== ''
+              ? h('span', { className: 'dsc-msg-model', title: t('modelLabel') }, messageModelLabel(message))
+              : null,
             h(VersionNav, { message }),
             message.usage
               ? h('span', { className: 'dsc-usage' }, t('usage', {
@@ -712,6 +835,48 @@ function AuthBanner() {
   )
 }
 
+/** Active toggle tools as one-line chips above the input, click to turn off. */
+function ActiveToolChips() {
+  const t = useT()
+  const state = useChat(snapshot => snapshot)
+  const tools = activeChatTools(state)
+  if (tools.length === 0) return null
+  return h('div', { className: 'dsc-active-tools' },
+    tools.map(tool => h('button', {
+      key: tool.id,
+      type: 'button',
+      className: 'dsc-active-tool',
+      title: t(tool.hintKey),
+      onClick: () => tool.run(),
+    },
+      h(Icon, { name: tool.icon, size: 13 }),
+      h('span', null, t(tool.labelKey)),
+      h(Icon, { name: 'close', size: 11 }),
+    )),
+  )
+}
+
+/** Editor grows with the text up to this height, then scrolls internally. */
+const COMPOSER_MAX_HEIGHT = 220
+
+/**
+ * Whether one keydown should send the message.
+ *
+ * Two rules matter here and never change with the preference: an IME composing
+ * text owns Enter (it commits a candidate, it must not send), and in the
+ * default mode Enter needs no modifier. `ctrl-enter` flips the pair so Enter
+ * inserts a newline and Ctrl/Cmd+Enter sends.
+ */
+function composerKeySends(event, sendKey) {
+  if (event === null || typeof event !== 'object' || event.key !== 'Enter') return false
+  const native = event.nativeEvent ?? event
+  if (native.isComposing === true || event.isComposing === true || event.keyCode === 229) return false
+  if (sendKey === 'ctrl-enter') {
+    return (event.ctrlKey === true || event.metaKey === true) && event.shiftKey !== true && event.altKey !== true
+  }
+  return event.shiftKey !== true && event.altKey !== true && event.ctrlKey !== true && event.metaKey !== true
+}
+
 function Composer() {
   const t = useT()
   const draft = useChat(state => state.draft)
@@ -719,18 +884,23 @@ function Composer() {
   const streaming = useChat(state => state.streaming)
   const stopping = useChat(state => state.stopping)
   const auth = useChat(state => state.auth)
-  const settings = useChat(state => state.settings)
-  const modelName = useChat(state => state.bootData?.model?.name)
+  const sendKey = useChat(state => state.sendKey)
+  useChat(state => state.modelChoice)
+  const choice = currentModelChoice()
+  const unsupportedImages = !modelCapability(choice.model, 'vision')
+    && attachments.some(item => item.isImage && item.status !== 'error')
   const focusRequest = useChat(state => state.focusRequest)
   const filePickRequest = useChat(state => state.filePickRequest)
   const textareaRef = React.useRef(null)
   const fileRef = React.useRef(null)
   const [drag, setDrag] = React.useState(false)
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     const node = textareaRef.current
     if (!node) return
     node.style.height = 'auto'
-    node.style.height = `${Math.min(node.scrollHeight, 220)}px`
+    const next = Math.min(node.scrollHeight, COMPOSER_MAX_HEIGHT)
+    node.style.height = `${next}px`
+    node.style.overflowY = node.scrollHeight > COMPOSER_MAX_HEIGHT ? 'auto' : 'hidden'
   }, [draft])
   React.useEffect(() => {
     if (focusRequest === 0) return
@@ -754,13 +924,22 @@ function Composer() {
     }
     void chatActions.sendMessage()
   }
+  const onKeyDown = (event) => {
+    if (!composerKeySends(event, sendKey)) return
+    event.preventDefault()
+    if (isStreaming || !canSend) return
+    handleSend()
+  }
   return h('div', { className: 'dsc-composer-wrap' },
     h(AuthBanner, null),
     h('div', {
-      className: cx('dsc-composer', drag && 'is-drag'),
-      onDragOver: (event) => {
+      className: cx('dsc-composer', drag && 'is-drag', unsupportedImages && 'has-warning'),
+      onDragEnter: (event) => {
         event.preventDefault()
         if (!drag) setDrag(true)
+      },
+      onDragOver: (event) => {
+        event.preventDefault()
       },
       onDragLeave: (event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setDrag(false)
@@ -771,88 +950,92 @@ function Composer() {
         onFiles(event.dataTransfer?.files)
       },
     },
-      attachments.length > 0
-        ? h('div', { className: 'dsc-attach-rail' }, attachments.map(file => (
-            h(AttachmentCard, {
-              key: file.id, file,
-              onRemove: chatActions.removeAttachment,
-              onRetry: chatActions.retryAttachment,
-            })
-          )))
-        : null,
-      h('textarea', {
-        ref: textareaRef,
-        className: 'dsc-textarea',
-        value: draft,
-        rows: 1,
-        placeholder: t('composerPlaceholder'),
-        'aria-label': t('composerPlaceholder'),
-        onChange: (event) => chatStore.set({ draft: event.target.value }),
-        onPaste: (event) => {
-          const files = [...(event.clipboardData?.files ?? [])]
-          if (files.length > 0) {
-            event.preventDefault()
-            onFiles(files)
-          }
-        },
-        onKeyDown: (event) => {
-          if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
-            event.preventDefault()
-            if (!isStreaming && canSend) handleSend()
-          }
-        },
-      }),
-      h('div', { className: 'dsc-composer-tools' },
-        h('input', {
-          ref: fileRef,
-          type: 'file',
-          className: 'dsc-file-input',
-          multiple: true,
-          accept: ACCEPT,
-          onChange: (event) => {
-            onFiles(event.target.files)
-            event.target.value = ''
+      h('div', { className: 'dsc-composer-main' },
+        attachments.length > 0
+          ? h('div', { className: 'dsc-attach-rail' }, attachments.map(file => (
+              h(AttachmentCard, {
+                key: file.id, file,
+                onRemove: chatActions.removeAttachment,
+                onRetry: chatActions.retryAttachment,
+              })
+            )))
+          : null,
+        h('div', {
+          className: 'dsc-editor',
+          onClick: (event) => {
+            // Clicking the empty area around the caret line focuses the editor,
+            // like any chat composer. Buttons inside keep their own clicks.
+            if (event.target === event.currentTarget) textareaRef.current?.focus()
           },
-        }),
-        h('button', {
-          type: 'button', className: 'dsc-tool-button', title: t('attach'), 'aria-label': t('attach'),
-          onClick: () => fileRef.current?.click(),
-        }, h(Icon, { name: 'paperclip', size: 18 })),
-        h('button', {
-          type: 'button',
-          className: cx('dsc-mode-button', settings.thinking && 'is-active'),
-          title: t('deepThink'),
-          'aria-label': t('deepThink'),
-          'aria-pressed': settings.thinking,
-          onClick: chatActions.toggleThinking,
-        }, h(Icon, { name: 'brain', size: 16 }), h('span', { className: 'dsc-mode-label' }, t('deepThink'))),
-        h('button', {
-          type: 'button',
-          className: cx('dsc-mode-button', settings.search && 'is-active'),
-          title: t('webSearch'),
-          'aria-label': t('webSearch'),
-          'aria-pressed': settings.search,
-          onClick: chatActions.toggleSearch,
-        }, h(Icon, { name: 'globe', size: 16 }), h('span', { className: 'dsc-mode-label' }, t('webSearch'))),
-        h('span', { className: 'dsc-tool-spacer' }),
-        modelName ? h('span', { className: 'dsc-model-pill', title: t('modelNote') }, modelName) : null,
-        isStreaming
-          ? h('button', {
-              type: 'button',
-              className: 'dsc-stop-button',
-              title: t('stop'),
-              'aria-label': t('stop'),
-              disabled: stopping,
-              onClick: () => chatActions.requestStop(),
-            }, h(Icon, { name: 'stop', size: 15 }))
-          : h('button', {
-              type: 'button',
-              className: cx('dsc-send-button', !canSend && 'is-idle'),
-              title: t('send'),
-              'aria-label': t('send'),
-              'aria-disabled': !canSend,
-              onClick: handleSend,
-            }, h(Icon, { name: 'arrowUp', size: 17 })),
+        },
+          h('textarea', {
+            ref: textareaRef,
+            className: 'dsc-editor-field',
+            value: draft,
+            rows: 1,
+            placeholder: t('composerPlaceholder'),
+            'aria-label': t('composerPlaceholder'),
+            title: t(sendKey === 'ctrl-enter' ? 'newlineToSend' : 'enterToSend'),
+            spellCheck: 'false',
+            onChange: (event) => chatStore.set({ draft: event.target.value }),
+            onPaste: (event) => {
+              const files = [...(event.clipboardData?.files ?? [])]
+              if (files.length > 0) {
+                event.preventDefault()
+                onFiles(files)
+              }
+            },
+            onKeyDown,
+          }),
+        ),
+        unsupportedImages
+          ? h('div', { className: 'dsc-composer-warning' },
+              h(Icon, { name: 'warning', size: 14 }),
+              h('span', null, t('modelUnsupportedImage')),
+              h('button', {
+                type: 'button',
+                className: 'dsc-inline-button',
+                onClick: () => chatActions.selectModel('deepseek-flash'),
+              }, t('switchModel')),
+            )
+          : null,
+      ),
+      h('div', { className: 'dsc-composer-bar' },
+        h('div', { className: 'dsc-composer-left' },
+          h('input', {
+            ref: fileRef,
+            type: 'file',
+            className: 'dsc-file-input',
+            multiple: true,
+            accept: ACCEPT,
+            onChange: (event) => {
+              onFiles(event.target.files)
+              event.target.value = ''
+            },
+          }),
+          h(ToolsMenu, null),
+          h(ActiveToolChips, null),
+        ),
+        h('div', { className: 'dsc-composer-right' },
+          h(ModelMenu, null),
+          isStreaming
+            ? h('button', {
+                type: 'button',
+                className: 'dsc-stop-button',
+                title: t('stop'),
+                'aria-label': t('stop'),
+                disabled: stopping,
+                onClick: () => chatActions.requestStop(),
+              }, h(Icon, { name: 'stop', size: 15 }))
+            : h('button', {
+                type: 'button',
+                className: cx('dsc-send-button', !canSend && 'is-idle'),
+                title: t('send'),
+                'aria-label': t('send'),
+                'aria-disabled': !canSend,
+                onClick: handleSend,
+              }, h(Icon, { name: 'arrowUp', size: 17 })),
+        ),
       ),
       drag ? h('div', { className: 'dsc-drop-mask' }, h(Icon, { name: 'paperclip', size: 22 }), t('dropFiles')) : null,
     ),
