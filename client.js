@@ -243,6 +243,9 @@ const DICT_ZH = {
   folderCreateTitle: '新建文件夹',
   folderRenameTitle: '重命名文件夹',
   folderNamePlaceholder: '文件夹名称',
+  folderNameLabel: '文件夹名称',
+  folderCreateHint: '为一组对话起一个名字，稍后可以随时重命名。',
+  folderRenameHint: '只修改文件夹名称，里面的对话保持不变。',
   create: '创建',
   unfiled: '未分类',
   folderEmpty: '文件夹为空',
@@ -306,6 +309,7 @@ const DICT_ZH = {
   toolThinkingUnavailable: '当前模型不支持深度思考',
   modelFlashDesc: '快速响应，支持图片理解，适合日常对话',
   modelProDesc: '推理能力更强，不支持图片理解；联网工具建议改用 Flash',
+  modelNoVision: '不支持图片',
   // Model selection
   modelSelect: '选择模型',
   switchModel: '切换模型',
@@ -321,6 +325,8 @@ const DICT_ZH = {
   modelAppliedToChat: '仅对当前对话生效',
   modelAppliedToDefault: '新对话默认使用',
   thinkingEffort: '思考强度',
+  effortOff: '关闭',
+  effortOffHint: '不展示思考过程，直接回答',
   effortLow: '低',
   effortHigh: '高',
   effortMax: '最高',
@@ -578,6 +584,9 @@ const DICT_EN = {
   folderCreateTitle: 'New folder',
   folderRenameTitle: 'Rename folder',
   folderNamePlaceholder: 'Folder name',
+  folderNameLabel: 'Folder name',
+  folderCreateHint: 'Name this group of chats. You can rename it later.',
+  folderRenameHint: 'Only the folder name changes; its chats stay as they are.',
   create: 'Create',
   unfiled: 'Unfiled',
   folderEmpty: 'This folder is empty',
@@ -641,6 +650,7 @@ const DICT_EN = {
   toolThinkingUnavailable: 'This model cannot think first',
   modelFlashDesc: 'Fast everyday chat, reads images',
   modelProDesc: 'Stronger reasoning, no image input; web tools prefer Flash',
+  modelNoVision: 'No image input',
   // Model selection
   modelSelect: 'Select model',
   switchModel: 'Switch model',
@@ -656,6 +666,8 @@ const DICT_EN = {
   modelAppliedToChat: 'Applies to this conversation',
   modelAppliedToDefault: 'Default for new conversations',
   thinkingEffort: 'Thinking effort',
+  effortOff: 'Off',
+  effortOffHint: 'Answer directly without showing reasoning',
   effortLow: 'Low',
   effortHigh: 'High',
   effortMax: 'Max',
@@ -7061,10 +7073,16 @@ function useOutsideDismiss(open, onClose, panelRef, triggerRef) {
  * Keep a popover on the side with room for it and clamp its height to the
  * viewport. Re-measures on resize and on any layout scroll (the thread above
  * the composer scrolls independently of the window).
- * @returns `{ placement, maxHeight }` - "top" opens above the trigger.
+ *
+ * Composer popovers are aligned to the whole rounded input, not to the small
+ * control that opened them: "above" means above the composer's top edge, so a
+ * menu never covers the text the user is writing. The extra distance is
+ * published as a CSS custom property on the panel.
+ *
+ * @returns `{ placement, maxHeight, gap }` - "top" opens above the trigger.
  */
 function usePopupPlacement(open, triggerRef, panelRef) {
-  const [layout, setLayout] = React.useState({ placement: 'top', maxHeight: null })
+  const [layout, setLayout] = React.useState({ placement: 'top', maxHeight: null, gap: 0 })
   React.useLayoutEffect(() => {
     if (!open) return () => {}
     const update = () => {
@@ -7072,19 +7090,23 @@ function usePopupPlacement(open, triggerRef, panelRef) {
       const panel = panelRef.current
       if (!trigger || !panel) return
       const rect = trigger.getBoundingClientRect()
+      const composer = trigger.closest?.('.dsc-composer')
+      const composerTop = composer?.getBoundingClientRect?.().top ?? rect.top
+      const gap = Math.max(0, Math.round(rect.top - composerTop))
       const viewport = window.innerHeight || 0
       const natural = panel.offsetHeight || panel.scrollHeight || 0
-      const spaceAbove = rect.top - POPOVER_GAP - 8
+      const spaceAbove = composerTop - POPOVER_GAP - 8
       const spaceBelow = viewport - rect.bottom - POPOVER_GAP - 8
       const placement = spaceAbove >= Math.min(natural, POPOVER_PREFERRED) || spaceAbove >= spaceBelow
         ? 'top'
         : 'bottom'
       const available = placement === 'top' ? spaceAbove : spaceBelow
       const maxHeight = available > 120 ? Math.min(available, 520) : null
+      const nextGap = placement === 'top' ? gap : 0
       setLayout((current) => (
-        current.placement === placement && current.maxHeight === maxHeight
+        current.placement === placement && current.maxHeight === maxHeight && current.gap === nextGap
           ? current
-          : { placement, maxHeight }
+          : { placement, maxHeight, gap: nextGap }
       ))
     }
     update()
@@ -7093,6 +7115,8 @@ function usePopupPlacement(open, triggerRef, panelRef) {
     window.addEventListener('scroll', update, true)
     const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(update) : null
     if (observer && panelRef.current) observer.observe(panelRef.current)
+    const composer = triggerRef.current?.closest?.('.dsc-composer')
+    if (observer && composer) observer.observe(composer)
     return () => {
       window.removeEventListener('resize', update)
       window.removeEventListener('scroll', update, true)
@@ -7100,6 +7124,14 @@ function usePopupPlacement(open, triggerRef, panelRef) {
     }
   }, [open, panelRef, triggerRef])
   return layout
+}
+
+/** Inline style for an open popover: viewport clamp plus composer clearance. */
+function popoverStyle(layout) {
+  const style = {}
+  if (layout.maxHeight !== null) style.maxHeight = `${layout.maxHeight}px`
+  if (layout.gap > 0) style['--dsc-popover-gap'] = `${layout.gap}px`
+  return style
 }
 
 function popoverItems(container) {
@@ -7207,6 +7239,11 @@ function DeepSeekLockup({ height = 24, className = '' }) {
  *
  * `chatStore.state.modelChoice` holds the selection for the active
  * conversation; per-conversation overrides and the defaults live on the Host.
+ *
+ * The composer splits the two decisions into two small popovers: the model
+ * picker is a name-only list, and the thinking-effort picker is its own compact
+ * control next to it. Neither panel repeats the other's options, so choosing a
+ * model never asks the user to read a feature sheet.
  */
 
 /** The single model an older Host always sends. */
@@ -7223,12 +7260,6 @@ const FALLBACK_MODELS = [
 const EFFORT_ORDER = ['low', 'high', 'max']
 const EFFORT_LABEL = { low: 'effortLow', high: 'effortHigh', max: 'effortMax' }
 const EFFORT_HINT = { low: 'effortLowHint', high: 'effortHighHint', max: 'effortMaxHint' }
-const CAPABILITY_KEYS = [
-  { key: 'vision', label: 'modelCapVision' },
-  { key: 'documents', label: 'modelCapFiles' },
-  { key: 'search', label: 'modelCapSearch' },
-  { key: 'thinking', label: 'modelCapThinking' },
-]
 
 function modelCatalog() {
   const models = chatStore.state.models
@@ -7250,7 +7281,12 @@ function modelEfforts(model) {
   return list.length > 0 ? list : (modelCapability(model, 'thinking') ? EFFORT_ORDER : [])
 }
 
-/** Short label for the composer chip; the full name is kept for the menu. */
+/** The compact name shown on the composer chip and in the model list. */
+function modelTriggerLabel(model) {
+  return model?.shortName || model?.name || ''
+}
+
+/** Full label for a reply footer, including the effort that produced it. */
 function modelChipLabel(model, thinking, effort) {
   const name = model?.shortName || model?.name || ''
   if (!thinking) return name
@@ -7285,15 +7321,25 @@ function currentModelChoice() {
 }
 
 /**
- * Model menu: a compact list of the real API models plus the thinking-effort
- * control for the selected one. It opens above the composer, right-aligned to
- * its chip, and is fully operable from the keyboard.
+ * A model's capability gaps, for the one short note the menu may show. The full
+ * description stays in the row's native tooltip; the menu itself only carries
+ * the limitation that changes what the user can attach.
+ */
+function modelNotes(model) {
+  const notes = []
+  if (model !== undefined && modelCapability(model, 'vision') === false) notes.push(tr('modelNoVision'))
+  return notes
+}
+
+/**
+ * Model menu: the real API models, by name, plus a check on the current one.
+ * It opens above the composer, right-aligned to its chip, and is fully operable
+ * from the keyboard.
  */
 function ModelMenu() {
   const t = useT()
   const models = modelCatalog()
   const choice = currentModelChoice()
-  const thinking = useChat(state => state.settings.thinking)
   const activeId = useChat(state => state.activeId)
   const [open, setOpen] = React.useState(false)
   const triggerRef = React.useRef(null)
@@ -7331,7 +7377,7 @@ function ModelMenu() {
         }
       },
     },
-      h('span', { className: 'dsc-model-name' }, modelChipLabel(choice.model, thinking, choice.effort)),
+      h('span', { className: 'dsc-model-name' }, modelTriggerLabel(choice.model)),
       h(Icon, { name: 'chevronDown', size: 12 }),
     ),
     open
@@ -7341,69 +7387,137 @@ function ModelMenu() {
           role: 'menu',
           'aria-label': t('modelSelect'),
           'data-placement': layout.placement,
-          style: layout.maxHeight === null ? undefined : { maxHeight: `${layout.maxHeight}px` },
+          style: popoverStyle(layout),
           onKeyDown,
         },
-        h('div', { className: 'dsc-popover-title' }, t('modelMenuTitle')),
         h('div', { className: 'dsc-model-list' },
           models.map(model => {
             const selected = model.id === choice.model.id
+            const notes = modelNotes(model)
+            const description = model.descriptionKey === undefined ? '' : t(model.descriptionKey)
             return h('button', {
               key: model.id,
               type: 'button',
               role: 'menuitemradio',
               'aria-checked': selected,
+              'aria-label': description === '' ? model.name : `${model.name} — ${description}`,
+              title: description,
               'data-model': model.id,
               className: cx('dsc-popover-item dsc-model-option', selected && 'is-selected'),
               onClick: () => { chatActions.selectModel(model.id); close() },
             },
               h('span', { className: 'dsc-popover-item-main' },
                 h('span', { className: 'dsc-popover-item-title' }, model.name),
-                model.descriptionKey !== undefined
-                  ? h('span', { className: 'dsc-popover-item-desc' }, t(model.descriptionKey))
+                notes.length > 0
+                  ? h('span', { className: 'dsc-model-note' }, notes.join(' · '))
                   : null,
               ),
               selected ? h(Icon, { name: 'check', size: 15 }) : null,
             )
           }),
         ),
-        h('div', { className: 'dsc-popover-sep' }),
-        h('div', { className: 'dsc-effort' },
-          h('div', { className: 'dsc-effort-head' },
-            h('span', { className: 'dsc-popover-label' }, t('thinkingEffort')),
-            h('span', { className: 'dsc-effort-active' }, h(Icon, { name: 'brain', size: 12 }), thinking ? t('toolOn') : t('toolOff')),
+        h('p', { className: 'dsc-model-scope' }, scope),
+      )
+      : null,
+  )
+}
+
+/**
+ * Thinking-effort picker: a separate compact control beside the model chip. It
+ * stays visible (showing Off) for every model with a real effort list, so
+ * toggling deep thinking never shifts the composer layout. The four states are
+ * the API's real tiers plus Off; there is no free-form value.
+ */
+function EffortMenu() {
+  const t = useT()
+  const choice = currentModelChoice()
+  const thinking = useChat(state => state.settings.thinking)
+  const [open, setOpen] = React.useState(false)
+  const triggerRef = React.useRef(null)
+  const panelRef = React.useRef(null)
+  const layout = usePopupPlacement(open, triggerRef, panelRef)
+  useOutsideDismiss(open, () => setOpen(false), panelRef, triggerRef)
+  React.useEffect(() => {
+    if (!open) return
+    const panel = panelRef.current
+    const selected = panel?.querySelector?.(`[data-effort="${thinking ? choice.effort : 'off'}"]`)
+    selected?.focus?.({ preventScroll: false })
+  }, [open])
+  const close = () => setOpen(false)
+  const onKeyDown = event => handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef })
+  const label = thinking ? t(EFFORT_LABEL[choice.effort] ?? 'effortHigh') : t('effortOff')
+  const chooseOff = () => {
+    if (thinking) chatActions.toggleThinking()
+    close()
+  }
+  const chooseEffort = (effort) => {
+    if (!thinking) chatActions.toggleThinking()
+    if (effort !== choice.effort) chatActions.selectEffort(effort)
+    close()
+  }
+  return h('div', { className: 'dsc-effort-control' },
+    h('button', {
+      ref: triggerRef,
+      type: 'button',
+      className: cx('dsc-effort-trigger', open && 'is-open'),
+      'aria-haspopup': 'menu',
+      'aria-expanded': open,
+      title: `${t('thinkingEffort')}: ${label}`,
+      'aria-label': `${t('thinkingEffort')}: ${label}`,
+      onClick: () => setOpen(value => !value),
+      onKeyDown: (event) => {
+        if (event.key === 'Escape' && open) {
+          event.preventDefault()
+          setOpen(false)
+          return
+        }
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          event.preventDefault()
+          setOpen(true)
+        }
+      },
+    },
+      h(Icon, { name: 'brain', size: 13 }),
+      h('span', null, label),
+      h(Icon, { name: 'chevronDown', size: 11 }),
+    ),
+    open
+      ? h('div', {
+          ref: panelRef,
+          className: 'dsc-popover dsc-effort-menu',
+          role: 'menu',
+          'aria-label': t('thinkingEffort'),
+          'data-placement': layout.placement,
+          style: popoverStyle(layout),
+          onKeyDown,
+        },
+        h('div', { className: 'dsc-effort-list' },
+          h('button', {
+            type: 'button',
+            role: 'menuitemradio',
+            'aria-checked': !thinking,
+            'data-effort': 'off',
+            title: t('effortOffHint'),
+            className: cx('dsc-effort-option', !thinking && 'is-selected'),
+            onClick: chooseOff,
+          },
+            h('span', { className: 'dsc-effort-option-label' }, t('effortOff')),
+            !thinking ? h(Icon, { name: 'check', size: 14 }) : null,
           ),
-          thinking && choice.efforts.length > 0
-            ? h('div', { className: 'dsc-effort-options', role: 'group', 'aria-label': t('thinkingEffort') },
-                choice.efforts.map(effort => h('button', {
-                  key: effort,
-                  type: 'button',
-                  role: 'menuitemradio',
-                  'aria-checked': choice.effort === effort,
-                  className: cx('dsc-effort-option', choice.effort === effort && 'is-selected'),
-                  title: t(EFFORT_HINT[effort] ?? 'thinkingEffort'),
-                  onClick: () => chatActions.selectEffort(effort),
-                }, t(EFFORT_LABEL[effort]))),
-              )
-            : h('p', { className: 'dsc-popover-hint' },
-                thinking ? t('effortUnsupported') : t('effortNeedsThinking')),
-          thinking && EFFORT_HINT[choice.effort] !== undefined
-            ? h('p', { className: 'dsc-popover-hint' }, t(EFFORT_HINT[choice.effort]))
-            : null,
-        ),
-        h('div', { className: 'dsc-popover-sep' }),
-        h('div', { className: 'dsc-model-meta' },
-          h('div', { className: 'dsc-model-caps', 'aria-label': t('modelCapabilities') },
-            CAPABILITY_KEYS.map(item => h('span', {
-              key: item.key,
-              className: cx('dsc-model-cap', !modelCapability(choice.model, item.key) && 'is-off'),
-              title: `${t(item.label)}：${modelCapability(choice.model, item.key) ? t('toolOn') : t('toolOff')}`,
-            },
-              h(Icon, { name: modelCapability(choice.model, item.key) ? 'check' : 'close', size: 11 }),
-              t(item.label),
-            )),
-          ),
-          h('p', { className: 'dsc-popover-hint' }, scope),
+          h('div', { className: 'dsc-popover-sep' }),
+          choice.efforts.map(effort => h('button', {
+            key: effort,
+            type: 'button',
+            role: 'menuitemradio',
+            'aria-checked': thinking && choice.effort === effort,
+            'data-effort': effort,
+            title: t(EFFORT_HINT[effort] ?? 'thinkingEffort'),
+            className: cx('dsc-effort-option', thinking && choice.effort === effort && 'is-selected'),
+            onClick: () => chooseEffort(effort),
+          },
+            h('span', { className: 'dsc-effort-option-label' }, t(EFFORT_LABEL[effort])),
+            thinking && choice.effort === effort ? h(Icon, { name: 'check', size: 14 }) : null,
+          )),
         ),
       )
       : null,
@@ -7412,34 +7526,39 @@ function ModelMenu() {
 
 /* ---- 48-tools.js ---- */
 /**
- * The composer's "+" tools menu.
+ * Chat capabilities that are not plain model settings.
  *
- * Every Chat capability that is not a plain setting is defined once, here, as a
- * small descriptor. The menu, the active-tool chips above the input and future
- * entry points all read the same list, so adding a tool (image generation, deep
- * research, document generation, code execution, ...) never means touching the
- * composer or the menu markup again:
+ * Every capability is defined once, here, as a small descriptor. The "+" menu
+ * and the composer's quick toggles both read the same list, so adding a tool
+ * (image generation, deep research, document generation, code execution, ...)
+ * never means touching the composer or the menu markup again:
  *
  *   registerChatTool({
  *     id: 'image-generation',
  *     kind: 'action',                 // or "toggle" for an on/off capability
+ *     surface: 'menu',                // "menu" (the + card) or "composer"
  *     icon: 'image',
  *     labelKey: 'toolImageGen',
  *     hintKey: 'toolImageGenHint',
  *     run: () => chatActions.openImageGeneration(),
  *   })
  *
- * Tools that are not implemented yet must NOT be registered: the menu only ever
- * shows entries that do something.
+ * Tools that are not implemented yet must NOT be registered: both entry points
+ * only ever show entries that do something.
+ *
+ * Web search and deep thinking are deliberately composer tools: they are used
+ * while writing a message, so they stay one click away instead of hiding in a
+ * menu. The + menu is reserved for add-file / action tools.
  */
 
 const EXTRA_CHAT_TOOLS = []
 
-/** The tools that already work, in menu order. */
+/** The tools that already work, in display order. */
 const BUILTIN_CHAT_TOOLS = [
   {
     id: 'upload',
     kind: 'action',
+    surface: 'menu',
     icon: 'paperclip',
     labelKey: 'uploadFiles',
     hintKey: 'uploadFilesHint',
@@ -7449,6 +7568,7 @@ const BUILTIN_CHAT_TOOLS = [
   {
     id: 'web-search',
     kind: 'toggle',
+    surface: 'composer',
     icon: 'globe',
     labelKey: 'webSearch',
     hintKey: 'webSearchHint',
@@ -7463,6 +7583,7 @@ const BUILTIN_CHAT_TOOLS = [
   {
     id: 'deep-thinking',
     kind: 'toggle',
+    surface: 'composer',
     icon: 'brain',
     labelKey: 'deepThink',
     hintKey: 'deepThinkHint',
@@ -7476,13 +7597,13 @@ const BUILTIN_CHAT_TOOLS = [
   },
 ]
 
-/** Add one tool to the composer menu; returns its unregister function. */
+/** Add one tool to the composer surfaces; returns its unregister function. */
 function registerChatTool(definition) {
   if (definition === null || typeof definition !== 'object' || typeof definition.id !== 'string' || definition.id === '') {
     throw new Error('deepseek-chat: a tool needs a stable id')
   }
   if (typeof definition.run !== 'function') throw new Error('deepseek-chat: a tool needs run()')
-  const entry = { order: 100, kind: 'action', ...definition }
+  const entry = { order: 100, kind: 'action', surface: 'menu', ...definition }
   EXTRA_CHAT_TOOLS.push(entry)
   return () => {
     const index = EXTRA_CHAT_TOOLS.indexOf(entry)
@@ -7495,12 +7616,22 @@ function chatToolDefinitions() {
   return [...BUILTIN_CHAT_TOOLS, ...EXTRA_CHAT_TOOLS].sort((left, right) => (left.order ?? 100) - (right.order ?? 100))
 }
 
+/** Tools shown inside the "+" card. */
+function chatMenuTools() {
+  return chatToolDefinitions().filter(tool => tool.surface !== 'composer')
+}
+
+/** Tools shown as direct buttons on the composer bar. */
+function composerToolDefinitions() {
+  return chatToolDefinitions().filter(tool => tool.surface === 'composer')
+}
+
 /**
- * Tools that currently render as an active chip in the composer: only stateful
- * tools whose state is on. Plain actions never take permanent space.
+ * Toggle tools that are currently on. Kept for plugin integrations that want to
+ * mirror the composer state; the composer itself renders the toggle buttons.
  */
 function activeChatTools(state) {
-  return chatToolDefinitions().filter(tool => tool.kind === 'toggle' && tool.active?.(state) === true)
+  return composerToolDefinitions().filter(tool => tool.kind === 'toggle' && tool.active?.(state) === true)
 }
 
 function toolAvailability(tool, state) {
@@ -7516,17 +7647,17 @@ function ToolMenuItem({ tool, state, index, onClose }) {
   const t = useT()
   const availability = toolAvailability(tool, state)
   const enabled = availability.enabled !== false
-  const active = tool.kind === 'toggle' && tool.active?.(state) === true
+  const toggle = tool.kind === 'toggle'
+  const active = toggle && tool.active?.(state) === true
   const uploading = tool.id === 'upload' && state.attachments.some(item => item.status === 'uploading')
-  const role = tool.kind === 'toggle' ? 'menuitemcheckbox' : 'menuitem'
   const description = enabled
     ? t(tool.hintKey ?? tool.labelKey)
     : t(availability.reasonKey ?? 'toolUnavailable')
   return h('button', {
     type: 'button',
-    role,
-    className: cx('dsc-popover-item', active && 'is-active', !enabled && 'is-disabled'),
-    'aria-checked': tool.kind === 'toggle' ? active : undefined,
+    role: toggle ? 'menuitemcheckbox' : 'menuitem',
+    className: cx('dsc-popover-item dsc-tool-item', active && 'is-active', !enabled && 'is-disabled'),
+    'aria-checked': toggle ? active : undefined,
     'aria-disabled': enabled ? undefined : 'true',
     'data-tool': tool.id,
     'data-index': index,
@@ -7535,19 +7666,52 @@ function ToolMenuItem({ tool, state, index, onClose }) {
     onClick: () => {
       if (!enabled) return
       tool.run()
-      if (tool.kind === 'action') onClose()
+      if (!toggle) onClose()
     },
   },
-    h('span', { className: 'dsc-popover-item-icon' }, h(Icon, { name: tool.icon, size: 18 })),
+    h('span', { className: 'dsc-popover-item-icon' }, h(Icon, { name: tool.icon, size: 17 })),
     h('span', { className: 'dsc-popover-item-main' },
       h('span', { className: 'dsc-popover-item-title' }, t(tool.labelKey)),
       h('span', { className: cx('dsc-popover-item-desc', !enabled && 'is-warn') }, description),
     ),
-    tool.kind === 'toggle'
+    toggle
       ? h('span', { className: cx('dsc-switch', active && 'is-on'), 'aria-hidden': 'true' }, h('span', { className: 'dsc-switch-thumb' }))
       : uploading
         ? h('span', { className: 'dsc-popover-item-state' }, t('toolUploading'))
         : null,
+  )
+}
+
+/**
+ * One direct on/off button on the composer bar. The button is always rendered,
+ * so enabling a tool never moves its neighbour or resizes the editor; only the
+ * tint changes. An unsupported capability stays in place, disabled and with the
+ * reason available as its tooltip.
+ */
+function ComposerToolButton({ tool, state }) {
+  const t = useT()
+  const availability = toolAvailability(tool, state)
+  const enabled = availability.enabled !== false
+  const toggle = tool.kind === 'toggle'
+  const active = enabled && toggle && tool.active?.(state) === true
+  const reason = enabled ? t(tool.hintKey ?? tool.labelKey) : t(availability.reasonKey ?? 'toolUnavailable')
+  const label = t(tool.labelKey)
+  return h('button', {
+    type: 'button',
+    className: cx('dsc-tool-toggle', active && 'is-on'),
+    'aria-pressed': toggle ? active : undefined,
+    'aria-label': enabled ? label : `${label}: ${reason}`,
+    'aria-disabled': enabled ? undefined : 'true',
+    title: reason,
+    'data-tool': tool.id,
+    disabled: !enabled,
+    onClick: () => {
+      if (!enabled) return
+      tool.run()
+    },
+  },
+    h(Icon, { name: tool.icon, size: 15 }),
+    h('span', { className: 'dsc-tool-toggle-label' }, label),
   )
 }
 
@@ -7565,15 +7729,13 @@ function ToolsMenu() {
     // and then an arrow key continue in the same place.
     focusMenuItem(panelRef.current, 'first')
   }, [open])
-  const tools = chatToolDefinitions()
-  const toolsState = state
-  const anyActive = tools.some(tool => tool.kind === 'toggle' && tool.active?.(toolsState) === true)
+  const tools = chatMenuTools()
   const close = () => setOpen(false)
   return h('div', { className: 'dsc-tools' },
     h('button', {
       ref: triggerRef,
       type: 'button',
-      className: cx('dsc-tools-trigger', open && 'is-open', anyActive && 'has-active'),
+      className: cx('dsc-tools-trigger', open && 'is-open'),
       title: t('toolsMenu'),
       'aria-label': t('toolsMenu'),
       'aria-haspopup': 'menu',
@@ -7598,26 +7760,16 @@ function ToolsMenu() {
           role: 'menu',
           'aria-label': t('toolsMenu'),
           'data-placement': layout.placement,
-          style: layout.maxHeight === null ? undefined : { maxHeight: `${layout.maxHeight}px` },
+          style: popoverStyle(layout),
           onKeyDown: event => handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef }),
         },
-        h('div', { className: 'dsc-popover-title' }, t('toolsMenu')),
         tools.map((tool, index) => h(ToolMenuItem, {
           key: tool.id,
           tool,
           index,
-          state: toolsState,
+          state,
           onClose: close,
         })),
-        toolsState.settings.search || toolsState.settings.thinking
-          ? h('p', {
-              className: 'dsc-popover-hint dsc-tools-hint',
-            }, toolsState.settings.search && toolsState.settings.thinking
-              ? t('deepSearchHint')
-              : toolsState.settings.search
-                ? t('quickSearchHint')
-                : t('pureThinkingHint'))
-          : null,
       )
       : null,
   )
@@ -8461,27 +8613,6 @@ function AuthBanner() {
   )
 }
 
-/** Active toggle tools as one-line chips above the input, click to turn off. */
-function ActiveToolChips() {
-  const t = useT()
-  const state = useChat(snapshot => snapshot)
-  const tools = activeChatTools(state)
-  if (tools.length === 0) return null
-  return h('div', { className: 'dsc-active-tools' },
-    tools.map(tool => h('button', {
-      key: tool.id,
-      type: 'button',
-      className: 'dsc-active-tool',
-      title: t(tool.hintKey),
-      onClick: () => tool.run(),
-    },
-      h(Icon, { name: tool.icon, size: 13 }),
-      h('span', null, t(tool.labelKey)),
-      h(Icon, { name: 'close', size: 11 }),
-    )),
-  )
-}
-
 /** Editor grows with the text up to this height, then scrolls internally. */
 const COMPOSER_MAX_HEIGHT = 220
 
@@ -8511,8 +8642,10 @@ function Composer() {
   const stopping = useChat(state => state.stopping)
   const auth = useChat(state => state.auth)
   const sendKey = useChat(state => state.sendKey)
+  const toolState = useChat(state => state)
   useChat(state => state.modelChoice)
   const choice = currentModelChoice()
+  const tools = composerToolDefinitions()
   const unsupportedImages = !modelCapability(choice.model, 'vision')
     && attachments.some(item => item.isImage && item.status !== 'error')
   const focusRequest = useChat(state => state.focusRequest)
@@ -8640,10 +8773,15 @@ function Composer() {
             },
           }),
           h(ToolsMenu, null),
-          h(ActiveToolChips, null),
+          tools.map(tool => h(ComposerToolButton, {
+            key: tool.id,
+            tool,
+            state: toolState,
+          })),
         ),
         h('div', { className: 'dsc-composer-right' },
           h(ModelMenu, null),
+          choice.efforts.length > 0 ? h(EffortMenu, null) : null,
           isStreaming
             ? h('button', {
                 type: 'button',
@@ -10282,10 +10420,11 @@ function FolderPromptDialog() {
     return () => clearTimeout(timer)
   }, [prompt?.mode, prompt?.id])
   if (prompt === null) return null
-  const title = prompt.mode === 'rename' ? t('folderRenameTitle') : t('folderCreateTitle')
+  const rename = prompt.mode === 'rename'
+  const title = rename ? t('folderRenameTitle') : t('folderCreateTitle')
   return h(ModalBackdrop, { onDismiss: () => chatActions.closeFolderPrompt() },
     h('form', {
-      className: 'dsc-confirm',
+      className: 'dsc-modal dsc-form-modal',
       role: 'dialog',
       'aria-modal': 'true',
       'aria-label': title,
@@ -10294,24 +10433,41 @@ function FolderPromptDialog() {
         void chatActions.submitFolderPrompt()
       },
     },
-      h('h2', null, title),
-      h('input', {
-        ref: inputRef,
-        className: 'dsc-input dsc-folder-name',
-        value: prompt.draft,
-        maxLength: 60,
-        placeholder: t('folderNamePlaceholder'),
-        'aria-label': t('folderNamePlaceholder'),
-        onChange: (event) => chatActions.updateFolderPrompt(event.target.value),
-      }),
-      h('div', { className: 'dsc-confirm-actions' },
+      h('header', { className: 'dsc-modal-head' },
+        h('div', null,
+          h('h2', null, title),
+          h('p', { className: 'dsc-modal-sub' }, rename ? t('folderRenameHint') : t('folderCreateHint')),
+        ),
+        h('button', {
+          type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
+          onClick: () => chatActions.closeFolderPrompt(),
+        }, h(Icon, { name: 'close', size: 18 })),
+      ),
+      h('div', { className: 'dsc-modal-body' },
+        h('div', { className: 'dsc-field' },
+          h('label', { className: 'dsc-field-label', htmlFor: 'dsc-folder-name-input' }, t('folderNameLabel')),
+          h('input', {
+            ref: inputRef,
+            id: 'dsc-folder-name-input',
+            className: 'dsc-input dsc-folder-name-input',
+            value: prompt.draft,
+            maxLength: 60,
+            placeholder: t('folderNamePlaceholder'),
+            autoComplete: 'off',
+            spellCheck: false,
+            onChange: (event) => chatActions.updateFolderPrompt(event.target.value),
+          }),
+        ),
+      ),
+      h('footer', { className: 'dsc-modal-foot' },
+        h('div', { className: 'dsc-modal-foot-note' }),
         h('button', {
           type: 'button', className: 'dsc-secondary-button', onClick: () => chatActions.closeFolderPrompt(),
         }, t('cancel')),
         h('button', {
           type: 'submit', className: 'dsc-primary-button',
           disabled: prompt.busy || prompt.draft.trim() === '',
-        }, prompt.mode === 'rename' ? t('save') : t('create')),
+        }, rename ? t('save') : t('create')),
       ),
     ),
   )
@@ -10556,6 +10712,8 @@ const CHAT_CSS = `
   --dsc-shadow: 0 20px 48px rgba(9, 12, 20, 0.18);
   --dsc-shadow-soft: 0 4px 16px rgba(9, 12, 20, 0.07);
   --dsc-shadow-composer: 0 2px 10px rgba(9, 12, 20, 0.05);
+  --dsc-shadow-popover: 0 12px 34px rgba(9, 12, 20, 0.17), 0 2px 7px rgba(9, 12, 20, 0.07);
+  --dsc-control-h: 32px;
   --dsc-radius: var(--dsw-radius-md, 12px);
   --dsc-font: var(--dsw-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif);
   --dsc-mono: var(--ds-font-family-code, 'SF Mono', Consolas, 'Liberation Mono', monospace);
@@ -10650,7 +10808,18 @@ body[data-ds-dark-theme] .dsc-root {
 .dsc-root button { cursor: pointer; }
 .dsc-root button:disabled { cursor: default; }
 .dsc-root ::selection { background: var(--dsc-brand-soft-strong); }
-.dsc-root :focus-visible { outline: 2px solid var(--dsc-brand); outline-offset: 2px; }
+/* Keyboard focus is a thin brand ring on real controls. Text fields never take
+   the browser's own outline: their surface (a composer or an input) draws a
+   single quiet focus state instead, so the native ring and a component border
+   can never stack into a double white frame. */
+.dsc-root :where(button, a, [role='button'], [role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox'], [role='switch']):focus-visible {
+  outline: 2px solid var(--dsc-brand);
+  outline-offset: 2px;
+}
+.dsc-root :where(input, textarea, select):focus,
+.dsc-root :where(input, textarea, select):focus-visible {
+  outline: 0;
+}
 .dsc-icon { display: block; flex: none; }
 .dsc-spinner {
   display: inline-block;
@@ -10958,6 +11127,7 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
 .dsc-chat-item.is-active .dsc-chat-item-time { visibility: hidden; }
 .dsc-chat-item-pin { display: inline-flex; flex: none; color: var(--dsc-muted); }
 .dsc-chat-item.is-renaming { background: var(--dsc-layer); border: 1px solid var(--dsc-border-strong); }
+.dsc-chat-item.is-renaming:focus-within { border-color: color-mix(in srgb, var(--dsc-brand) 42%, var(--dsc-border-strong)); }
 .dsc-rename-input {
   width: 100%;
   height: 30px;
@@ -11294,8 +11464,12 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   white-space: nowrap;
   transition: filter var(--dsc-fast) ease;
 }
-.dsc-primary-button:hover { filter: brightness(1.06); }
-.dsc-primary-button:disabled { opacity: 0.45; }
+.dsc-primary-button:hover:not(:disabled) { filter: brightness(1.06); }
+.dsc-primary-button:disabled {
+  background: var(--dsc-layer2);
+  color: var(--dsc-muted);
+  opacity: 0.8;
+}
 .dsc-primary-button.is-danger { background: var(--dsc-error); }
 .dsc-secondary-button {
   height: 36px;
@@ -11308,7 +11482,7 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   white-space: nowrap;
   transition: background var(--dsc-fast) ease;
 }
-.dsc-secondary-button:hover { background: var(--dsc-hover); }
+.dsc-secondary-button:hover:not(:disabled) { background: var(--dsc-hover); }
 .dsc-secondary-button:disabled { opacity: 0.45; }
 .dsc-text-button {
   display: inline-flex;
@@ -11976,9 +12150,9 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-auth-banner span { flex: 1; }
 /* One rounded surface owns the border. The textarea inside is a bare,
    transparent field: a text input must never draw a second rectangle (or a
-   browser focus outline) inside this container. Focus feedback lives on the
-   container so it keeps the rounded shape and stays visible for keyboard
-   users. */
+   browser focus outline) inside this container. Focus feedback is a quiet
+   border tone change, with one very light keyboard-only ring; there is no
+   white double frame and no glow. */
 .dsc-composer {
   position: relative;
   max-width: 788px;
@@ -11990,15 +12164,11 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   box-shadow: var(--dsc-shadow-composer);
   transition: border-color var(--dsc-fast) ease, box-shadow var(--dsc-fast) ease;
 }
-.dsc-composer:focus-within {
-  border-color: color-mix(in srgb, var(--dsc-brand) 45%, var(--dsc-border-strong));
-  box-shadow: 0 0 0 3px var(--dsc-brand-soft), var(--dsc-shadow-soft);
+.dsc-composer:has(.dsc-editor-field:focus) {
+  border-color: color-mix(in srgb, var(--dsc-brand) 34%, var(--dsc-border-strong));
 }
-/* The editor itself never draws a ring; the whole rounded container does, and
-   keyboard focus gets the stronger tint. */
 .dsc-composer:has(.dsc-editor-field:focus-visible) {
-  border-color: var(--dsc-brand);
-  box-shadow: 0 0 0 3px var(--dsc-brand-soft-strong), var(--dsc-shadow-soft);
+  box-shadow: 0 0 0 1px var(--dsc-brand-soft-strong), var(--dsc-shadow-composer);
 }
 .dsc-composer.is-drag { border-color: var(--dsc-brand); }
 .dsc-composer.has-warning { border-color: color-mix(in srgb, var(--dsc-warn) 42%, var(--dsc-border-strong)); }
@@ -12021,6 +12191,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   overflow-y: hidden;
   background: transparent;
   color: var(--dsc-text);
+  caret-color: var(--dsc-brand);
   font-family: inherit;
   font-size: 15.2px;
   line-height: 1.6;
@@ -12051,31 +12222,44 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   min-height: 34px;
   margin-top: 2px;
 }
-.dsc-composer-left { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
-.dsc-composer-right { display: flex; align-items: center; gap: 6px; flex: none; }
-.dsc-active-tools { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-.dsc-active-tool {
+.dsc-composer-left { display: flex; align-items: center; gap: 4px; min-width: 0; flex-wrap: nowrap; }
+.dsc-composer-right { display: flex; align-items: center; gap: 4px; flex: none; }
+/* Direct on/off controls for web search and deep thinking. They are always in
+   the same place: only the tint changes, so toggling never resizes the editor
+   or moves the model chip. */
+.dsc-tool-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  height: 26px;
-  padding: 0 8px;
-  border: 1px solid color-mix(in srgb, var(--dsc-brand) 18%, transparent);
+  gap: 6px;
+  height: var(--dsc-control-h);
+  padding: 0 10px;
+  border: 1px solid transparent;
   border-radius: 999px;
+  background: transparent;
+  color: var(--dsc-muted);
+  font-size: 12.1px;
+  font-weight: 550;
+  white-space: nowrap;
+  flex: none;
+  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
+}
+.dsc-tool-toggle:hover:not(:disabled) { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-tool-toggle.is-on {
+  border-color: color-mix(in srgb, var(--dsc-link) 16%, transparent);
   background: var(--dsc-brand-soft);
   color: var(--dsc-link);
-  font-size: 11.8px;
-  font-weight: 550;
 }
-.dsc-active-tool:hover { background: var(--dsc-brand-soft-strong); }
-.dsc-active-tool .dsc-icon:last-child { opacity: 0.62; }
-.dsc-model-control { position: relative; display: flex; }
-.dsc-model-trigger {
+.dsc-tool-toggle.is-on:hover:not(:disabled) { background: var(--dsc-brand-soft-strong); }
+.dsc-tool-toggle:disabled { opacity: 0.42; cursor: default; }
+.dsc-tool-toggle-label { overflow: hidden; text-overflow: ellipsis; }
+.dsc-model-control,
+.dsc-effort-control { position: relative; display: flex; }
+.dsc-model-trigger,
+.dsc-effort-trigger {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  max-width: 210px;
-  height: 30px;
+  height: var(--dsc-control-h);
   padding: 0 8px;
   border: 1px solid transparent;
   border-radius: 999px;
@@ -12084,9 +12268,14 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   font-size: 12.1px;
   font-weight: 550;
   white-space: nowrap;
+  flex: none;
 }
+.dsc-model-trigger { max-width: 170px; }
+.dsc-effort-trigger { max-width: 116px; }
 .dsc-model-trigger:hover,
-.dsc-model-trigger.is-open { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-model-trigger.is-open,
+.dsc-effort-trigger:hover,
+.dsc-effort-trigger.is-open { background: var(--dsc-hover); color: var(--dsc-text); }
 .dsc-model-name { overflow: hidden; text-overflow: ellipsis; }
 .dsc-textarea {
   display: block;
@@ -12102,8 +12291,17 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   line-height: 1.62;
 }
 .dsc-textarea::placeholder { color: var(--dsc-muted); }
+.dsc-textarea:focus,
+.dsc-textarea:focus-visible { outline: 0; box-shadow: none; }
+.dsc-prompt:focus,
+.dsc-prompt:focus-visible,
+.dsc-handoff-brief:focus,
+.dsc-handoff-brief:focus-visible {
+  border-color: color-mix(in srgb, var(--dsc-brand) 42%, var(--dsc-border-strong));
+  box-shadow: none;
+}
 .dsc-file-input { display: none; }
-.dsc-tools { position: relative; display: flex; }
+.dsc-tools { position: relative; display: flex; flex: none; }
 .dsc-tools-trigger {
   position: relative;
   width: 32px;
@@ -12120,50 +12318,46 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 }
 .dsc-tools-trigger:hover { background: var(--dsc-hover); color: var(--dsc-text); }
 .dsc-tools-trigger.is-open { background: var(--dsc-active); color: var(--dsc-text); }
-.dsc-tools-trigger.has-active::after {
-  content: '';
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--dsc-link);
-  box-shadow: 0 0 0 1.5px var(--dsc-layer);
-}
 
-/* ---------- popovers (tools + model) ----------
-   Shared shell: rounded surface, quiet border, internal scroll, and a side
-   that the placement hook flips when the composer sits too low in the window. */
+/* ---------- popovers (tools + model + effort) ----------
+   One small floating card anchored to its trigger, opening upward by default.
+   The placement hook flips it when the composer sits too low and clamps its
+   height to the viewport, so the card never clips against a window edge. */
 .dsc-popover {
   position: absolute;
   z-index: 24;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 8px + var(--dsc-popover-gap, 0px));
   left: 0;
   padding: 6px;
-  border: 1px solid var(--dsc-border-strong);
+  border: 1px solid var(--dsc-border);
   border-radius: 14px;
   background: var(--dsc-layer);
-  box-shadow: var(--dsc-shadow);
+  box-shadow: var(--dsc-shadow-popover);
   overflow-y: auto;
   overscroll-behavior: contain;
   animation: dsc-pop 0.12s ease;
 }
 .dsc-popover[data-placement='bottom'] { bottom: auto; top: calc(100% + 8px); }
-.dsc-tools-menu { width: 274px; max-width: calc(100vw - 40px); }
-.dsc-model-menu { left: auto; right: 0; width: 306px; max-width: calc(100vw - 40px); }
-@keyframes dsc-pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-.dsc-popover-title {
-  padding: 4px 10px 6px;
-  font-size: 10.9px;
-  font-weight: 650;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--dsc-muted);
+.dsc-tools-menu {
+  width: 282px;
+  max-width: calc(100vw - 32px);
 }
-.dsc-popover-sep { height: 1px; margin: 5px 4px; background: var(--dsc-border); }
-.dsc-popover-label { font-size: 11.6px; font-weight: 600; color: var(--dsc-text); }
-.dsc-popover-hint { margin: 4px 0 0; font-size: 11.1px; line-height: 1.5; color: var(--dsc-muted); }
+.dsc-model-menu {
+  left: auto;
+  right: 0;
+  width: max-content;
+  min-width: 216px;
+  max-width: min(300px, calc(100vw - 32px));
+}
+.dsc-effort-menu {
+  left: auto;
+  right: 0;
+  width: max-content;
+  min-width: 158px;
+  max-width: min(220px, calc(100vw - 32px));
+}
+@keyframes dsc-pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.dsc-popover-sep { height: 1px; margin: 4px 2px; background: var(--dsc-border); }
 .dsc-popover-item {
   display: flex;
   align-items: center;
@@ -12184,8 +12378,8 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 27px;
-  height: 27px;
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
   background: var(--dsc-layer2);
   color: var(--dsc-muted);
@@ -12200,52 +12394,49 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-popover-item .dsc-switch { flex: none; }
 .dsc-popover-item .dsc-switch-thumb { width: 16px; height: 16px; }
 .dsc-popover-item .dsc-switch.is-on .dsc-switch-thumb { transform: translateX(14px); }
-/* model list */
-.dsc-model-list { display: flex; flex-direction: column; gap: 2px; }
-.dsc-model-option { align-items: flex-start; }
-.dsc-model-option .dsc-popover-item-main { gap: 2px; }
+/* The + card: a normal list of actions, never a settings panel. */
+.dsc-tool-item { padding: 9px; }
+.dsc-tool-item .dsc-popover-item-icon { background: var(--dsc-field); }
+/* Model list: names only, with one check and an optional one-line limitation. */
+.dsc-model-list { display: flex; flex-direction: column; gap: 2px; padding: 2px; }
+.dsc-model-option { align-items: center; }
 .dsc-model-option.is-selected { background: var(--dsc-brand-soft); }
-.dsc-model-option.is-selected .dsc-popover-item-title { color: var(--dsc-link); }
-.dsc-model-option > .dsc-icon { margin-top: 5px; color: var(--dsc-link); flex: none; }
-/* effort control */
-.dsc-effort { padding: 3px 4px 2px; }
-.dsc-effort-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 6px; }
-.dsc-effort-active { display: inline-flex; align-items: center; gap: 4px; color: var(--dsc-muted); font-size: 10.8px; }
-.dsc-effort-options {
-  display: flex;
-  gap: 2px;
-  margin-top: 6px;
-  padding: 3px;
-  border: 1px solid var(--dsc-border);
-  border-radius: 9px;
-  background: var(--dsc-layer2);
+.dsc-model-option.is-selected .dsc-popover-item-title { color: var(--dsc-text); }
+.dsc-model-option > .dsc-icon { color: var(--dsc-link); flex: none; }
+.dsc-model-note { font-size: 10.7px; line-height: 1.4; color: var(--dsc-muted); }
+.dsc-model-scope {
+  margin: 6px 2px 1px;
+  padding: 7px 8px 2px;
+  border-top: 1px solid var(--dsc-border);
+  font-size: 10.9px;
+  line-height: 1.45;
+  color: var(--dsc-muted);
 }
+/* Thinking effort: four discrete rows, Off first, then the API tiers. */
+.dsc-effort-list { display: flex; flex-direction: column; gap: 1px; padding: 2px; }
 .dsc-effort-option {
-  flex: 1;
-  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  height: 33px;
+  padding: 0 9px;
   border: 0;
   border-radius: 7px;
   background: transparent;
-  color: var(--dsc-muted);
-  font-size: 11.8px;
-  font-weight: 550;
-}
-.dsc-effort-option:hover { color: var(--dsc-text); }
-.dsc-effort-option.is-selected {
-  background: var(--dsc-layer);
   color: var(--dsc-text);
-  box-shadow: 0 1px 3px rgba(9, 12, 20, 0.12);
+  font-size: 12.7px;
+  font-weight: 540;
+  text-align: left;
 }
-.dsc-model-meta { padding: 2px 10px 4px; }
-.dsc-model-caps { display: flex; flex-wrap: wrap; gap: 4px 8px; padding: 2px 0 3px; }
-.dsc-model-cap { display: inline-flex; align-items: center; gap: 3px; font-size: 10.7px; color: var(--dsc-muted); }
-.dsc-model-cap .dsc-icon { color: var(--dsc-success); }
-.dsc-model-cap.is-off { opacity: 0.62; }
-.dsc-model-cap.is-off .dsc-icon { color: var(--dsc-warn); }
-.dsc-tools-hint { margin-top: 5px; padding: 6px 6px 2px; border-top: 1px solid var(--dsc-border); }
+.dsc-effort-option:hover { background: var(--dsc-hover); }
+.dsc-effort-option.is-selected { background: var(--dsc-hover); }
+.dsc-effort-option .dsc-icon { color: var(--dsc-link); flex: none; }
+.dsc-effort-option-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dsc-send-button {
-  width: 33px;
-  height: 33px;
+  width: var(--dsc-control-h);
+  height: var(--dsc-control-h);
   border: 0;
   border-radius: 999px;
   background: var(--dsc-brand);
@@ -12254,13 +12445,17 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   align-items: center;
   justify-content: center;
   flex: none;
-  transition: filter var(--dsc-fast) ease, opacity var(--dsc-fast) ease;
+  transition: filter var(--dsc-fast) ease, background var(--dsc-fast) ease, color var(--dsc-fast) ease;
 }
 .dsc-send-button:hover { filter: brightness(1.07); }
-.dsc-send-button.is-idle { opacity: 0.4; }
+.dsc-send-button.is-idle {
+  background: var(--dsc-layer2);
+  color: var(--dsc-muted);
+  opacity: 0.9;
+}
 .dsc-stop-button {
-  width: 33px;
-  height: 33px;
+  width: var(--dsc-control-h);
+  height: var(--dsc-control-h);
   border: 1px solid var(--dsc-border-strong);
   border-radius: 999px;
   background: var(--dsc-layer2);
@@ -12328,6 +12523,14 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 }
 @keyframes dsc-rise { from { opacity: 0; transform: translateY(8px) scale(0.995); } to { opacity: 1; transform: none; } }
 .dsc-modal.dsc-handoff { width: min(760px, 100%); }
+/* One compact form layout shared by create/rename prompts: header, a full-width
+   field, then right-aligned actions. The width belongs to the dialog, not to
+   the intrinsic width of an input. */
+.dsc-modal.dsc-form-modal { width: min(420px, 100%); }
+.dsc-form-modal .dsc-modal-body { padding: 18px 20px 20px; }
+.dsc-form-modal .dsc-field { gap: 8px; }
+.dsc-form-modal .dsc-input { height: 38px; font-size: 13.2px; }
+.dsc-modal-foot-note:empty { min-height: 1px; }
 .dsc-modal-head { display: flex; align-items: flex-start; gap: 12px; padding: 18px 20px 14px; border-bottom: 1px solid var(--dsc-border); }
 .dsc-modal-head h2 { margin: 0; font-size: 16.5px; font-weight: 620; letter-spacing: -0.01em; }
 .dsc-modal-sub { margin: 4px 0 0; font-size: 11.9px; color: var(--dsc-muted); line-height: 1.55; }
@@ -12366,19 +12569,28 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-key-row { display: flex; gap: 7px; align-items: center; }
 .dsc-input {
   flex: 1;
+  width: 100%;
   min-width: 0;
-  height: 35px;
+  height: 36px;
   padding: 0 10px;
   border: 1px solid var(--dsc-border-strong);
   border-radius: 9px;
   background: var(--dsc-bg);
+  color: var(--dsc-text);
   outline: 0;
   font-size: 12.9px;
   transition: border-color var(--dsc-fast) ease, box-shadow var(--dsc-fast) ease;
 }
-.dsc-input:focus { border-color: var(--dsc-brand); box-shadow: 0 0 0 2px var(--dsc-brand-soft); }
+.dsc-input::placeholder { color: var(--dsc-muted); }
+.dsc-input:focus,
+.dsc-input:focus-visible {
+  outline: 0;
+  border-color: color-mix(in srgb, var(--dsc-brand) 42%, var(--dsc-border-strong));
+  box-shadow: none;
+}
+.dsc-input:disabled { opacity: 0.58; }
 .dsc-select {
-  height: 35px;
+  height: 36px;
   padding: 0 30px 0 10px;
   border: 1px solid var(--dsc-border-strong);
   border-radius: 9px;
@@ -12391,6 +12603,12 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   background-position: calc(100% - 16px) 15px, calc(100% - 11px) 15px;
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
+}
+.dsc-select:focus,
+.dsc-select:focus-visible {
+  outline: 0;
+  border-color: color-mix(in srgb, var(--dsc-brand) 42%, var(--dsc-border-strong));
+  box-shadow: none;
 }
 .dsc-key-state { flex: 1; padding: 8px 10px; border-radius: 9px; background: var(--dsc-layer2); color: var(--dsc-muted); font-size: 12px; }
 .dsc-switch-row { display: flex; align-items: center; gap: 12px; }
@@ -12467,8 +12685,8 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-path { max-width: 68%; overflow-x: auto; padding: 5px 7px; border-radius: 6px; background: var(--dsc-layer2); font-size: 11.2px; white-space: nowrap; font-family: var(--dsc-mono); }
 .dsc-about-row { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--dsc-muted); }
 .dsc-about-row strong { color: var(--dsc-text); font-weight: 580; }
-.dsc-confirm { width: min(430px, 100%); padding: 20px; border: 1px solid var(--dsc-border); border-radius: 16px; background: var(--dsc-layer); box-shadow: var(--dsc-shadow); animation: dsc-rise 0.16s ease; }
-.dsc-confirm h2 { margin: 0 0 7px; font-size: 15.5px; font-weight: 620; }
+.dsc-confirm { width: min(420px, 100%); padding: 20px; border: 1px solid var(--dsc-border); border-radius: 16px; background: var(--dsc-layer); box-shadow: var(--dsc-shadow); animation: dsc-rise 0.16s ease; }
+.dsc-confirm h2 { margin: 0 0 7px; font-size: 16px; font-weight: 620; letter-spacing: -0.01em; }
 .dsc-confirm p { margin: 0; font-size: 12.9px; line-height: 1.62; color: var(--dsc-muted); }
 .dsc-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 
@@ -12506,7 +12724,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-menu-separator { height: 1px; margin: 4px 6px; background: var(--dsc-border); }
 
 /* ---------- folder pickers / archive manager ---------- */
-.dsc-folder-name { margin-top: 12px; }
+.dsc-folder-name-input { margin: 0; }
 .dsc-dialog-list { display: flex; flex-direction: column; gap: 2px; max-height: 48vh; overflow-y: auto; }
 .dsc-choice {
   display: flex;
@@ -12624,7 +12842,9 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 }
 @media (max-width: 620px) {
   .dsc-model-trigger { max-width: 132px; }
-  .dsc-active-tool span { display: none; }
+  .dsc-effort-trigger { max-width: 84px; }
+  .dsc-tool-toggle { width: 30px; padding: 0; justify-content: center; }
+  .dsc-tool-toggle-label { display: none; }
   .dsc-header-title { display: none; }
   .dsc-thread { padding: 16px 12px 8px; }
   .dsc-composer-wrap { padding: 4px 10px 8px; }
@@ -12749,13 +12969,18 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     SourceRow,
     ToolsMenu,
     ModelMenu,
+    EffortMenu,
     chatToolDefinitions,
+    chatMenuTools,
+    composerToolDefinitions,
     activeChatTools,
     registerChatTool,
     modelCatalog,
     modelById,
     modelCapability,
     modelEfforts,
+    modelTriggerLabel,
+    modelNotes,
     modelChipLabel,
     currentModelChoice,
     // Rendering helpers, so the checks can exercise them without a browser.

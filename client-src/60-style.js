@@ -41,6 +41,8 @@ const CHAT_CSS = `
   --dsc-shadow: 0 20px 48px rgba(9, 12, 20, 0.18);
   --dsc-shadow-soft: 0 4px 16px rgba(9, 12, 20, 0.07);
   --dsc-shadow-composer: 0 2px 10px rgba(9, 12, 20, 0.05);
+  --dsc-shadow-popover: 0 12px 34px rgba(9, 12, 20, 0.17), 0 2px 7px rgba(9, 12, 20, 0.07);
+  --dsc-control-h: 32px;
   --dsc-radius: var(--dsw-radius-md, 12px);
   --dsc-font: var(--dsw-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif);
   --dsc-mono: var(--ds-font-family-code, 'SF Mono', Consolas, 'Liberation Mono', monospace);
@@ -135,7 +137,18 @@ body[data-ds-dark-theme] .dsc-root {
 .dsc-root button { cursor: pointer; }
 .dsc-root button:disabled { cursor: default; }
 .dsc-root ::selection { background: var(--dsc-brand-soft-strong); }
-.dsc-root :focus-visible { outline: 2px solid var(--dsc-brand); outline-offset: 2px; }
+/* Keyboard focus is a thin brand ring on real controls. Text fields never take
+   the browser's own outline: their surface (a composer or an input) draws a
+   single quiet focus state instead, so the native ring and a component border
+   can never stack into a double white frame. */
+.dsc-root :where(button, a, [role='button'], [role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox'], [role='switch']):focus-visible {
+  outline: 2px solid var(--dsc-brand);
+  outline-offset: 2px;
+}
+.dsc-root :where(input, textarea, select):focus,
+.dsc-root :where(input, textarea, select):focus-visible {
+  outline: 0;
+}
 .dsc-icon { display: block; flex: none; }
 .dsc-spinner {
   display: inline-block;
@@ -443,6 +456,7 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
 .dsc-chat-item.is-active .dsc-chat-item-time { visibility: hidden; }
 .dsc-chat-item-pin { display: inline-flex; flex: none; color: var(--dsc-muted); }
 .dsc-chat-item.is-renaming { background: var(--dsc-layer); border: 1px solid var(--dsc-border-strong); }
+.dsc-chat-item.is-renaming:focus-within { border-color: color-mix(in srgb, var(--dsc-brand) 42%, var(--dsc-border-strong)); }
 .dsc-rename-input {
   width: 100%;
   height: 30px;
@@ -779,8 +793,12 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   white-space: nowrap;
   transition: filter var(--dsc-fast) ease;
 }
-.dsc-primary-button:hover { filter: brightness(1.06); }
-.dsc-primary-button:disabled { opacity: 0.45; }
+.dsc-primary-button:hover:not(:disabled) { filter: brightness(1.06); }
+.dsc-primary-button:disabled {
+  background: var(--dsc-layer2);
+  color: var(--dsc-muted);
+  opacity: 0.8;
+}
 .dsc-primary-button.is-danger { background: var(--dsc-error); }
 .dsc-secondary-button {
   height: 36px;
@@ -793,7 +811,7 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   white-space: nowrap;
   transition: background var(--dsc-fast) ease;
 }
-.dsc-secondary-button:hover { background: var(--dsc-hover); }
+.dsc-secondary-button:hover:not(:disabled) { background: var(--dsc-hover); }
 .dsc-secondary-button:disabled { opacity: 0.45; }
 .dsc-text-button {
   display: inline-flex;
@@ -1461,9 +1479,9 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-auth-banner span { flex: 1; }
 /* One rounded surface owns the border. The textarea inside is a bare,
    transparent field: a text input must never draw a second rectangle (or a
-   browser focus outline) inside this container. Focus feedback lives on the
-   container so it keeps the rounded shape and stays visible for keyboard
-   users. */
+   browser focus outline) inside this container. Focus feedback is a quiet
+   border tone change, with one very light keyboard-only ring; there is no
+   white double frame and no glow. */
 .dsc-composer {
   position: relative;
   max-width: 788px;
@@ -1475,15 +1493,11 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   box-shadow: var(--dsc-shadow-composer);
   transition: border-color var(--dsc-fast) ease, box-shadow var(--dsc-fast) ease;
 }
-.dsc-composer:focus-within {
-  border-color: color-mix(in srgb, var(--dsc-brand) 45%, var(--dsc-border-strong));
-  box-shadow: 0 0 0 3px var(--dsc-brand-soft), var(--dsc-shadow-soft);
+.dsc-composer:has(.dsc-editor-field:focus) {
+  border-color: color-mix(in srgb, var(--dsc-brand) 34%, var(--dsc-border-strong));
 }
-/* The editor itself never draws a ring; the whole rounded container does, and
-   keyboard focus gets the stronger tint. */
 .dsc-composer:has(.dsc-editor-field:focus-visible) {
-  border-color: var(--dsc-brand);
-  box-shadow: 0 0 0 3px var(--dsc-brand-soft-strong), var(--dsc-shadow-soft);
+  box-shadow: 0 0 0 1px var(--dsc-brand-soft-strong), var(--dsc-shadow-composer);
 }
 .dsc-composer.is-drag { border-color: var(--dsc-brand); }
 .dsc-composer.has-warning { border-color: color-mix(in srgb, var(--dsc-warn) 42%, var(--dsc-border-strong)); }
@@ -1506,6 +1520,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   overflow-y: hidden;
   background: transparent;
   color: var(--dsc-text);
+  caret-color: var(--dsc-brand);
   font-family: inherit;
   font-size: 15.2px;
   line-height: 1.6;
@@ -1536,31 +1551,44 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   min-height: 34px;
   margin-top: 2px;
 }
-.dsc-composer-left { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
-.dsc-composer-right { display: flex; align-items: center; gap: 6px; flex: none; }
-.dsc-active-tools { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-.dsc-active-tool {
+.dsc-composer-left { display: flex; align-items: center; gap: 4px; min-width: 0; flex-wrap: nowrap; }
+.dsc-composer-right { display: flex; align-items: center; gap: 4px; flex: none; }
+/* Direct on/off controls for web search and deep thinking. They are always in
+   the same place: only the tint changes, so toggling never resizes the editor
+   or moves the model chip. */
+.dsc-tool-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  height: 26px;
-  padding: 0 8px;
-  border: 1px solid color-mix(in srgb, var(--dsc-brand) 18%, transparent);
+  gap: 6px;
+  height: var(--dsc-control-h);
+  padding: 0 10px;
+  border: 1px solid transparent;
   border-radius: 999px;
+  background: transparent;
+  color: var(--dsc-muted);
+  font-size: 12.1px;
+  font-weight: 550;
+  white-space: nowrap;
+  flex: none;
+  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
+}
+.dsc-tool-toggle:hover:not(:disabled) { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-tool-toggle.is-on {
+  border-color: color-mix(in srgb, var(--dsc-link) 16%, transparent);
   background: var(--dsc-brand-soft);
   color: var(--dsc-link);
-  font-size: 11.8px;
-  font-weight: 550;
 }
-.dsc-active-tool:hover { background: var(--dsc-brand-soft-strong); }
-.dsc-active-tool .dsc-icon:last-child { opacity: 0.62; }
-.dsc-model-control { position: relative; display: flex; }
-.dsc-model-trigger {
+.dsc-tool-toggle.is-on:hover:not(:disabled) { background: var(--dsc-brand-soft-strong); }
+.dsc-tool-toggle:disabled { opacity: 0.42; cursor: default; }
+.dsc-tool-toggle-label { overflow: hidden; text-overflow: ellipsis; }
+.dsc-model-control,
+.dsc-effort-control { position: relative; display: flex; }
+.dsc-model-trigger,
+.dsc-effort-trigger {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  max-width: 210px;
-  height: 30px;
+  height: var(--dsc-control-h);
   padding: 0 8px;
   border: 1px solid transparent;
   border-radius: 999px;
@@ -1569,9 +1597,14 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   font-size: 12.1px;
   font-weight: 550;
   white-space: nowrap;
+  flex: none;
 }
+.dsc-model-trigger { max-width: 170px; }
+.dsc-effort-trigger { max-width: 116px; }
 .dsc-model-trigger:hover,
-.dsc-model-trigger.is-open { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-model-trigger.is-open,
+.dsc-effort-trigger:hover,
+.dsc-effort-trigger.is-open { background: var(--dsc-hover); color: var(--dsc-text); }
 .dsc-model-name { overflow: hidden; text-overflow: ellipsis; }
 .dsc-textarea {
   display: block;
@@ -1587,8 +1620,17 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   line-height: 1.62;
 }
 .dsc-textarea::placeholder { color: var(--dsc-muted); }
+.dsc-textarea:focus,
+.dsc-textarea:focus-visible { outline: 0; box-shadow: none; }
+.dsc-prompt:focus,
+.dsc-prompt:focus-visible,
+.dsc-handoff-brief:focus,
+.dsc-handoff-brief:focus-visible {
+  border-color: color-mix(in srgb, var(--dsc-brand) 42%, var(--dsc-border-strong));
+  box-shadow: none;
+}
 .dsc-file-input { display: none; }
-.dsc-tools { position: relative; display: flex; }
+.dsc-tools { position: relative; display: flex; flex: none; }
 .dsc-tools-trigger {
   position: relative;
   width: 32px;
@@ -1605,50 +1647,46 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 }
 .dsc-tools-trigger:hover { background: var(--dsc-hover); color: var(--dsc-text); }
 .dsc-tools-trigger.is-open { background: var(--dsc-active); color: var(--dsc-text); }
-.dsc-tools-trigger.has-active::after {
-  content: '';
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--dsc-link);
-  box-shadow: 0 0 0 1.5px var(--dsc-layer);
-}
 
-/* ---------- popovers (tools + model) ----------
-   Shared shell: rounded surface, quiet border, internal scroll, and a side
-   that the placement hook flips when the composer sits too low in the window. */
+/* ---------- popovers (tools + model + effort) ----------
+   One small floating card anchored to its trigger, opening upward by default.
+   The placement hook flips it when the composer sits too low and clamps its
+   height to the viewport, so the card never clips against a window edge. */
 .dsc-popover {
   position: absolute;
   z-index: 24;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 8px + var(--dsc-popover-gap, 0px));
   left: 0;
   padding: 6px;
-  border: 1px solid var(--dsc-border-strong);
+  border: 1px solid var(--dsc-border);
   border-radius: 14px;
   background: var(--dsc-layer);
-  box-shadow: var(--dsc-shadow);
+  box-shadow: var(--dsc-shadow-popover);
   overflow-y: auto;
   overscroll-behavior: contain;
   animation: dsc-pop 0.12s ease;
 }
 .dsc-popover[data-placement='bottom'] { bottom: auto; top: calc(100% + 8px); }
-.dsc-tools-menu { width: 274px; max-width: calc(100vw - 40px); }
-.dsc-model-menu { left: auto; right: 0; width: 306px; max-width: calc(100vw - 40px); }
-@keyframes dsc-pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-.dsc-popover-title {
-  padding: 4px 10px 6px;
-  font-size: 10.9px;
-  font-weight: 650;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--dsc-muted);
+.dsc-tools-menu {
+  width: 282px;
+  max-width: calc(100vw - 32px);
 }
-.dsc-popover-sep { height: 1px; margin: 5px 4px; background: var(--dsc-border); }
-.dsc-popover-label { font-size: 11.6px; font-weight: 600; color: var(--dsc-text); }
-.dsc-popover-hint { margin: 4px 0 0; font-size: 11.1px; line-height: 1.5; color: var(--dsc-muted); }
+.dsc-model-menu {
+  left: auto;
+  right: 0;
+  width: max-content;
+  min-width: 216px;
+  max-width: min(300px, calc(100vw - 32px));
+}
+.dsc-effort-menu {
+  left: auto;
+  right: 0;
+  width: max-content;
+  min-width: 158px;
+  max-width: min(220px, calc(100vw - 32px));
+}
+@keyframes dsc-pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.dsc-popover-sep { height: 1px; margin: 4px 2px; background: var(--dsc-border); }
 .dsc-popover-item {
   display: flex;
   align-items: center;
@@ -1669,8 +1707,8 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 27px;
-  height: 27px;
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
   background: var(--dsc-layer2);
   color: var(--dsc-muted);
@@ -1685,52 +1723,49 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-popover-item .dsc-switch { flex: none; }
 .dsc-popover-item .dsc-switch-thumb { width: 16px; height: 16px; }
 .dsc-popover-item .dsc-switch.is-on .dsc-switch-thumb { transform: translateX(14px); }
-/* model list */
-.dsc-model-list { display: flex; flex-direction: column; gap: 2px; }
-.dsc-model-option { align-items: flex-start; }
-.dsc-model-option .dsc-popover-item-main { gap: 2px; }
+/* The + card: a normal list of actions, never a settings panel. */
+.dsc-tool-item { padding: 9px; }
+.dsc-tool-item .dsc-popover-item-icon { background: var(--dsc-field); }
+/* Model list: names only, with one check and an optional one-line limitation. */
+.dsc-model-list { display: flex; flex-direction: column; gap: 2px; padding: 2px; }
+.dsc-model-option { align-items: center; }
 .dsc-model-option.is-selected { background: var(--dsc-brand-soft); }
-.dsc-model-option.is-selected .dsc-popover-item-title { color: var(--dsc-link); }
-.dsc-model-option > .dsc-icon { margin-top: 5px; color: var(--dsc-link); flex: none; }
-/* effort control */
-.dsc-effort { padding: 3px 4px 2px; }
-.dsc-effort-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 6px; }
-.dsc-effort-active { display: inline-flex; align-items: center; gap: 4px; color: var(--dsc-muted); font-size: 10.8px; }
-.dsc-effort-options {
-  display: flex;
-  gap: 2px;
-  margin-top: 6px;
-  padding: 3px;
-  border: 1px solid var(--dsc-border);
-  border-radius: 9px;
-  background: var(--dsc-layer2);
+.dsc-model-option.is-selected .dsc-popover-item-title { color: var(--dsc-text); }
+.dsc-model-option > .dsc-icon { color: var(--dsc-link); flex: none; }
+.dsc-model-note { font-size: 10.7px; line-height: 1.4; color: var(--dsc-muted); }
+.dsc-model-scope {
+  margin: 6px 2px 1px;
+  padding: 7px 8px 2px;
+  border-top: 1px solid var(--dsc-border);
+  font-size: 10.9px;
+  line-height: 1.45;
+  color: var(--dsc-muted);
 }
+/* Thinking effort: four discrete rows, Off first, then the API tiers. */
+.dsc-effort-list { display: flex; flex-direction: column; gap: 1px; padding: 2px; }
 .dsc-effort-option {
-  flex: 1;
-  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  height: 33px;
+  padding: 0 9px;
   border: 0;
   border-radius: 7px;
   background: transparent;
-  color: var(--dsc-muted);
-  font-size: 11.8px;
-  font-weight: 550;
-}
-.dsc-effort-option:hover { color: var(--dsc-text); }
-.dsc-effort-option.is-selected {
-  background: var(--dsc-layer);
   color: var(--dsc-text);
-  box-shadow: 0 1px 3px rgba(9, 12, 20, 0.12);
+  font-size: 12.7px;
+  font-weight: 540;
+  text-align: left;
 }
-.dsc-model-meta { padding: 2px 10px 4px; }
-.dsc-model-caps { display: flex; flex-wrap: wrap; gap: 4px 8px; padding: 2px 0 3px; }
-.dsc-model-cap { display: inline-flex; align-items: center; gap: 3px; font-size: 10.7px; color: var(--dsc-muted); }
-.dsc-model-cap .dsc-icon { color: var(--dsc-success); }
-.dsc-model-cap.is-off { opacity: 0.62; }
-.dsc-model-cap.is-off .dsc-icon { color: var(--dsc-warn); }
-.dsc-tools-hint { margin-top: 5px; padding: 6px 6px 2px; border-top: 1px solid var(--dsc-border); }
+.dsc-effort-option:hover { background: var(--dsc-hover); }
+.dsc-effort-option.is-selected { background: var(--dsc-hover); }
+.dsc-effort-option .dsc-icon { color: var(--dsc-link); flex: none; }
+.dsc-effort-option-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dsc-send-button {
-  width: 33px;
-  height: 33px;
+  width: var(--dsc-control-h);
+  height: var(--dsc-control-h);
   border: 0;
   border-radius: 999px;
   background: var(--dsc-brand);
@@ -1739,13 +1774,17 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   align-items: center;
   justify-content: center;
   flex: none;
-  transition: filter var(--dsc-fast) ease, opacity var(--dsc-fast) ease;
+  transition: filter var(--dsc-fast) ease, background var(--dsc-fast) ease, color var(--dsc-fast) ease;
 }
 .dsc-send-button:hover { filter: brightness(1.07); }
-.dsc-send-button.is-idle { opacity: 0.4; }
+.dsc-send-button.is-idle {
+  background: var(--dsc-layer2);
+  color: var(--dsc-muted);
+  opacity: 0.9;
+}
 .dsc-stop-button {
-  width: 33px;
-  height: 33px;
+  width: var(--dsc-control-h);
+  height: var(--dsc-control-h);
   border: 1px solid var(--dsc-border-strong);
   border-radius: 999px;
   background: var(--dsc-layer2);
@@ -1813,6 +1852,14 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 }
 @keyframes dsc-rise { from { opacity: 0; transform: translateY(8px) scale(0.995); } to { opacity: 1; transform: none; } }
 .dsc-modal.dsc-handoff { width: min(760px, 100%); }
+/* One compact form layout shared by create/rename prompts: header, a full-width
+   field, then right-aligned actions. The width belongs to the dialog, not to
+   the intrinsic width of an input. */
+.dsc-modal.dsc-form-modal { width: min(420px, 100%); }
+.dsc-form-modal .dsc-modal-body { padding: 18px 20px 20px; }
+.dsc-form-modal .dsc-field { gap: 8px; }
+.dsc-form-modal .dsc-input { height: 38px; font-size: 13.2px; }
+.dsc-modal-foot-note:empty { min-height: 1px; }
 .dsc-modal-head { display: flex; align-items: flex-start; gap: 12px; padding: 18px 20px 14px; border-bottom: 1px solid var(--dsc-border); }
 .dsc-modal-head h2 { margin: 0; font-size: 16.5px; font-weight: 620; letter-spacing: -0.01em; }
 .dsc-modal-sub { margin: 4px 0 0; font-size: 11.9px; color: var(--dsc-muted); line-height: 1.55; }
@@ -1851,19 +1898,28 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-key-row { display: flex; gap: 7px; align-items: center; }
 .dsc-input {
   flex: 1;
+  width: 100%;
   min-width: 0;
-  height: 35px;
+  height: 36px;
   padding: 0 10px;
   border: 1px solid var(--dsc-border-strong);
   border-radius: 9px;
   background: var(--dsc-bg);
+  color: var(--dsc-text);
   outline: 0;
   font-size: 12.9px;
   transition: border-color var(--dsc-fast) ease, box-shadow var(--dsc-fast) ease;
 }
-.dsc-input:focus { border-color: var(--dsc-brand); box-shadow: 0 0 0 2px var(--dsc-brand-soft); }
+.dsc-input::placeholder { color: var(--dsc-muted); }
+.dsc-input:focus,
+.dsc-input:focus-visible {
+  outline: 0;
+  border-color: color-mix(in srgb, var(--dsc-brand) 42%, var(--dsc-border-strong));
+  box-shadow: none;
+}
+.dsc-input:disabled { opacity: 0.58; }
 .dsc-select {
-  height: 35px;
+  height: 36px;
   padding: 0 30px 0 10px;
   border: 1px solid var(--dsc-border-strong);
   border-radius: 9px;
@@ -1876,6 +1932,12 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   background-position: calc(100% - 16px) 15px, calc(100% - 11px) 15px;
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
+}
+.dsc-select:focus,
+.dsc-select:focus-visible {
+  outline: 0;
+  border-color: color-mix(in srgb, var(--dsc-brand) 42%, var(--dsc-border-strong));
+  box-shadow: none;
 }
 .dsc-key-state { flex: 1; padding: 8px 10px; border-radius: 9px; background: var(--dsc-layer2); color: var(--dsc-muted); font-size: 12px; }
 .dsc-switch-row { display: flex; align-items: center; gap: 12px; }
@@ -1952,8 +2014,8 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-path { max-width: 68%; overflow-x: auto; padding: 5px 7px; border-radius: 6px; background: var(--dsc-layer2); font-size: 11.2px; white-space: nowrap; font-family: var(--dsc-mono); }
 .dsc-about-row { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--dsc-muted); }
 .dsc-about-row strong { color: var(--dsc-text); font-weight: 580; }
-.dsc-confirm { width: min(430px, 100%); padding: 20px; border: 1px solid var(--dsc-border); border-radius: 16px; background: var(--dsc-layer); box-shadow: var(--dsc-shadow); animation: dsc-rise 0.16s ease; }
-.dsc-confirm h2 { margin: 0 0 7px; font-size: 15.5px; font-weight: 620; }
+.dsc-confirm { width: min(420px, 100%); padding: 20px; border: 1px solid var(--dsc-border); border-radius: 16px; background: var(--dsc-layer); box-shadow: var(--dsc-shadow); animation: dsc-rise 0.16s ease; }
+.dsc-confirm h2 { margin: 0 0 7px; font-size: 16px; font-weight: 620; letter-spacing: -0.01em; }
 .dsc-confirm p { margin: 0; font-size: 12.9px; line-height: 1.62; color: var(--dsc-muted); }
 .dsc-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 
@@ -1991,7 +2053,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-menu-separator { height: 1px; margin: 4px 6px; background: var(--dsc-border); }
 
 /* ---------- folder pickers / archive manager ---------- */
-.dsc-folder-name { margin-top: 12px; }
+.dsc-folder-name-input { margin: 0; }
 .dsc-dialog-list { display: flex; flex-direction: column; gap: 2px; max-height: 48vh; overflow-y: auto; }
 .dsc-choice {
   display: flex;
@@ -2109,7 +2171,9 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 }
 @media (max-width: 620px) {
   .dsc-model-trigger { max-width: 132px; }
-  .dsc-active-tool span { display: none; }
+  .dsc-effort-trigger { max-width: 84px; }
+  .dsc-tool-toggle { width: 30px; padding: 0; justify-content: center; }
+  .dsc-tool-toggle-label { display: none; }
   .dsc-header-title { display: none; }
   .dsc-thread { padding: 16px 12px 8px; }
   .dsc-composer-wrap { padding: 4px 10px 8px; }

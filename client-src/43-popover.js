@@ -42,10 +42,16 @@ function useOutsideDismiss(open, onClose, panelRef, triggerRef) {
  * Keep a popover on the side with room for it and clamp its height to the
  * viewport. Re-measures on resize and on any layout scroll (the thread above
  * the composer scrolls independently of the window).
- * @returns `{ placement, maxHeight }` - "top" opens above the trigger.
+ *
+ * Composer popovers are aligned to the whole rounded input, not to the small
+ * control that opened them: "above" means above the composer's top edge, so a
+ * menu never covers the text the user is writing. The extra distance is
+ * published as a CSS custom property on the panel.
+ *
+ * @returns `{ placement, maxHeight, gap }` - "top" opens above the trigger.
  */
 function usePopupPlacement(open, triggerRef, panelRef) {
-  const [layout, setLayout] = React.useState({ placement: 'top', maxHeight: null })
+  const [layout, setLayout] = React.useState({ placement: 'top', maxHeight: null, gap: 0 })
   React.useLayoutEffect(() => {
     if (!open) return () => {}
     const update = () => {
@@ -53,19 +59,23 @@ function usePopupPlacement(open, triggerRef, panelRef) {
       const panel = panelRef.current
       if (!trigger || !panel) return
       const rect = trigger.getBoundingClientRect()
+      const composer = trigger.closest?.('.dsc-composer')
+      const composerTop = composer?.getBoundingClientRect?.().top ?? rect.top
+      const gap = Math.max(0, Math.round(rect.top - composerTop))
       const viewport = window.innerHeight || 0
       const natural = panel.offsetHeight || panel.scrollHeight || 0
-      const spaceAbove = rect.top - POPOVER_GAP - 8
+      const spaceAbove = composerTop - POPOVER_GAP - 8
       const spaceBelow = viewport - rect.bottom - POPOVER_GAP - 8
       const placement = spaceAbove >= Math.min(natural, POPOVER_PREFERRED) || spaceAbove >= spaceBelow
         ? 'top'
         : 'bottom'
       const available = placement === 'top' ? spaceAbove : spaceBelow
       const maxHeight = available > 120 ? Math.min(available, 520) : null
+      const nextGap = placement === 'top' ? gap : 0
       setLayout((current) => (
-        current.placement === placement && current.maxHeight === maxHeight
+        current.placement === placement && current.maxHeight === maxHeight && current.gap === nextGap
           ? current
-          : { placement, maxHeight }
+          : { placement, maxHeight, gap: nextGap }
       ))
     }
     update()
@@ -74,6 +84,8 @@ function usePopupPlacement(open, triggerRef, panelRef) {
     window.addEventListener('scroll', update, true)
     const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(update) : null
     if (observer && panelRef.current) observer.observe(panelRef.current)
+    const composer = triggerRef.current?.closest?.('.dsc-composer')
+    if (observer && composer) observer.observe(composer)
     return () => {
       window.removeEventListener('resize', update)
       window.removeEventListener('scroll', update, true)
@@ -81,6 +93,14 @@ function usePopupPlacement(open, triggerRef, panelRef) {
     }
   }, [open, panelRef, triggerRef])
   return layout
+}
+
+/** Inline style for an open popover: viewport clamp plus composer clearance. */
+function popoverStyle(layout) {
+  const style = {}
+  if (layout.maxHeight !== null) style.maxHeight = `${layout.maxHeight}px`
+  if (layout.gap > 0) style['--dsc-popover-gap'] = `${layout.gap}px`
+  return style
 }
 
 function popoverItems(container) {

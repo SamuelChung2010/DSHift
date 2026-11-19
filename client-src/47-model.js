@@ -9,6 +9,11 @@
  *
  * `chatStore.state.modelChoice` holds the selection for the active
  * conversation; per-conversation overrides and the defaults live on the Host.
+ *
+ * The composer splits the two decisions into two small popovers: the model
+ * picker is a name-only list, and the thinking-effort picker is its own compact
+ * control next to it. Neither panel repeats the other's options, so choosing a
+ * model never asks the user to read a feature sheet.
  */
 
 /** The single model an older Host always sends. */
@@ -25,12 +30,6 @@ const FALLBACK_MODELS = [
 const EFFORT_ORDER = ['low', 'high', 'max']
 const EFFORT_LABEL = { low: 'effortLow', high: 'effortHigh', max: 'effortMax' }
 const EFFORT_HINT = { low: 'effortLowHint', high: 'effortHighHint', max: 'effortMaxHint' }
-const CAPABILITY_KEYS = [
-  { key: 'vision', label: 'modelCapVision' },
-  { key: 'documents', label: 'modelCapFiles' },
-  { key: 'search', label: 'modelCapSearch' },
-  { key: 'thinking', label: 'modelCapThinking' },
-]
 
 function modelCatalog() {
   const models = chatStore.state.models
@@ -52,7 +51,12 @@ function modelEfforts(model) {
   return list.length > 0 ? list : (modelCapability(model, 'thinking') ? EFFORT_ORDER : [])
 }
 
-/** Short label for the composer chip; the full name is kept for the menu. */
+/** The compact name shown on the composer chip and in the model list. */
+function modelTriggerLabel(model) {
+  return model?.shortName || model?.name || ''
+}
+
+/** Full label for a reply footer, including the effort that produced it. */
 function modelChipLabel(model, thinking, effort) {
   const name = model?.shortName || model?.name || ''
   if (!thinking) return name
@@ -87,15 +91,25 @@ function currentModelChoice() {
 }
 
 /**
- * Model menu: a compact list of the real API models plus the thinking-effort
- * control for the selected one. It opens above the composer, right-aligned to
- * its chip, and is fully operable from the keyboard.
+ * A model's capability gaps, for the one short note the menu may show. The full
+ * description stays in the row's native tooltip; the menu itself only carries
+ * the limitation that changes what the user can attach.
+ */
+function modelNotes(model) {
+  const notes = []
+  if (model !== undefined && modelCapability(model, 'vision') === false) notes.push(tr('modelNoVision'))
+  return notes
+}
+
+/**
+ * Model menu: the real API models, by name, plus a check on the current one.
+ * It opens above the composer, right-aligned to its chip, and is fully operable
+ * from the keyboard.
  */
 function ModelMenu() {
   const t = useT()
   const models = modelCatalog()
   const choice = currentModelChoice()
-  const thinking = useChat(state => state.settings.thinking)
   const activeId = useChat(state => state.activeId)
   const [open, setOpen] = React.useState(false)
   const triggerRef = React.useRef(null)
@@ -133,7 +147,7 @@ function ModelMenu() {
         }
       },
     },
-      h('span', { className: 'dsc-model-name' }, modelChipLabel(choice.model, thinking, choice.effort)),
+      h('span', { className: 'dsc-model-name' }, modelTriggerLabel(choice.model)),
       h(Icon, { name: 'chevronDown', size: 12 }),
     ),
     open
@@ -143,69 +157,137 @@ function ModelMenu() {
           role: 'menu',
           'aria-label': t('modelSelect'),
           'data-placement': layout.placement,
-          style: layout.maxHeight === null ? undefined : { maxHeight: `${layout.maxHeight}px` },
+          style: popoverStyle(layout),
           onKeyDown,
         },
-        h('div', { className: 'dsc-popover-title' }, t('modelMenuTitle')),
         h('div', { className: 'dsc-model-list' },
           models.map(model => {
             const selected = model.id === choice.model.id
+            const notes = modelNotes(model)
+            const description = model.descriptionKey === undefined ? '' : t(model.descriptionKey)
             return h('button', {
               key: model.id,
               type: 'button',
               role: 'menuitemradio',
               'aria-checked': selected,
+              'aria-label': description === '' ? model.name : `${model.name} — ${description}`,
+              title: description,
               'data-model': model.id,
               className: cx('dsc-popover-item dsc-model-option', selected && 'is-selected'),
               onClick: () => { chatActions.selectModel(model.id); close() },
             },
               h('span', { className: 'dsc-popover-item-main' },
                 h('span', { className: 'dsc-popover-item-title' }, model.name),
-                model.descriptionKey !== undefined
-                  ? h('span', { className: 'dsc-popover-item-desc' }, t(model.descriptionKey))
+                notes.length > 0
+                  ? h('span', { className: 'dsc-model-note' }, notes.join(' · '))
                   : null,
               ),
               selected ? h(Icon, { name: 'check', size: 15 }) : null,
             )
           }),
         ),
-        h('div', { className: 'dsc-popover-sep' }),
-        h('div', { className: 'dsc-effort' },
-          h('div', { className: 'dsc-effort-head' },
-            h('span', { className: 'dsc-popover-label' }, t('thinkingEffort')),
-            h('span', { className: 'dsc-effort-active' }, h(Icon, { name: 'brain', size: 12 }), thinking ? t('toolOn') : t('toolOff')),
+        h('p', { className: 'dsc-model-scope' }, scope),
+      )
+      : null,
+  )
+}
+
+/**
+ * Thinking-effort picker: a separate compact control beside the model chip. It
+ * stays visible (showing Off) for every model with a real effort list, so
+ * toggling deep thinking never shifts the composer layout. The four states are
+ * the API's real tiers plus Off; there is no free-form value.
+ */
+function EffortMenu() {
+  const t = useT()
+  const choice = currentModelChoice()
+  const thinking = useChat(state => state.settings.thinking)
+  const [open, setOpen] = React.useState(false)
+  const triggerRef = React.useRef(null)
+  const panelRef = React.useRef(null)
+  const layout = usePopupPlacement(open, triggerRef, panelRef)
+  useOutsideDismiss(open, () => setOpen(false), panelRef, triggerRef)
+  React.useEffect(() => {
+    if (!open) return
+    const panel = panelRef.current
+    const selected = panel?.querySelector?.(`[data-effort="${thinking ? choice.effort : 'off'}"]`)
+    selected?.focus?.({ preventScroll: false })
+  }, [open])
+  const close = () => setOpen(false)
+  const onKeyDown = event => handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef })
+  const label = thinking ? t(EFFORT_LABEL[choice.effort] ?? 'effortHigh') : t('effortOff')
+  const chooseOff = () => {
+    if (thinking) chatActions.toggleThinking()
+    close()
+  }
+  const chooseEffort = (effort) => {
+    if (!thinking) chatActions.toggleThinking()
+    if (effort !== choice.effort) chatActions.selectEffort(effort)
+    close()
+  }
+  return h('div', { className: 'dsc-effort-control' },
+    h('button', {
+      ref: triggerRef,
+      type: 'button',
+      className: cx('dsc-effort-trigger', open && 'is-open'),
+      'aria-haspopup': 'menu',
+      'aria-expanded': open,
+      title: `${t('thinkingEffort')}: ${label}`,
+      'aria-label': `${t('thinkingEffort')}: ${label}`,
+      onClick: () => setOpen(value => !value),
+      onKeyDown: (event) => {
+        if (event.key === 'Escape' && open) {
+          event.preventDefault()
+          setOpen(false)
+          return
+        }
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          event.preventDefault()
+          setOpen(true)
+        }
+      },
+    },
+      h(Icon, { name: 'brain', size: 13 }),
+      h('span', null, label),
+      h(Icon, { name: 'chevronDown', size: 11 }),
+    ),
+    open
+      ? h('div', {
+          ref: panelRef,
+          className: 'dsc-popover dsc-effort-menu',
+          role: 'menu',
+          'aria-label': t('thinkingEffort'),
+          'data-placement': layout.placement,
+          style: popoverStyle(layout),
+          onKeyDown,
+        },
+        h('div', { className: 'dsc-effort-list' },
+          h('button', {
+            type: 'button',
+            role: 'menuitemradio',
+            'aria-checked': !thinking,
+            'data-effort': 'off',
+            title: t('effortOffHint'),
+            className: cx('dsc-effort-option', !thinking && 'is-selected'),
+            onClick: chooseOff,
+          },
+            h('span', { className: 'dsc-effort-option-label' }, t('effortOff')),
+            !thinking ? h(Icon, { name: 'check', size: 14 }) : null,
           ),
-          thinking && choice.efforts.length > 0
-            ? h('div', { className: 'dsc-effort-options', role: 'group', 'aria-label': t('thinkingEffort') },
-                choice.efforts.map(effort => h('button', {
-                  key: effort,
-                  type: 'button',
-                  role: 'menuitemradio',
-                  'aria-checked': choice.effort === effort,
-                  className: cx('dsc-effort-option', choice.effort === effort && 'is-selected'),
-                  title: t(EFFORT_HINT[effort] ?? 'thinkingEffort'),
-                  onClick: () => chatActions.selectEffort(effort),
-                }, t(EFFORT_LABEL[effort]))),
-              )
-            : h('p', { className: 'dsc-popover-hint' },
-                thinking ? t('effortUnsupported') : t('effortNeedsThinking')),
-          thinking && EFFORT_HINT[choice.effort] !== undefined
-            ? h('p', { className: 'dsc-popover-hint' }, t(EFFORT_HINT[choice.effort]))
-            : null,
-        ),
-        h('div', { className: 'dsc-popover-sep' }),
-        h('div', { className: 'dsc-model-meta' },
-          h('div', { className: 'dsc-model-caps', 'aria-label': t('modelCapabilities') },
-            CAPABILITY_KEYS.map(item => h('span', {
-              key: item.key,
-              className: cx('dsc-model-cap', !modelCapability(choice.model, item.key) && 'is-off'),
-              title: `${t(item.label)}：${modelCapability(choice.model, item.key) ? t('toolOn') : t('toolOff')}`,
-            },
-              h(Icon, { name: modelCapability(choice.model, item.key) ? 'check' : 'close', size: 11 }),
-              t(item.label),
-            )),
-          ),
-          h('p', { className: 'dsc-popover-hint' }, scope),
+          h('div', { className: 'dsc-popover-sep' }),
+          choice.efforts.map(effort => h('button', {
+            key: effort,
+            type: 'button',
+            role: 'menuitemradio',
+            'aria-checked': thinking && choice.effort === effort,
+            'data-effort': effort,
+            title: t(EFFORT_HINT[effort] ?? 'thinkingEffort'),
+            className: cx('dsc-effort-option', thinking && choice.effort === effort && 'is-selected'),
+            onClick: () => chooseEffort(effort),
+          },
+            h('span', { className: 'dsc-effort-option-label' }, t(EFFORT_LABEL[effort])),
+            thinking && choice.effort === effort ? h(Icon, { name: 'check', size: 14 }) : null,
+          )),
         ),
       )
       : null,

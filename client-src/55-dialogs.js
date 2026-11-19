@@ -691,10 +691,11 @@ function FolderPromptDialog() {
     return () => clearTimeout(timer)
   }, [prompt?.mode, prompt?.id])
   if (prompt === null) return null
-  const title = prompt.mode === 'rename' ? t('folderRenameTitle') : t('folderCreateTitle')
+  const rename = prompt.mode === 'rename'
+  const title = rename ? t('folderRenameTitle') : t('folderCreateTitle')
   return h(ModalBackdrop, { onDismiss: () => chatActions.closeFolderPrompt() },
     h('form', {
-      className: 'dsc-confirm',
+      className: 'dsc-modal dsc-form-modal',
       role: 'dialog',
       'aria-modal': 'true',
       'aria-label': title,
@@ -703,24 +704,41 @@ function FolderPromptDialog() {
         void chatActions.submitFolderPrompt()
       },
     },
-      h('h2', null, title),
-      h('input', {
-        ref: inputRef,
-        className: 'dsc-input dsc-folder-name',
-        value: prompt.draft,
-        maxLength: 60,
-        placeholder: t('folderNamePlaceholder'),
-        'aria-label': t('folderNamePlaceholder'),
-        onChange: (event) => chatActions.updateFolderPrompt(event.target.value),
-      }),
-      h('div', { className: 'dsc-confirm-actions' },
+      h('header', { className: 'dsc-modal-head' },
+        h('div', null,
+          h('h2', null, title),
+          h('p', { className: 'dsc-modal-sub' }, rename ? t('folderRenameHint') : t('folderCreateHint')),
+        ),
+        h('button', {
+          type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
+          onClick: () => chatActions.closeFolderPrompt(),
+        }, h(Icon, { name: 'close', size: 18 })),
+      ),
+      h('div', { className: 'dsc-modal-body' },
+        h('div', { className: 'dsc-field' },
+          h('label', { className: 'dsc-field-label', htmlFor: 'dsc-folder-name-input' }, t('folderNameLabel')),
+          h('input', {
+            ref: inputRef,
+            id: 'dsc-folder-name-input',
+            className: 'dsc-input dsc-folder-name-input',
+            value: prompt.draft,
+            maxLength: 60,
+            placeholder: t('folderNamePlaceholder'),
+            autoComplete: 'off',
+            spellCheck: false,
+            onChange: (event) => chatActions.updateFolderPrompt(event.target.value),
+          }),
+        ),
+      ),
+      h('footer', { className: 'dsc-modal-foot' },
+        h('div', { className: 'dsc-modal-foot-note' }),
         h('button', {
           type: 'button', className: 'dsc-secondary-button', onClick: () => chatActions.closeFolderPrompt(),
         }, t('cancel')),
         h('button', {
           type: 'submit', className: 'dsc-primary-button',
           disabled: prompt.busy || prompt.draft.trim() === '',
-        }, prompt.mode === 'rename' ? t('save') : t('create')),
+        }, rename ? t('save') : t('create')),
       ),
     ),
   )

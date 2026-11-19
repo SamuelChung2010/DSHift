@@ -893,6 +893,15 @@ captured.chatStore.set({ menu: { kind: 'folder', id: 'f1', x: 120, y: 140 } })
 render('ContextMenu-folder', captured.ContextMenu)
 captured.chatStore.set({ menu: null, folderPrompt: { mode: 'create', id: null, draft: '', busy: false } })
 render('FolderPromptDialog', captured.FolderPromptDialog)
+const folderTree = React.createElement(captured.FolderPromptDialog)
+if (collectByClass(folderTree, 'dsc-form-modal').length !== 1) throw new Error('the folder prompt must use the shared form dialog')
+if (collectByClass(folderTree, 'dsc-folder-name-input').length !== 1) throw new Error('the folder name field is missing')
+const folderSubmit = collectByClass(folderTree, 'dsc-primary-button')[0]
+if (folderSubmit === undefined || folderSubmit.props.disabled !== true) throw new Error('an empty folder name must disable Create')
+captured.chatStore.set({ folderPrompt: { mode: 'create', id: null, draft: '工作', busy: false } })
+const folderReady = React.createElement(captured.FolderPromptDialog)
+const folderReadySubmit = collectByClass(folderReady, 'dsc-primary-button')[0]
+if (folderReadySubmit.props.disabled !== false) throw new Error('a non-empty folder name must enable Create')
 captured.chatStore.set({ folderPrompt: { mode: 'rename', id: 'f1', draft: '工作', busy: false } })
 render('FolderPromptDialog-rename', captured.FolderPromptDialog)
 captured.chatStore.set({ folderPrompt: null, moveChat: { conversationId: 'c1', folderId: null, busy: false } })
@@ -1109,14 +1118,28 @@ captured.chatStore.set({
 let composerTree = React.createElement(captured.Composer)
 if (collectByClass(composerTree, 'dsc-editor-field').length !== 1) throw new Error('the composer needs exactly one editor field')
 if (collectByClass(composerTree, 'dsc-textarea').length !== 0) throw new Error('the editor must not be the old bordered textarea')
-if (collectByClass(composerTree, 'dsc-tool-button').length !== 0) throw new Error('per-tool buttons must move into the + menu')
 if (collectByClass(composerTree, 'dsc-tools-trigger').length !== 1) throw new Error('the + menu trigger is missing')
 if (collectByClass(composerTree, 'dsc-model-trigger').length !== 1) throw new Error('the model trigger is missing')
-if (collectByClass(composerTree, 'dsc-active-tool').length !== 2) throw new Error('active search/thinking tools need chips')
+const quickTools = collectByClass(composerTree, 'dsc-tool-toggle')
+if (quickTools.length !== 2) throw new Error(`search and deep thinking need direct buttons: ${quickTools.length}`)
+if (quickTools.map(node => node.props['data-tool']).join(',') !== 'web-search,deep-thinking') throw new Error('the quick toggles must be search then deep thinking')
+if (quickTools.some(node => node.props['aria-pressed'] !== true)) throw new Error('both direct toggles must show their on state')
+if (collectByClass(composerTree, 'dsc-active-tool').length !== 0) throw new Error('toggles must not become removable chips')
+if (collectByClass(composerTree, 'dsc-effort-trigger').length !== 1) throw new Error('thinking on must expose the effort control')
+const effortTrigger = collectByClass(composerTree, 'dsc-effort-trigger')[0]
+if (!collectionText(effortTrigger).includes('高')) throw new Error('the effort control must show the current tier')
 const editor = collectByClass(composerTree, 'dsc-editor-field')[0]
 if (typeof editor.props.onKeyDown !== 'function') throw new Error('the editor must own Enter handling')
 if (!String(editor.props.value).includes('你好')) throw new Error('the editor must show the draft')
 console.log('COMPOSER_STRUCTURE_OK')
+
+// The effort control is always present for a thinking-capable model, showing
+// Off while thinking is disabled, so toggling never moves the model chip.
+captured.chatStore.set({ settings: { authMode: 'auto', thinking: false, search: true, systemPrompt: '' } })
+composerTree = React.createElement(captured.Composer)
+const offEffort = collectByClass(composerTree, 'dsc-effort-trigger')
+if (offEffort.length !== 1 || !collectionText(offEffort[0]).includes('关闭')) throw new Error('effort must stay visible and show Off while thinking is off')
+captured.chatStore.set({ settings: { authMode: 'auto', thinking: true, search: true, systemPrompt: '' } })
 
 // Enter / Shift+Enter / IME / Ctrl+Enter preference.
 const key = overrides => ({ key: 'Enter', ...overrides })
@@ -1154,12 +1177,15 @@ console.log('COMPOSER_VISION_OK')
 // The tool registry is the one extension point; no fake entries exist.
 const toolIds = captured.chatToolDefinitions().map(tool => tool.id)
 if (toolIds.join(',') !== 'upload,web-search,deep-thinking') throw new Error(`unexpected tools: ${toolIds.join(',')}`)
+if (captured.chatMenuTools().map(tool => tool.id).join(',') !== 'upload') throw new Error('the + menu must only contain action tools')
+if (captured.composerToolDefinitions().map(tool => tool.id).join(',') !== 'web-search,deep-thinking') throw new Error('the composer must own the two quick toggles')
 let ranCustomTool = 0
 const unregister = captured.registerChatTool({
   id: 'test-tool', kind: 'action', icon: 'spark', labelKey: 'toolsMenu', hintKey: 'toolsMenu',
   order: 5, run: () => { ranCustomTool += 1 },
 })
 if (captured.chatToolDefinitions()[0].id !== 'test-tool') throw new Error('a custom tool must respect its order')
+if (captured.chatMenuTools()[0].id !== 'test-tool') throw new Error('a menu action must appear in the + menu')
 const customTool = captured.chatToolDefinitions()[0]
 customTool.run()
 if (ranCustomTool !== 1) throw new Error('a registered tool must run its action')
@@ -1182,6 +1208,40 @@ captured.chatStore.set({ modelChoice: { model: 'retired-model', effort: 'ultra' 
 const fallbackChoice = captured.currentModelChoice()
 if (fallbackChoice.model.id !== 'deepseek-flash' || fallbackChoice.effort !== 'high') throw new Error('an unavailable model must fall back to the default one')
 if (captured.chatStore.state.models.length === 0) captured.chatStore.set({ models: bootstrap.models, modelConfig: bootstrap.modelConfig })
+captured.chatStore.set({
+  models: bootstrap.models,
+  modelChoice: { model: 'deepseek-v4-pro', effort: 'max' },
+  settings: { authMode: 'auto', thinking: true, search: true, systemPrompt: '' },
+})
+if (captured.modelTriggerLabel(captured.modelById('deepseek-v4-pro')) !== 'V4 Pro') throw new Error('the model chip must use the short name')
+const modelMenuTree = React.createElement(captured.ModelMenu)
+const modelTriggerNode = collectByClass(modelMenuTree, 'dsc-model-trigger')[0]
+if (modelTriggerNode === undefined) throw new Error('the compact model menu needs a trigger')
+const modelTriggerText = collectionText(modelTriggerNode)
+if (!modelTriggerText.includes('V4 Pro') || modelTriggerText.includes('最高')) throw new Error(`the model chip must not carry the effort: ${modelTriggerText}`)
+if (!captured.modelNotes(captured.modelById('deepseek-v4-pro')).join(' ').includes('不支持图片')) throw new Error('a text-only model must carry its one-line limitation')
+if (captured.modelNotes(captured.modelById('deepseek-flash')).length !== 0) throw new Error('flash has no limitation to advertise')
+const effortMenuTree = React.createElement(captured.EffortMenu)
+const effortTriggerNode = collectByClass(effortMenuTree, 'dsc-effort-trigger')[0]
+if (effortTriggerNode === undefined || !collectionText(effortTriggerNode).includes('最高')) throw new Error('the effort control must show the current tier')
+// A model without the capability disables the matching direct button in place.
+const textOnly = {
+  id: 'text-only', name: 'Text Only', shortName: 'Text',
+  capabilities: { vision: false, documents: true, search: false, thinking: false, efforts: [] },
+}
+captured.chatStore.set({
+  models: [textOnly], modelChoice: { model: 'text-only', effort: 'high' },
+  settings: { authMode: 'auto', thinking: true, search: true, systemPrompt: '' },
+})
+composerTree = React.createElement(captured.Composer)
+const disabledTools = collectByClass(composerTree, 'dsc-tool-toggle')
+if (disabledTools.length !== 2 || disabledTools.some(node => node.props.disabled !== true)) throw new Error('unsupported capabilities must disable the direct buttons')
+if (!disabledTools.every(node => String(node.props.title).includes('不支持'))) throw new Error('a disabled tool must explain why')
+if (collectByClass(composerTree, 'dsc-effort-trigger').length !== 0) throw new Error('a model without thinking must not show an effort control')
+captured.chatStore.set({
+  models: bootstrap.models, modelChoice: { model: 'deepseek-flash', effort: 'high' },
+  settings: { authMode: 'auto', thinking: true, search: true, systemPrompt: '' },
+})
 console.log('MODEL_HELPERS_OK')
 
 // A blank chat writes the default; an open conversation writes its override.

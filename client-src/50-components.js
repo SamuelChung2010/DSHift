@@ -835,27 +835,6 @@ function AuthBanner() {
   )
 }
 
-/** Active toggle tools as one-line chips above the input, click to turn off. */
-function ActiveToolChips() {
-  const t = useT()
-  const state = useChat(snapshot => snapshot)
-  const tools = activeChatTools(state)
-  if (tools.length === 0) return null
-  return h('div', { className: 'dsc-active-tools' },
-    tools.map(tool => h('button', {
-      key: tool.id,
-      type: 'button',
-      className: 'dsc-active-tool',
-      title: t(tool.hintKey),
-      onClick: () => tool.run(),
-    },
-      h(Icon, { name: tool.icon, size: 13 }),
-      h('span', null, t(tool.labelKey)),
-      h(Icon, { name: 'close', size: 11 }),
-    )),
-  )
-}
-
 /** Editor grows with the text up to this height, then scrolls internally. */
 const COMPOSER_MAX_HEIGHT = 220
 
@@ -885,8 +864,10 @@ function Composer() {
   const stopping = useChat(state => state.stopping)
   const auth = useChat(state => state.auth)
   const sendKey = useChat(state => state.sendKey)
+  const toolState = useChat(state => state)
   useChat(state => state.modelChoice)
   const choice = currentModelChoice()
+  const tools = composerToolDefinitions()
   const unsupportedImages = !modelCapability(choice.model, 'vision')
     && attachments.some(item => item.isImage && item.status !== 'error')
   const focusRequest = useChat(state => state.focusRequest)
@@ -1014,10 +995,15 @@ function Composer() {
             },
           }),
           h(ToolsMenu, null),
-          h(ActiveToolChips, null),
+          tools.map(tool => h(ComposerToolButton, {
+            key: tool.id,
+            tool,
+            state: toolState,
+          })),
         ),
         h('div', { className: 'dsc-composer-right' },
           h(ModelMenu, null),
+          choice.efforts.length > 0 ? h(EffortMenu, null) : null,
           isStreaming
             ? h('button', {
                 type: 'button',
