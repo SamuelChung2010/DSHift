@@ -115,6 +115,14 @@ const chatStore = {
     bootData: null,
     auth: null,
     settings: { authMode: 'auto', thinking: false, search: false, systemPrompt: '' },
+    // Model catalog and preferences, filled from the Host bootstrap. The
+    // fallback keeps the composer usable while an older Host half answers.
+    models: [],
+    modelConfig: null,
+    modelChoice: { model: 'deepseek-flash', effort: 'high' },
+    // Composer send key: "enter" (Enter sends) or "ctrl-enter" (Ctrl/Cmd+Enter
+    // sends). A browser preference, stored next to the layout settings.
+    sendKey: stored.sendKey === 'ctrl-enter' ? 'ctrl-enter' : 'enter',
     conversations: [],
     workspaces: [],
     limits: { maxFiles: MAX_FILES, maxUploadBytes: MAX_UPLOAD_MB, maxUserDataBytes: MAX_USER_DATA_MB * 1024 * 1024 },
@@ -478,6 +486,8 @@ async function ensureBoot(force = false) {
         bootData: data,
         auth: data.auth,
         settings: data.settings,
+        models: Array.isArray(data.models) && data.models.length > 0 ? data.models : chatStore.state.models,
+        modelConfig: data.modelConfig ?? chatStore.state.modelConfig,
         conversations: data.conversations ?? [],
         workspaces: Array.isArray(data.workspaces) ? data.workspaces : [],
         limits: normalizeLimits(data.limits),
@@ -495,6 +505,7 @@ async function ensureBoot(force = false) {
         chatStore.set({ activeId: null, messages: [] })
         writeStored({ activeId: null })
       }
+      applyModelConfigFor(chatStore.state.activeId)
       return data
     } catch (error) {
       chatStore.set({ boot: 'error', bootError: error instanceof Error ? error.message : String(error) })
@@ -520,9 +531,13 @@ async function loadConversation(id, { quiet = false } = {}) {
     chatStore.toast(tr('sendingWait'), 'warning')
     return
   }
+  // Keep the text this conversation was leaving behind, then load the target's
+  // own draft instead of starting from an empty field.
+  stashDraft()
   clearComposer()
   const sequence = ++conversationLoadSequence
   chatStore.set({ activeId: id, conversationLoading: true, conversationError: '' })
+  applyModelConfigFor(id)
   writeStored({ activeId: id })
   try {
     const data = await hostJson('/api/deepseek-chat/conversation', { action: 'get', id })
@@ -532,6 +547,7 @@ async function loadConversation(id, { quiet = false } = {}) {
       conversationLoading: false,
       conversationError: '',
     })
+    restoreDraft(id)
   } catch (error) {
     if (sequence !== conversationLoadSequence) return
     const message = error instanceof Error ? error.message : String(error)
@@ -593,6 +609,7 @@ async function newChat() {
     chatStore.toast(tr('sendingWait'), 'warning')
     return
   }
+  stashDraft()
   clearComposer()
   chatStore.set({
     activeId: null,
@@ -602,6 +619,8 @@ async function newChat() {
     greetingIndex: pickGreetingIndex(chatStore.state.greetingIndex),
     focusRequest: chatStore.state.focusRequest + 1,
   })
+  applyModelConfigFor(null)
+  restoreDraft(null)
   writeStored({ activeId: null })
 }
 
@@ -614,6 +633,7 @@ async function createConversation() {
     messages: [],
     conversationError: '',
   })
+  applyModelConfigFor(data.conversation.id)
   writeStored({ activeId: data.conversation.id })
   return data.conversation.id
 }
@@ -645,6 +665,7 @@ function requestDeleteConversation(id, title) {
           })
           if (chatStore.state.activeId === id) {
             clearComposer()
+            forgetDraft(id)
             chatStore.set({
               activeId: null,
               messages: [],
@@ -698,6 +719,120 @@ function toggleSearch() {
   const next = !before.search
   chatStore.set({ settings: { ...before, search: next } })
   void saveSettings({ search: next }, { rollback: before })
+}
+
+/* ------------------------------------------------------------------------- */
+/* Model preference                                                          */
+/* ------------------------------------------------------------------------- */
+
+/**
+ * Point the composer at the model configuration of one conversation.
+ * `id === null` is the blank new-chat page, which uses the Host defaults.
+ * The raw ids are stored; the model menu normalises them against the catalog,
+ * so an id this Host no longer serves can never break the composer.
+ */
+function applyModelConfigFor(id) {
+  const config = chatStore.state.modelConfig
+  const override = id !== null && config?.conversations?.[id] !== undefined ? config.conversations[id] : null
+  const model = override?.model ?? config?.defaults?.model ?? 'deepseek-flash'
+  const effort = override?.effort ?? config?.defaults?.effort ?? 'high'
+  chatStore.set({ modelChoice: { model, effort } })
+}
+
+/**
+ * Persist one model/effort change. A blank chat updates the default for new
+ * conversations; an open conversation stores its own override. The UI updates
+ * first and rolls back when the Host rejects the write.
+ */
+async function saveModelChoice(patch) {
+  const before = chatStore.state.modelChoice
+  const conversationId = chatStore.state.activeId
+  chatStore.set({ modelChoice: { ...before, ...patch } })
+  try {
+    const data = await hostJson('/api/deepseek-chat/model', {
+      action: 'set',
+      ...(conversationId === null ? {} : { conversationId }),
+      ...patch,
+    })
+    if (data?.modelConfig !== undefined) {
+      chatStore.set({
+        modelConfig: data.modelConfig,
+        models: Array.isArray(data.models) && data.models.length > 0 ? data.models : chatStore.state.models,
+      })
+    }
+    return true
+  } catch (error) {
+    if (error?.status === 404) {
+      // An older Host half has no model route; keep the local choice and make
+      // no promise about persistence instead of alarming the user.
+      return false
+    }
+    chatStore.set({ modelChoice: before })
+    chatStore.toast(tr('modelConfigFailed', {
+      message: error instanceof Error ? error.message : String(error),
+    }), 'error')
+    return false
+  }
+}
+
+function selectModel(modelId) {
+  const model = modelCatalog().find(item => item.id === modelId)
+  if (model === undefined) return
+  const efforts = modelEfforts(model)
+  const current = chatStore.state.modelChoice
+  const effort = efforts.includes(current.effort) ? current.effort : (efforts.includes('high') ? 'high' : efforts[0])
+  void saveModelChoice({ model: model.id, effort })
+}
+
+function selectEffort(effort) {
+  const { efforts } = currentModelChoice()
+  if (!efforts.includes(effort)) return
+  void saveModelChoice({ effort })
+}
+
+/**
+ * A request that names a model this API no longer serves is recoverable: fall
+ * back to the default model so the retry button does the useful thing instead
+ * of failing again.
+ */
+function recoverUnavailableModel(payload) {
+  if (payload?.code !== 'INVALID_MODEL') return false
+  const fallback = modelCatalog().find(model => model.id === 'deepseek-flash') ?? modelCatalog()[0]
+  if (fallback !== undefined) void saveModelChoice({ model: fallback.id, effort: 'high' })
+  chatStore.toast(tr('modelUnavailable'), 'warning')
+  return true
+}
+
+/** Composer send key preference; browser-only, so it never needs the Host. */
+function setSendKey(mode) {
+  const next = mode === 'ctrl-enter' ? 'ctrl-enter' : 'enter'
+  chatStore.set({ sendKey: next })
+  writeStored({ sendKey: next })
+}
+
+/* ------------------------------------------------------------------------- */
+/* Per-conversation drafts                                                   */
+/* ------------------------------------------------------------------------- */
+
+/**
+ * Unsent text for each conversation, so switching chats or pressing "New chat"
+ * does not throw away half-written prompts. Attachments are deliberately not
+ * kept: their upload streams are aborted on a switch.
+ */
+const draftStash = new Map()
+
+function stashDraft() {
+  draftStash.set(chatStore.state.activeId ?? '__new__', chatStore.state.draft)
+}
+
+function restoreDraft(id) {
+  const key = id ?? '__new__'
+  if (!draftStash.has(key)) return
+  chatStore.set({ draft: draftStash.get(key) ?? '' })
+}
+
+function forgetDraft(id) {
+  draftStash.delete(id ?? '__new__')
 }
 
 async function saveKey(key) {
@@ -1029,6 +1164,11 @@ async function sendMessage() {
   const readyFiles = state.attachments.filter(item => item.status === 'ready' && item.fileId)
   const sentAttachments = state.attachments.filter(item => item.status === 'ready' && item.fileId)
   if (text === '' && readyFiles.length === 0) return
+  const choice = currentModelChoice()
+  if (!modelCapability(choice.model, 'vision') && readyFiles.some(item => item.isImage)) {
+    chatStore.toast(tr('modelUnsupportedImage'), 'warning')
+    return
+  }
   if (sendInFlight) return
   markSendInFlight(true)
 
@@ -1066,7 +1206,8 @@ async function sendMessage() {
     role: 'assistant',
     createdAt: now,
     updatedAt: now,
-    model: chatStore.state.bootData?.model?.id ?? 'deepseek-flash',
+    model: choice.model.id,
+    effort: choice.effort,
     thinking: state.settings.thinking,
     search: state.settings.search,
     status: 'streaming',
@@ -1091,6 +1232,8 @@ async function sendMessage() {
     focusRequest: chatStore.state.focusRequest + 1,
   })
   writeStored({ activeId: conversationId })
+  forgetDraft(conversationId)
+  forgetDraft(null)
 
   let current = reply
   let userCurrent = userMessage
@@ -1121,6 +1264,8 @@ async function sendMessage() {
       files: userMessage.files,
       thinking: reply.thinking,
       search: reply.search,
+      model: reply.model,
+      effort: reply.effort,
       locale: appCtx?.locale.getSnapshot().active === 'zh' ? 'zh' : 'en',
     }, {
       signal: controller.signal,
@@ -1182,7 +1327,8 @@ async function sendMessage() {
           }
           replaceAssistant(current)
           finish()
-          chatStore.toast(info.text, 'error')
+          const recovered = recoverUnavailableModel(item.error)
+          if (!recovered) chatStore.toast(info.text, 'error')
           if (info.action === 'settings') chatStore.set({ settingsOpen: true })
           return
         }
@@ -1216,6 +1362,7 @@ async function sendMessage() {
     } else {
       const payload = error?.payload ?? { message: error instanceof Error ? error.message : String(error) }
       const info = friendlyError(payload, payload.message)
+      const recovered = recoverUnavailableModel(payload)
       if (!started) {
         // The Host never created the turn (auth, network, or a rejected
         // request), so pull the optimistic bubbles back and return the text and
@@ -1227,13 +1374,13 @@ async function sendMessage() {
           streaming: null,
           stopping: false,
         })
-        chatStore.toast(info.text, 'error')
+        if (!recovered) chatStore.toast(info.text, 'error')
         if (info.action === 'settings') chatStore.set({ settingsOpen: true })
         return
       }
       current = { ...current, status: 'error', error: payload, updatedAt: Date.now() }
       replaceAssistant(current)
-      chatStore.toast(info.text, 'error')
+      if (!recovered) chatStore.toast(info.text, 'error')
       if (info.action === 'settings') chatStore.set({ settingsOpen: true })
     }
     finish()
@@ -1467,6 +1614,9 @@ const chatActions = {
   saveSettings,
   toggleThinking,
   toggleSearch,
+  selectModel,
+  selectEffort,
+  setSendKey,
   saveKey,
   clearKey,
   addFiles,
