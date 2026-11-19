@@ -1,0 +1,257 @@
+function BootView({ error, onRetry }) {
+  const t = useT()
+  if (error !== '') {
+    return h('div', { className: 'dsc-boot' },
+      h('button', {
+        type: 'button', className: 'dsc-boot-close', title: t('openAgent'), 'aria-label': t('openAgent'),
+        onClick: chatActions.closeChat,
+      }, h(Icon, { name: 'agent', size: 18 })),
+      h('div', { className: 'dsc-boot-card' },
+        h('span', { className: 'dsc-boot-icon' }, h(Icon, { name: 'warning', size: 22 })),
+        h('h2', null, t('loadFailed')),
+        h('p', null, error),
+        h('button', { type: 'button', className: 'dsc-primary-button', onClick: onRetry }, t('retry')),
+      ),
+    )
+  }
+  return h('div', { className: 'dsc-boot' },
+    h('button', {
+      type: 'button', className: 'dsc-boot-close', title: t('openAgent'), 'aria-label': t('openAgent'),
+      onClick: chatActions.closeChat,
+    }, h(Icon, { name: 'agent', size: 18 })),
+    h(Spinner, { size: 24 }),
+    h('div', { className: 'dsc-boot-text' }, t('loading')),
+  )
+}
+
+function Switch({ checked, onChange, label }) {
+  return h('button', {
+    type: 'button',
+    role: 'switch',
+    'aria-checked': checked,
+    'aria-label': label,
+    className: cx('dsc-switch', checked && 'is-on'),
+    onClick: () => onChange(!checked),
+  }, h('span', { className: 'dsc-switch-thumb' }))
+}
+
+function SettingsSection({ title, children }) {
+  return h('section', { className: 'dsc-settings-section' },
+    h('h3', { className: 'dsc-settings-title' }, title),
+    h('div', { className: 'dsc-settings-card' }, children),
+  )
+}
+
+function SettingsDialog() {
+  const t = useT()
+  const auth = useChat(state => state.auth)
+  const settings = useChat(state => state.settings)
+  const bootData = useChat(state => state.bootData)
+  const [keyInput, setKeyInput] = React.useState('')
+  const [prompt, setPrompt] = React.useState(settings.systemPrompt)
+  const [savingKey, setSavingKey] = React.useState(false)
+  const [savingPrompt, setSavingPrompt] = React.useState(false)
+  React.useEffect(() => {
+    setPrompt(settings.systemPrompt)
+  }, [settings.systemPrompt])
+  const close = () => chatStore.set({ settingsOpen: false })
+  const saveKey = async () => {
+    const value = keyInput.trim()
+    if (value === '') return
+    setSavingKey(true)
+    try {
+      await chatActions.saveKey(value)
+      setKeyInput('')
+    } catch (error) {
+      chatStore.toast(tr('authSaveFailed', { message: error instanceof Error ? error.message : String(error) }), 'error')
+    } finally {
+      setSavingKey(false)
+    }
+  }
+  const clearKey = async () => {
+    setSavingKey(true)
+    try {
+      await chatActions.clearKey()
+    } catch (error) {
+      chatStore.toast(tr('authSaveFailed', { message: error instanceof Error ? error.message : String(error) }), 'error')
+    } finally {
+      setSavingKey(false)
+    }
+  }
+  const savePrompt = async () => {
+    setSavingPrompt(true)
+    try {
+      await chatActions.saveSettings({ systemPrompt: prompt }, { quiet: false })
+    } finally {
+      setSavingPrompt(false)
+    }
+  }
+  const mode = settings.authMode
+  return h('div', {
+    className: 'dsc-modal-backdrop',
+    onMouseDown: (event) => { if (event.target === event.currentTarget) close() },
+  },
+    h('div', { className: 'dsc-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('settingsTitle') },
+      h('header', { className: 'dsc-modal-head' },
+        h('div', null,
+          h('h2', null, t('settingsTitle')),
+          h('p', { className: 'dsc-modal-sub' }, t('modeSwitchHint')),
+        ),
+        h('button', {
+          type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
+          autoFocus: true, onClick: close,
+        }, h(Icon, { name: 'close', size: 18 })),
+      ),
+      h('div', { className: 'dsc-modal-body' },
+        h(SettingsSection, { title: t('connection') },
+          h('div', { className: cx('dsc-auth-status', auth?.ready ? 'is-ready' : 'is-missing') },
+            h('span', { className: 'dsc-auth-dot' }),
+            h('div', { className: 'dsc-auth-status-body' },
+              h('strong', null, auth?.ready ? t('authReady') : t('authMissing')),
+              h('span', null, authSourceLabel(auth, t)),
+              h('span', { className: 'dsc-auth-sub' }, auth?.accountSignedIn ? t('authAccountSignedIn') : t('authAccountSignedOut')),
+              auth?.dshKeyConfigured ? h('span', { className: 'dsc-auth-sub' }, `${t('authSourceDshKey')} · ${t('apiKeyConfigured')}`) : null,
+            ),
+          ),
+          h('div', { className: 'dsc-field' },
+            h('span', { className: 'dsc-field-label' }, t('authMode')),
+            h('div', { className: 'dsc-segment', role: 'group', 'aria-label': t('authMode') },
+              [['auto', 'authAuto'], ['account', 'authAccount'], ['api-key', 'authApiKey']].map(([value, key]) => (
+                h('button', {
+                  key: value,
+                  type: 'button',
+                  className: cx('dsc-segment-button', mode === value && 'is-active'),
+                  'aria-pressed': mode === value,
+                  onClick: () => { void chatActions.saveSettings({ authMode: value }) },
+                }, t(key))
+              )),
+            ),
+          ),
+          h('div', { className: 'dsc-field' },
+            h('span', { className: 'dsc-field-label' }, t('apiKeyLabel')),
+            auth?.chatKeyConfigured
+              ? h('div', { className: 'dsc-key-row' },
+                  h('span', { className: 'dsc-key-state' }, t('apiKeyConfigured')),
+                  h('button', {
+                    type: 'button', className: 'dsc-secondary-button', disabled: savingKey,
+                    onClick: clearKey,
+                  }, t('clear')),
+                )
+              : h('div', { className: 'dsc-key-row' },
+                  h('input', {
+                    type: 'password',
+                    className: 'dsc-input',
+                    value: keyInput,
+                    placeholder: t('apiKeyPlaceholder'),
+                    autoComplete: 'off',
+                    spellCheck: false,
+                    disabled: savingKey || auth?.canStoreKey === false,
+                    onChange: (event) => setKeyInput(event.target.value),
+                    onKeyDown: (event) => { if (event.key === 'Enter') { event.preventDefault(); void saveKey() } },
+                  }),
+                  h('button', {
+                    type: 'button', className: 'dsc-primary-button', disabled: savingKey || keyInput.trim() === '' || auth?.canStoreKey === false,
+                    onClick: () => { void saveKey() },
+                  }, savingKey ? t('saving') : t('save')),
+                ),
+            h('p', { className: 'dsc-field-hint' }, t('apiKeyHint')),
+          ),
+        ),
+        h(SettingsSection, { title: t('defaults') },
+          h('div', { className: 'dsc-switch-row' },
+            h('div', { className: 'dsc-switch-copy' },
+              h('strong', null, t('defaultThinking')),
+              h('span', null, t('deepThink')),
+            ),
+            h(Switch, { checked: settings.thinking, onChange: () => chatActions.toggleThinking(), label: t('defaultThinking') }),
+          ),
+          h('div', { className: 'dsc-switch-row' },
+            h('div', { className: 'dsc-switch-copy' },
+              h('strong', null, t('defaultSearch')),
+              h('span', null, t('webSearch')),
+            ),
+            h(Switch, { checked: settings.search, onChange: () => chatActions.toggleSearch(), label: t('defaultSearch') }),
+          ),
+        ),
+        h(SettingsSection, { title: t('systemPrompt') },
+          h('textarea', {
+            className: 'dsc-textarea dsc-prompt',
+            value: prompt,
+            rows: 4,
+            maxLength: 8000,
+            placeholder: t('systemPromptPlaceholder'),
+            onChange: (event) => setPrompt(event.target.value),
+          }),
+          h('div', { className: 'dsc-field-actions' },
+            h('p', { className: 'dsc-field-hint' }, t('systemPromptHint')),
+            h('button', {
+              type: 'button', className: 'dsc-secondary-button',
+              disabled: savingPrompt || prompt === settings.systemPrompt,
+              onClick: () => { void savePrompt() },
+            }, savingPrompt ? t('saving') : t('save')),
+          ),
+        ),
+        h(SettingsSection, { title: t('data') },
+          h('div', { className: 'dsc-data-row' },
+            h('span', { className: 'dsc-field-label' }, t('storagePath')),
+            h('code', { className: 'dsc-path' }, bootData?.dataDir ?? ''),
+          ),
+          h('p', { className: 'dsc-field-hint' }, t('dataNote')),
+        ),
+        h(SettingsSection, { title: t('about') },
+          h('div', { className: 'dsc-about-row' },
+            h('span', null, t('modelLabel')),
+            h('strong', null, bootData?.model?.name ?? t('modelName')),
+          ),
+          h('p', { className: 'dsc-field-hint' }, t('aboutText')),
+          h('p', { className: 'dsc-field-hint' }, `${t('limitations')}：${t('limitationsText')}`),
+        ),
+      ),
+    ),
+  )
+}
+
+function ConfirmDialog() {
+  const t = useT()
+  const confirm = useChat(state => state.confirm)
+  if (confirm === null) return null
+  const run = async () => {
+    const action = confirm.onConfirm
+    chatStore.set({ confirm: null })
+    try {
+      await action()
+    } catch (error) {
+      chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+    }
+  }
+  return h('div', {
+    className: 'dsc-modal-backdrop',
+    onMouseDown: (event) => { if (event.target === event.currentTarget) chatStore.set({ confirm: null }) },
+  },
+    h('div', { className: 'dsc-confirm', role: 'alertdialog', 'aria-modal': 'true', 'aria-label': confirm.title },
+      h('h2', null, confirm.title),
+      h('p', null, confirm.message),
+      h('div', { className: 'dsc-confirm-actions' },
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button', autoFocus: true,
+          onClick: () => chatStore.set({ confirm: null }),
+        }, t('cancel')),
+        h('button', {
+          type: 'button', className: cx('dsc-primary-button', confirm.danger && 'is-danger'),
+          onClick: () => { void run() },
+        }, confirm.confirmLabel || t('confirm')),
+      ),
+    ),
+  )
+}
+
+function Toasts() {
+  const toasts = useChat(state => state.toasts)
+  if (toasts.length === 0) return null
+  return h('div', { className: 'dsc-toasts', role: 'status', 'aria-live': 'polite' },
+    toasts.map(toast => h('div', { key: toast.id, className: cx('dsc-toast', `is-${toast.kind}`) },
+      h(Icon, { name: toast.kind === 'error' || toast.kind === 'warning' ? 'warning' : 'check', size: 16 }),
+      h('span', null, toast.message),
+    )),
+  )
+}

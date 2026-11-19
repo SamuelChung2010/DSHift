@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DeepSeek Chat",
+    "description": "Adds a native DeepSeek Chat mode beside the Agent mode. It supports deep thinking, web search with citations, URL reading, file and image upload, multi-turn conversation, and persistent local chat history. Open it from the Chat action at the sidebar footer; return to Agent mode from the Chat header or sidebar. Chat uses your signed-in DeepSeek account, or a DeepSeek API key stored in the DSH credential store; the key never reaches the browser. Web search and document parsing use DeepSeek's service and may incur usage charges. Agent mode and all existing DSH capabilities are unchanged."
+  }
+}

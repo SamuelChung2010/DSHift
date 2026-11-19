@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DeepSeek Chat",
+    "description": "在 Agent 模式旁增加一个原生 DeepSeek Chat 模式，支持深度思考、联网搜索与引用、链接阅读、文件与图片上传、多轮对话和本地持久化历史。点击侧边栏底部的 Chat 进入，点击 Chat 顶部或侧边栏中的 Agent 模式返回。Chat 使用已登录的 DeepSeek 账号，或在 DSH 凭证库中保存的 DeepSeek API Key；Key 不会进入浏览器。联网搜索与文件解析会使用 DeepSeek 服务，可能产生用量费用。原有 Agent 模式与全部 DSH 功能保持不变。"
+  }
+}
