@@ -2,15 +2,6 @@ function cx(...values) {
   return values.filter(Boolean).join(' ')
 }
 
-function useTicker(active, interval = 1000) {
-  const [, force] = React.useState(0)
-  React.useEffect(() => {
-    if (!active) return undefined
-    const timer = setInterval(() => force(value => value + 1), interval)
-    return () => clearInterval(timer)
-  }, [active, interval])
-}
-
 function useAutoScroll(ref, deps) {
   const stick = React.useRef(true)
   React.useEffect(() => {
@@ -86,16 +77,36 @@ function messageText(message) {
     .join('')
 }
 
-function thinkingSeconds(message) {
-  const starts = []
-  const ends = []
-  for (const block of message.blocks ?? []) {
-    if (block.type !== 'thinking') continue
-    if (typeof block.startedAt === 'number') starts.push(block.startedAt)
-    if (typeof block.endedAt === 'number') ends.push(block.endedAt)
+/**
+ * Reasoning time of one reply, in milliseconds.
+ *
+ * Only stored timestamps count. `Date.now()` is read for a thinking block that
+ * is still open in the live reply, and never for a settled one: a finished
+ * answer must keep reporting the same duration across re-renders, conversation
+ * switches and reloads. A settled reply whose block lost its `endedAt` falls
+ * back to the reply's own last write, not to the current clock.
+ */
+function thinkingDurationMs(message, live = false) {
+  let start = null
+  let end = null
+  let open = false
+  for (const block of message?.blocks ?? []) {
+    if (block?.type !== 'thinking') continue
+    if (typeof block.startedAt === 'number') start = start === null ? block.startedAt : Math.min(start, block.startedAt)
+    if (typeof block.endedAt === 'number') end = end === null ? block.endedAt : Math.max(end, block.endedAt)
+    else open = true
   }
-  if (starts.length === 0) return 0
-  return Math.max(1, Math.round((Math.max(...ends, Date.now()) - Math.min(...starts)) / 1000))
+  if (start === null) return 0
+  if (!open) return Math.max(0, (end ?? start) - start)
+  const settled = typeof message.updatedAt === 'number' ? message.updatedAt : null
+  const finish = live ? Date.now() : Math.max(end ?? 0, settled ?? start, start)
+  return Math.max(0, finish - start)
+}
+
+function thinkingSeconds(message, live = false) {
+  const ms = thinkingDurationMs(message, live)
+  if (ms <= 0) return 0
+  return Math.max(1, Math.round(ms / 1000))
 }
 
 function copyToClipboard(text) {
@@ -225,7 +236,7 @@ function SourceCard({ source, index }) {
       h('span', { className: 'dsc-source-meta' }, source.siteName || hostnameOf(source.url)),
       source.snippet ? h('span', { className: 'dsc-source-snippet' }, source.snippet) : null,
     ),
-    h(Icon, { name: 'external', size: 14 }),
+    h(Icon, { name: 'external', size: 13 }),
   )
 }
 
@@ -261,7 +272,7 @@ function ToolStep({ block, result, streaming }) {
   const fetchContent = result?.type === 'web_fetch_tool_result' ? result.content : null
   const failed = fetchContent?.type === 'web_fetch_tool_result_error'
     || searchItems.some(item => item?.type === 'web_search_tool_result_error')
-  let icon = isSearch ? 'search' : isReadLink ? 'link' : 'globe'
+  const icon = isSearch ? 'search' : isReadLink ? 'link' : 'globe'
   let label = isSearch ? t('searchStep') : isReadLink ? t('readStep') : t('openStep')
   let detail = ''
   if (isSearch) {
@@ -270,8 +281,6 @@ function ToolStep({ block, result, streaming }) {
   } else if (action === 'find_in_page') {
     label = t('findStep')
     detail = t('findInPage', { pattern: input.pattern || '' })
-  } else if (action === 'open_page') {
-    detail = input.url || ''
   } else {
     detail = input.url || ''
   }
@@ -280,7 +289,7 @@ function ToolStep({ block, result, streaming }) {
   const pageUrl = fetchContent?.type === 'web_fetch_result' ? fetchContent.url : (input.url || '')
   const pageTitle = fetchContent?.type === 'web_fetch_result' ? fetchContent.title : ''
   return h('div', { className: cx('dsc-step', failed && 'is-failed') },
-    h('span', { className: 'dsc-step-icon' }, h(Icon, { name: icon, size: 15 })),
+    h('span', { className: 'dsc-step-icon' }, h(Icon, { name: icon, size: 14 })),
     h('div', { className: 'dsc-step-main' },
       h('div', {
         className: cx('dsc-step-line', clickable && 'is-clickable'),
@@ -299,12 +308,12 @@ function ToolStep({ block, result, streaming }) {
         resultCount > 0 ? h('span', { className: 'dsc-step-count' }, t('resultCount', { count: resultCount })) : null,
         streaming && result === undefined ? h('span', { className: 'dsc-step-pending' }, t('searching')) : null,
         failed ? h('span', { className: 'dsc-step-failed' }, t('searchFailed')) : null,
-        clickable ? h(Icon, { name: expanded ? 'chevronDown' : 'chevronRight', size: 13 }) : null,
+        clickable ? h(Icon, { name: expanded ? 'chevronDown' : 'chevronRight', size: 12 }) : null,
       ),
       pageUrl && fetchContent?.type === 'web_fetch_result'
         ? h('a', {
             className: 'dsc-step-page', href: safeHref(pageUrl) ?? undefined, target: '_blank', rel: 'noreferrer noopener',
-          }, pageTitle || hostnameOf(pageUrl), h(Icon, { name: 'external', size: 12 }))
+          }, pageTitle || hostnameOf(pageUrl), h(Icon, { name: 'external', size: 11 }))
         : null,
       expanded ? h(SearchResultList, { items: searchItems }) : null,
     ),
@@ -313,7 +322,6 @@ function ToolStep({ block, result, streaming }) {
 
 function ProcessPanel({ message, streaming }) {
   const t = useT()
-  useTicker(streaming, 1000)
   const blocks = message.blocks ?? []
   const thinking = blocks.filter(block => block.type === 'thinking' && block.thinking.trim() !== '')
   const calls = blocks.filter(block => block.type === 'server_tool_use')
@@ -341,27 +349,20 @@ function ProcessPanel({ message, streaming }) {
   } else if (last?.type === 'web_fetch_tool_result') {
     activeLabel = t('thinkingReading')
   }
-  const seconds = thinkingSeconds(message)
+  const seconds = thinkingSeconds(message, streaming)
   const title = thinking.length > 0
     ? (streaming ? activeLabel : (seconds > 0 ? t('thinkingDone', { seconds }) : t('thinkingDoneNoTime')))
     : (streaming ? t('processing') : t('processSteps', { count: calls.length }))
   return h('div', { className: cx('dsc-process', streaming && 'is-streaming') },
-    h('div', {
+    h('button', {
+      type: 'button',
       className: 'dsc-process-head',
-      role: 'button',
-      tabIndex: 0,
       'aria-expanded': open,
       onClick: () => setOpen(value => !value),
-      onKeyDown: (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault()
-          setOpen(value => !value)
-        }
-      },
     },
-      h('span', { className: 'dsc-process-icon' }, h(Icon, { name: 'spark', size: 15 })),
+      h('span', { className: 'dsc-process-icon' }, h(Icon, { name: 'spark', size: 14 })),
       h('span', { className: cx('dsc-process-title', streaming && 'is-shimmer') }, title),
-      h(Icon, { name: open ? 'chevronDown' : 'chevronRight', size: 14 }),
+      h('span', { className: 'dsc-process-chevron' }, h(Icon, { name: open ? 'chevronDown' : 'chevronRight', size: 13 })),
     ),
     open ? h('div', { className: 'dsc-process-body' },
       blocks.map((block, index) => {
@@ -395,7 +396,6 @@ function AssistantMessage({ message, streaming, isLast }) {
   const errorInfo = message.error ? friendlyError(message.error) : null
   const showTyping = streaming && text === '' && (message.blocks ?? []).length === 0
   return h('div', { className: 'dsc-msg dsc-msg-assistant' },
-    h('div', { className: 'dsc-msg-avatar' }, h(BrandMark, { size: 26 })),
     h('div', { className: 'dsc-msg-body' },
       h(ProcessPanel, { message, streaming }),
       refused
@@ -422,7 +422,7 @@ function AssistantMessage({ message, streaming, isLast }) {
         : null,
       sources.length > 0
         ? h('div', { className: 'dsc-sources' },
-            h('div', { className: 'dsc-sources-head' }, h(Icon, { name: 'link', size: 14 }), t('sourceCount', { count: sources.length })),
+            h('div', { className: 'dsc-sources-head' }, h(Icon, { name: 'link', size: 13 }), t('sourceCount', { count: sources.length })),
             h('div', { className: 'dsc-source-list' }, sources.map((source, index) => h(SourceCard, { key: source.url, source, index }))),
           )
         : null,
@@ -430,7 +430,7 @@ function AssistantMessage({ message, streaming, isLast }) {
         ? h('div', { className: cx('dsc-msg-actions', isLast && 'is-last') },
             text !== ''
               ? h('button', {
-                  type: 'button', className: 'dsc-icon-button', title: t('copy'),
+                  type: 'button', className: 'dsc-msg-action', title: t('copy'),
                   'aria-label': t('copy'),
                   onClick: () => {
                     copyToClipboard(text).then(() => {
@@ -438,7 +438,7 @@ function AssistantMessage({ message, streaming, isLast }) {
                       setTimeout(() => setCopied(false), 1600)
                     }).catch(() => chatStore.toast(t('copyFailed'), 'error'))
                   },
-                }, h(Icon, { name: copied ? 'check' : 'copy', size: 15 }))
+                }, h(Icon, { name: copied ? 'check' : 'copy', size: 14 }), h('span', null, copied ? t('copied') : t('copy')))
               : null,
             message.usage
               ? h('span', { className: 'dsc-usage' }, t('usage', {
@@ -467,7 +467,7 @@ function UserMessage({ message }) {
 function SuggestionCard({ suggestion, onClick }) {
   const t = useT()
   return h('button', { type: 'button', className: 'dsc-suggestion', onClick },
-    h('span', { className: 'dsc-suggestion-icon' }, h(Icon, { name: suggestion.icon, size: 18 })),
+    h('span', { className: 'dsc-suggestion-icon' }, h(Icon, { name: suggestion.icon, size: 17 })),
     h('span', { className: 'dsc-suggestion-body' },
       h('span', { className: 'dsc-suggestion-title' }, t(suggestion.titleKey)),
       h('span', { className: 'dsc-suggestion-text' }, t(suggestion.textKey)),
@@ -490,7 +490,6 @@ function EmptyState() {
     chatActions.requestFocus()
   }
   return h('div', { className: 'dsc-empty' },
-    h('div', { className: 'dsc-empty-brand' }, h(BrandMark, { size: 44 })),
     h('h1', { className: 'dsc-empty-title' }, t('greeting')),
     h('p', { className: 'dsc-empty-subtitle' }, t('greetingSubtitle')),
     auth?.ready === false
@@ -579,6 +578,7 @@ function Composer() {
   const stopping = useChat(state => state.stopping)
   const auth = useChat(state => state.auth)
   const settings = useChat(state => state.settings)
+  const modelName = useChat(state => state.bootData?.model?.name)
   const focusRequest = useChat(state => state.focusRequest)
   const filePickRequest = useChat(state => state.filePickRequest)
   const textareaRef = React.useRef(null)
@@ -588,7 +588,7 @@ function Composer() {
     const node = textareaRef.current
     if (!node) return
     node.style.height = 'auto'
-    node.style.height = `${Math.min(node.scrollHeight, 200)}px`
+    node.style.height = `${Math.min(node.scrollHeight, 220)}px`
   }, [draft])
   React.useEffect(() => {
     if (focusRequest === 0) return
@@ -675,7 +675,7 @@ function Composer() {
         h('button', {
           type: 'button', className: 'dsc-tool-button', title: t('attach'), 'aria-label': t('attach'),
           onClick: () => fileRef.current?.click(),
-        }, h(Icon, { name: 'paperclip', size: 19 })),
+        }, h(Icon, { name: 'paperclip', size: 18 })),
         h('button', {
           type: 'button',
           className: cx('dsc-mode-button', settings.thinking && 'is-active'),
@@ -683,7 +683,7 @@ function Composer() {
           'aria-label': t('deepThink'),
           'aria-pressed': settings.thinking,
           onClick: chatActions.toggleThinking,
-        }, h(Icon, { name: 'brain', size: 17 }), h('span', null, t('deepThink'))),
+        }, h(Icon, { name: 'brain', size: 16 }), h('span', { className: 'dsc-mode-label' }, t('deepThink'))),
         h('button', {
           type: 'button',
           className: cx('dsc-mode-button', settings.search && 'is-active'),
@@ -691,8 +691,9 @@ function Composer() {
           'aria-label': t('webSearch'),
           'aria-pressed': settings.search,
           onClick: chatActions.toggleSearch,
-        }, h(Icon, { name: 'globe', size: 17 }), h('span', null, t('webSearch'))),
+        }, h(Icon, { name: 'globe', size: 16 }), h('span', { className: 'dsc-mode-label' }, t('webSearch'))),
         h('span', { className: 'dsc-tool-spacer' }),
+        modelName ? h('span', { className: 'dsc-model-pill', title: t('modelNote') }, modelName) : null,
         isStreaming
           ? h('button', {
               type: 'button',
@@ -701,7 +702,7 @@ function Composer() {
               'aria-label': t('stop'),
               disabled: stopping,
               onClick: () => chatActions.requestStop(),
-            }, h(Icon, { name: 'stop', size: 16 }))
+            }, h(Icon, { name: 'stop', size: 15 }))
           : h('button', {
               type: 'button',
               className: cx('dsc-send-button', !canSend && 'is-idle'),
@@ -709,7 +710,7 @@ function Composer() {
               'aria-label': t('send'),
               'aria-disabled': !canSend,
               onClick: handleSend,
-            }, h(Icon, { name: 'arrowUp', size: 18 })),
+            }, h(Icon, { name: 'arrowUp', size: 17 })),
       ),
       drag ? h('div', { className: 'dsc-drop-mask' }, h(Icon, { name: 'paperclip', size: 22 }), t('dropFiles')) : null,
     ),
@@ -782,14 +783,14 @@ function ConversationItem({ conversation, active, renaming, onOpen, onRename, on
           event.stopPropagation()
           chatStore.set({ renamingId: conversation.id })
         },
-      }, h(Icon, { name: 'pencil', size: 14 })),
+      }, h(Icon, { name: 'pencil', size: 13 })),
       h('button', {
         type: 'button', className: 'dsc-icon-button is-small is-danger', title: t('delete'), 'aria-label': t('delete'),
         onClick: (event) => {
           event.stopPropagation()
           chatActions.requestDeleteConversation(conversation.id, conversation.title)
         },
-      }, h(Icon, { name: 'trash', size: 14 })),
+      }, h(Icon, { name: 'trash', size: 13 })),
     ),
   )
 }
@@ -805,10 +806,13 @@ function Sidebar() {
     ? conversations
     : conversations.filter(item => (item.title || '').toLowerCase().includes(query.trim().toLowerCase()))
   const groups = groupConversations(filtered, t)
+  const closeOnMobile = () => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 900) chatStore.set({ sidebarOpen: false })
+  }
   const select = (id) => {
     if (id === activeId) {
       chatActions.requestFocus()
-      if (typeof window !== 'undefined' && window.innerWidth <= 900) chatStore.set({ sidebarOpen: false })
+      closeOnMobile()
       return
     }
     if (chatStore.state.streaming !== null) {
@@ -816,23 +820,21 @@ function Sidebar() {
       return
     }
     void chatActions.loadConversation(id)
-    if (typeof window !== 'undefined' && window.innerWidth <= 900) chatStore.set({ sidebarOpen: false })
+    closeOnMobile()
   }
   return h('aside', { className: 'dsc-sidebar-inner' },
     h('div', { className: 'dsc-sidebar-top' },
-      h('div', { className: 'dsc-brand-row' },
-        h(BrandMark, { size: 28 }),
-        h('span', { className: 'dsc-brand-name' }, t('appTitle')),
+      h('div', { className: 'dsc-sidebar-actions' },
+        h('button', {
+          type: 'button', className: 'dsc-new-chat',
+          onClick: () => { void chatActions.newChat(); closeOnMobile() },
+        }, h(Icon, { name: 'plus', size: 16 }), h('span', null, t('newChat'))),
         h('button', {
           type: 'button', className: 'dsc-icon-button dsc-sidebar-collapse', title: t('collapseSidebar'),
           'aria-label': t('collapseSidebar'), onClick: () => chatStore.set({ sidebarOpen: false }),
-        }, h(Icon, { name: 'sidebar', size: 18 })),
+        }, h(Icon, { name: 'sidebar', size: 17 })),
       ),
-      h('button', {
-        type: 'button', className: 'dsc-new-chat',
-        onClick: () => { void chatActions.newChat(); if (typeof window !== 'undefined' && window.innerWidth <= 900) chatStore.set({ sidebarOpen: false }) },
-      }, h(Icon, { name: 'plus', size: 17 }), h('span', null, t('newChat'))),
-      h('div', { className: 'dsc-search' },
+      h('label', { className: 'dsc-search' },
         h(Icon, { name: 'search', size: 15 }),
         h('input', {
           className: 'dsc-search-input',
@@ -868,14 +870,11 @@ function Sidebar() {
     h('div', { className: 'dsc-sidebar-foot' },
       h('button', {
         type: 'button', className: 'dsc-foot-action',
+        title: t('chatSettings'),
         onClick: () => chatStore.set({ settingsOpen: true }),
-      }, h(Icon, { name: 'settings', size: 18 }), h('span', null, t('settings')),
+      }, h(Icon, { name: 'settings', size: 17 }), h('span', null, t('settings')),
         h('span', { className: cx('dsc-auth-dot', auth?.ready ? 'is-ready' : 'is-missing'), title: authSourceLabel(auth, t) }),
       ),
-      h('button', {
-        type: 'button', className: 'dsc-foot-action',
-        onClick: chatActions.closeChat,
-      }, h(Icon, { name: 'agent', size: 18 }), h('span', null, t('agentMode'))),
     ),
   )
 }
@@ -885,57 +884,60 @@ function ChatHeader() {
   const activeId = useChat(state => state.activeId)
   const conversations = useChat(state => state.conversations)
   const auth = useChat(state => state.auth)
-  const model = useChat(state => state.bootData?.model?.name)
-  const modelName = model || t('modelName')
+  const sidebarOpen = useChat(state => state.sidebarOpen)
   const conversation = conversations.find(item => item.id === activeId)
+  const canHandoff = useChat(state => state.bootData?.handoff?.enabled !== false)
   return h('header', { className: 'dsc-header' },
     h('div', { className: 'dsc-header-left' },
-      h('button', {
-        type: 'button', className: 'dsc-icon-button dsc-header-menu',
-        title: t('expandSidebar'), 'aria-label': t('expandSidebar'),
-        onClick: () => chatStore.set({ sidebarOpen: !chatStore.state.sidebarOpen }),
-      }, h(Icon, { name: 'menu', size: 19 })),
-      h('button', {
-        type: 'button', className: 'dsc-icon-button dsc-header-newchat',
-        title: t('newChat'), 'aria-label': t('newChat'),
-        onClick: () => { void chatActions.newChat() },
-      }, h(Icon, { name: 'plus', size: 19 })),
+      !sidebarOpen
+        ? h('button', {
+            type: 'button', className: 'dsc-icon-button dsc-header-menu',
+            title: t('expandSidebar'), 'aria-label': t('expandSidebar'),
+            onClick: () => chatStore.set({ sidebarOpen: true }),
+          }, h(Icon, { name: 'menu', size: 18 }))
+        : null,
       h('div', { className: 'dsc-header-title' }, conversation?.title || t('newChatTitle')),
     ),
     h('div', { className: 'dsc-header-right' },
-      h('div', { className: 'dsc-model-pill', title: t('modelLabel') },
-        h('span', { className: 'dsc-model-dot' }), modelName),
-      h('button', {
-        type: 'button', className: 'dsc-agent-button', title: t('openAgent'),
-        'aria-label': t('openAgent'), onClick: chatActions.closeChat,
-      }, h(Icon, { name: 'agent', size: 17 }),
-        h('span', { className: 'dsc-agent-label-full' }, t('agentMode')),
-        h('span', { className: 'dsc-agent-label-short' }, t('agentModeShort'))),
-      h('button', {
-        type: 'button', className: 'dsc-icon-button', title: t('settings'),
-        'aria-label': t('settings'), onClick: () => chatStore.set({ settingsOpen: true }),
-      }, h(Icon, { name: 'settings', size: 18 })),
       auth?.ready === false
         ? h('button', {
             type: 'button', className: 'dsc-auth-pill is-missing', title: t('noAuthTitle'),
             onClick: () => chatStore.set({ settingsOpen: true }),
-          }, h(Icon, { name: 'warning', size: 14 }), h('span', null, t('authMissing')))
+          }, h(Icon, { name: 'warning', size: 13 }), h('span', null, t('authMissing')))
         : null,
+      h('button', {
+        type: 'button',
+        className: 'dsc-handoff-button',
+        title: canHandoff ? t('handoffSubtitle') : t('handoffUnavailable'),
+        disabled: !canHandoff,
+        onClick: () => { void chatActions.openHandoff() },
+      }, h(Icon, { name: 'agent', size: 15 }), h('span', { className: 'dsc-handoff-label' }, t('handoff'))),
     ),
   )
 }
 
-function ChatToggle({ wide = false } = {}) {
+/**
+ * The shared Chat | Agent navigation. It is registered in the frame-wide
+ * overlay (root scope, outside every column), so it is part of the shell
+ * chrome rather than of either view: it sits in the desktop caption row above
+ * the window's drag strip, stays visible in both modes, and switches the whole
+ * application view.
+ */
+function ModeSwitch() {
   const t = useT()
   const open = useChat(state => state.open)
-  return h('button', {
+  const item = (mode, label, icon, selected) => h('button', {
     type: 'button',
-    className: 'dsc-footer-action',
-    title: open ? t('agentMode') : t('openChat'),
-    'aria-label': open ? t('agentMode') : t('openChat'),
-    'aria-pressed': open,
-    onClick: () => { if (open) chatActions.closeChat(); else chatActions.openChat() },
-  }, h(Icon, { name: open ? 'agent' : 'chat', size: 18 }), wide ? h('span', null, open ? t('agentMode') : t('openChat')) : null)
+    role: 'tab',
+    'aria-selected': selected,
+    className: cx('dsc-modeswitch-item', selected && 'is-active'),
+    title: mode === 'chat' ? t('switchToChat') : t('switchToAgent'),
+    onClick: () => chatActions.setMode(mode),
+  }, h(Icon, { name: icon, size: 14 }), h('span', { className: 'dsc-modeswitch-label' }, label))
+  return h('div', { className: 'dsc-modeswitch', role: 'tablist', 'aria-label': t('modeSwitchLabel') },
+    item('chat', t('chatMode'), 'chat', open),
+    item('agent', t('agentMode'), 'agent', !open),
+  )
 }
 
 function ChatRoot() {
@@ -945,24 +947,9 @@ function ChatRoot() {
   const bootError = useChat(state => state.bootError)
   const settingsOpen = useChat(state => state.settingsOpen)
   const confirm = useChat(state => state.confirm)
+  const handoff = useChat(state => state.handoff)
   const sidebarOpen = useChat(state => state.sidebarOpen)
-  const rootRef = React.useRef(null)
   const sidebarRef = React.useRef(null)
-  const previousFocus = React.useRef(null)
-  React.useEffect(() => {
-    if (!open) return undefined
-    previousFocus.current = document.activeElement
-    return () => {
-      const node = previousFocus.current
-      if (node && typeof node.focus === 'function') {
-        try {
-          node.focus()
-        } catch {
-          // The previous owner may have unmounted.
-        }
-      }
-    }
-  }, [open])
   React.useEffect(() => {
     if (!open) return
     const node = sidebarRef.current
@@ -971,51 +958,23 @@ function ChatRoot() {
   React.useEffect(() => {
     if (!open) return undefined
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        if (confirm !== null) {
-          chatStore.set({ confirm: null })
-          return
-        }
-        if (settingsOpen) chatStore.set({ settingsOpen: false })
+      if (event.key !== 'Escape') return
+      if (confirm !== null) {
+        chatStore.set({ confirm: null })
         return
       }
-      if (event.key !== 'Tab') return
-      const root = rootRef.current
-      if (!root) return
-      const current = document.activeElement
-      const modal = current?.closest?.('.dsc-modal, .dsc-confirm')
-      const scope = modal ?? root
-      const focusables = [...scope.querySelectorAll('a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])')]
-        .filter(el => el.offsetParent !== null
-          && !el.closest('[inert]')
-          && el.getAttribute('aria-hidden') !== 'true'
-          && getComputedStyle(el).visibility !== 'hidden')
-      if (focusables.length === 0) {
-        event.preventDefault()
+      if (chatStore.state.handoff !== null) {
+        chatActions.closeHandoff()
         return
-      }
-      const first = focusables[0]
-      const last = focusables[focusables.length - 1]
-      if (!scope.contains(current)) {
-        event.preventDefault()
-        first.focus()
-        return
-      }
-      if (event.shiftKey && current === first) {
-        event.preventDefault()
-        last.focus()
-      } else if (!event.shiftKey && current === last) {
-        event.preventDefault()
-        first.focus()
-      }
+      }      if (settingsOpen) chatStore.set({ settingsOpen: false })
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [open, settingsOpen, confirm])
   if (!open) return null
   return h('div', {
-    className: 'dsc-root', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('appTitle'),
-    ref: rootRef, tabIndex: -1,
+    className: 'dsc-root', role: 'region', 'aria-label': t('appTitle'), tabIndex: -1,
+    'data-dsc-mode': 'chat',
   },
     h('div', {
       className: cx('dsc-sidebar', sidebarOpen && 'is-open'),
@@ -1033,6 +992,7 @@ function ChatRoot() {
     ),
     settingsOpen ? h(SettingsDialog, null) : null,
     confirm !== null ? h(ConfirmDialog, null) : null,
+    handoff !== null ? h(HandoffDialog, null) : null,
     h(Toasts, null),
   )
 }

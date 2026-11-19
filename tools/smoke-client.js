@@ -254,7 +254,35 @@ captured.chatStore.set({ streaming: null })
 render('AssistantMessage', captured.AssistantMessage, { message: assistant, streaming: false, isLast: true })
 render('SettingsDialog', captured.SettingsDialog)
 render('Composer', captured.Composer)
-render('ChatToggle', captured.ChatToggle, { wide: true })
+render('ModeSwitch', captured.ModeSwitch)
+
+// Thinking duration must come from stored timestamps only: a settled reply
+// reports the same value on every render, and an open block is only measured
+// against the clock while it is live.
+const settled = captured.thinkingSeconds(assistant, false)
+await wait(110)
+const again = captured.thinkingSeconds(assistant, false)
+console.log('THINKING_STABLE', settled, again)
+if (settled !== again) throw new Error(`settled thinking duration drifted: ${settled} -> ${again}`)
+if (settled !== 1) throw new Error(`unexpected settled thinking duration: ${settled}`)
+const openReply = {
+  id: 'a2', role: 'assistant', createdAt: Date.now() - 5000, updatedAt: Date.now() - 4000, status: 'stopped',
+  blocks: [{ type: 'thinking', thinking: '半截', signature: '', startedAt: Date.now() - 5000 }],
+}
+const stale = captured.thinkingSeconds(openReply, false)
+await wait(110)
+const staleAgain = captured.thinkingSeconds(openReply, false)
+console.log('THINKING_STALE', stale, staleAgain, 'updatedAt-fallback')
+if (stale !== staleAgain) throw new Error('an orphaned thinking block kept counting')
+if (stale > 2) throw new Error(`an orphaned thinking block used the wall clock: ${stale}s`)
+
+captured.chatStore.set({
+  workspaces: [{ id: 'w1', title: 'dsh-chat', path: 'C:/work/dsh-chat' }],
+  handoff: { generating: false, brief: '## 目标\n实现分段导航', generated: true, warning: '', instruction: '', workspaceId: 'w1', busy: false, error: '' },
+})
+render('HandoffDialog', captured.HandoffDialog)
+render('ChatRoot-handoff', captured.ChatRoot)
+captured.chatStore.set({ handoff: null })
 
 // End-to-end client state flow against a synthetic NDJSON stream.
 console.log('FLOW_START')

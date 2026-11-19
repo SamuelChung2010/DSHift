@@ -2,10 +2,6 @@ function BootView({ error, onRetry }) {
   const t = useT()
   if (error !== '') {
     return h('div', { className: 'dsc-boot' },
-      h('button', {
-        type: 'button', className: 'dsc-boot-close', title: t('openAgent'), 'aria-label': t('openAgent'),
-        onClick: chatActions.closeChat,
-      }, h(Icon, { name: 'agent', size: 18 })),
       h('div', { className: 'dsc-boot-card' },
         h('span', { className: 'dsc-boot-icon' }, h(Icon, { name: 'warning', size: 22 })),
         h('h2', null, t('loadFailed')),
@@ -15,10 +11,6 @@ function BootView({ error, onRetry }) {
     )
   }
   return h('div', { className: 'dsc-boot' },
-    h('button', {
-      type: 'button', className: 'dsc-boot-close', title: t('openAgent'), 'aria-label': t('openAgent'),
-      onClick: chatActions.closeChat,
-    }, h(Icon, { name: 'agent', size: 18 })),
     h(Spinner, { size: 24 }),
     h('div', { className: 'dsc-boot-text' }, t('loading')),
   )
@@ -207,6 +199,116 @@ function SettingsDialog() {
           h('p', { className: 'dsc-field-hint' }, `${t('limitations')}：${t('limitationsText')}`),
         ),
       ),
+    ),
+  )
+}
+
+/**
+ * Chat → Agent handoff: draft an editable task brief from this conversation,
+ * create a real Agent Session in the chosen Workspace, and switch the shell to
+ * Agent mode on that Session.
+ */
+function HandoffDialog() {
+  const t = useT()
+  const handoff = useChat(state => state.handoff)
+  const workspaces = useChat(state => state.workspaces)
+  const hostReady = useChat(state => state.bootData?.handoff !== undefined)
+  const [copied, setCopied] = React.useState(false)
+  if (handoff === null) return null
+  const close = () => chatActions.closeHandoff()
+  const brief = handoff.brief ?? ''
+  const canSend = hostReady && brief.trim() !== '' && !handoff.busy && !handoff.generating
+  const copy = () => {
+    copyToClipboard(brief).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1600)
+    }).catch(() => chatStore.toast(t('copyFailed'), 'error'))
+  }
+  return h('div', {
+    className: 'dsc-modal-backdrop',
+    onMouseDown: (event) => { if (event.target === event.currentTarget) close() },
+  },
+    h('div', { className: 'dsc-modal dsc-handoff', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('handoffTitle') },
+      h('header', { className: 'dsc-modal-head' },
+        h('div', null,
+          h('h2', null, t('handoffTitle')),
+          h('p', { className: 'dsc-modal-sub' }, t('handoffSubtitle')),
+        ),
+        h('button', {
+          type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
+          autoFocus: true, onClick: close,
+        }, h(Icon, { name: 'close', size: 18 })),
+      ),
+      h('div', { className: 'dsc-modal-body' },
+        !hostReady
+          ? h('div', { className: 'dsc-notice' }, h(Icon, { name: 'warning', size: 16 }), h('span', null, t('handoffRestart')))
+          : workspaces.length === 0
+            ? h('div', { className: 'dsc-notice' }, h(Icon, { name: 'warning', size: 16 }), h('span', null, t('handoffWorkspaceEmpty')))
+            : h('div', { className: 'dsc-field' },
+                h('span', { className: 'dsc-field-label' }, t('handoffWorkspace')),
+                h('select', {
+                  className: 'dsc-select',
+                  value: handoff.workspaceId ?? '',
+                  onChange: (event) => chatActions.setHandoffWorkspace(event.target.value),
+                }, workspaces.map(workspace => h('option', { key: workspace.id, value: workspace.id }, workspace.title || workspace.path))),
+                h('p', { className: 'dsc-field-hint' }, workspaces.find(workspace => workspace.id === handoff.workspaceId)?.path ?? ''),
+              ),
+        h('div', { className: 'dsc-field' },
+          h('label', { className: 'dsc-field-label', htmlFor: 'dsc-handoff-extra' }, t('handoffExtra')),
+          h('input', {
+            id: 'dsc-handoff-extra',
+            className: 'dsc-input',
+            value: handoff.instruction ?? '',
+            placeholder: t('handoffExtraPlaceholder'),
+            maxLength: 4000,
+            onChange: (event) => chatActions.setHandoffInstruction(event.target.value),
+            onKeyDown: (event) => {
+              if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+                event.preventDefault()
+                void chatActions.draftHandoff()
+              }
+            },
+          }),
+        ),
+        h('div', { className: 'dsc-field' },
+          h('div', { className: 'dsc-field-row' },
+            h('span', { className: 'dsc-field-label' }, t('handoffEditorLabel')),
+            h('div', { className: 'dsc-field-tools' },
+              h('button', {
+                type: 'button', className: 'dsc-text-button', disabled: handoff.generating,
+                onClick: () => { void chatActions.draftHandoff() },
+              }, h(Icon, { name: 'refresh', size: 14 }), t('handoffRegenerate')),
+              brief.trim() === '' ? null : h('button', {
+                type: 'button', className: 'dsc-text-button', onClick: copy,
+              }, h(Icon, { name: copied ? 'check' : 'copy', size: 14 }), copied ? t('copied') : t('copyBrief')),
+            ),
+          ),
+          handoff.generating
+            ? h('div', { className: 'dsc-handoff-loading' }, h(Spinner, { size: 16 }), t('handoffDrafting'))
+            : h('textarea', {
+                className: 'dsc-textarea dsc-handoff-brief',
+                value: brief,
+                rows: 12,
+                spellCheck: false,
+                onChange: (event) => chatActions.setHandoffBrief(event.target.value),
+              }),
+          handoff.warning !== '' && !handoff.generating
+            ? h('p', { className: 'dsc-field-hint' }, `${t('handoffLocal')} ${t('handoffShortcut')}`)
+            : h('p', { className: 'dsc-field-hint' }, t('handoffShortcut')),
+          handoff.error !== ''
+            ? h('div', { className: 'dsc-notice is-error' }, h(Icon, { name: 'warning', size: 15 }), h('span', null, handoff.error))
+            : null,
+        ),
+      ),
+      h('footer', { className: 'dsc-modal-foot' },
+        h('div', { className: 'dsc-modal-foot-note' }, workspaces.length === 0 ? t('handoffWorkspaceEmpty') : ''),
+        h('button', { type: 'button', className: 'dsc-secondary-button', onClick: close }, t('cancel')),
+        h('button', {
+          type: 'button',
+          className: 'dsc-primary-button',
+          disabled: !canSend || workspaces.length === 0,
+          onClick: () => { void chatActions.submitHandoff() },
+        }, handoff.busy ? t('handoffSending') : t('handoffSend')),      ),
     ),
   )
 }

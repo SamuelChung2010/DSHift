@@ -64,6 +64,7 @@ const chatStore = {
     auth: null,
     settings: { authMode: 'auto', thinking: false, search: false, systemPrompt: '' },
     conversations: [],
+    workspaces: [],
     activeId: typeof stored.activeId === 'string' ? stored.activeId : null,
     messages: [],
     conversationLoading: false,
@@ -74,6 +75,7 @@ const chatStore = {
     attachments: [],
     toasts: [],
     settingsOpen: false,
+    handoff: null,
     confirm: null,
     sidebarOpen: typeof window !== 'undefined' ? window.innerWidth > 900 : true,
     renamingId: null,
@@ -281,6 +283,7 @@ function patchUserMessage(id, patch) {
 
 let bootPromise = null
 let sendInFlight = false
+let handoffSequence = 0
 
 async function ensureBoot(force = false) {
   if (!force && (chatStore.state.boot === 'ready' || chatStore.state.boot === 'loading')) {
@@ -297,6 +300,7 @@ async function ensureBoot(force = false) {
         auth: data.auth,
         settings: data.settings,
         conversations: data.conversations ?? [],
+        workspaces: Array.isArray(data.workspaces) ? data.workspaces : [],
       })
       const active = chatStore.state.activeId
       const exists = active !== null && (data.conversations ?? []).some(item => item.id === active)
@@ -358,7 +362,8 @@ function openChat() {
 }
 
 function closeChat() {
-  chatStore.set({ open: false, settingsOpen: false, confirm: null })
+  handoffSequence += 1
+  chatStore.set({ open: false, settingsOpen: false, confirm: null, handoff: null })
   writeStored({ open: false })
 }
 
@@ -1022,9 +1027,158 @@ function requestStop() {
   stopStreaming()
 }
 
+/** The shared Chat | Agent navigation: one mode slot, two views. */
+function setMode(mode) {
+  if (mode === 'chat') {
+    if (chatStore.state.open) {
+      requestFocus()
+      return
+    }
+    openChat()
+    return
+  }
+  if (chatStore.state.open) closeChat()
+}
+
+function defaultWorkspaceId() {
+  const workspaces = chatStore.state.workspaces
+  if (typeof stored.workspaceId === 'string' && workspaces.some(item => item.id === stored.workspaceId)) {
+    return stored.workspaceId
+  }
+  return workspaces[0]?.id ?? ''
+}
+
+function handoffPatch(patch) {
+  const current = chatStore.state.handoff
+  if (current === null) return
+  chatStore.set({ handoff: { ...current, ...patch } })
+}
+
+async function openHandoff() {
+  if (chatStore.state.handoff !== null) return
+  if (chatStore.state.messages.length === 0 || chatStore.state.activeId === null) {
+    chatStore.toast(tr('handoffEmpty'), 'warning')
+    return
+  }
+  if (chatStore.state.streaming !== null) {
+    chatStore.toast(tr('waitStreaming'), 'warning')
+    return
+  }
+  chatStore.set({
+    handoff: {
+      generating: true,
+      brief: '',
+      generated: false,
+      warning: '',
+      instruction: '',
+      workspaceId: defaultWorkspaceId(),
+      busy: false,
+      error: '',
+    },
+  })
+  await draftHandoff()
+}
+
+function closeHandoff() {
+  handoffSequence += 1
+  chatStore.set({ handoff: null })
+}
+
+async function draftHandoff() {
+  const handoff = chatStore.state.handoff
+  if (handoff === null || chatStore.state.activeId === null) return
+  const sequence = ++handoffSequence
+  handoffPatch({ generating: true, error: '' })
+  try {
+    const data = await hostJson('/api/deepseek-chat/handoff', {
+      conversationId: chatStore.state.activeId,
+      locale: appCtx?.locale.getSnapshot().active === 'zh' ? 'zh' : 'en',
+      instruction: handoff.instruction ?? '',
+    })
+    if (sequence !== handoffSequence) return
+    handoffPatch({
+      generating: false,
+      brief: typeof data.brief === 'string' ? data.brief : '',
+      generated: data.generated === true,
+      warning: typeof data.warning === 'string' ? data.warning : '',
+      error: '',
+    })
+  } catch (error) {
+    if (sequence !== handoffSequence) return
+    const status = error?.status
+    handoffPatch({
+      generating: false,
+      error: status === 404 || status === 501
+        ? tr('handoffRestart')
+        : error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+function setHandoffBrief(brief) {
+  handoffPatch({ brief })
+}
+
+function setHandoffInstruction(instruction) {
+  handoffPatch({ instruction })
+}
+
+function setHandoffWorkspace(workspaceId) {
+  handoffPatch({ workspaceId })
+  writeStored({ workspaceId })
+}
+
+/** Open the created Session through the native workspace navigation. */
+function openAgentSession(sessionId) {
+  try {
+    appCtx?.get?.('uiWorkspace')?.openSession?.(sessionId)
+    appCtx?.get?.('layout')?.selectPanel?.(null)
+    return true
+  } catch (error) {
+    console.error('deepseek-chat: could not open the Agent session', error)
+    return false
+  }
+}
+
+async function submitHandoff() {
+  const handoff = chatStore.state.handoff
+  if (handoff === null || handoff.busy) return
+  const brief = typeof handoff.brief === 'string' ? handoff.brief.trim() : ''
+  if (brief === '') {
+    handoffPatch({ error: tr('handoffEmpty') })
+    return
+  }
+  handoffPatch({ busy: true, error: '' })
+  let sessionId = ''
+  try {
+    const data = await hostJson('/api/deepseek-chat/handoff/send', {
+      prompt: brief,
+      ...(handoff.workspaceId === '' ? {} : { workspaceId: handoff.workspaceId }),
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    })
+    sessionId = typeof data.sessionId === 'string' ? data.sessionId : ''
+  } catch (error) {
+    handoffPatch({
+      busy: false,
+      error: error?.status === 404 || error?.status === 501
+        ? tr('handoffRestart')
+        : error instanceof Error ? error.message : String(error),
+    })
+    return
+  }
+  chatStore.set({ handoff: null })
+  closeChat()
+  if (sessionId === '' || !openAgentSession(sessionId)) {
+    chatStore.toast(tr('handoffNoSession'), 'warning')
+    return
+  }
+  chatStore.toast(tr('handoffSent'), 'success')
+}
+
 const chatActions = {
   openChat,
   closeChat,
+  setMode,
   ensureBoot,
   newChat,
   loadConversation,
@@ -1043,4 +1197,11 @@ const chatActions = {
   requestFocus,
   requestFilePicker,
   requestStop,
+  openHandoff,
+  closeHandoff,
+  draftHandoff,
+  setHandoffBrief,
+  setHandoffInstruction,
+  setHandoffWorkspace,
+  submitHandoff,
 }

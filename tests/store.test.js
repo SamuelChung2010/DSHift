@@ -61,6 +61,29 @@ test('reloads a streaming reply as stopped and closes its thinking block', async
     const message = again.getConversation(conversation.id).messages[0]
     assert.equal(message.status, 'stopped')
     assert.equal(typeof message.blocks[0].endedAt, 'number')
+    // The close time is the reply's own last write, never the load clock: the
+    // reasoning duration must not grow the longer the file sits on disk.
+    assert.equal(message.blocks[0].endedAt, 1)
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true })
+  }
+})
+
+test('keeps a persisted thinking duration stable across reloads', async () => {
+  const { dir, store } = await tempStore()
+  try {
+    const conversation = await store.createConversation()
+    await store.appendMessage(conversation.id, {
+      id: 'a1', role: 'assistant', createdAt: 1, updatedAt: 12_000, status: 'streaming',
+      blocks: [{ type: 'thinking', thinking: 'deep', signature: '', startedAt: 1_000 }],
+    })
+    await store.flush()
+    const again = new ChatStore(dir, { logger: { warn() {} } })
+    await again.load()
+    const message = again.getConversation(conversation.id).messages[0]
+    assert.equal(message.status, 'stopped')
+    assert.equal(message.blocks[0].endedAt, 12_000)
+    assert.equal(message.blocks[0].endedAt - message.blocks[0].startedAt, 11_000)
   } finally {
     await fs.rm(dir, { recursive: true, force: true })
   }

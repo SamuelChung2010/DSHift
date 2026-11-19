@@ -1,8 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  applyEvent, buildRequestMessages, conversationSummary, createLatestReminder, getReplyText,
-  replySources, settleReply, titleFromUserMessage,
+  applyEvent, buildHandoffRequest, buildRequestMessages, conversationSummary, createLatestReminder,
+  fallbackHandoffBrief, getReplyText, replySources, settleReply, titleFromUserMessage,
 } from '../lib/protocol.js'
 
 function assistant(overrides = {}) {
@@ -148,4 +148,32 @@ test('derives titles and reminders without leaking empty values', () => {
   const reminder = createLatestReminder({ now: new Date('2026-11-19T08:00:00Z'), locale: 'zh', timeZone: 'Asia/Singapore' })
   assert.match(reminder, /^2026-11-19,.*,Web,中文$/)
   assert.equal(conversationSummary({ id: 'c', title: 't', titleAuto: true, createdAt: 1, updatedAt: 2, messages: [1, 2] }).messageCount, 2)
+})
+
+test('drafts a handoff brief request from the finished discussion', () => {
+  const reply = settleReply({ ...assistant(), blocks: [{ type: 'text', text: '用分段导航实现', citations: [] }] }, 'done', 2)
+  const built = buildHandoffRequest([user('u1', '把 Chat 和 Agent 合成一个模式'), reply], { locale: 'zh' })
+  assert.equal(typeof built.system, 'string')
+  assert.equal(built.messages.length, 1)
+  assert.match(built.messages[0].content, /把 Chat 和 Agent 合成一个模式/)
+  assert.match(built.messages[0].content, /用分段导航实现/)
+  assert.equal(buildHandoffRequest([], { locale: 'zh' }), null)
+  const instructed = buildHandoffRequest([user('u1', 'q')], { locale: 'en', instruction: 'only the client' })
+  assert.match(instructed.messages[0].content, /only the client/)
+  assert.match(instructed.messages[0].content, /### User/)
+})
+
+test('falls back to a local handoff brief without a model round', () => {
+  const reply = settleReply({ ...assistant(), blocks: [{ type: 'text', text: '已确认方案 A', citations: [] }] }, 'done', 2)
+  const brief = fallbackHandoffBrief([
+    user('u1', '做一个分段导航', [{ name: 'spec.md' }]),
+    reply,
+  ], { locale: 'zh' })
+  assert.match(brief, /^## 目标/)
+  assert.match(brief, /做一个分段导航/)
+  assert.match(brief, /spec\.md/)
+  assert.match(brief, /已确认方案 A/)
+  assert.match(brief, /## 验收标准/)
+  const empty = fallbackHandoffBrief([], { locale: 'en' })
+  assert.match(empty, /^## Goal/)
 })

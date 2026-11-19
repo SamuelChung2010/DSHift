@@ -100,17 +100,6 @@ const IconAgent = props => h(IconBase, props,
   h('path', { d: 'M7 9.5l2.5 2.5L7 14.5M12.5 14.5H17' }),
 )
 
-function BrandMark({ size = 30 }) {
-  return h('span', { className: 'dsc-brand-mark', style: { width: `${size}px`, height: `${size}px` }, 'aria-hidden': 'true' }, h('svg', {
-    width: size, height: size, viewBox: '0 0 32 32', fill: 'none',
-  },
-    h('rect', { width: 32, height: 32, rx: 10, fill: 'currentColor' }),
-    h('path', { d: 'M8 20.5c3.4-5.4 9.6-5.4 14 0', stroke: '#fff', strokeWidth: 2.1, strokeLinecap: 'round' }),
-    h('circle', { cx: 23.2, cy: 9.6, r: 2.1, fill: '#fff' }),
-    h('circle', { cx: 12.2, cy: 12.2, r: 1.35, fill: '#fff', opacity: 0.85 }),
-  ))
-}
-
 const ICONS = {
   plus: IconPlus,
   search: IconSearch,

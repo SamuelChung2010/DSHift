@@ -10,8 +10,11 @@ const CHAT_NS = 'deepseekChatMode'
 
 const DICT_ZH = {
   appTitle: 'DeepSeek Chat',
+  chatMode: 'Chat',
   openChat: 'Chat',
-  agentMode: 'Agent 模式',
+  agentMode: 'Agent',
+  agentModeFull: 'Agent 模式',
+  modeSwitchLabel: '切换 Chat 与 Agent 模式',
   newChat: '新对话',
   searchChats: '搜索对话',
   today: '今天',
@@ -169,12 +172,44 @@ const DICT_ZH = {
   historyLoadFailed: '无法加载对话历史',
   agentModeShort: 'Agent',
   emptyFile: '文件为空',
+  // Chat → Agent handoff
+  handoff: '交给 Agent',
+  handoffTitle: '交给 Agent',
+  handoffSubtitle: '把当前对话整理成任务说明，交给 Harness Agent 继续开发。',
+  handoffDrafting: '正在整理任务说明…',
+  handoffEditorLabel: '任务说明（可编辑）',
+  handoffWorkspace: '工作区',
+  handoffWorkspaceEmpty: '还没有工作区。请先在 Agent 模式中打开一个项目目录。',
+  handoffExtra: '补充要求（可选）',
+  handoffExtraPlaceholder: '例如：只改插件，不要动 Harness 核心。',
+  handoffRegenerate: '重新生成',
+  handoffSend: '创建 Agent 会话',
+  handoffSending: '正在创建…',
+  handoffSent: '已创建 Agent 会话，正在切换…',
+  handoffCopied: '任务说明已复制',
+  handoffEmpty: '这个对话还没有可以交接的内容。',
+  handoffUnavailable: '当前环境不支持从 Chat 创建 Agent 会话，可以复制任务说明后手动粘贴。',
+  handoffLocal: 'AI 整理失败，已使用本地整理的版本。',
+  handoffShortcut: '也可以先复制，稍后自行粘贴到 Agent。',
+  handoffRestart: 'Chat 的宿主端代码已更新，需要刷新插件或重启 Harness 后才能创建 Agent 会话。',
+  handoffNoSession: '无法打开新建的 Agent 会话，请在 Agent 模式中手动选择。',
+  copyBrief: '复制',
+  // Mode / layout
+  chatSettings: 'Chat 设置',
+  openSettings: '打开设置',
+  thinkingProcess: '思考过程',
+  modelNote: '模型由 DeepSeek Chat 服务端固定',
+  switchToAgent: '切换到 Agent',
+  switchToChat: '切换到 Chat',
 }
 
 const DICT_EN = {
   appTitle: 'DeepSeek Chat',
+  chatMode: 'Chat',
   openChat: 'Chat',
-  agentMode: 'Agent mode',
+  agentMode: 'Agent',
+  agentModeFull: 'Agent mode',
+  modeSwitchLabel: 'Switch between Chat and Agent',
   newChat: 'New chat',
   searchChats: 'Search chats',
   today: 'Today',
@@ -332,6 +367,33 @@ const DICT_EN = {
   historyLoadFailed: 'Could not load conversation',
   agentModeShort: 'Agent',
   emptyFile: 'The file is empty',
+  handoff: 'Hand off to Agent',
+  handoffTitle: 'Hand off to Agent',
+  handoffSubtitle: 'Turn this conversation into a task brief and hand it to a Harness Agent.',
+  handoffDrafting: 'Drafting the task brief…',
+  handoffEditorLabel: 'Task brief (editable)',
+  handoffWorkspace: 'Workspace',
+  handoffWorkspaceEmpty: 'No workspace yet. Open a project directory in Agent mode first.',
+  handoffExtra: 'Extra requirements (optional)',
+  handoffExtraPlaceholder: 'e.g. change only the plugin, not the Harness core.',
+  handoffRegenerate: 'Regenerate',
+  handoffSend: 'Create Agent session',
+  handoffSending: 'Creating…',
+  handoffSent: 'Agent session created. Switching…',
+  handoffCopied: 'Task brief copied',
+  handoffEmpty: 'Nothing in this conversation to hand off yet.',
+  handoffUnavailable: 'This environment cannot create Agent sessions from Chat. Copy the brief and paste it in Agent mode.',
+  handoffLocal: 'The model draft failed, so a local brief was used.',
+  handoffShortcut: 'You can also copy it and paste it in Agent mode yourself.',
+  handoffRestart: 'The Chat Host half has changed. Refresh the plugin or restart Harness before creating Agent sessions.',
+  handoffNoSession: 'The new Agent session could not be opened. Pick it in Agent mode.',
+  copyBrief: 'Copy',
+  chatSettings: 'Chat settings',
+  openSettings: 'Open settings',
+  thinkingProcess: 'Reasoning',
+  modelNote: 'The model is fixed by the DeepSeek Chat service',
+  switchToAgent: 'Switch to Agent',
+  switchToChat: 'Switch to Chat',
 }
 
 /* ---- 20-store.js ---- */
@@ -401,6 +463,7 @@ const chatStore = {
     auth: null,
     settings: { authMode: 'auto', thinking: false, search: false, systemPrompt: '' },
     conversations: [],
+    workspaces: [],
     activeId: typeof stored.activeId === 'string' ? stored.activeId : null,
     messages: [],
     conversationLoading: false,
@@ -411,6 +474,7 @@ const chatStore = {
     attachments: [],
     toasts: [],
     settingsOpen: false,
+    handoff: null,
     confirm: null,
     sidebarOpen: typeof window !== 'undefined' ? window.innerWidth > 900 : true,
     renamingId: null,
@@ -618,6 +682,7 @@ function patchUserMessage(id, patch) {
 
 let bootPromise = null
 let sendInFlight = false
+let handoffSequence = 0
 
 async function ensureBoot(force = false) {
   if (!force && (chatStore.state.boot === 'ready' || chatStore.state.boot === 'loading')) {
@@ -634,6 +699,7 @@ async function ensureBoot(force = false) {
         auth: data.auth,
         settings: data.settings,
         conversations: data.conversations ?? [],
+        workspaces: Array.isArray(data.workspaces) ? data.workspaces : [],
       })
       const active = chatStore.state.activeId
       const exists = active !== null && (data.conversations ?? []).some(item => item.id === active)
@@ -695,7 +761,8 @@ function openChat() {
 }
 
 function closeChat() {
-  chatStore.set({ open: false, settingsOpen: false, confirm: null })
+  handoffSequence += 1
+  chatStore.set({ open: false, settingsOpen: false, confirm: null, handoff: null })
   writeStored({ open: false })
 }
 
@@ -1359,9 +1426,158 @@ function requestStop() {
   stopStreaming()
 }
 
+/** The shared Chat | Agent navigation: one mode slot, two views. */
+function setMode(mode) {
+  if (mode === 'chat') {
+    if (chatStore.state.open) {
+      requestFocus()
+      return
+    }
+    openChat()
+    return
+  }
+  if (chatStore.state.open) closeChat()
+}
+
+function defaultWorkspaceId() {
+  const workspaces = chatStore.state.workspaces
+  if (typeof stored.workspaceId === 'string' && workspaces.some(item => item.id === stored.workspaceId)) {
+    return stored.workspaceId
+  }
+  return workspaces[0]?.id ?? ''
+}
+
+function handoffPatch(patch) {
+  const current = chatStore.state.handoff
+  if (current === null) return
+  chatStore.set({ handoff: { ...current, ...patch } })
+}
+
+async function openHandoff() {
+  if (chatStore.state.handoff !== null) return
+  if (chatStore.state.messages.length === 0 || chatStore.state.activeId === null) {
+    chatStore.toast(tr('handoffEmpty'), 'warning')
+    return
+  }
+  if (chatStore.state.streaming !== null) {
+    chatStore.toast(tr('waitStreaming'), 'warning')
+    return
+  }
+  chatStore.set({
+    handoff: {
+      generating: true,
+      brief: '',
+      generated: false,
+      warning: '',
+      instruction: '',
+      workspaceId: defaultWorkspaceId(),
+      busy: false,
+      error: '',
+    },
+  })
+  await draftHandoff()
+}
+
+function closeHandoff() {
+  handoffSequence += 1
+  chatStore.set({ handoff: null })
+}
+
+async function draftHandoff() {
+  const handoff = chatStore.state.handoff
+  if (handoff === null || chatStore.state.activeId === null) return
+  const sequence = ++handoffSequence
+  handoffPatch({ generating: true, error: '' })
+  try {
+    const data = await hostJson('/api/deepseek-chat/handoff', {
+      conversationId: chatStore.state.activeId,
+      locale: appCtx?.locale.getSnapshot().active === 'zh' ? 'zh' : 'en',
+      instruction: handoff.instruction ?? '',
+    })
+    if (sequence !== handoffSequence) return
+    handoffPatch({
+      generating: false,
+      brief: typeof data.brief === 'string' ? data.brief : '',
+      generated: data.generated === true,
+      warning: typeof data.warning === 'string' ? data.warning : '',
+      error: '',
+    })
+  } catch (error) {
+    if (sequence !== handoffSequence) return
+    const status = error?.status
+    handoffPatch({
+      generating: false,
+      error: status === 404 || status === 501
+        ? tr('handoffRestart')
+        : error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+function setHandoffBrief(brief) {
+  handoffPatch({ brief })
+}
+
+function setHandoffInstruction(instruction) {
+  handoffPatch({ instruction })
+}
+
+function setHandoffWorkspace(workspaceId) {
+  handoffPatch({ workspaceId })
+  writeStored({ workspaceId })
+}
+
+/** Open the created Session through the native workspace navigation. */
+function openAgentSession(sessionId) {
+  try {
+    appCtx?.get?.('uiWorkspace')?.openSession?.(sessionId)
+    appCtx?.get?.('layout')?.selectPanel?.(null)
+    return true
+  } catch (error) {
+    console.error('deepseek-chat: could not open the Agent session', error)
+    return false
+  }
+}
+
+async function submitHandoff() {
+  const handoff = chatStore.state.handoff
+  if (handoff === null || handoff.busy) return
+  const brief = typeof handoff.brief === 'string' ? handoff.brief.trim() : ''
+  if (brief === '') {
+    handoffPatch({ error: tr('handoffEmpty') })
+    return
+  }
+  handoffPatch({ busy: true, error: '' })
+  let sessionId = ''
+  try {
+    const data = await hostJson('/api/deepseek-chat/handoff/send', {
+      prompt: brief,
+      ...(handoff.workspaceId === '' ? {} : { workspaceId: handoff.workspaceId }),
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    })
+    sessionId = typeof data.sessionId === 'string' ? data.sessionId : ''
+  } catch (error) {
+    handoffPatch({
+      busy: false,
+      error: error?.status === 404 || error?.status === 501
+        ? tr('handoffRestart')
+        : error instanceof Error ? error.message : String(error),
+    })
+    return
+  }
+  chatStore.set({ handoff: null })
+  closeChat()
+  if (sessionId === '' || !openAgentSession(sessionId)) {
+    chatStore.toast(tr('handoffNoSession'), 'warning')
+    return
+  }
+  chatStore.toast(tr('handoffSent'), 'success')
+}
+
 const chatActions = {
   openChat,
   closeChat,
+  setMode,
   ensureBoot,
   newChat,
   loadConversation,
@@ -1380,6 +1596,13 @@ const chatActions = {
   requestFocus,
   requestFilePicker,
   requestStop,
+  openHandoff,
+  closeHandoff,
+  draftHandoff,
+  setHandoffBrief,
+  setHandoffInstruction,
+  setHandoffWorkspace,
+  submitHandoff,
 }
 
 /* ---- 30-markdown.js ---- */
@@ -1719,17 +1942,6 @@ const IconAgent = props => h(IconBase, props,
   h('path', { d: 'M7 9.5l2.5 2.5L7 14.5M12.5 14.5H17' }),
 )
 
-function BrandMark({ size = 30 }) {
-  return h('span', { className: 'dsc-brand-mark', style: { width: `${size}px`, height: `${size}px` }, 'aria-hidden': 'true' }, h('svg', {
-    width: size, height: size, viewBox: '0 0 32 32', fill: 'none',
-  },
-    h('rect', { width: 32, height: 32, rx: 10, fill: 'currentColor' }),
-    h('path', { d: 'M8 20.5c3.4-5.4 9.6-5.4 14 0', stroke: '#fff', strokeWidth: 2.1, strokeLinecap: 'round' }),
-    h('circle', { cx: 23.2, cy: 9.6, r: 2.1, fill: '#fff' }),
-    h('circle', { cx: 12.2, cy: 12.2, r: 1.35, fill: '#fff', opacity: 0.85 }),
-  ))
-}
-
 const ICONS = {
   plus: IconPlus,
   search: IconSearch,
@@ -1769,15 +1981,6 @@ function Icon({ name, size = 18, className = '' }) {
 /* ---- 50-components.js ---- */
 function cx(...values) {
   return values.filter(Boolean).join(' ')
-}
-
-function useTicker(active, interval = 1000) {
-  const [, force] = React.useState(0)
-  React.useEffect(() => {
-    if (!active) return undefined
-    const timer = setInterval(() => force(value => value + 1), interval)
-    return () => clearInterval(timer)
-  }, [active, interval])
 }
 
 function useAutoScroll(ref, deps) {
@@ -1855,16 +2058,36 @@ function messageText(message) {
     .join('')
 }
 
-function thinkingSeconds(message) {
-  const starts = []
-  const ends = []
-  for (const block of message.blocks ?? []) {
-    if (block.type !== 'thinking') continue
-    if (typeof block.startedAt === 'number') starts.push(block.startedAt)
-    if (typeof block.endedAt === 'number') ends.push(block.endedAt)
+/**
+ * Reasoning time of one reply, in milliseconds.
+ *
+ * Only stored timestamps count. `Date.now()` is read for a thinking block that
+ * is still open in the live reply, and never for a settled one: a finished
+ * answer must keep reporting the same duration across re-renders, conversation
+ * switches and reloads. A settled reply whose block lost its `endedAt` falls
+ * back to the reply's own last write, not to the current clock.
+ */
+function thinkingDurationMs(message, live = false) {
+  let start = null
+  let end = null
+  let open = false
+  for (const block of message?.blocks ?? []) {
+    if (block?.type !== 'thinking') continue
+    if (typeof block.startedAt === 'number') start = start === null ? block.startedAt : Math.min(start, block.startedAt)
+    if (typeof block.endedAt === 'number') end = end === null ? block.endedAt : Math.max(end, block.endedAt)
+    else open = true
   }
-  if (starts.length === 0) return 0
-  return Math.max(1, Math.round((Math.max(...ends, Date.now()) - Math.min(...starts)) / 1000))
+  if (start === null) return 0
+  if (!open) return Math.max(0, (end ?? start) - start)
+  const settled = typeof message.updatedAt === 'number' ? message.updatedAt : null
+  const finish = live ? Date.now() : Math.max(end ?? 0, settled ?? start, start)
+  return Math.max(0, finish - start)
+}
+
+function thinkingSeconds(message, live = false) {
+  const ms = thinkingDurationMs(message, live)
+  if (ms <= 0) return 0
+  return Math.max(1, Math.round(ms / 1000))
 }
 
 function copyToClipboard(text) {
@@ -1994,7 +2217,7 @@ function SourceCard({ source, index }) {
       h('span', { className: 'dsc-source-meta' }, source.siteName || hostnameOf(source.url)),
       source.snippet ? h('span', { className: 'dsc-source-snippet' }, source.snippet) : null,
     ),
-    h(Icon, { name: 'external', size: 14 }),
+    h(Icon, { name: 'external', size: 13 }),
   )
 }
 
@@ -2030,7 +2253,7 @@ function ToolStep({ block, result, streaming }) {
   const fetchContent = result?.type === 'web_fetch_tool_result' ? result.content : null
   const failed = fetchContent?.type === 'web_fetch_tool_result_error'
     || searchItems.some(item => item?.type === 'web_search_tool_result_error')
-  let icon = isSearch ? 'search' : isReadLink ? 'link' : 'globe'
+  const icon = isSearch ? 'search' : isReadLink ? 'link' : 'globe'
   let label = isSearch ? t('searchStep') : isReadLink ? t('readStep') : t('openStep')
   let detail = ''
   if (isSearch) {
@@ -2039,8 +2262,6 @@ function ToolStep({ block, result, streaming }) {
   } else if (action === 'find_in_page') {
     label = t('findStep')
     detail = t('findInPage', { pattern: input.pattern || '' })
-  } else if (action === 'open_page') {
-    detail = input.url || ''
   } else {
     detail = input.url || ''
   }
@@ -2049,7 +2270,7 @@ function ToolStep({ block, result, streaming }) {
   const pageUrl = fetchContent?.type === 'web_fetch_result' ? fetchContent.url : (input.url || '')
   const pageTitle = fetchContent?.type === 'web_fetch_result' ? fetchContent.title : ''
   return h('div', { className: cx('dsc-step', failed && 'is-failed') },
-    h('span', { className: 'dsc-step-icon' }, h(Icon, { name: icon, size: 15 })),
+    h('span', { className: 'dsc-step-icon' }, h(Icon, { name: icon, size: 14 })),
     h('div', { className: 'dsc-step-main' },
       h('div', {
         className: cx('dsc-step-line', clickable && 'is-clickable'),
@@ -2068,12 +2289,12 @@ function ToolStep({ block, result, streaming }) {
         resultCount > 0 ? h('span', { className: 'dsc-step-count' }, t('resultCount', { count: resultCount })) : null,
         streaming && result === undefined ? h('span', { className: 'dsc-step-pending' }, t('searching')) : null,
         failed ? h('span', { className: 'dsc-step-failed' }, t('searchFailed')) : null,
-        clickable ? h(Icon, { name: expanded ? 'chevronDown' : 'chevronRight', size: 13 }) : null,
+        clickable ? h(Icon, { name: expanded ? 'chevronDown' : 'chevronRight', size: 12 }) : null,
       ),
       pageUrl && fetchContent?.type === 'web_fetch_result'
         ? h('a', {
             className: 'dsc-step-page', href: safeHref(pageUrl) ?? undefined, target: '_blank', rel: 'noreferrer noopener',
-          }, pageTitle || hostnameOf(pageUrl), h(Icon, { name: 'external', size: 12 }))
+          }, pageTitle || hostnameOf(pageUrl), h(Icon, { name: 'external', size: 11 }))
         : null,
       expanded ? h(SearchResultList, { items: searchItems }) : null,
     ),
@@ -2082,7 +2303,6 @@ function ToolStep({ block, result, streaming }) {
 
 function ProcessPanel({ message, streaming }) {
   const t = useT()
-  useTicker(streaming, 1000)
   const blocks = message.blocks ?? []
   const thinking = blocks.filter(block => block.type === 'thinking' && block.thinking.trim() !== '')
   const calls = blocks.filter(block => block.type === 'server_tool_use')
@@ -2110,27 +2330,20 @@ function ProcessPanel({ message, streaming }) {
   } else if (last?.type === 'web_fetch_tool_result') {
     activeLabel = t('thinkingReading')
   }
-  const seconds = thinkingSeconds(message)
+  const seconds = thinkingSeconds(message, streaming)
   const title = thinking.length > 0
     ? (streaming ? activeLabel : (seconds > 0 ? t('thinkingDone', { seconds }) : t('thinkingDoneNoTime')))
     : (streaming ? t('processing') : t('processSteps', { count: calls.length }))
   return h('div', { className: cx('dsc-process', streaming && 'is-streaming') },
-    h('div', {
+    h('button', {
+      type: 'button',
       className: 'dsc-process-head',
-      role: 'button',
-      tabIndex: 0,
       'aria-expanded': open,
       onClick: () => setOpen(value => !value),
-      onKeyDown: (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault()
-          setOpen(value => !value)
-        }
-      },
     },
-      h('span', { className: 'dsc-process-icon' }, h(Icon, { name: 'spark', size: 15 })),
+      h('span', { className: 'dsc-process-icon' }, h(Icon, { name: 'spark', size: 14 })),
       h('span', { className: cx('dsc-process-title', streaming && 'is-shimmer') }, title),
-      h(Icon, { name: open ? 'chevronDown' : 'chevronRight', size: 14 }),
+      h('span', { className: 'dsc-process-chevron' }, h(Icon, { name: open ? 'chevronDown' : 'chevronRight', size: 13 })),
     ),
     open ? h('div', { className: 'dsc-process-body' },
       blocks.map((block, index) => {
@@ -2164,7 +2377,6 @@ function AssistantMessage({ message, streaming, isLast }) {
   const errorInfo = message.error ? friendlyError(message.error) : null
   const showTyping = streaming && text === '' && (message.blocks ?? []).length === 0
   return h('div', { className: 'dsc-msg dsc-msg-assistant' },
-    h('div', { className: 'dsc-msg-avatar' }, h(BrandMark, { size: 26 })),
     h('div', { className: 'dsc-msg-body' },
       h(ProcessPanel, { message, streaming }),
       refused
@@ -2191,7 +2403,7 @@ function AssistantMessage({ message, streaming, isLast }) {
         : null,
       sources.length > 0
         ? h('div', { className: 'dsc-sources' },
-            h('div', { className: 'dsc-sources-head' }, h(Icon, { name: 'link', size: 14 }), t('sourceCount', { count: sources.length })),
+            h('div', { className: 'dsc-sources-head' }, h(Icon, { name: 'link', size: 13 }), t('sourceCount', { count: sources.length })),
             h('div', { className: 'dsc-source-list' }, sources.map((source, index) => h(SourceCard, { key: source.url, source, index }))),
           )
         : null,
@@ -2199,7 +2411,7 @@ function AssistantMessage({ message, streaming, isLast }) {
         ? h('div', { className: cx('dsc-msg-actions', isLast && 'is-last') },
             text !== ''
               ? h('button', {
-                  type: 'button', className: 'dsc-icon-button', title: t('copy'),
+                  type: 'button', className: 'dsc-msg-action', title: t('copy'),
                   'aria-label': t('copy'),
                   onClick: () => {
                     copyToClipboard(text).then(() => {
@@ -2207,7 +2419,7 @@ function AssistantMessage({ message, streaming, isLast }) {
                       setTimeout(() => setCopied(false), 1600)
                     }).catch(() => chatStore.toast(t('copyFailed'), 'error'))
                   },
-                }, h(Icon, { name: copied ? 'check' : 'copy', size: 15 }))
+                }, h(Icon, { name: copied ? 'check' : 'copy', size: 14 }), h('span', null, copied ? t('copied') : t('copy')))
               : null,
             message.usage
               ? h('span', { className: 'dsc-usage' }, t('usage', {
@@ -2236,7 +2448,7 @@ function UserMessage({ message }) {
 function SuggestionCard({ suggestion, onClick }) {
   const t = useT()
   return h('button', { type: 'button', className: 'dsc-suggestion', onClick },
-    h('span', { className: 'dsc-suggestion-icon' }, h(Icon, { name: suggestion.icon, size: 18 })),
+    h('span', { className: 'dsc-suggestion-icon' }, h(Icon, { name: suggestion.icon, size: 17 })),
     h('span', { className: 'dsc-suggestion-body' },
       h('span', { className: 'dsc-suggestion-title' }, t(suggestion.titleKey)),
       h('span', { className: 'dsc-suggestion-text' }, t(suggestion.textKey)),
@@ -2259,7 +2471,6 @@ function EmptyState() {
     chatActions.requestFocus()
   }
   return h('div', { className: 'dsc-empty' },
-    h('div', { className: 'dsc-empty-brand' }, h(BrandMark, { size: 44 })),
     h('h1', { className: 'dsc-empty-title' }, t('greeting')),
     h('p', { className: 'dsc-empty-subtitle' }, t('greetingSubtitle')),
     auth?.ready === false
@@ -2348,6 +2559,7 @@ function Composer() {
   const stopping = useChat(state => state.stopping)
   const auth = useChat(state => state.auth)
   const settings = useChat(state => state.settings)
+  const modelName = useChat(state => state.bootData?.model?.name)
   const focusRequest = useChat(state => state.focusRequest)
   const filePickRequest = useChat(state => state.filePickRequest)
   const textareaRef = React.useRef(null)
@@ -2357,7 +2569,7 @@ function Composer() {
     const node = textareaRef.current
     if (!node) return
     node.style.height = 'auto'
-    node.style.height = `${Math.min(node.scrollHeight, 200)}px`
+    node.style.height = `${Math.min(node.scrollHeight, 220)}px`
   }, [draft])
   React.useEffect(() => {
     if (focusRequest === 0) return
@@ -2444,7 +2656,7 @@ function Composer() {
         h('button', {
           type: 'button', className: 'dsc-tool-button', title: t('attach'), 'aria-label': t('attach'),
           onClick: () => fileRef.current?.click(),
-        }, h(Icon, { name: 'paperclip', size: 19 })),
+        }, h(Icon, { name: 'paperclip', size: 18 })),
         h('button', {
           type: 'button',
           className: cx('dsc-mode-button', settings.thinking && 'is-active'),
@@ -2452,7 +2664,7 @@ function Composer() {
           'aria-label': t('deepThink'),
           'aria-pressed': settings.thinking,
           onClick: chatActions.toggleThinking,
-        }, h(Icon, { name: 'brain', size: 17 }), h('span', null, t('deepThink'))),
+        }, h(Icon, { name: 'brain', size: 16 }), h('span', { className: 'dsc-mode-label' }, t('deepThink'))),
         h('button', {
           type: 'button',
           className: cx('dsc-mode-button', settings.search && 'is-active'),
@@ -2460,8 +2672,9 @@ function Composer() {
           'aria-label': t('webSearch'),
           'aria-pressed': settings.search,
           onClick: chatActions.toggleSearch,
-        }, h(Icon, { name: 'globe', size: 17 }), h('span', null, t('webSearch'))),
+        }, h(Icon, { name: 'globe', size: 16 }), h('span', { className: 'dsc-mode-label' }, t('webSearch'))),
         h('span', { className: 'dsc-tool-spacer' }),
+        modelName ? h('span', { className: 'dsc-model-pill', title: t('modelNote') }, modelName) : null,
         isStreaming
           ? h('button', {
               type: 'button',
@@ -2470,7 +2683,7 @@ function Composer() {
               'aria-label': t('stop'),
               disabled: stopping,
               onClick: () => chatActions.requestStop(),
-            }, h(Icon, { name: 'stop', size: 16 }))
+            }, h(Icon, { name: 'stop', size: 15 }))
           : h('button', {
               type: 'button',
               className: cx('dsc-send-button', !canSend && 'is-idle'),
@@ -2478,7 +2691,7 @@ function Composer() {
               'aria-label': t('send'),
               'aria-disabled': !canSend,
               onClick: handleSend,
-            }, h(Icon, { name: 'arrowUp', size: 18 })),
+            }, h(Icon, { name: 'arrowUp', size: 17 })),
       ),
       drag ? h('div', { className: 'dsc-drop-mask' }, h(Icon, { name: 'paperclip', size: 22 }), t('dropFiles')) : null,
     ),
@@ -2551,14 +2764,14 @@ function ConversationItem({ conversation, active, renaming, onOpen, onRename, on
           event.stopPropagation()
           chatStore.set({ renamingId: conversation.id })
         },
-      }, h(Icon, { name: 'pencil', size: 14 })),
+      }, h(Icon, { name: 'pencil', size: 13 })),
       h('button', {
         type: 'button', className: 'dsc-icon-button is-small is-danger', title: t('delete'), 'aria-label': t('delete'),
         onClick: (event) => {
           event.stopPropagation()
           chatActions.requestDeleteConversation(conversation.id, conversation.title)
         },
-      }, h(Icon, { name: 'trash', size: 14 })),
+      }, h(Icon, { name: 'trash', size: 13 })),
     ),
   )
 }
@@ -2574,10 +2787,13 @@ function Sidebar() {
     ? conversations
     : conversations.filter(item => (item.title || '').toLowerCase().includes(query.trim().toLowerCase()))
   const groups = groupConversations(filtered, t)
+  const closeOnMobile = () => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 900) chatStore.set({ sidebarOpen: false })
+  }
   const select = (id) => {
     if (id === activeId) {
       chatActions.requestFocus()
-      if (typeof window !== 'undefined' && window.innerWidth <= 900) chatStore.set({ sidebarOpen: false })
+      closeOnMobile()
       return
     }
     if (chatStore.state.streaming !== null) {
@@ -2585,23 +2801,21 @@ function Sidebar() {
       return
     }
     void chatActions.loadConversation(id)
-    if (typeof window !== 'undefined' && window.innerWidth <= 900) chatStore.set({ sidebarOpen: false })
+    closeOnMobile()
   }
   return h('aside', { className: 'dsc-sidebar-inner' },
     h('div', { className: 'dsc-sidebar-top' },
-      h('div', { className: 'dsc-brand-row' },
-        h(BrandMark, { size: 28 }),
-        h('span', { className: 'dsc-brand-name' }, t('appTitle')),
+      h('div', { className: 'dsc-sidebar-actions' },
+        h('button', {
+          type: 'button', className: 'dsc-new-chat',
+          onClick: () => { void chatActions.newChat(); closeOnMobile() },
+        }, h(Icon, { name: 'plus', size: 16 }), h('span', null, t('newChat'))),
         h('button', {
           type: 'button', className: 'dsc-icon-button dsc-sidebar-collapse', title: t('collapseSidebar'),
           'aria-label': t('collapseSidebar'), onClick: () => chatStore.set({ sidebarOpen: false }),
-        }, h(Icon, { name: 'sidebar', size: 18 })),
+        }, h(Icon, { name: 'sidebar', size: 17 })),
       ),
-      h('button', {
-        type: 'button', className: 'dsc-new-chat',
-        onClick: () => { void chatActions.newChat(); if (typeof window !== 'undefined' && window.innerWidth <= 900) chatStore.set({ sidebarOpen: false }) },
-      }, h(Icon, { name: 'plus', size: 17 }), h('span', null, t('newChat'))),
-      h('div', { className: 'dsc-search' },
+      h('label', { className: 'dsc-search' },
         h(Icon, { name: 'search', size: 15 }),
         h('input', {
           className: 'dsc-search-input',
@@ -2637,14 +2851,11 @@ function Sidebar() {
     h('div', { className: 'dsc-sidebar-foot' },
       h('button', {
         type: 'button', className: 'dsc-foot-action',
+        title: t('chatSettings'),
         onClick: () => chatStore.set({ settingsOpen: true }),
-      }, h(Icon, { name: 'settings', size: 18 }), h('span', null, t('settings')),
+      }, h(Icon, { name: 'settings', size: 17 }), h('span', null, t('settings')),
         h('span', { className: cx('dsc-auth-dot', auth?.ready ? 'is-ready' : 'is-missing'), title: authSourceLabel(auth, t) }),
       ),
-      h('button', {
-        type: 'button', className: 'dsc-foot-action',
-        onClick: chatActions.closeChat,
-      }, h(Icon, { name: 'agent', size: 18 }), h('span', null, t('agentMode'))),
     ),
   )
 }
@@ -2654,57 +2865,60 @@ function ChatHeader() {
   const activeId = useChat(state => state.activeId)
   const conversations = useChat(state => state.conversations)
   const auth = useChat(state => state.auth)
-  const model = useChat(state => state.bootData?.model?.name)
-  const modelName = model || t('modelName')
+  const sidebarOpen = useChat(state => state.sidebarOpen)
   const conversation = conversations.find(item => item.id === activeId)
+  const canHandoff = useChat(state => state.bootData?.handoff?.enabled !== false)
   return h('header', { className: 'dsc-header' },
     h('div', { className: 'dsc-header-left' },
-      h('button', {
-        type: 'button', className: 'dsc-icon-button dsc-header-menu',
-        title: t('expandSidebar'), 'aria-label': t('expandSidebar'),
-        onClick: () => chatStore.set({ sidebarOpen: !chatStore.state.sidebarOpen }),
-      }, h(Icon, { name: 'menu', size: 19 })),
-      h('button', {
-        type: 'button', className: 'dsc-icon-button dsc-header-newchat',
-        title: t('newChat'), 'aria-label': t('newChat'),
-        onClick: () => { void chatActions.newChat() },
-      }, h(Icon, { name: 'plus', size: 19 })),
+      !sidebarOpen
+        ? h('button', {
+            type: 'button', className: 'dsc-icon-button dsc-header-menu',
+            title: t('expandSidebar'), 'aria-label': t('expandSidebar'),
+            onClick: () => chatStore.set({ sidebarOpen: true }),
+          }, h(Icon, { name: 'menu', size: 18 }))
+        : null,
       h('div', { className: 'dsc-header-title' }, conversation?.title || t('newChatTitle')),
     ),
     h('div', { className: 'dsc-header-right' },
-      h('div', { className: 'dsc-model-pill', title: t('modelLabel') },
-        h('span', { className: 'dsc-model-dot' }), modelName),
-      h('button', {
-        type: 'button', className: 'dsc-agent-button', title: t('openAgent'),
-        'aria-label': t('openAgent'), onClick: chatActions.closeChat,
-      }, h(Icon, { name: 'agent', size: 17 }),
-        h('span', { className: 'dsc-agent-label-full' }, t('agentMode')),
-        h('span', { className: 'dsc-agent-label-short' }, t('agentModeShort'))),
-      h('button', {
-        type: 'button', className: 'dsc-icon-button', title: t('settings'),
-        'aria-label': t('settings'), onClick: () => chatStore.set({ settingsOpen: true }),
-      }, h(Icon, { name: 'settings', size: 18 })),
       auth?.ready === false
         ? h('button', {
             type: 'button', className: 'dsc-auth-pill is-missing', title: t('noAuthTitle'),
             onClick: () => chatStore.set({ settingsOpen: true }),
-          }, h(Icon, { name: 'warning', size: 14 }), h('span', null, t('authMissing')))
+          }, h(Icon, { name: 'warning', size: 13 }), h('span', null, t('authMissing')))
         : null,
+      h('button', {
+        type: 'button',
+        className: 'dsc-handoff-button',
+        title: canHandoff ? t('handoffSubtitle') : t('handoffUnavailable'),
+        disabled: !canHandoff,
+        onClick: () => { void chatActions.openHandoff() },
+      }, h(Icon, { name: 'agent', size: 15 }), h('span', { className: 'dsc-handoff-label' }, t('handoff'))),
     ),
   )
 }
 
-function ChatToggle({ wide = false } = {}) {
+/**
+ * The shared Chat | Agent navigation. It is registered in the frame-wide
+ * overlay (root scope, outside every column), so it is part of the shell
+ * chrome rather than of either view: it sits in the desktop caption row above
+ * the window's drag strip, stays visible in both modes, and switches the whole
+ * application view.
+ */
+function ModeSwitch() {
   const t = useT()
   const open = useChat(state => state.open)
-  return h('button', {
+  const item = (mode, label, icon, selected) => h('button', {
     type: 'button',
-    className: 'dsc-footer-action',
-    title: open ? t('agentMode') : t('openChat'),
-    'aria-label': open ? t('agentMode') : t('openChat'),
-    'aria-pressed': open,
-    onClick: () => { if (open) chatActions.closeChat(); else chatActions.openChat() },
-  }, h(Icon, { name: open ? 'agent' : 'chat', size: 18 }), wide ? h('span', null, open ? t('agentMode') : t('openChat')) : null)
+    role: 'tab',
+    'aria-selected': selected,
+    className: cx('dsc-modeswitch-item', selected && 'is-active'),
+    title: mode === 'chat' ? t('switchToChat') : t('switchToAgent'),
+    onClick: () => chatActions.setMode(mode),
+  }, h(Icon, { name: icon, size: 14 }), h('span', { className: 'dsc-modeswitch-label' }, label))
+  return h('div', { className: 'dsc-modeswitch', role: 'tablist', 'aria-label': t('modeSwitchLabel') },
+    item('chat', t('chatMode'), 'chat', open),
+    item('agent', t('agentMode'), 'agent', !open),
+  )
 }
 
 function ChatRoot() {
@@ -2714,24 +2928,9 @@ function ChatRoot() {
   const bootError = useChat(state => state.bootError)
   const settingsOpen = useChat(state => state.settingsOpen)
   const confirm = useChat(state => state.confirm)
+  const handoff = useChat(state => state.handoff)
   const sidebarOpen = useChat(state => state.sidebarOpen)
-  const rootRef = React.useRef(null)
   const sidebarRef = React.useRef(null)
-  const previousFocus = React.useRef(null)
-  React.useEffect(() => {
-    if (!open) return undefined
-    previousFocus.current = document.activeElement
-    return () => {
-      const node = previousFocus.current
-      if (node && typeof node.focus === 'function') {
-        try {
-          node.focus()
-        } catch {
-          // The previous owner may have unmounted.
-        }
-      }
-    }
-  }, [open])
   React.useEffect(() => {
     if (!open) return
     const node = sidebarRef.current
@@ -2740,51 +2939,23 @@ function ChatRoot() {
   React.useEffect(() => {
     if (!open) return undefined
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        if (confirm !== null) {
-          chatStore.set({ confirm: null })
-          return
-        }
-        if (settingsOpen) chatStore.set({ settingsOpen: false })
+      if (event.key !== 'Escape') return
+      if (confirm !== null) {
+        chatStore.set({ confirm: null })
         return
       }
-      if (event.key !== 'Tab') return
-      const root = rootRef.current
-      if (!root) return
-      const current = document.activeElement
-      const modal = current?.closest?.('.dsc-modal, .dsc-confirm')
-      const scope = modal ?? root
-      const focusables = [...scope.querySelectorAll('a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])')]
-        .filter(el => el.offsetParent !== null
-          && !el.closest('[inert]')
-          && el.getAttribute('aria-hidden') !== 'true'
-          && getComputedStyle(el).visibility !== 'hidden')
-      if (focusables.length === 0) {
-        event.preventDefault()
+      if (chatStore.state.handoff !== null) {
+        chatActions.closeHandoff()
         return
-      }
-      const first = focusables[0]
-      const last = focusables[focusables.length - 1]
-      if (!scope.contains(current)) {
-        event.preventDefault()
-        first.focus()
-        return
-      }
-      if (event.shiftKey && current === first) {
-        event.preventDefault()
-        last.focus()
-      } else if (!event.shiftKey && current === last) {
-        event.preventDefault()
-        first.focus()
-      }
+      }      if (settingsOpen) chatStore.set({ settingsOpen: false })
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [open, settingsOpen, confirm])
   if (!open) return null
   return h('div', {
-    className: 'dsc-root', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('appTitle'),
-    ref: rootRef, tabIndex: -1,
+    className: 'dsc-root', role: 'region', 'aria-label': t('appTitle'), tabIndex: -1,
+    'data-dsc-mode': 'chat',
   },
     h('div', {
       className: cx('dsc-sidebar', sidebarOpen && 'is-open'),
@@ -2802,6 +2973,7 @@ function ChatRoot() {
     ),
     settingsOpen ? h(SettingsDialog, null) : null,
     confirm !== null ? h(ConfirmDialog, null) : null,
+    handoff !== null ? h(HandoffDialog, null) : null,
     h(Toasts, null),
   )
 }
@@ -2811,10 +2983,6 @@ function BootView({ error, onRetry }) {
   const t = useT()
   if (error !== '') {
     return h('div', { className: 'dsc-boot' },
-      h('button', {
-        type: 'button', className: 'dsc-boot-close', title: t('openAgent'), 'aria-label': t('openAgent'),
-        onClick: chatActions.closeChat,
-      }, h(Icon, { name: 'agent', size: 18 })),
       h('div', { className: 'dsc-boot-card' },
         h('span', { className: 'dsc-boot-icon' }, h(Icon, { name: 'warning', size: 22 })),
         h('h2', null, t('loadFailed')),
@@ -2824,10 +2992,6 @@ function BootView({ error, onRetry }) {
     )
   }
   return h('div', { className: 'dsc-boot' },
-    h('button', {
-      type: 'button', className: 'dsc-boot-close', title: t('openAgent'), 'aria-label': t('openAgent'),
-      onClick: chatActions.closeChat,
-    }, h(Icon, { name: 'agent', size: 18 })),
     h(Spinner, { size: 24 }),
     h('div', { className: 'dsc-boot-text' }, t('loading')),
   )
@@ -3020,6 +3184,116 @@ function SettingsDialog() {
   )
 }
 
+/**
+ * Chat → Agent handoff: draft an editable task brief from this conversation,
+ * create a real Agent Session in the chosen Workspace, and switch the shell to
+ * Agent mode on that Session.
+ */
+function HandoffDialog() {
+  const t = useT()
+  const handoff = useChat(state => state.handoff)
+  const workspaces = useChat(state => state.workspaces)
+  const hostReady = useChat(state => state.bootData?.handoff !== undefined)
+  const [copied, setCopied] = React.useState(false)
+  if (handoff === null) return null
+  const close = () => chatActions.closeHandoff()
+  const brief = handoff.brief ?? ''
+  const canSend = hostReady && brief.trim() !== '' && !handoff.busy && !handoff.generating
+  const copy = () => {
+    copyToClipboard(brief).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1600)
+    }).catch(() => chatStore.toast(t('copyFailed'), 'error'))
+  }
+  return h('div', {
+    className: 'dsc-modal-backdrop',
+    onMouseDown: (event) => { if (event.target === event.currentTarget) close() },
+  },
+    h('div', { className: 'dsc-modal dsc-handoff', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('handoffTitle') },
+      h('header', { className: 'dsc-modal-head' },
+        h('div', null,
+          h('h2', null, t('handoffTitle')),
+          h('p', { className: 'dsc-modal-sub' }, t('handoffSubtitle')),
+        ),
+        h('button', {
+          type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
+          autoFocus: true, onClick: close,
+        }, h(Icon, { name: 'close', size: 18 })),
+      ),
+      h('div', { className: 'dsc-modal-body' },
+        !hostReady
+          ? h('div', { className: 'dsc-notice' }, h(Icon, { name: 'warning', size: 16 }), h('span', null, t('handoffRestart')))
+          : workspaces.length === 0
+            ? h('div', { className: 'dsc-notice' }, h(Icon, { name: 'warning', size: 16 }), h('span', null, t('handoffWorkspaceEmpty')))
+            : h('div', { className: 'dsc-field' },
+                h('span', { className: 'dsc-field-label' }, t('handoffWorkspace')),
+                h('select', {
+                  className: 'dsc-select',
+                  value: handoff.workspaceId ?? '',
+                  onChange: (event) => chatActions.setHandoffWorkspace(event.target.value),
+                }, workspaces.map(workspace => h('option', { key: workspace.id, value: workspace.id }, workspace.title || workspace.path))),
+                h('p', { className: 'dsc-field-hint' }, workspaces.find(workspace => workspace.id === handoff.workspaceId)?.path ?? ''),
+              ),
+        h('div', { className: 'dsc-field' },
+          h('label', { className: 'dsc-field-label', htmlFor: 'dsc-handoff-extra' }, t('handoffExtra')),
+          h('input', {
+            id: 'dsc-handoff-extra',
+            className: 'dsc-input',
+            value: handoff.instruction ?? '',
+            placeholder: t('handoffExtraPlaceholder'),
+            maxLength: 4000,
+            onChange: (event) => chatActions.setHandoffInstruction(event.target.value),
+            onKeyDown: (event) => {
+              if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+                event.preventDefault()
+                void chatActions.draftHandoff()
+              }
+            },
+          }),
+        ),
+        h('div', { className: 'dsc-field' },
+          h('div', { className: 'dsc-field-row' },
+            h('span', { className: 'dsc-field-label' }, t('handoffEditorLabel')),
+            h('div', { className: 'dsc-field-tools' },
+              h('button', {
+                type: 'button', className: 'dsc-text-button', disabled: handoff.generating,
+                onClick: () => { void chatActions.draftHandoff() },
+              }, h(Icon, { name: 'refresh', size: 14 }), t('handoffRegenerate')),
+              brief.trim() === '' ? null : h('button', {
+                type: 'button', className: 'dsc-text-button', onClick: copy,
+              }, h(Icon, { name: copied ? 'check' : 'copy', size: 14 }), copied ? t('copied') : t('copyBrief')),
+            ),
+          ),
+          handoff.generating
+            ? h('div', { className: 'dsc-handoff-loading' }, h(Spinner, { size: 16 }), t('handoffDrafting'))
+            : h('textarea', {
+                className: 'dsc-textarea dsc-handoff-brief',
+                value: brief,
+                rows: 12,
+                spellCheck: false,
+                onChange: (event) => chatActions.setHandoffBrief(event.target.value),
+              }),
+          handoff.warning !== '' && !handoff.generating
+            ? h('p', { className: 'dsc-field-hint' }, `${t('handoffLocal')} ${t('handoffShortcut')}`)
+            : h('p', { className: 'dsc-field-hint' }, t('handoffShortcut')),
+          handoff.error !== ''
+            ? h('div', { className: 'dsc-notice is-error' }, h(Icon, { name: 'warning', size: 15 }), h('span', null, handoff.error))
+            : null,
+        ),
+      ),
+      h('footer', { className: 'dsc-modal-foot' },
+        h('div', { className: 'dsc-modal-foot-note' }, workspaces.length === 0 ? t('handoffWorkspaceEmpty') : ''),
+        h('button', { type: 'button', className: 'dsc-secondary-button', onClick: close }, t('cancel')),
+        h('button', {
+          type: 'button',
+          className: 'dsc-primary-button',
+          disabled: !canSend || workspaces.length === 0,
+          onClick: () => { void chatActions.submitHandoff() },
+        }, handoff.busy ? t('handoffSending') : t('handoffSend')),      ),
+    ),
+  )
+}
+
 function ConfirmDialog() {
   const t = useT()
   const confirm = useChat(state => state.confirm)
@@ -3067,34 +3341,59 @@ function Toasts() {
 
 /* ---- 60-style.js ---- */
 const CHAT_CSS = `
+/* ==========================================================================
+   DeepSeek Chat mode — shell-coordinated surfaces.
+
+   Placement contract with DeepSeek Harness:
+   * the Chat view is a frame-wide layer that starts BELOW the platform chrome
+     (--dsh-frame-chrome-top: the Windows caption row / the macOS top strip),
+     so the native menu, sidebar toggle and window controls stay usable;
+   * the shared Chat | Agent switch lives in that chrome row, centered, and
+     never overlaps the native menu or the window buttons;
+   * every colour, radius and motion value comes from the Harness theme.
+   ========================================================================== */
 .dsc-root {
-  --dsc-brand: var(--dsw-static-deepseek-500, #4176e6);
-  --dsc-link: var(--dsw-alias-link, var(--dsw-static-deepseek-400, #4d6bfe));
+  --dsc-brand: var(--dsw-alias-brand-primary, var(--dsw-static-deepseek-500, #4d6bff));
+  --dsc-link: var(--dsw-alias-link, var(--dsw-alias-brand-primary, #4d6bff));
   --dsc-on-brand: var(--dsw-alias-label-on-color, #ffffff);
   --dsc-bg: var(--dsw-alias-bg-base, #ffffff);
   --dsc-layer: var(--dsw-alias-bg-layer-1, #ffffff);
-  --dsc-layer2: var(--dsw-alias-bg-layer-2, #f3f4f8);
+  --dsc-layer2: var(--dsw-alias-bg-layer-2, #f2f3f7);
   --dsc-sidebar: var(--dsw-specific-sidebar-fill, #f7f8fc);
-  --dsc-text: var(--dsw-alias-label-primary, #1b1c1f);
+  --dsc-text: var(--dsw-alias-label-primary, #16181d);
   --dsc-muted: var(--dsw-alias-label-secondary, #6b7280);
-  --dsc-border: var(--dsw-alias-border-l1, rgba(15, 23, 42, 0.09));
-  --dsc-border-strong: var(--dsw-alias-border-l2, rgba(15, 23, 42, 0.16));
-  --dsc-hover: color-mix(in srgb, var(--dsc-text) 5%, transparent);
-  --dsc-brand-soft: color-mix(in srgb, var(--dsc-link) 10%, transparent);
-  --dsc-brand-soft-strong: color-mix(in srgb, var(--dsc-link) 17%, transparent);
+  --dsc-border: var(--dsw-alias-border-l1, rgba(15, 23, 42, 0.08));
+  --dsc-border-strong: var(--dsw-alias-border-l2, rgba(15, 23, 42, 0.14));
+  --dsc-hover: color-mix(in srgb, var(--dsc-text) 5.5%, transparent);
+  --dsc-active: color-mix(in srgb, var(--dsc-text) 9%, transparent);
+  --dsc-brand-soft: color-mix(in srgb, var(--dsc-link) 11%, transparent);
+  --dsc-brand-soft-strong: color-mix(in srgb, var(--dsc-link) 18%, transparent);
+  --dsc-user-bubble: color-mix(in srgb, var(--dsc-link) 9%, var(--dsc-layer2));
+  --dsc-code-bg: color-mix(in srgb, var(--dsc-text) 4%, var(--dsc-layer2));
   --dsc-error: var(--dsw-alias-state-error-primary, #d33d3d);
   --dsc-warn: var(--dsw-alias-state-warn-primary, #b45309);
   --dsc-success: var(--dsw-alias-state-success-primary, #15803d);
-  --dsc-shadow: 0 18px 48px rgba(15, 23, 42, 0.16);
-  --dsc-shadow-soft: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --dsc-shadow: 0 20px 48px rgba(9, 12, 20, 0.18);
+  --dsc-shadow-soft: 0 4px 16px rgba(9, 12, 20, 0.07);
+  --dsc-shadow-composer: 0 2px 10px rgba(9, 12, 20, 0.05);
+  --dsc-radius: var(--dsw-radius-md, 12px);
+  --dsc-font: var(--dsw-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif);
+  --dsc-mono: var(--ds-font-family-code, 'SF Mono', Consolas, 'Liberation Mono', monospace);
+  --dsc-ease: var(--ds-ease-in-out, cubic-bezier(0.4, 0, 0.2, 1));
+  --dsc-fast: var(--ds-transition-duration-fast, 0.1s);
   position: fixed;
-  inset: 0;
-  z-index: 2147483000;
+  top: var(--dsh-frame-chrome-top, 0px);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  /* Above the mode switch so an open dialog backdrop also covers it; the box
+     itself starts below the caption row, so the switch stays clickable. */
+  z-index: 30;
   display: flex;
   overflow: hidden;
   background: var(--dsc-bg);
   color: var(--dsc-text);
-  font-family: inherit;
+  font-family: var(--dsc-font);
   font-size: 14px;
   line-height: 1.55;
   pointer-events: auto;
@@ -3103,11 +3402,11 @@ const CHAT_CSS = `
 .dsc-root *,
 .dsc-root *::before,
 .dsc-root *::after { box-sizing: border-box; }
-.dsc-root :where(button, input, textarea) { font: inherit; color: inherit; }
+.dsc-root :where(button, input, textarea, select) { font: inherit; color: inherit; }
 .dsc-root button { cursor: pointer; }
 .dsc-root button:disabled { cursor: default; }
 .dsc-root ::selection { background: var(--dsc-brand-soft-strong); }
-.dsc-root :focus-visible { outline: 2px solid var(--dsc-brand); outline-offset: 2px; }
+.dsc-root :focus-visible { outline: 2px solid var(--dsc-brand); outline-offset: 2px; border-radius: 6px; }
 .dsc-icon { display: block; flex: none; }
 .dsc-spinner {
   display: inline-block;
@@ -3118,13 +3417,64 @@ const CHAT_CSS = `
 }
 @keyframes dsc-spin { to { transform: rotate(360deg); } }
 
-/* Sidebar */
+/* ---------- shared Chat | Agent switch (shell chrome) ---------- */
+.dsc-modeswitch {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 34px;
+  padding: 3px;
+  border: 1px solid var(--dsw-alias-border-l1, rgba(15, 23, 42, 0.1));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dsw-alias-label-primary, #16181d) 8%, transparent);
+  color: var(--dsw-alias-label-primary, #16181d);
+  font-family: var(--dsw-font-family, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif);
+  font-size: 13px;
+  line-height: 1;
+  -webkit-app-region: no-drag;
+  pointer-events: auto;
+  user-select: none;
+  backdrop-filter: blur(10px);
+}
+/* Windows Electron reserves a 40px caption row; the switch sits in it. */
+html[data-windows-titlebar] .dsc-modeswitch { top: 4px; height: 32px; }
+html[data-platform='darwin'] .dsc-modeswitch { top: 9px; }
+html[data-windows-titlebar][data-fullscreen] .dsc-modeswitch { top: 8px; }
+.dsc-modeswitch-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+  font-size: 12.8px;
+  font-weight: 550;
+  transition: background var(--ds-transition-duration-fast, 0.1s) ease, color var(--ds-transition-duration-fast, 0.1s) ease;
+}
+.dsc-modeswitch-item:hover { color: var(--dsw-alias-label-primary, #16181d); }
+.dsc-modeswitch-item.is-active {
+  background: var(--dsw-alias-bg-layer-1, #ffffff);
+  color: var(--dsw-alias-label-primary, #16181d);
+  box-shadow: 0 1px 2px rgba(9, 12, 20, 0.14), 0 0 0 0.5px rgba(9, 12, 20, 0.06);
+}
+.dsc-modeswitch-label { white-space: nowrap; }
+
+/* ---------- sidebar ---------- */
 .dsc-sidebar {
-  width: 276px;
-  flex: 0 0 276px;
+  width: 264px;
+  flex: 0 0 264px;
   min-height: 0;
   background: var(--dsc-sidebar);
   border-right: 1px solid var(--dsc-border);
+  overflow: hidden;
 }
 .dsc-sidebar:not(.is-open) { display: none; }
 .dsc-sidebar-inner {
@@ -3133,74 +3483,80 @@ const CHAT_CSS = `
   width: 100%;
   height: 100%;
   min-height: 0;
-  padding: 14px 12px 12px;
+  padding: 10px 8px 8px;
 }
-.dsc-sidebar-top { flex: none; }
-.dsc-brand-row { display: flex; align-items: center; gap: 9px; padding: 2px 4px 14px; }
-.dsc-brand-mark { display: inline-flex; flex: none; color: var(--dsc-brand); }
-.dsc-brand-name { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; }
-.dsc-sidebar-collapse { margin-left: auto; }
+.dsc-sidebar-top { flex: none; display: flex; flex-direction: column; gap: 8px; padding: 0 2px; }
+.dsc-sidebar-actions { display: flex; align-items: center; gap: 6px; height: 36px; }
 .dsc-new-chat {
-  width: 100%;
-  height: 40px;
-  border: 0;
-  border-radius: 12px;
-  background: var(--dsc-brand);
-  color: var(--dsc-on-brand);
-  font-size: 13.5px;
-  font-weight: 650;
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 11px;
+  border: 1px solid var(--dsc-border);
+  border-radius: 10px;
+  background: var(--dsc-layer);
+  color: var(--dsc-text);
+  font-size: 13.3px;
+  font-weight: 560;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 7px;
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--dsc-brand) 26%, transparent);
-  transition: filter 0.15s ease, transform 0.15s ease;
+  text-align: left;
+  transition: background var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
 }
-.dsc-new-chat:hover { filter: brightness(1.06); }
-.dsc-new-chat:active { transform: scale(0.99); }
+.dsc-new-chat:hover { background: color-mix(in srgb, var(--dsc-layer) 60%, var(--dsc-layer2)); border-color: var(--dsc-border-strong); }
+.dsc-sidebar-collapse { flex: none; }
 .dsc-search {
   display: flex;
   align-items: center;
   gap: 7px;
   height: 34px;
-  margin: 10px 0 8px;
-  padding: 0 10px;
+  padding: 0 9px;
   border: 1px solid transparent;
   border-radius: 10px;
   background: color-mix(in srgb, var(--dsc-text) 4%, transparent);
   color: var(--dsc-muted);
+  cursor: text;
+  transition: background var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
 }
+.dsc-search:hover { background: color-mix(in srgb, var(--dsc-text) 6%, transparent); }
 .dsc-search:focus-within { border-color: var(--dsc-border-strong); background: var(--dsc-layer); }
-.dsc-search-input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 13px; color: var(--dsc-text); }
+.dsc-search-input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 12.9px; color: var(--dsc-text); }
 .dsc-search-input::placeholder { color: var(--dsc-muted); }
-.dsc-chat-list { flex: 1; min-height: 0; overflow-y: auto; padding: 2px 0 10px; scrollbar-width: thin; }
-.dsc-chat-group { margin-top: 12px; }
-.dsc-chat-group:first-child { margin-top: 2px; }
-.dsc-chat-group-label { padding: 0 8px 4px; font-size: 11.5px; font-weight: 600; color: var(--dsc-muted); }
+.dsc-chat-list { flex: 1; min-height: 0; overflow-y: auto; padding: 6px 2px 10px; }
+.dsc-chat-group { margin-top: 14px; }
+.dsc-chat-group:first-child { margin-top: 4px; }
+.dsc-chat-group-label {
+  padding: 0 8px 5px;
+  font-size: 11.4px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--dsc-muted);
+}
 .dsc-chat-item {
   position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 38px;
+  height: 36px;
   padding: 0 8px;
   margin: 1px 0;
-  border-radius: 10px;
+  border-radius: 9px;
   cursor: pointer;
-  transition: background 0.13s ease;
+  transition: background var(--dsc-fast) ease;
 }
 .dsc-chat-item:hover { background: var(--dsc-hover); }
-.dsc-chat-item.is-active { background: var(--dsc-brand-soft); }
+.dsc-chat-item.is-active { background: var(--dsc-active); }
 .dsc-chat-item-title {
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 13.2px;
-  font-weight: 500;
+  font-size: 13.1px;
+  font-weight: 455;
 }
-.dsc-chat-item.is-active .dsc-chat-item-title { color: var(--dsc-link); }
+.dsc-chat-item.is-active .dsc-chat-item-title { font-weight: 550; }
 .dsc-chat-item-time { flex: none; font-size: 11px; color: var(--dsc-muted); }
 .dsc-chat-item-actions {
   position: absolute;
@@ -3210,102 +3566,104 @@ const CHAT_CSS = `
   display: none;
   align-items: center;
   gap: 1px;
-  padding-left: 12px;
-  background: linear-gradient(to right, transparent, var(--dsc-sidebar) 32%);
+  padding-left: 14px;
+  background: linear-gradient(to right, transparent, var(--dsc-sidebar) 30%);
 }
 .dsc-chat-item:hover .dsc-chat-item-actions,
 .dsc-chat-item.is-active .dsc-chat-item-actions { display: flex; }
-.dsc-chat-item:hover .dsc-chat-item-time { visibility: hidden; }
+.dsc-chat-item:hover .dsc-chat-item-time,
+.dsc-chat-item.is-active .dsc-chat-item-time { visibility: hidden; }
 .dsc-chat-item.is-renaming { background: var(--dsc-layer); border: 1px solid var(--dsc-border-strong); }
 .dsc-rename-input {
   width: 100%;
   height: 30px;
+  padding: 0 2px;
   border: 0;
   outline: 0;
   background: transparent;
   font-size: 13px;
 }
-.dsc-list-empty { padding: 24px 10px; text-align: center; color: var(--dsc-muted); font-size: 12.5px; }
-.dsc-sidebar-foot { flex: none; padding-top: 8px; border-top: 1px solid var(--dsc-border); display: flex; flex-direction: column; gap: 1px; }
+.dsc-list-empty { padding: 22px 10px; text-align: center; color: var(--dsc-muted); font-size: 12.4px; line-height: 1.6; }
+.dsc-sidebar-foot {
+  flex: none;
+  padding-top: 6px;
+  border-top: 1px solid var(--dsc-border);
+}
 .dsc-foot-action {
   display: flex;
   align-items: center;
   gap: 9px;
-  height: 36px;
+  width: 100%;
+  height: 34px;
   padding: 0 9px;
   border: 0;
   border-radius: 9px;
   background: transparent;
-  font-size: 13px;
+  font-size: 12.9px;
   color: var(--dsc-muted);
   text-align: left;
+  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease;
 }
 .dsc-foot-action:hover { background: var(--dsc-hover); color: var(--dsc-text); }
 .dsc-auth-dot { width: 7px; height: 7px; border-radius: 999px; margin-left: auto; background: var(--dsc-warn); }
 .dsc-auth-dot.is-ready { background: var(--dsc-success); }
 .dsc-auth-dot.is-missing { background: var(--dsc-warn); }
 
-/* Main frame */
+/* ---------- main column ---------- */
 .dsc-main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--dsc-bg); }
 .dsc-main-column { flex: 1; display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .dsc-header {
   flex: none;
-  height: 58px;
+  height: 52px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 20px;
+  padding: 0 14px 0 16px;
   border-bottom: 1px solid var(--dsc-border);
-  background: color-mix(in srgb, var(--dsc-bg) 92%, transparent);
-  backdrop-filter: blur(12px);
+  background: color-mix(in srgb, var(--dsc-bg) 88%, transparent);
+  backdrop-filter: blur(14px);
   z-index: 3;
 }
-.dsc-header-left { display: flex; align-items: center; gap: 4px; min-width: 0; flex: 1; }
-.dsc-header-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14.5px; font-weight: 600; }
-.dsc-header-right { display: flex; align-items: center; gap: 6px; flex: none; }
-.dsc-model-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 30px;
-  padding: 0 10px;
-  border: 1px solid var(--dsc-border);
-  border-radius: 999px;
-  background: var(--dsc-layer);
-  color: var(--dsc-muted);
-  font-size: 12.2px;
-  font-weight: 550;
+.dsc-header-left { display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1; }
+.dsc-header-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 14px;
+  font-weight: 560;
+  letter-spacing: -0.005em;
 }
-.dsc-model-pill:hover { border-color: var(--dsc-border-strong); color: var(--dsc-text); }
-.dsc-model-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--dsc-brand); }
-.dsc-agent-button {
-  display: flex;
+.dsc-header-right { display: flex; align-items: center; gap: 6px; flex: none; }
+.dsc-header-menu { margin-left: -6px; }
+.dsc-handoff-button {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   height: 32px;
   padding: 0 11px;
-  border: 1px solid var(--dsc-border);
+  border: 1px solid var(--dsc-border-strong);
   border-radius: 9px;
-  background: transparent;
-  color: var(--dsc-muted);
-  font-size: 12.5px;
+  background: var(--dsc-layer);
+  color: var(--dsc-text);
+  font-size: 12.6px;
   font-weight: 550;
+  white-space: nowrap;
+  transition: background var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
 }
-.dsc-agent-button:hover { border-color: var(--dsc-border-strong); color: var(--dsc-text); background: var(--dsc-hover); }
-.dsc-agent-label-short { display: none; }
-.dsc-header-newchat { display: none; }
+.dsc-handoff-button:hover { background: var(--dsc-hover); border-color: var(--dsc-border-strong); }
+.dsc-handoff-button:disabled { opacity: 0.42; }
 .dsc-auth-pill {
   display: flex;
   align-items: center;
   gap: 5px;
-  height: 28px;
+  height: 27px;
   padding: 0 9px;
-  border: 1px solid color-mix(in srgb, var(--dsc-warn) 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dsc-warn) 26%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--dsc-warn) 8%, transparent);
   color: var(--dsc-warn);
-  font-size: 11.5px;
+  font-size: 11.4px;
   font-weight: 600;
 }
 .dsc-icon-button {
@@ -3319,27 +3677,28 @@ const CHAT_CSS = `
   border-radius: 8px;
   background: transparent;
   color: var(--dsc-muted);
+  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease;
 }
 .dsc-icon-button:hover { background: var(--dsc-hover); color: var(--dsc-text); }
 .dsc-icon-button.is-small { width: 24px; height: 24px; border-radius: 6px; }
 .dsc-icon-button.is-danger:hover { color: var(--dsc-error); background: color-mix(in srgb, var(--dsc-error) 9%, transparent); }
-.dsc-header-menu { margin-left: -4px; }
 
-/* Thread */
+/* ---------- thread ---------- */
 .dsc-thread {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 28px 24px 12px;
+  padding: 26px 20px 10px;
   scrollbar-gutter: stable;
+  overscroll-behavior: contain;
 }
 .dsc-thread-inner {
   width: 100%;
-  max-width: 860px;
+  max-width: 788px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 26px;
 }
 .dsc-thread-loading { display: flex; align-items: center; justify-content: center; }
 .dsc-thread-error {
@@ -3361,41 +3720,53 @@ const CHAT_CSS = `
 .dsc-thread-error .dsc-secondary-button { margin-top: 7px; }
 .dsc-thread::-webkit-scrollbar,
 .dsc-chat-list::-webkit-scrollbar,
-.dsc-modal-body::-webkit-scrollbar { width: 10px; height: 10px; }
+.dsc-modal-body::-webkit-scrollbar,
+.dsc-handoff-brief::-webkit-scrollbar,
+.dsc-pre::-webkit-scrollbar { width: 10px; height: 10px; }
 .dsc-thread::-webkit-scrollbar-thumb,
 .dsc-chat-list::-webkit-scrollbar-thumb,
-.dsc-modal-body::-webkit-scrollbar-thumb {
+.dsc-modal-body::-webkit-scrollbar-thumb,
+.dsc-handoff-brief::-webkit-scrollbar-thumb,
+.dsc-pre::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--dsc-text) 16%, transparent);
   border: 3px solid transparent;
   background-clip: content-box;
   border-radius: 999px;
 }
+.dsc-thread::-webkit-scrollbar-thumb:hover,
+.dsc-chat-list::-webkit-scrollbar-thumb:hover,
+.dsc-modal-body::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--dsc-text) 28%, transparent); background-clip: content-box; }
 
-/* Empty state */
-.dsc-empty { width: 100%; max-width: 760px; margin: 0 auto; padding: 9vh 0 20px; text-align: center; }
-.dsc-empty-brand { display: flex; justify-content: center; margin-bottom: 18px; }
-.dsc-empty-title { margin: 0 0 8px; font-size: clamp(24px, 3.2vw, 31px); font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
-.dsc-empty-subtitle { max-width: 560px; margin: 0 auto; color: var(--dsc-muted); font-size: 14.5px; line-height: 1.7; }
-.dsc-suggestions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 28px; text-align: left; }
+/* ---------- empty state ---------- */
+.dsc-empty { width: 100%; max-width: 720px; margin: 0 auto; padding: 11vh 0 20px; text-align: center; }
+.dsc-empty-title {
+  margin: 0 0 10px;
+  font-size: clamp(25px, 2.6vw, 33px);
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  line-height: 1.22;
+}
+.dsc-empty-subtitle { max-width: 540px; margin: 0 auto; color: var(--dsc-muted); font-size: 14.2px; line-height: 1.72; }
+.dsc-suggestions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 30px; text-align: left; }
 .dsc-suggestion {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 12px 14px;
+  padding: 12px 13px;
   border: 1px solid var(--dsc-border);
-  border-radius: 14px;
+  border-radius: 13px;
   background: var(--dsc-layer);
   text-align: left;
-  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--dsc-fast) ease, background var(--dsc-fast) ease, transform var(--dsc-fast) ease;
 }
 .dsc-suggestion:hover {
-  border-color: color-mix(in srgb, var(--dsc-brand) 40%, var(--dsc-border));
-  box-shadow: var(--dsc-shadow-soft);
+  border-color: var(--dsc-border-strong);
+  background: color-mix(in srgb, var(--dsc-layer) 55%, var(--dsc-layer2));
   transform: translateY(-1px);
 }
 .dsc-suggestion-icon {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 9px;
   display: flex;
   align-items: center;
@@ -3405,76 +3776,92 @@ const CHAT_CSS = `
   flex: none;
 }
 .dsc-suggestion-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.dsc-suggestion-title { font-size: 12.5px; font-weight: 650; }
-.dsc-suggestion-text { font-size: 12.5px; color: var(--dsc-muted); line-height: 1.5; }
-.dsc-empty-foot { margin-top: 24px; font-size: 11.5px; color: var(--dsc-muted); }
+.dsc-suggestion-title { font-size: 12.7px; font-weight: 600; }
+.dsc-suggestion-text { font-size: 12.4px; color: var(--dsc-muted); line-height: 1.5; }
+.dsc-empty-foot { margin-top: 26px; font-size: 11.6px; color: var(--dsc-muted); }
 .dsc-setup-card {
   display: flex;
   align-items: center;
   gap: 11px;
-  max-width: 580px;
+  max-width: 560px;
   margin: 22px auto 0;
   padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--dsc-warn) 25%, transparent);
-  border-radius: 13px;
+  border: 1px solid color-mix(in srgb, var(--dsc-warn) 22%, transparent);
+  border-radius: 12px;
   background: color-mix(in srgb, var(--dsc-warn) 7%, var(--dsc-layer));
   text-align: left;
 }
 .dsc-setup-icon { color: var(--dsc-warn); flex: none; }
 .dsc-setup-body { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
-.dsc-setup-body strong { font-size: 13px; }
-.dsc-setup-body span { font-size: 12px; color: var(--dsc-muted); }
+.dsc-setup-body strong { font-size: 12.9px; }
+.dsc-setup-body span { font-size: 11.9px; color: var(--dsc-muted); }
 .dsc-primary-button {
   height: 36px;
-  padding: 0 14px;
+  padding: 0 15px;
   border: 0;
   border-radius: 9px;
   background: var(--dsc-brand);
   color: var(--dsc-on-brand);
-  font-size: 13px;
+  font-size: 12.9px;
   font-weight: 600;
   white-space: nowrap;
+  transition: filter var(--dsc-fast) ease;
 }
 .dsc-primary-button:hover { filter: brightness(1.06); }
 .dsc-primary-button:disabled { opacity: 0.45; }
 .dsc-primary-button.is-danger { background: var(--dsc-error); }
 .dsc-secondary-button {
   height: 36px;
-  padding: 0 14px;
+  padding: 0 15px;
   border: 1px solid var(--dsc-border-strong);
   border-radius: 9px;
   background: transparent;
-  font-size: 13px;
+  font-size: 12.9px;
   font-weight: 550;
   white-space: nowrap;
+  transition: background var(--dsc-fast) ease;
 }
 .dsc-secondary-button:hover { background: var(--dsc-hover); }
 .dsc-secondary-button:disabled { opacity: 0.45; }
+.dsc-text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--dsc-muted);
+  font-size: 11.9px;
+  font-weight: 550;
+}
+.dsc-text-button:hover { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-text-button:disabled { opacity: 0.45; }
 
-/* Messages */
+/* ---------- messages ---------- */
 .dsc-msg { display: flex; width: 100%; min-width: 0; }
-.dsc-msg-user { justify-content: flex-end; padding-left: 12%; }
+.dsc-msg-user { justify-content: flex-end; padding-left: 10%; }
 .dsc-user-bubble {
   max-width: 100%;
   padding: 10px 15px;
-  border-radius: 18px 18px 5px 18px;
-  background: color-mix(in srgb, var(--dsc-brand) 9%, var(--dsc-layer));
-  border: 1px solid color-mix(in srgb, var(--dsc-brand) 12%, transparent);
-  font-size: 14.5px;
-  line-height: 1.65;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  border-radius: 18px;
+  border-bottom-right-radius: 6px;
+  background: var(--dsc-user-bubble);
+  font-size: 14.6px;
+  line-height: 1.68;
+  overflow-wrap: anywhere;
 }
 .dsc-user-text { white-space: pre-wrap; word-break: break-word; }
 .dsc-user-files { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 7px; }
-.dsc-msg-assistant { align-items: flex-start; gap: 12px; padding-right: 6%; }
-.dsc-msg-avatar { flex: none; padding-top: 2px; }
+.dsc-msg-assistant { align-items: flex-start; padding-right: 2%; }
 .dsc-msg-body { flex: 1; min-width: 0; }
 
-/* Attachments */
+/* ---------- attachments ---------- */
 .dsc-attach {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   max-width: 260px;
   min-height: 38px;
   padding: 4px 6px;
@@ -3482,7 +3869,7 @@ const CHAT_CSS = `
   border-radius: 10px;
   background: var(--dsc-layer);
 }
-.dsc-attach.is-compact { max-width: 220px; min-height: 34px; padding: 3px 6px; background: color-mix(in srgb, var(--dsc-layer) 75%, transparent); }
+.dsc-attach.is-compact { max-width: 220px; min-height: 34px; padding: 3px 6px; background: transparent; }
 .dsc-attach.is-error { border-color: color-mix(in srgb, var(--dsc-error) 36%, transparent); }
 .dsc-attach-thumb { width: 32px; height: 32px; border-radius: 7px; object-fit: cover; flex: none; background: var(--dsc-layer2); }
 .dsc-attach.is-compact .dsc-attach-thumb { width: 28px; height: 28px; }
@@ -3497,8 +3884,8 @@ const CHAT_CSS = `
   color: var(--dsc-link);
   flex: none;
 }
-.dsc-attach-meta { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 0; }
-.dsc-attach-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.3px; font-weight: 600; }
+.dsc-attach-meta { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.dsc-attach-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.3px; font-weight: 550; }
 .dsc-attach-size { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10.8px; color: var(--dsc-muted); }
 .dsc-attach.is-error .dsc-attach-size { color: var(--dsc-error); }
 .dsc-attach-action {
@@ -3516,49 +3903,62 @@ const CHAT_CSS = `
 .dsc-attach-action:hover { background: var(--dsc-hover); color: var(--dsc-text); }
 .dsc-attach-rail { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 2px 8px; }
 
-/* Process / reasoning */
-.dsc-process {
-  margin: 0 0 12px;
-  padding: 2px 11px;
-  border: 1px solid var(--dsc-border);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--dsc-layer2) 55%, transparent);
-}
+/* ---------- reasoning / process ---------- */
+.dsc-process { margin: 0 0 12px; }
 .dsc-process-head {
   display: flex;
   align-items: center;
   gap: 7px;
-  min-height: 34px;
+  width: 100%;
+  max-width: 100%;
+  min-height: 26px;
+  padding: 2px 4px 2px 2px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
   color: var(--dsc-muted);
-  font-size: 12.8px;
+  font-size: 12.9px;
   font-weight: 550;
-  cursor: pointer;
-  user-select: none;
+  text-align: left;
+  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease;
 }
+.dsc-process-head:hover { background: var(--dsc-hover); color: var(--dsc-text); }
 .dsc-process-icon { color: var(--dsc-link); display: flex; }
-.dsc-process-title { flex: 1; min-width: 0; }
-.dsc-process-body { padding: 2px 0 10px; }
+.dsc-process-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dsc-process-chevron { display: flex; color: var(--dsc-muted); }
+.dsc-process-title.is-shimmer {
+  background: linear-gradient(90deg, var(--dsc-muted) 0%, var(--dsc-link) 45%, var(--dsc-muted) 90%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: dsc-shimmer 2.4s linear infinite;
+}
+@keyframes dsc-shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+.dsc-process-body { padding: 6px 0 4px 4px; }
 .dsc-think-block {
-  margin: 4px 0 8px;
-  padding: 2px 0 2px 11px;
+  margin: 2px 0 10px;
+  padding: 2px 0 2px 12px;
   border-left: 2px solid var(--dsc-border-strong);
   color: var(--dsc-muted);
-  font-size: 13px;
-  line-height: 1.7;
-  max-height: 340px;
+  font-size: 13.2px;
+  line-height: 1.72;
+  max-height: 380px;
   overflow-y: auto;
 }
-.dsc-think-block .dsc-md { font-size: 13px; line-height: 1.7; color: var(--dsc-muted); }
-.dsc-step { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; }
+.dsc-think-block.is-active { border-left-color: var(--dsc-brand-soft-strong); }
+.dsc-think-block .dsc-md { font-size: 13.2px; line-height: 1.72; color: var(--dsc-muted); }
+.dsc-step { display: flex; align-items: flex-start; gap: 8px; padding: 4px 0; }
 .dsc-step-icon { color: var(--dsc-muted); padding-top: 1px; display: flex; }
 .dsc-step-main { min-width: 0; flex: 1; }
-.dsc-step-line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-width: 0; font-size: 12.7px; }
+.dsc-step-line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-width: 0; font-size: 12.6px; }
 .dsc-step-line.is-clickable { cursor: pointer; }
-.dsc-step-label { font-weight: 600; color: var(--dsc-text); }
+.dsc-step-line.is-clickable:hover .dsc-step-label { color: var(--dsc-link); }
+.dsc-step-label { font-weight: 550; color: var(--dsc-text); }
 .dsc-step-detail { color: var(--dsc-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 430px; }
 .dsc-step-count { padding: 0 6px; border-radius: 999px; background: var(--dsc-brand-soft); color: var(--dsc-link); font-size: 10.8px; font-weight: 600; }
-.dsc-step-pending { color: var(--dsc-link); font-size: 11.5px; }
-.dsc-step-failed { color: var(--dsc-error); font-size: 11.5px; }
+.dsc-step-pending { color: var(--dsc-link); font-size: 11.4px; }
+.dsc-step-failed { color: var(--dsc-error); font-size: 11.4px; }
 .dsc-step-page {
   display: inline-flex;
   align-items: center;
@@ -3583,8 +3983,8 @@ const CHAT_CSS = `
   text-decoration: none;
   color: var(--dsc-text);
 }
-.dsc-result:hover { border-color: color-mix(in srgb, var(--dsc-brand) 38%, var(--dsc-border)); }
-.dsc-result-title { display: block; font-size: 12.3px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dsc-result:hover { border-color: var(--dsc-border-strong); background: var(--dsc-hover); }
+.dsc-result-title { display: block; font-size: 12.3px; font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dsc-result-meta { display: block; margin-top: 1px; font-size: 10.8px; color: var(--dsc-muted); }
 .dsc-result-snippet {
   display: -webkit-box;
@@ -3598,73 +3998,87 @@ const CHAT_CSS = `
 }
 .dsc-result-empty { padding: 5px 0; font-size: 12px; color: var(--dsc-muted); }
 
-/* Markdown */
-.dsc-md { font-size: 14.8px; line-height: 1.76; word-break: break-word; }
+/* ---------- markdown ---------- */
+.dsc-md { font-size: 15px; line-height: 1.78; word-break: break-word; }
 .dsc-md > *:first-child { margin-top: 0; }
 .dsc-md > *:last-child { margin-bottom: 0; }
 .dsc-paragraph { margin: 0 0 12px; white-space: pre-wrap; }
-.dsc-heading { margin: 20px 0 8px; line-height: 1.35; letter-spacing: -0.01em; }
+.dsc-heading { margin: 22px 0 9px; line-height: 1.32; letter-spacing: -0.012em; font-weight: 620; }
 h1.dsc-heading { font-size: 22px; }
 h2.dsc-heading { font-size: 19px; }
-h3.dsc-heading { font-size: 17px; }
+h3.dsc-heading { font-size: 16.5px; }
 h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
-.dsc-link { color: var(--dsc-link); text-decoration: none; }
-.dsc-link:hover { text-decoration: underline; }
+.dsc-link { color: var(--dsc-link); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--dsc-link) 32%, transparent); }
+.dsc-link:hover { border-bottom-color: var(--dsc-link); }
 .dsc-inline-code {
-  padding: 1px 5px;
-  border: 1px solid var(--dsc-border);
+  padding: 1.5px 5px;
   border-radius: 5px;
-  background: var(--dsc-layer2);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-  font-size: 0.89em;
+  background: var(--dsc-code-bg);
+  font-family: var(--dsc-mono);
+  font-size: 0.875em;
 }
-.dsc-code { margin: 12px 0; border: 1px solid var(--dsc-border); border-radius: 12px; overflow: hidden; background: color-mix(in srgb, var(--dsc-text) 4%, var(--dsc-layer2)); }
-.dsc-code-head { display: flex; align-items: center; justify-content: space-between; height: 32px; padding: 0 10px 0 12px; border-bottom: 1px solid var(--dsc-border); }
-.dsc-code-lang { font-size: 11.5px; color: var(--dsc-muted); font-weight: 600; text-transform: lowercase; }
+.dsc-code {
+  margin: 13px 0;
+  border: 1px solid var(--dsc-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--dsc-code-bg);
+}
+.dsc-code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 33px;
+  padding: 0 8px 0 12px;
+  border-bottom: 1px solid var(--dsc-border);
+  background: color-mix(in srgb, var(--dsc-text) 2%, transparent);
+}
+.dsc-code-lang { font-size: 11.4px; color: var(--dsc-muted); font-weight: 600; text-transform: lowercase; letter-spacing: 0.02em; }
 .dsc-code-copy {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   height: 24px;
   padding: 0 7px;
   border: 0;
   border-radius: 6px;
   background: transparent;
   color: var(--dsc-muted);
-  font-size: 11.5px;
+  font-size: 11.4px;
 }
 .dsc-code-copy:hover { background: var(--dsc-hover); color: var(--dsc-text); }
-.dsc-pre { margin: 0; padding: 12px 13px; overflow-x: auto; font-size: 12.6px; line-height: 1.65; }
-.dsc-pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; white-space: pre; }
-.dsc-quote { margin: 12px 0; padding: 2px 13px; border-left: 3px solid var(--dsc-brand-soft-strong); color: var(--dsc-muted); white-space: pre-wrap; }
-.dsc-list { margin: 8px 0 12px; padding-left: 21px; }
+.dsc-pre { margin: 0; padding: 13px 14px; overflow-x: auto; font-size: 12.7px; line-height: 1.66; }
+.dsc-pre code { font-family: var(--dsc-mono); white-space: pre; }
+.dsc-quote { margin: 12px 0; padding: 2px 14px; border-left: 3px solid var(--dsc-brand-soft-strong); color: var(--dsc-muted); white-space: pre-wrap; }
+.dsc-list { margin: 8px 0 12px; padding-left: 22px; }
 .dsc-list li { margin: 3px 0; }
-.dsc-table-wrap { overflow-x: auto; margin: 12px 0; border: 1px solid var(--dsc-border); border-radius: 10px; }
+.dsc-list li::marker { color: var(--dsc-muted); }
+.dsc-table-wrap { overflow-x: auto; margin: 13px 0; border: 1px solid var(--dsc-border); border-radius: 10px; }
 .dsc-table { border-collapse: collapse; width: 100%; font-size: 13px; }
-.dsc-table th, .dsc-table td { padding: 7px 10px; border-bottom: 1px solid var(--dsc-border); text-align: left; vertical-align: top; }
-.dsc-table th { background: var(--dsc-layer2); font-weight: 600; }
+.dsc-table th, .dsc-table td { padding: 7px 11px; border-bottom: 1px solid var(--dsc-border); text-align: left; vertical-align: top; }
+.dsc-table th { background: color-mix(in srgb, var(--dsc-text) 3%, transparent); font-weight: 600; }
 .dsc-table tr:last-child td { border-bottom: 0; }
-.dsc-hr { border: 0; border-top: 1px solid var(--dsc-border); margin: 18px 0; }
+.dsc-hr { border: 0; border-top: 1px solid var(--dsc-border); margin: 20px 0; }
 .dsc-caret {
   display: inline-block;
-  width: 7px;
+  width: 2px;
   height: 15px;
   margin-left: 2px;
   border-radius: 1px;
   background: var(--dsc-brand);
   vertical-align: -2px;
-  animation: dsc-blink 1s steps(2, start) infinite;
+  animation: dsc-blink 1.1s steps(2, start) infinite;
 }
 @keyframes dsc-blink { 50% { opacity: 0; } }
 
-/* Sources */
-.dsc-sources { margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--dsc-border); }
-.dsc-sources-head { display: flex; align-items: center; gap: 5px; margin-bottom: 7px; font-size: 12px; font-weight: 600; color: var(--dsc-muted); }
+/* ---------- sources ---------- */
+.dsc-sources { margin-top: 16px; }
+.dsc-sources-head { display: flex; align-items: center; gap: 5px; margin-bottom: 7px; font-size: 11.9px; font-weight: 600; color: var(--dsc-muted); }
 .dsc-source-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
 .dsc-source {
   display: flex;
   align-items: flex-start;
-  gap: 7px;
+  gap: 8px;
   padding: 8px 9px;
   border: 1px solid var(--dsc-border);
   border-radius: 10px;
@@ -3672,15 +4086,16 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   color: var(--dsc-text);
   text-decoration: none;
   min-width: 0;
+  transition: border-color var(--dsc-fast) ease, background var(--dsc-fast) ease;
 }
-.dsc-source:hover { border-color: color-mix(in srgb, var(--dsc-brand) 38%, var(--dsc-border)); }
+.dsc-source:hover { border-color: var(--dsc-border-strong); background: color-mix(in srgb, var(--dsc-layer) 60%, var(--dsc-layer2)); }
 .dsc-source-index {
   width: 18px;
   height: 18px;
   border-radius: 6px;
   background: var(--dsc-brand-soft);
   color: var(--dsc-link);
-  font-size: 10.5px;
+  font-size: 10.4px;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -3691,8 +4106,8 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-source-body { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 1px; }
 .dsc-source-title {
   font-size: 12px;
-  font-weight: 600;
-  line-height: 1.4;
+  font-weight: 550;
+  line-height: 1.42;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -3710,31 +4125,44 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 }
 .dsc-source .dsc-icon { color: var(--dsc-muted); margin-top: 2px; }
 
-/* Message actions / notices */
-.dsc-msg-actions { display: flex; align-items: center; gap: 4px; margin-top: 8px; opacity: 0; visibility: hidden; transition: opacity 0.15s ease; }
+/* ---------- message actions / notices ---------- */
+.dsc-msg-actions { display: flex; align-items: center; gap: 2px; margin-top: 7px; opacity: 0; transition: opacity var(--dsc-fast) ease; }
 .dsc-msg-assistant:hover .dsc-msg-actions,
-.dsc-msg-actions.is-last { opacity: 1; visibility: visible; }
-.dsc-usage { font-size: 10.8px; color: var(--dsc-muted); margin-left: 5px; }
+.dsc-msg-actions.is-last { opacity: 1; }
+.dsc-msg-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--dsc-muted);
+  font-size: 11.7px;
+}
+.dsc-msg-action:hover { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-usage { font-size: 10.8px; color: var(--dsc-muted); margin-left: 6px; }
 .dsc-notice {
   display: flex;
   align-items: flex-start;
   gap: 7px;
   margin: 8px 0;
   padding: 9px 11px;
-  border: 1px solid color-mix(in srgb, var(--dsc-warn) 24%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dsc-warn) 22%, transparent);
   border-radius: 10px;
   background: color-mix(in srgb, var(--dsc-warn) 7%, transparent);
   color: var(--dsc-warn);
-  font-size: 12.8px;
+  font-size: 12.7px;
   line-height: 1.55;
 }
 .dsc-notice.is-error {
-  border-color: color-mix(in srgb, var(--dsc-error) 24%, transparent);
+  border-color: color-mix(in srgb, var(--dsc-error) 22%, transparent);
   background: color-mix(in srgb, var(--dsc-error) 7%, transparent);
   color: var(--dsc-error);
 }
 .dsc-notice .dsc-icon { margin-top: 1px; }
-.dsc-muted-note { margin: 6px 0; font-size: 12.5px; color: var(--dsc-muted); }
+.dsc-muted-note { margin: 6px 0; font-size: 12.4px; color: var(--dsc-muted); }
 .dsc-inline-button {
   border: 0;
   background: transparent;
@@ -3744,70 +4172,70 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   padding: 0 2px;
   text-decoration: underline;
 }
-.dsc-typing { display: inline-flex; align-items: center; gap: 4px; padding: 7px 0 3px; }
+.dsc-typing { display: inline-flex; align-items: center; gap: 4px; padding: 8px 0 3px; }
 .dsc-typing-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--dsc-brand); opacity: 0.35; animation: dsc-dot 1.2s ease-in-out infinite; }
 .dsc-typing-dot:nth-child(2) { animation-delay: 0.15s; }
 .dsc-typing-dot:nth-child(3) { animation-delay: 0.3s; }
 @keyframes dsc-dot { 0%, 80%, 100% { opacity: 0.25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }
 
-/* Composer */
+/* ---------- composer ---------- */
 .dsc-composer-wrap {
   flex: none;
   width: 100%;
-  max-width: 908px;
+  max-width: 836px;
   margin: 0 auto;
-  padding: 8px 24px 14px;
-  background: linear-gradient(to top, var(--dsc-bg) 72%, transparent);
+  padding: 6px 20px 12px;
+  background: linear-gradient(to top, var(--dsc-bg) 74%, transparent);
 }
 .dsc-auth-banner {
   display: flex;
   align-items: center;
   gap: 7px;
   margin: 0 auto 8px;
-  max-width: 812px;
+  max-width: 788px;
   padding: 8px 12px;
-  border: 1px solid color-mix(in srgb, var(--dsc-warn) 24%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dsc-warn) 22%, transparent);
   border-radius: 10px;
   background: color-mix(in srgb, var(--dsc-warn) 7%, var(--dsc-layer));
   color: var(--dsc-warn);
-  font-size: 12.3px;
+  font-size: 12.2px;
 }
 .dsc-auth-banner span { flex: 1; }
 .dsc-composer {
   position: relative;
-  max-width: 812px;
+  max-width: 788px;
   margin: 0 auto;
-  padding: 9px 11px 7px;
+  padding: 10px 12px 8px;
   border: 1px solid var(--dsc-border-strong);
   border-radius: 24px;
   background: var(--dsc-layer);
-  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: var(--dsc-shadow-composer);
+  transition: border-color var(--dsc-fast) ease, box-shadow var(--dsc-fast) ease;
 }
 .dsc-composer:focus-within {
-  border-color: color-mix(in srgb, var(--dsc-brand) 55%, var(--dsc-border-strong));
-  box-shadow: 0 0 0 3px var(--dsc-brand-soft), 0 6px 22px rgba(15, 23, 42, 0.07);
+  border-color: color-mix(in srgb, var(--dsc-brand) 45%, var(--dsc-border-strong));
+  box-shadow: 0 0 0 3px var(--dsc-brand-soft), var(--dsc-shadow-soft);
 }
 .dsc-composer.is-drag { border-color: var(--dsc-brand); }
 .dsc-textarea {
   display: block;
   width: 100%;
   min-height: 42px;
-  max-height: 200px;
-  padding: 5px 5px 2px;
+  max-height: 220px;
+  padding: 5px 6px 2px;
   border: 0;
   outline: 0;
   resize: none;
   background: transparent;
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 14.8px;
+  line-height: 1.62;
 }
 .dsc-textarea::placeholder { color: var(--dsc-muted); }
-.dsc-composer-tools { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+.dsc-composer-tools { display: flex; align-items: center; gap: 3px; margin-top: 2px; }
 .dsc-file-input { display: none; }
 .dsc-tool-button {
-  width: 34px;
-  height: 34px;
+  width: 33px;
+  height: 33px;
   border: 1px solid transparent;
   border-radius: 9px;
   background: transparent;
@@ -3816,32 +4244,44 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   align-items: center;
   justify-content: center;
   flex: none;
+  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease;
 }
 .dsc-tool-button:hover { background: var(--dsc-hover); color: var(--dsc-text); }
 .dsc-mode-button {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  height: 30px;
+  height: 29px;
   padding: 0 9px;
   border: 1px solid transparent;
   border-radius: 999px;
   background: transparent;
   color: var(--dsc-muted);
-  font-size: 12.4px;
-  font-weight: 550;
+  font-size: 12.3px;
+  font-weight: 520;
   white-space: nowrap;
+  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
 }
 .dsc-mode-button:hover { background: var(--dsc-hover); color: var(--dsc-text); }
 .dsc-mode-button.is-active {
   background: var(--dsc-brand-soft);
-  border-color: color-mix(in srgb, var(--dsc-brand) 18%, transparent);
+  border-color: color-mix(in srgb, var(--dsc-brand) 16%, transparent);
   color: var(--dsc-link);
 }
 .dsc-tool-spacer { flex: 1; }
+.dsc-model-pill {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 8px;
+  color: var(--dsc-muted);
+  font-size: 11.8px;
+  font-weight: 500;
+}
 .dsc-send-button {
-  width: 34px;
-  height: 34px;
+  width: 33px;
+  height: 33px;
   border: 0;
   border-radius: 999px;
   background: var(--dsc-brand);
@@ -3850,13 +4290,13 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   align-items: center;
   justify-content: center;
   flex: none;
-  box-shadow: 0 3px 10px color-mix(in srgb, var(--dsc-brand) 30%, transparent);
+  transition: filter var(--dsc-fast) ease, opacity var(--dsc-fast) ease;
 }
 .dsc-send-button:hover { filter: brightness(1.07); }
-.dsc-send-button.is-idle { opacity: 0.42; box-shadow: none; }
+.dsc-send-button.is-idle { opacity: 0.4; }
 .dsc-stop-button {
-  width: 34px;
-  height: 34px;
+  width: 33px;
+  height: 33px;
   border: 1px solid var(--dsc-border-strong);
   border-radius: 999px;
   background: var(--dsc-layer2);
@@ -3882,9 +4322,9 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   font-weight: 600;
   pointer-events: none;
 }
-.dsc-disclaimer { margin-top: 7px; text-align: center; font-size: 11px; color: var(--dsc-muted); }
+.dsc-disclaimer { margin-top: 7px; text-align: center; font-size: 10.9px; color: var(--dsc-muted); }
 
-/* Modal */
+/* ---------- dialogs ---------- */
 .dsc-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -3893,30 +4333,33 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(15, 23, 42, 0.42);
+  background: var(--dsw-alias-bg-mask-1, color-mix(in srgb, #0b0f19 46%, transparent));
   backdrop-filter: blur(3px);
-  animation: dsc-fade 0.15s ease;
+  animation: dsc-fade var(--ds-transition-duration-fast, 0.1s) ease;
 }
 @keyframes dsc-fade { from { opacity: 0; } to { opacity: 1; } }
 .dsc-modal {
-  width: min(640px, 100%);
+  width: min(620px, 100%);
   max-height: 88vh;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--dsc-border);
-  border-radius: 18px;
+  border-radius: 16px;
   background: var(--dsc-layer);
   box-shadow: var(--dsc-shadow);
   overflow: hidden;
-  animation: dsc-rise 0.18s ease;
+  animation: dsc-rise 0.16s ease;
 }
-@keyframes dsc-rise { from { opacity: 0; transform: translateY(8px) scale(0.99); } to { opacity: 1; transform: none; } }
+@keyframes dsc-rise { from { opacity: 0; transform: translateY(8px) scale(0.995); } to { opacity: 1; transform: none; } }
+.dsc-modal.dsc-handoff { width: min(760px, 100%); }
 .dsc-modal-head { display: flex; align-items: flex-start; gap: 12px; padding: 18px 20px 14px; border-bottom: 1px solid var(--dsc-border); }
-.dsc-modal-head h2 { margin: 0; font-size: 17px; font-weight: 650; letter-spacing: -0.01em; }
-.dsc-modal-sub { margin: 3px 0 0; font-size: 11.8px; color: var(--dsc-muted); line-height: 1.5; }
+.dsc-modal-head h2 { margin: 0; font-size: 16.5px; font-weight: 620; letter-spacing: -0.01em; }
+.dsc-modal-sub { margin: 4px 0 0; font-size: 11.9px; color: var(--dsc-muted); line-height: 1.55; }
 .dsc-modal-head .dsc-icon-button { margin-left: auto; }
-.dsc-modal-body { overflow-y: auto; padding: 16px 20px 22px; display: flex; flex-direction: column; gap: 17px; }
-.dsc-settings-title { margin: 0 0 7px 2px; font-size: 12px; font-weight: 650; color: var(--dsc-muted); }
+.dsc-modal-body { overflow-y: auto; padding: 16px 20px 18px; display: flex; flex-direction: column; gap: 16px; }
+.dsc-modal-foot { display: flex; align-items: center; gap: 8px; padding: 12px 20px 16px; border-top: 1px solid var(--dsc-border); }
+.dsc-modal-foot-note { flex: 1; min-width: 0; font-size: 11.5px; color: var(--dsc-muted); }
+.dsc-settings-title { margin: 0 0 7px 2px; font-size: 11.8px; font-weight: 620; color: var(--dsc-muted); }
 .dsc-settings-card {
   display: flex;
   flex-direction: column;
@@ -3935,28 +4378,46 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-auth-status-body span { font-size: 11.6px; color: var(--dsc-muted); }
 .dsc-auth-status-body .dsc-auth-sub { font-size: 11.2px; }
 .dsc-field { display: flex; flex-direction: column; gap: 6px; }
-.dsc-field-label { font-size: 12px; font-weight: 650; color: var(--dsc-muted); }
-.dsc-field-hint { margin: 0; font-size: 11.4px; line-height: 1.6; color: var(--dsc-muted); }
+.dsc-field-row { display: flex; align-items: center; gap: 8px; }
+.dsc-field-tools { margin-left: auto; display: flex; align-items: center; gap: 2px; }
+.dsc-field-label { font-size: 11.9px; font-weight: 620; color: var(--dsc-muted); }
+.dsc-field-hint { margin: 0; font-size: 11.4px; line-height: 1.6; color: var(--dsc-muted); word-break: break-word; }
 .dsc-segment { display: inline-flex; align-self: flex-start; gap: 2px; padding: 2px; border: 1px solid var(--dsc-border); border-radius: 9px; background: var(--dsc-layer2); }
 .dsc-segment-button { height: 29px; padding: 0 11px; border: 0; border-radius: 7px; background: transparent; color: var(--dsc-muted); font-size: 12px; font-weight: 550; }
-.dsc-segment-button.is-active { background: var(--dsc-layer); color: var(--dsc-text); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1); }
+.dsc-segment-button.is-active { background: var(--dsc-layer); color: var(--dsc-text); box-shadow: 0 1px 3px rgba(9, 12, 20, 0.1); }
 .dsc-key-row { display: flex; gap: 7px; align-items: center; }
 .dsc-input {
   flex: 1;
   min-width: 0;
-  height: 36px;
+  height: 35px;
   padding: 0 10px;
   border: 1px solid var(--dsc-border-strong);
   border-radius: 9px;
   background: var(--dsc-bg);
   outline: 0;
-  font-size: 13px;
+  font-size: 12.9px;
+  transition: border-color var(--dsc-fast) ease, box-shadow var(--dsc-fast) ease;
 }
 .dsc-input:focus { border-color: var(--dsc-brand); box-shadow: 0 0 0 2px var(--dsc-brand-soft); }
+.dsc-select {
+  height: 35px;
+  padding: 0 30px 0 10px;
+  border: 1px solid var(--dsc-border-strong);
+  border-radius: 9px;
+  background: var(--dsc-bg);
+  color: var(--dsc-text);
+  font-size: 12.9px;
+  outline: 0;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--dsc-muted) 50%), linear-gradient(135deg, var(--dsc-muted) 50%, transparent 50%);
+  background-position: calc(100% - 16px) 15px, calc(100% - 11px) 15px;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
 .dsc-key-state { flex: 1; padding: 8px 10px; border-radius: 9px; background: var(--dsc-layer2); color: var(--dsc-muted); font-size: 12px; }
 .dsc-switch-row { display: flex; align-items: center; gap: 12px; }
 .dsc-switch-copy { display: flex; flex-direction: column; gap: 1px; flex: 1; }
-.dsc-switch-copy strong { font-size: 12.8px; font-weight: 600; }
+.dsc-switch-copy strong { font-size: 12.8px; font-weight: 580; }
 .dsc-switch-copy span { font-size: 11.4px; color: var(--dsc-muted); }
 .dsc-switch {
   width: 40px;
@@ -3965,126 +4426,128 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   border: 0;
   border-radius: 999px;
   background: var(--dsc-border-strong);
-  transition: background 0.16s ease;
+  transition: background var(--dsc-fast) ease;
   flex: none;
 }
 .dsc-switch.is-on { background: var(--dsc-brand); }
-.dsc-switch-thumb { display: block; width: 20px; height: 20px; border-radius: 999px; background: #fff; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.22); transition: transform 0.16s ease; }
+.dsc-switch-thumb { display: block; width: 20px; height: 20px; border-radius: 999px; background: #fff; box-shadow: 0 1px 3px rgba(9, 12, 20, 0.24); transition: transform var(--dsc-fast) ease; }
 .dsc-switch.is-on .dsc-switch-thumb { transform: translateX(16px); }
 .dsc-prompt { min-height: 92px; border: 1px solid var(--dsc-border-strong); border-radius: 9px; padding: 9px 10px; background: var(--dsc-bg); resize: vertical; }
+.dsc-handoff-brief {
+  min-height: 220px;
+  max-height: 46vh;
+  padding: 10px 12px;
+  border: 1px solid var(--dsc-border-strong);
+  border-radius: 10px;
+  background: var(--dsc-bg);
+  font-size: 12.7px;
+  line-height: 1.7;
+  resize: vertical;
+}
+.dsc-handoff-loading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 220px;
+  padding: 14px;
+  border: 1px dashed var(--dsc-border-strong);
+  border-radius: 10px;
+  color: var(--dsc-muted);
+  font-size: 12.7px;
+}
 .dsc-field-actions { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .dsc-data-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.dsc-path { max-width: 68%; overflow-x: auto; padding: 5px 7px; border-radius: 6px; background: var(--dsc-layer2); font-size: 11.2px; white-space: nowrap; }
+.dsc-path { max-width: 68%; overflow-x: auto; padding: 5px 7px; border-radius: 6px; background: var(--dsc-layer2); font-size: 11.2px; white-space: nowrap; font-family: var(--dsc-mono); }
 .dsc-about-row { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--dsc-muted); }
-.dsc-about-row strong { color: var(--dsc-text); font-weight: 600; }
-.dsc-confirm { width: min(430px, 100%); padding: 20px; border: 1px solid var(--dsc-border); border-radius: 16px; background: var(--dsc-layer); box-shadow: var(--dsc-shadow); animation: dsc-rise 0.18s ease; }
-.dsc-confirm h2 { margin: 0 0 7px; font-size: 16px; font-weight: 650; }
-.dsc-confirm p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--dsc-muted); }
+.dsc-about-row strong { color: var(--dsc-text); font-weight: 580; }
+.dsc-confirm { width: min(430px, 100%); padding: 20px; border: 1px solid var(--dsc-border); border-radius: 16px; background: var(--dsc-layer); box-shadow: var(--dsc-shadow); animation: dsc-rise 0.16s ease; }
+.dsc-confirm h2 { margin: 0 0 7px; font-size: 15.5px; font-weight: 620; }
+.dsc-confirm p { margin: 0; font-size: 12.9px; line-height: 1.62; color: var(--dsc-muted); }
 .dsc-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 
-/* Toasts */
-.dsc-toasts { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 40; display: flex; flex-direction: column; gap: 7px; align-items: center; pointer-events: none; width: min(560px, calc(100% - 32px)); }
-.dsc-toast { display: flex; align-items: center; gap: 7px; max-width: 100%; padding: 9px 13px; border: 1px solid var(--dsc-border); border-radius: 10px; background: var(--dsc-layer); box-shadow: var(--dsc-shadow-soft); font-size: 12.6px; color: var(--dsc-text); animation: dsc-toast-in 0.18s ease; }
+/* ---------- toasts ---------- */
+.dsc-toasts { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 40; display: flex; flex-direction: column; gap: 7px; align-items: center; pointer-events: none; width: min(560px, calc(100% - 32px)); }
+.dsc-toast { display: flex; align-items: center; gap: 7px; max-width: 100%; padding: 9px 13px; border: 1px solid var(--dsc-border); border-radius: 10px; background: var(--dsc-layer); box-shadow: var(--dsc-shadow-soft); font-size: 12.5px; color: var(--dsc-text); animation: dsc-toast-in 0.16s ease; }
 .dsc-toast .dsc-icon { color: var(--dsc-success); flex: none; }
 .dsc-toast.is-warning .dsc-icon, .dsc-toast.is-warning { color: var(--dsc-warn); }
 .dsc-toast.is-error .dsc-icon, .dsc-toast.is-error { color: var(--dsc-error); }
 @keyframes dsc-toast-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-/* Boot */
-.dsc-boot { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; position: relative; padding: 24px; }
-.dsc-boot-text { font-size: 13px; color: var(--dsc-muted); }
-.dsc-boot-close { position: absolute; top: 16px; right: 16px; width: 34px; height: 34px; border: 1px solid var(--dsc-border); border-radius: 9px; background: var(--dsc-layer); color: var(--dsc-muted); display: flex; align-items: center; justify-content: center; }
-.dsc-boot-close:hover { color: var(--dsc-text); background: var(--dsc-hover); }
+/* ---------- boot ---------- */
+.dsc-boot { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; }
+.dsc-boot-text { font-size: 12.9px; color: var(--dsc-muted); }
 .dsc-boot-card { width: min(430px, 100%); padding: 22px; border: 1px solid var(--dsc-border); border-radius: 16px; background: var(--dsc-layer); text-align: center; box-shadow: var(--dsc-shadow-soft); }
 .dsc-boot-icon { display: inline-flex; color: var(--dsc-warn); }
 .dsc-boot-card h2 { margin: 8px 0 5px; font-size: 16px; }
 .dsc-boot-card p { margin: 0 0 14px; font-size: 12.5px; color: var(--dsc-muted); line-height: 1.6; word-break: break-word; }
 
-/* Sidebar footer slot action */
-.dsc-footer-action {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  height: 32px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--dsw-alias-label-primary, inherit);
-  font-size: 12.5px;
-  cursor: pointer;
-}
-.dsc-footer-action:hover {
-  background: color-mix(in srgb, currentColor 7%, transparent);
-  color: var(--dsw-alias-label-primary, inherit);
-}
-
-/* Responsive */
+/* ---------- responsive ---------- */
 @media (max-width: 1100px) {
   .dsc-sidebar { width: 248px; flex-basis: 248px; }
 }
 @media (max-width: 900px) {
-  .dsc-header-newchat { display: inline-flex; }
   .dsc-sidebar {
     position: fixed;
-    inset: 0 auto 0 0;
-    z-index: 20;
+    inset: var(--dsh-frame-chrome-top, 0px) auto 0 0;
+    z-index: 12;
     width: min(300px, 86vw);
     flex-basis: auto;
     box-shadow: var(--dsc-shadow);
-    transform: translateX(-102%);
-    transition: transform 0.22s ease;
+    transform: translateX(-101%);
+    transition: transform var(--ds-transition-duration-slow, 0.3s) var(--dsc-ease);
     display: flex;
   }
   .dsc-sidebar.is-open { transform: translateX(0); }
   .dsc-sidebar:not(.is-open) { display: flex; }
   .dsc-sidebar-backdrop {
     position: fixed;
-    inset: 0;
-    z-index: 19;
+    inset: var(--dsh-frame-chrome-top, 0px) 0 0;
+    z-index: 11;
     border: 0;
     padding: 0;
-    background: rgba(15, 23, 42, 0.35);
+    background: var(--dsw-alias-bg-mask-1, color-mix(in srgb, #0b0f19 38%, transparent));
     backdrop-filter: blur(1px);
   }
-  .dsc-header { padding: 0 14px; }
-  .dsc-thread { padding: 22px 16px 10px; }
-  .dsc-composer-wrap { padding: 6px 14px 12px; }
+  .dsc-header { padding: 0 10px 0 12px; }
+  .dsc-thread { padding: 20px 14px 8px; }
+  .dsc-composer-wrap { padding: 6px 12px 10px; }
   .dsc-msg-user { padding-left: 6%; }
   .dsc-msg-assistant { padding-right: 0; }
+  .dsc-handoff-label { display: none; }
+  .dsc-handoff-button { padding: 0 9px; }
 }
 @media (min-width: 901px) {
   .dsc-sidebar-backdrop { display: none; }
 }
-@media (max-width: 680px) {
-  .dsc-agent-label-full { display: none; }
-  .dsc-agent-label-short { display: inline; }
-  .dsc-agent-button { padding: 0 9px; }
-  .dsc-model-pill { max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 760px) {
+  .dsc-modeswitch-label { display: none; }
+  .dsc-modeswitch-item { padding: 0 11px; }
   .dsc-suggestions { grid-template-columns: 1fr; }
   .dsc-source-list { grid-template-columns: 1fr; }
-  .dsc-mode-button span { display: none; }
-  .dsc-mode-button { width: 32px; padding: 0; justify-content: center; }
-  .dsc-auth-pill span { display: none; }
-  .dsc-auth-pill { width: 28px; padding: 0; justify-content: center; }
-  .dsc-empty { padding-top: 6vh; }
+  .dsc-empty { padding-top: 8vh; }
 }
-@media (max-width: 480px) {
-  .dsc-header-title { display: none; }
-  .dsc-header-left { flex: none; }
-  .dsc-header-right { flex: 1; justify-content: flex-end; }
+@media (max-width: 620px) {
+  .dsc-mode-label { display: none; }
+  .dsc-mode-button { width: 30px; padding: 0; justify-content: center; }
   .dsc-model-pill { display: none; }
+  .dsc-header-title { display: none; }
   .dsc-thread { padding: 16px 12px 8px; }
-  .dsc-composer-wrap { padding: 4px 10px 10px; }
-  .dsc-user-bubble { font-size: 14px; }
-  .dsc-md { font-size: 14.2px; }
+  .dsc-composer-wrap { padding: 4px 10px 8px; }
+  .dsc-user-bubble { font-size: 14.2px; }
+  .dsc-md { font-size: 14.4px; }
   .dsc-modal-backdrop { padding: 10px; }
   .dsc-modal { max-height: 94vh; border-radius: 14px; }
-  .dsc-modal-body { padding: 14px 14px 18px; }
+  .dsc-modal-body { padding: 14px 14px 16px; }
   .dsc-modal-head { padding: 14px 14px 12px; }
+  .dsc-modal-foot { padding: 10px 14px 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dsc-root *, .dsc-root *::before, .dsc-root *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  .dsc-root *, .dsc-root *::before, .dsc-root *::after,
+  .dsc-modeswitch, .dsc-modeswitch * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 `
 
@@ -4101,18 +4564,21 @@ function apply(ctx) {
   setClientContext(ctx)
   ctx.effect(() => ctx.locale.register(CHAT_NS, { zh: DICT_ZH, en: DICT_EN }), 'deepseek-chat-mode: dictionaries')
   ctx.effect(injectChatStyles, 'deepseek-chat-mode: styles')
+  // The shared Chat | Agent navigation: a root-scoped entry in the frame-wide
+  // overlay, so it lives in the shell chrome and stays reachable from both
+  // modes instead of being a floating control inside the Chat view.
+  ctx.slots.inject('shell.overlay', () => ctx.slots.register({
+    name: 'shell.overlay',
+    id: 'deepseek-chat-mode:mode-switch',
+    order: 1,
+    locale: CHAT_NS,
+  }, ModeSwitch))
   ctx.slots.inject('shell.overlay', () => ctx.slots.register({
     name: 'shell.overlay',
     id: 'deepseek-chat-mode',
     order: 5,
     locale: CHAT_NS,
   }, ChatRoot))
-  ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({
-    name: 'sidebar.footer.action',
-    id: 'deepseek-chat-mode',
-    order: 5,
-    locale: CHAT_NS,
-  }, ChatToggle))
   if (chatStore.state.open) void ensureBoot()
 }
 
@@ -4121,14 +4587,17 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     chatStore,
     chatActions,
     ChatRoot,
-    ChatToggle,
+    ModeSwitch,
     SettingsDialog,
+    HandoffDialog,
     AssistantMessage,
     Composer,
     Markdown,
     parseMarkdown,
     renderBlock,
     renderInline,
+    thinkingSeconds,
+    thinkingDurationMs,
   })
 }
 
