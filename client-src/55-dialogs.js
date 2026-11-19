@@ -323,6 +323,377 @@ function HandoffDialog() {
   )
 }
 
+/**
+ * One floating menu for conversation and folder actions. It is anchored at the
+ * pointer (right-click or the row's "···"), clamped into the window, and closes
+ * on an outside click or Escape.
+ */
+function ContextMenu() {
+  const t = useT()
+  const menu = useChat(state => state.menu)
+  const conversations = useChat(state => state.conversations)
+  const folders = useChat(state => state.folders)
+  const ref = React.useRef(null)
+  const [position, setPosition] = React.useState(null)
+  React.useLayoutEffect(() => {
+    if (menu === null) {
+      setPosition(null)
+      return
+    }
+    const rect = ref.current?.getBoundingClientRect()
+    const width = rect?.width ?? 210
+    const height = rect?.height ?? 260
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 0
+    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 0
+    setPosition({
+      left: Math.max(8, Math.min(menu.x, viewportWidth - width - 8)),
+      top: Math.max(8, Math.min(menu.y, viewportHeight - height - 8)),
+    })
+  }, [menu])
+  if (menu === null) return null
+  let items = []
+  if (menu.kind === 'conversation') {
+    const conversation = conversations.find(item => item.id === menu.id)
+    if (conversation === undefined) return null
+    items = [
+      {
+        key: 'rename',
+        icon: 'pencil',
+        label: t('rename'),
+        onSelect: () => {
+          chatStore.set({ menu: null, renamingId: conversation.id })
+        },
+      },
+      {
+        key: 'pin',
+        icon: 'pin',
+        label: conversation.pinned ? t('unpin') : t('pin'),
+        onSelect: () => { void chatActions.setPinned(conversation.id, conversation.pinned !== true) },
+      },
+    ]
+    if (folders.length > 0) {
+      items.push({
+        key: 'move',
+        icon: 'folder',
+        label: t('moveToFolder'),
+        onSelect: () => chatActions.openMoveChat(conversation.id),
+      })
+    }
+    if (conversation.folderId !== null) {
+      items.push({
+        key: 'unfile',
+        icon: 'folderMinus',
+        label: t('moveOutOfFolder'),
+        onSelect: () => { void chatActions.moveConversationToFolder(conversation.id, null) },
+      })
+    }
+    items.push(
+      {
+        key: 'archive',
+        icon: 'archive',
+        label: conversation.archived ? t('unarchive') : t('archive'),
+        onSelect: () => { void chatActions.setArchived(conversation.id, conversation.archived !== true) },
+      },
+      null,
+      {
+        key: 'delete',
+        icon: 'trash',
+        label: t('delete'),
+        danger: true,
+        onSelect: () => {
+          chatActions.closeMenu()
+          chatActions.requestDeleteConversation(conversation.id, conversation.title)
+        },
+      },
+    )
+  } else {
+    const folder = folders.find(item => item.id === menu.id)
+    if (folder === undefined) return null
+    items = [
+      {
+        key: 'rename',
+        icon: 'pencil',
+        label: t('renameFolder'),
+        onSelect: () => chatActions.requestFolderPrompt('rename', folder),
+      },
+      {
+        key: 'add',
+        icon: 'plus',
+        label: t('addChatsToFolder'),
+        onSelect: () => chatActions.openFolderAdd(folder.id),
+      },
+      null,
+      {
+        key: 'delete',
+        icon: 'trash',
+        label: t('deleteFolder'),
+        danger: true,
+        onSelect: () => chatActions.requestDeleteFolder(folder),
+      },
+    ]
+  }
+  const moveFocus = (event) => {
+    const buttons = [...(ref.current?.querySelectorAll('[role="menuitem"]') ?? [])]
+    if (buttons.length === 0) return
+    const current = buttons.indexOf(document.activeElement)
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      buttons[(current + 1 + buttons.length) % buttons.length].focus()
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      buttons[(current - 1 + buttons.length) % buttons.length].focus()
+    } else if (event.key === 'Escape') {
+      event.preventDefault()
+      event.stopPropagation()
+      chatActions.closeMenu()
+    }
+  }
+  return h(React.Fragment, null,
+    h('div', {
+      className: 'dsc-menu-backdrop',
+      onMouseDown: () => chatActions.closeMenu(),
+      onContextMenu: (event) => {
+        event.preventDefault()
+        chatActions.closeMenu()
+      },
+    }),
+    h('div', {
+      ref,
+      className: 'dsc-menu',
+      role: 'menu',
+      'aria-label': t('moreActions'),
+      style: position === null ? { left: `${menu.x}px`, top: `${menu.y}px` } : position,
+      onKeyDown: moveFocus,
+      onContextMenu: (event) => event.preventDefault(),
+    },
+      items.map((item, index) => (item === null
+        ? h('div', { key: `separator-${index}`, className: 'dsc-menu-separator', role: 'separator' })
+        : h('button', {
+            key: item.key,
+            type: 'button',
+            role: 'menuitem',
+            className: cx('dsc-menu-item', item.danger && 'is-danger'),
+            autoFocus: index === 0,
+            onClick: item.onSelect,
+          },
+            h(Icon, { name: item.icon, size: 15 }),
+            h('span', null, item.label),
+          ))),
+    ),
+  )
+}
+
+/** Create or rename a folder. Enter submits, Escape closes via the shell. */
+function FolderPromptDialog() {
+  const t = useT()
+  const prompt = useChat(state => state.folderPrompt)
+  const inputRef = React.useRef(null)
+  React.useEffect(() => {
+    if (prompt === null) return undefined
+    const timer = setTimeout(() => inputRef.current?.select(), 30)
+    return () => clearTimeout(timer)
+  }, [prompt?.mode, prompt?.id])
+  if (prompt === null) return null
+  const title = prompt.mode === 'rename' ? t('folderRenameTitle') : t('folderCreateTitle')
+  return h('div', {
+    className: 'dsc-modal-backdrop',
+    onMouseDown: (event) => { if (event.target === event.currentTarget) chatActions.closeFolderPrompt() },
+  },
+    h('form', {
+      className: 'dsc-confirm',
+      role: 'dialog',
+      'aria-modal': 'true',
+      'aria-label': title,
+      onSubmit: (event) => {
+        event.preventDefault()
+        void chatActions.submitFolderPrompt()
+      },
+    },
+      h('h2', null, title),
+      h('input', {
+        ref: inputRef,
+        className: 'dsc-input dsc-folder-name',
+        value: prompt.draft,
+        maxLength: 60,
+        placeholder: t('folderNamePlaceholder'),
+        'aria-label': t('folderNamePlaceholder'),
+        onChange: (event) => chatActions.updateFolderPrompt(event.target.value),
+      }),
+      h('div', { className: 'dsc-confirm-actions' },
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button', onClick: () => chatActions.closeFolderPrompt(),
+        }, t('cancel')),
+        h('button', {
+          type: 'submit', className: 'dsc-primary-button',
+          disabled: prompt.busy || prompt.draft.trim() === '',
+        }, prompt.mode === 'rename' ? t('save') : t('create')),
+      ),
+    ),
+  )
+}
+
+/** Pick a folder (or the unfiled area) for one conversation. */
+function MoveChatDialog() {
+  const t = useT()
+  const move = useChat(state => state.moveChat)
+  const folders = useChat(state => state.folders)
+  if (move === null) return null
+  const options = [{ id: null, name: t('unfiled') }, ...folders.map(folder => ({ id: folder.id, name: folder.name }))]
+  return h('div', {
+    className: 'dsc-modal-backdrop',
+    onMouseDown: (event) => { if (event.target === event.currentTarget) chatActions.closeMoveChat() },
+  },
+    h('div', { className: 'dsc-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('moveChatTitle') },
+      h('header', { className: 'dsc-modal-head' },
+        h('div', null,
+          h('h2', null, t('moveChatTitle')),
+          h('p', { className: 'dsc-modal-sub' }, t('moveChatHint')),
+        ),
+        h('button', {
+          type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
+          autoFocus: true, onClick: () => chatActions.closeMoveChat(),
+        }, h(Icon, { name: 'close', size: 18 })),
+      ),
+      h('div', { className: 'dsc-modal-body' },
+        h('div', { className: 'dsc-dialog-list', role: 'radiogroup', 'aria-label': t('moveChatTitle') },
+          options.map(option => h('button', {
+            key: option.id ?? 'unfiled',
+            type: 'button',
+            role: 'radio',
+            'aria-checked': move.folderId === option.id,
+            className: cx('dsc-choice', move.folderId === option.id && 'is-selected'),
+            onClick: () => chatActions.setMoveChatFolder(option.id ?? ''),
+          },
+            h('span', { className: 'dsc-choice-icon' }, h(Icon, { name: option.id === null ? 'folderMinus' : 'folder', size: 16 })),
+            h('span', { className: 'dsc-choice-label' }, option.name),
+            move.folderId === option.id ? h(Icon, { name: 'check', size: 15 }) : null,
+          )),
+        ),
+      ),
+      h('footer', { className: 'dsc-modal-foot' },
+        h('div', { className: 'dsc-modal-foot-note' }),
+        h('button', { type: 'button', className: 'dsc-secondary-button', onClick: () => chatActions.closeMoveChat() }, t('cancel')),
+        h('button', {
+          type: 'button', className: 'dsc-primary-button', disabled: move.busy,
+          onClick: () => { void chatActions.submitMoveChat() },
+        }, t('moveChatConfirm')),
+      ),
+    ),
+  )
+}
+
+/** Move one or more conversations into a folder from the folder's own menu. */
+function FolderAddDialog() {
+  const t = useT()
+  const add = useChat(state => state.folderAdd)
+  const conversations = useChat(state => state.conversations)
+  if (add === null) return null
+  const candidates = conversations
+    .filter(conversation => conversation.archived !== true && conversation.folderId !== add.folderId)
+    .sort(byActivity)
+  return h('div', {
+    className: 'dsc-modal-backdrop',
+    onMouseDown: (event) => { if (event.target === event.currentTarget) chatActions.closeFolderAdd() },
+  },
+    h('div', { className: 'dsc-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('folderAddTitle', { name: add.name }) },
+      h('header', { className: 'dsc-modal-head' },
+        h('div', null,
+          h('h2', null, t('folderAddTitle', { name: add.name })),
+          h('p', { className: 'dsc-modal-sub' }, t('folderAddHint')),
+        ),
+        h('button', {
+          type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
+          autoFocus: true, onClick: () => chatActions.closeFolderAdd(),
+        }, h(Icon, { name: 'close', size: 18 })),
+      ),
+      h('div', { className: 'dsc-modal-body' },
+        candidates.length === 0
+          ? h('div', { className: 'dsc-list-empty' }, t('folderAddEmpty'))
+          : h('div', { className: 'dsc-dialog-list' },
+              candidates.map(conversation => {
+                const selected = add.selected.includes(conversation.id)
+                return h('button', {
+                  key: conversation.id,
+                  type: 'button',
+                  role: 'checkbox',
+                  'aria-checked': selected,
+                  className: cx('dsc-choice', selected && 'is-selected'),
+                  onClick: () => chatActions.toggleFolderAddSelection(conversation.id),
+                },
+                  h('span', { className: 'dsc-choice-check' }, selected ? h(Icon, { name: 'check', size: 14 }) : null),
+                  h('span', { className: 'dsc-choice-label' }, conversation.title || t('newChatTitle')),
+                  conversation.pinned ? h('span', { className: 'dsc-choice-hint' }, h(Icon, { name: 'pin', size: 12 })) : null,
+                )
+              }),
+            ),
+      ),
+      h('footer', { className: 'dsc-modal-foot' },
+        h('div', { className: 'dsc-modal-foot-note' }, add.selected.length > 0 ? String(add.selected.length) : ''),
+        h('button', { type: 'button', className: 'dsc-secondary-button', onClick: () => chatActions.closeFolderAdd() }, t('cancel')),
+        h('button', {
+          type: 'button', className: 'dsc-primary-button',
+          disabled: add.busy || add.selected.length === 0,
+          onClick: () => { void chatActions.submitFolderAdd() },
+        }, t('folderAddConfirm')),
+      ),
+    ),
+  )
+}
+
+/** Archived chats: the only place they are listed, with restore and delete. */
+function ArchiveDialog() {
+  const t = useT()
+  const open = useChat(state => state.archiveOpen)
+  const conversations = useChat(state => state.conversations)
+  const folders = useChat(state => state.folders)
+  if (!open) return null
+  const archived = conversations
+    .filter(conversation => conversation.archived === true)
+    .sort((left, right) => (right.archivedAt ?? right.updatedAt) - (left.archivedAt ?? left.updatedAt))
+  const folderName = folderId => folders.find(folder => folder.id === folderId)?.name ?? ''
+  return h('div', {
+    className: 'dsc-modal-backdrop',
+    onMouseDown: (event) => { if (event.target === event.currentTarget) chatActions.closeArchive() },
+  },
+    h('div', { className: 'dsc-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('archiveTitle') },
+      h('header', { className: 'dsc-modal-head' },
+        h('div', null,
+          h('h2', null, t('archiveTitle')),
+          h('p', { className: 'dsc-modal-sub' }, t('archiveSubtitle')),
+        ),
+        h('button', {
+          type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
+          autoFocus: true, onClick: () => chatActions.closeArchive(),
+        }, h(Icon, { name: 'close', size: 18 })),
+      ),
+      h('div', { className: 'dsc-modal-body' },
+        archived.length === 0
+          ? h('div', { className: 'dsc-list-empty' }, t('archiveEmpty'))
+          : h('div', { className: 'dsc-archive-list' },
+              archived.map(conversation => h('div', { key: conversation.id, className: 'dsc-archive-item' },
+                h('div', { className: 'dsc-archive-item-main' },
+                  h('span', { className: 'dsc-archive-item-title' }, conversation.title || t('newChatTitle')),
+                  h('span', { className: 'dsc-archive-item-meta' },
+                    `${relativeTime(conversation.archivedAt ?? conversation.updatedAt, t)} · ${t('messageCount', { count: conversation.messageCount ?? 0 })}${conversation.folderId === null ? '' : ` · ${folderName(conversation.folderId)}`}`,
+                  ),
+                ),
+                h('div', { className: 'dsc-archive-actions' },
+                  h('button', {
+                    type: 'button', className: 'dsc-secondary-button is-small-compact',
+                    onClick: () => { void chatActions.setArchived(conversation.id, false) },
+                  }, t('restore')),
+                  h('button', {
+                    type: 'button', className: 'dsc-icon-button is-small is-danger', title: t('delete'), 'aria-label': t('delete'),
+                    onClick: () => chatActions.requestDeleteConversation(conversation.id, conversation.title),
+                  }, h(Icon, { name: 'trash', size: 14 })),
+                ),
+              )),
+            ),
+      ),
+    ),
+  )
+}
+
 function ConfirmDialog() {
   const t = useT()
   const confirm = useChat(state => state.confirm)

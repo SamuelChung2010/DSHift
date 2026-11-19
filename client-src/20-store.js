@@ -116,6 +116,7 @@ const chatStore = {
     auth: null,
     settings: { authMode: 'auto', thinking: false, search: false, systemPrompt: '' },
     conversations: [],
+    folders: [],
     workspaces: [],
     limits: { maxFiles: MAX_FILES, maxUploadBytes: MAX_UPLOAD_MB, maxUserDataBytes: MAX_USER_DATA_MB * 1024 * 1024 },
     activeId: typeof stored.activeId === 'string' ? stored.activeId : null,
@@ -147,6 +148,21 @@ const chatStore = {
     renamingId: null,
     focusRequest: 0,
     filePickRequest: 0,
+    // ---- conversation organization (sidebar) ----
+    // One floating menu at a time, anchored at the pointer. `kind` selects the
+    // item list; `id` is the conversation or folder it acts on.
+    menu: null,
+    // Create/rename folder prompt, single-chat folder picker, multi-chat folder
+    // picker and the archive manager are separate surfaces.
+    folderPrompt: null,
+    moveChat: null,
+    folderAdd: null,
+    archiveOpen: false,
+    // Inline editor for one historical user message.
+    editingId: null,
+    editDraft: '',
+    // Message to bring into view after loading or switching a version.
+    focusMessage: null,
   },
   listeners: new Set(),
   subscribe(listener) {
@@ -320,12 +336,142 @@ function conversationSummary(conversation) {
     titleAuto: conversation.titleAuto === true,
     createdAt: conversation.createdAt,
     updatedAt: conversation.updatedAt,
+    pinned: conversation.pinned === true,
+    pinnedAt: conversation.pinnedAt ?? null,
+    archived: conversation.archived === true,
+    archivedAt: conversation.archivedAt ?? null,
+    folderId: conversation.folderId ?? null,
     messageCount: Array.isArray(conversation.messages) ? conversation.messages.length : (conversation.messageCount ?? 0),
   }
 }
 
 function sortConversations(list) {
   return [...list].sort((left, right) => (right.updatedAt ?? 0) - (left.updatedAt ?? 0))
+}
+
+/** Sidebar ordering: most recently active first, with a stable id tie-break. */
+function byActivity(left, right) {
+  const delta = (right.updatedAt ?? 0) - (left.updatedAt ?? 0)
+  if (delta !== 0) return delta
+  return String(left.id).localeCompare(String(right.id))
+}
+
+/**
+ * Group the summaries for the sidebar: pinned chats first (always, even when
+ * they also belong to a folder), then one bucket per folder, then the unfiled
+ * chats. Archived chats are left to the archive manager. Every bucket keeps a
+ * deterministic order, so a refresh never reshuffles equal timestamps.
+ */
+function organizeSidebar(conversations, folders) {
+  const visible = conversations.filter(conversation => conversation.archived !== true)
+  const pinned = visible.filter(conversation => conversation.pinned === true).sort(byActivity)
+  const buckets = new Map(folders.map(folder => [folder.id, []]))
+  const loose = []
+  for (const conversation of visible) {
+    if (conversation.pinned === true) continue
+    const bucket = conversation.folderId !== null ? buckets.get(conversation.folderId) : undefined
+    if (bucket === undefined) loose.push(conversation)
+    else bucket.push(conversation)
+  }
+  loose.sort(byActivity)
+  for (const bucket of buckets.values()) bucket.sort(byActivity)
+  return {
+    pinned,
+    folders: folders.map(folder => ({ folder, conversations: buckets.get(folder.id) ?? [] })),
+    loose,
+    archivedCount: conversations.filter(conversation => conversation.archived === true).length,
+  }
+}
+
+/** Replace the sidebar snapshot from a Host organization response. */
+function applyOrganization(data) {
+  const patch = {}
+  if (Array.isArray(data?.summaries)) patch.conversations = sortConversations(data.summaries)
+  if (Array.isArray(data?.folders)) patch.folders = data.folders
+  if (Object.keys(patch).length > 0) chatStore.set(patch)
+}
+
+/** Visible answer text of one assistant reply. */
+function messageBodyText(message) {
+  return (message?.blocks ?? [])
+    .filter(block => block?.type === 'text' && typeof block.text === 'string')
+    .map(block => block.text)
+    .join('')
+}
+
+/**
+ * Whether an answer can be resumed from its own visible prefix. Refused and
+ * tool-terminated answers cannot be continued; an empty answer has nothing to
+ * continue from either.
+ */
+function canContinueReply(message) {
+  if (!message || message.role !== 'assistant') return false
+  if (message.stopReason === 'refusal' || message.prefix === false) return false
+  const incomplete = message.status === 'stopped' || message.status === 'error' || message.stopReason === 'max_tokens'
+  return incomplete && messageBodyText(message).trim() !== ''
+}
+
+/** Files as the Host stores them: preview URLs never leave this browser. */
+function hostFiles(files) {
+  return (Array.isArray(files) ? files : []).flatMap((file) => {
+    if (!file || typeof file.fileId !== 'string' || file.fileId === '') return []
+    return [{
+      id: file.id,
+      fileId: file.fileId,
+      name: file.name,
+      size: file.size,
+      mimeType: file.mimeType,
+      isImage: file.isImage === true,
+    }]
+  })
+}
+
+/** Re-attach local image previews to the authoritative file metadata. */
+function withFilePreviews(messages, previousMessages) {
+  const previews = new Map()
+  for (const message of Array.isArray(previousMessages) ? previousMessages : []) {
+    for (const file of message?.files ?? []) {
+      if (file?.fileId && file.previewUrl) previews.set(file.fileId, file.previewUrl)
+    }
+  }
+  if (previews.size === 0) return messages
+  return messages.map((message) => {
+    if (!Array.isArray(message?.files) || message.files.length === 0) return message
+    let changed = false
+    const files = message.files.map((file) => {
+      const previewUrl = file?.fileId ? previews.get(file.fileId) : undefined
+      if (!previewUrl || file.previewUrl === previewUrl) return file
+      changed = true
+      return { ...file, previewUrl }
+    })
+    return changed ? { ...message, files } : message
+  })
+}
+
+/** Locale tag for one stream request. */
+function streamLocale() {
+  return appCtx?.locale.getSnapshot().active === 'zh' ? 'zh' : 'en'
+}
+
+function currentModelId() {
+  return chatStore.state.bootData?.model?.id ?? 'deepseek-flash'
+}
+
+/** A fresh assistant placeholder for an optimistic branch. */
+function makeReplyPlaceholder(settings) {
+  const now = Date.now()
+  return {
+    id: uid(),
+    role: 'assistant',
+    createdAt: now,
+    updatedAt: now,
+    model: currentModelId(),
+    thinking: settings.thinking === true,
+    search: settings.search === true,
+    status: 'streaming',
+    blocks: [],
+    prefix: true,
+  }
 }
 
 /**
@@ -479,6 +625,7 @@ async function ensureBoot(force = false) {
         auth: data.auth,
         settings: data.settings,
         conversations: data.conversations ?? [],
+        folders: Array.isArray(data.folders) ? data.folders : [],
         workspaces: Array.isArray(data.workspaces) ? data.workspaces : [],
         limits: normalizeLimits(data.limits),
       })
@@ -508,7 +655,7 @@ async function ensureBoot(force = false) {
 
 let conversationLoadSequence = 0
 
-async function loadConversation(id, { quiet = false } = {}) {
+async function loadConversation(id, { quiet = false, focusMessageId = '' } = {}) {
   if (chatStore.state.streaming !== null) {
     if (chatStore.state.streaming.conversationId !== id) {
       chatStore.toast(tr('waitStreaming'), 'warning')
@@ -522,16 +669,21 @@ async function loadConversation(id, { quiet = false } = {}) {
   }
   clearComposer()
   const sequence = ++conversationLoadSequence
-  chatStore.set({ activeId: id, conversationLoading: true, conversationError: '' })
+  chatStore.set({ activeId: id, conversationLoading: true, conversationError: '', editingId: null, editDraft: '' })
   writeStored({ activeId: id })
   try {
-    const data = await hostJson('/api/deepseek-chat/conversation', { action: 'get', id })
+    const body = { action: 'get', id }
+    if (typeof focusMessageId === 'string' && focusMessageId !== '') body.focusMessageId = focusMessageId
+    const data = await hostJson('/api/deepseek-chat/conversation', body)
     if (sequence !== conversationLoadSequence) return
-    chatStore.set({
+    const patch = {
       messages: Array.isArray(data.conversation?.messages) ? data.conversation.messages : [],
       conversationLoading: false,
       conversationError: '',
-    })
+      focusMessage: body.focusMessageId ? { id: body.focusMessageId, at: Date.now() } : null,
+    }
+    if (Array.isArray(data.folders)) patch.folders = data.folders
+    chatStore.set(patch)
   } catch (error) {
     if (sequence !== conversationLoadSequence) return
     const message = error instanceof Error ? error.message : String(error)
@@ -599,6 +751,10 @@ async function newChat() {
     messages: [],
     conversationError: '',
     renamingId: null,
+    editingId: null,
+    editDraft: '',
+    focusMessage: null,
+    menu: null,
     greetingIndex: pickGreetingIndex(chatStore.state.greetingIndex),
     focusRequest: chatStore.state.focusRequest + 1,
   })
@@ -608,11 +764,18 @@ async function newChat() {
 async function createConversation() {
   const data = await hostJson('/api/deepseek-chat/conversation', { action: 'create' })
   const summary = conversationSummary(data.conversation)
+  const conversations = Array.isArray(data.summaries)
+    ? sortConversations(data.summaries)
+    : sortConversations([summary, ...chatStore.state.conversations])
   chatStore.set({
     activeId: data.conversation.id,
-    conversations: sortConversations([summary, ...chatStore.state.conversations]),
+    conversations,
+    ...(Array.isArray(data.folders) ? { folders: data.folders } : {}),
     messages: [],
     conversationError: '',
+    editingId: null,
+    editDraft: '',
+    focusMessage: null,
   })
   writeStored({ activeId: data.conversation.id })
   return data.conversation.id
@@ -621,7 +784,8 @@ async function createConversation() {
 async function renameConversation(id, title) {
   try {
     const data = await hostJson('/api/deepseek-chat/conversation', { action: 'rename', id, title })
-    upsertSummary(conversationSummary(data.conversation))
+    if (Array.isArray(data.summaries)) applyOrganization(data)
+    else upsertSummary(conversationSummary(data.conversation))
     chatStore.set({ renamingId: null })
   } catch (error) {
     chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
@@ -640,8 +804,9 @@ function requestDeleteConversation(id, title) {
         if (chatStore.state.streaming?.conversationId === id) stopStreaming()
         try {
           const data = await hostJson('/api/deepseek-chat/conversation', { action: 'delete', id })
-          chatStore.set({
-            conversations: sortConversations(data.summaries ?? chatStore.state.conversations.filter(item => item.id !== id)),
+          applyOrganization({
+            summaries: data.summaries ?? chatStore.state.conversations.filter(item => item.id !== id),
+            folders: data.folders,
           })
           if (chatStore.state.activeId === id) {
             clearComposer()
@@ -649,6 +814,9 @@ function requestDeleteConversation(id, title) {
               activeId: null,
               messages: [],
               conversationError: '',
+              editingId: null,
+              editDraft: '',
+              focusMessage: null,
               greetingIndex: pickGreetingIndex(chatStore.state.greetingIndex),
             })
             writeStored({ activeId: null })
@@ -660,6 +828,299 @@ function requestDeleteConversation(id, title) {
     },
   })
 }
+
+// ---------------------------------------------------------------------------
+// Conversation organization: pin, archive, folders and the floating menu.
+// ---------------------------------------------------------------------------
+
+function openConversationMenu(conversationId, x, y) {
+  chatStore.set({ menu: { kind: 'conversation', id: conversationId, x, y } })
+}
+
+function openFolderMenu(folderId, x, y) {
+  chatStore.set({ menu: { kind: 'folder', id: folderId, x, y } })
+}
+
+function closeMenu() {
+  if (chatStore.state.menu !== null) chatStore.set({ menu: null })
+}
+
+async function setPinned(id, pinned) {
+  closeMenu()
+  try {
+    const data = await hostJson('/api/deepseek-chat/conversation', { action: 'pin', id, pinned })
+    applyOrganization(data)
+  } catch (error) {
+    chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+
+async function setArchived(id, archived) {
+  closeMenu()
+  try {
+    const data = await hostJson('/api/deepseek-chat/conversation', { action: 'archive', id, archived })
+    applyOrganization(data)
+    chatStore.toast(archived ? tr('archivedToast') : tr('unarchivedToast'), 'success')
+  } catch (error) {
+    chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+
+function requestFolderPrompt(mode, folder = null) {
+  closeMenu()
+  chatStore.set({
+    folderPrompt: {
+      mode: mode === 'rename' ? 'rename' : 'create',
+      id: folder?.id ?? null,
+      draft: mode === 'rename' ? (folder?.name ?? '') : '',
+      busy: false,
+    },
+  })
+}
+
+function updateFolderPrompt(draft) {
+  const prompt = chatStore.state.folderPrompt
+  if (prompt === null) return
+  chatStore.set({ folderPrompt: { ...prompt, draft } })
+}
+
+function closeFolderPrompt() {
+  if (chatStore.state.folderPrompt?.busy === true) return
+  chatStore.set({ folderPrompt: null })
+}
+
+async function submitFolderPrompt() {
+  const prompt = chatStore.state.folderPrompt
+  if (prompt === null || prompt.busy) return
+  const name = typeof prompt.draft === 'string' ? prompt.draft.trim() : ''
+  if (name === '') return
+  chatStore.set({ folderPrompt: { ...prompt, busy: true } })
+  try {
+    const data = prompt.mode === 'rename'
+      ? await hostJson('/api/deepseek-chat/conversation', { action: 'folder.rename', id: prompt.id, name })
+      : await hostJson('/api/deepseek-chat/conversation', { action: 'folder.create', name })
+    applyOrganization(data)
+    chatStore.set({ folderPrompt: null })
+  } catch (error) {
+    const current = chatStore.state.folderPrompt
+    if (current !== null) chatStore.set({ folderPrompt: { ...current, busy: false } })
+    chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+
+async function toggleFolder(id) {
+  const folder = chatStore.state.folders.find(item => item.id === id)
+  if (folder === undefined) return
+  const collapsed = folder.collapsed !== true
+  chatStore.set({
+    folders: chatStore.state.folders.map(item => (item.id === id ? { ...item, collapsed } : item)),
+  })
+  try {
+    const data = await hostJson('/api/deepseek-chat/conversation', { action: 'folder.collapse', id, collapsed })
+    if (Array.isArray(data.folders)) chatStore.set({ folders: data.folders })
+  } catch (error) {
+    chatStore.set({
+      folders: chatStore.state.folders.map(item => (item.id === id ? { ...item, collapsed: !collapsed } : item)),
+    })
+    chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+
+function requestDeleteFolder(folder) {
+  closeMenu()
+  const count = chatStore.state.conversations.filter(item => item.folderId === folder.id).length
+  chatStore.set({
+    confirm: {
+      title: tr('deleteFolderTitle'),
+      message: tr('deleteFolderMessage', { name: folder.name, count }),
+      confirmLabel: tr('deleteConfirm'),
+      danger: true,
+      onConfirm: async () => {
+        try {
+          const data = await hostJson('/api/deepseek-chat/conversation', { action: 'folder.delete', id: folder.id })
+          applyOrganization(data)
+        } catch (error) {
+          chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+        }
+      },
+    },
+  })
+}
+
+function openMoveChat(conversationId) {
+  closeMenu()
+  const conversation = chatStore.state.conversations.find(item => item.id === conversationId)
+  if (conversation === undefined) return
+  chatStore.set({
+    moveChat: { conversationId, folderId: conversation.folderId ?? null, busy: false },
+  })
+}
+
+function setMoveChatFolder(folderId) {
+  const move = chatStore.state.moveChat
+  if (move === null) return
+  chatStore.set({ moveChat: { ...move, folderId: folderId === '' ? null : folderId } })
+}
+
+function closeMoveChat() {
+  if (chatStore.state.moveChat?.busy === true) return
+  chatStore.set({ moveChat: null })
+}
+
+/** One-click move used by the "remove from folder" menu item. */
+async function moveConversationToFolder(conversationId, folderId) {
+  closeMenu()
+  try {
+    const data = await hostJson('/api/deepseek-chat/conversation', {
+      action: 'move',
+      ids: [conversationId],
+      folderId: folderId ?? null,
+    })
+    applyOrganization(data)
+    chatStore.toast(tr('chatMoved'), 'success')
+  } catch (error) {
+    chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+
+async function submitMoveChat() {
+  const move = chatStore.state.moveChat
+  if (move === null || move.busy) return
+  chatStore.set({ moveChat: { ...move, busy: true } })
+  try {
+    const data = await hostJson('/api/deepseek-chat/conversation', {
+      action: 'move',
+      ids: [move.conversationId],
+      folderId: move.folderId,
+    })
+    applyOrganization(data)
+    chatStore.set({ moveChat: null })
+    chatStore.toast(tr('chatMoved'), 'success')
+  } catch (error) {
+    const current = chatStore.state.moveChat
+    if (current !== null) chatStore.set({ moveChat: { ...current, busy: false } })
+    chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+
+function openFolderAdd(folderId) {
+  closeMenu()
+  const folder = chatStore.state.folders.find(item => item.id === folderId)
+  if (folder === undefined) return
+  chatStore.set({ folderAdd: { folderId, name: folder.name, selected: [], busy: false } })
+}
+
+function toggleFolderAddSelection(conversationId) {
+  const add = chatStore.state.folderAdd
+  if (add === null) return
+  const selected = add.selected.includes(conversationId)
+    ? add.selected.filter(id => id !== conversationId)
+    : [...add.selected, conversationId]
+  chatStore.set({ folderAdd: { ...add, selected } })
+}
+
+function closeFolderAdd() {
+  if (chatStore.state.folderAdd?.busy === true) return
+  chatStore.set({ folderAdd: null })
+}
+
+async function submitFolderAdd() {
+  const add = chatStore.state.folderAdd
+  if (add === null || add.busy || add.selected.length === 0) return
+  chatStore.set({ folderAdd: { ...add, busy: true } })
+  try {
+    const data = await hostJson('/api/deepseek-chat/conversation', {
+      action: 'move',
+      ids: add.selected,
+      folderId: add.folderId,
+    })
+    applyOrganization(data)
+    const count = add.selected.length
+    chatStore.set({ folderAdd: null })
+    chatStore.toast(tr('chatsMoved', { count }), 'success')
+  } catch (error) {
+    const current = chatStore.state.folderAdd
+    if (current !== null) chatStore.set({ folderAdd: { ...current, busy: false } })
+    chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+
+function openArchive() {
+  closeMenu()
+  chatStore.set({ archiveOpen: true })
+}
+
+function closeArchive() {
+  chatStore.set({ archiveOpen: false })
+}
+
+function searchHistory(query) {
+  return hostJson('/api/deepseek-chat/conversation', { action: 'search', query })
+}
+
+/** Open a search hit, reopening the branch it lives on when necessary. */
+async function openSearchResult(result) {
+  if (result === null || typeof result !== 'object' || typeof result.id !== 'string') return
+  const target = typeof result.messageId === 'string' ? result.messageId : ''
+  if (result.id === chatStore.state.activeId) {
+    try {
+      const data = await hostJson('/api/deepseek-chat/conversation', {
+        action: 'get',
+        id: result.id,
+        ...(target === '' ? {} : { focusMessageId: target }),
+      })
+      if (Array.isArray(data.conversation?.messages)) {
+        chatStore.set({
+          messages: data.conversation.messages,
+          conversationLoading: false,
+          conversationError: '',
+          editingId: null,
+          editDraft: '',
+          focusMessage: target === '' ? null : { id: target, at: Date.now() },
+        })
+      }
+      if (Array.isArray(data.folders)) chatStore.set({ folders: data.folders })
+    } catch (error) {
+      chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+    }
+    return
+  }
+  await loadConversation(result.id, { focusMessageId: target })
+}
+
+/** Step one sibling version backward or forward and reopen that branch. */
+async function selectVersion(messageId, direction) {
+  const state = chatStore.state
+  if (state.activeId === null) return
+  if (state.streaming !== null || sendInFlight) {
+    chatStore.toast(tr('waitStreaming'), 'warning')
+    return
+  }
+  closeMenu()
+  try {
+    const data = await hostJson('/api/deepseek-chat/conversation', {
+      action: 'version',
+      id: state.activeId,
+      messageId,
+      direction: direction < 0 ? 'prev' : 'next',
+    })
+    if (Array.isArray(data.summaries)) applyOrganization(data)
+    const messages = data.conversation?.messages
+    if (Array.isArray(messages)) {
+      chatStore.set({
+        messages,
+        conversationError: '',
+        editingId: null,
+        editDraft: '',
+        focusMessage: { id: typeof data.selectedId === 'string' ? data.selectedId : messageId, at: Date.now() },
+      })
+    }
+  } catch (error) {
+    chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+
+
 
 let settingsSequence = 0
 let settingsChain = Promise.resolve()
@@ -1003,6 +1464,167 @@ function applyClientEvent(reply, event, indexes) {
   return next
 }
 
+/**
+ * Consume one NDJSON turn stream.
+ *
+ * `initialMessages` is the optimistic branch shown immediately; the Host's
+ * `start` frame replaces it with the authoritative active path (including new
+ * ids, version positions and file metadata). Events are folded into
+ * `assistant` and painted on the next animation frame.
+ *
+ * `restorePreStart` runs when the request failed or was cancelled before the
+ * Host acknowledged the turn: the caller decides whether that means putting the
+ * draft back in the composer (a fresh send) or restoring the previous branch
+ * (an edit or regeneration).
+ */
+async function runTurnStream({
+  conversationId, payload, assistant, initialMessages, userId = null, restorePreStart,
+}) {
+  const controller = new AbortController()
+  const holder = { controller, conversationId, assistantId: assistant.id, userId, startedAt: Date.now() }
+  chatStore.set({
+    messages: initialMessages,
+    streaming: holder,
+    stopping: false,
+    conversationError: '',
+  })
+  markSendInFlight(true)
+  let current = assistant
+  let started = false
+  let finished = false
+  const indexes = new Map()
+  let frame = 0
+  const flush = () => {
+    frame = 0
+    if (!finished) replaceAssistant(current)
+  }
+  const schedule = () => {
+    if (frame !== 0) return
+    frame = requestAnimationFrame(flush)
+  }
+  const finish = () => {
+    if (frame !== 0) {
+      cancelAnimationFrame(frame)
+      frame = 0
+    }
+    if (!finished) {
+      finished = true
+      replaceAssistant(current)
+    }
+    const streaming = chatStore.state.streaming
+    if (streaming !== null && (streaming.assistantId === current.id || streaming.assistantId === assistant.id)) {
+      chatStore.set({ streaming: null, stopping: false })
+    }
+  }
+  const restore = () => {
+    if (typeof restorePreStart === 'function') restorePreStart()
+    chatStore.set({ streaming: null, stopping: false })
+  }
+  const applyTitle = (title, titleAuto) => {
+    if (typeof title !== 'string' || title === '') return
+    const summary = chatStore.state.conversations.find(entry => entry.id === conversationId)
+    if (summary) upsertSummary({ ...summary, title, ...(titleAuto === undefined ? {} : { titleAuto }) })
+  }
+  try {
+    await streamChat(payload, {
+      signal: controller.signal,
+      onItem(item) {
+        if (item.type === 'start') {
+          started = true
+          const hostAssistantId = typeof item.assistantMessageId === 'string' && item.assistantMessageId !== ''
+            ? item.assistantMessageId
+            : current.id
+          current = { ...current, id: hostAssistantId }
+          let messages
+          if (Array.isArray(item.messages) && item.messages.length > 0) {
+            messages = withFilePreviews(item.messages, chatStore.state.messages)
+          } else {
+            // Older Host halves only send the ids; patch the optimistic branch.
+            const hostUserId = typeof item.userMessage?.id === 'string' ? item.userMessage.id : null
+            const hostFiles = Array.isArray(item.userMessage?.files) ? item.userMessage.files : null
+            messages = chatStore.state.messages.map((message) => {
+              if (message.id === assistant.id) return { ...message, id: hostAssistantId }
+              if (hostUserId !== null && message.id === userId) {
+                return { ...message, id: hostUserId, ...(hostFiles === null ? {} : { files: hostFiles }) }
+              }
+              return message
+            })
+          }
+          const streaming = chatStore.state.streaming
+          chatStore.set({
+            messages,
+            streaming: streaming === null ? null : {
+              ...streaming,
+              assistantId: hostAssistantId,
+              userId: typeof item.userMessageId === 'string' ? item.userMessageId : streaming.userId,
+            },
+          })
+          applyTitle(item.title)
+          return
+        }
+        if (item.type === 'event') {
+          current = applyClientEvent(current, item.event, indexes)
+          schedule()
+          return
+        }
+        if (item.type === 'title') {
+          applyTitle(item.title, false)
+          return
+        }
+        if (item.type === 'done') {
+          if (item.message) current = { ...item.message }
+          if (item.conversation) upsertSummary(item.conversation)
+          finish()
+          return
+        }
+        if (item.type === 'error') {
+          const info = friendlyError(item.error)
+          current = item.message
+            ? { ...item.message }
+            : { ...current, status: 'error', error: item.error ?? { message: info.text }, updatedAt: Date.now() }
+          finish()
+          chatStore.toast(info.text, 'error')
+          if (info.action === 'settings') chatStore.set({ settingsOpen: true })
+          return
+        }
+        if (item.type === 'aborted') {
+          current = item.message ? { ...item.message } : { ...current, status: 'stopped', updatedAt: Date.now() }
+          finish()
+        }
+      },
+    })
+    if (chatStore.state.streaming !== null) {
+      current = { ...current, status: 'stopped', updatedAt: Date.now() }
+      finish()
+    }
+  } catch (error) {
+    if (controller.signal.aborted) {
+      if (!started) {
+        restore()
+        return
+      }
+      current = { ...current, status: 'stopped', updatedAt: Date.now() }
+      finish()
+    } else {
+      const payloadInfo = error?.payload ?? { message: error instanceof Error ? error.message : String(error) }
+      const info = friendlyError(payloadInfo, payloadInfo.message)
+      if (!started) {
+        restore()
+        chatStore.toast(info.text, 'error')
+        if (info.action === 'settings') chatStore.set({ settingsOpen: true })
+        return
+      }
+      current = { ...current, status: 'error', error: payloadInfo, updatedAt: Date.now() }
+      finish()
+      chatStore.toast(info.text, 'error')
+      if (info.action === 'settings') chatStore.set({ settingsOpen: true })
+    }
+  } finally {
+    if (!finished) finish()
+    markSendInFlight(false)
+  }
+}
+
 async function sendMessage() {
   const state = chatStore.state
   if (state.streaming !== null) return
@@ -1061,185 +1683,193 @@ async function sendMessage() {
     })),
     createdAt: now,
   }
-  const reply = {
-    id: uid(),
-    role: 'assistant',
-    createdAt: now,
-    updatedAt: now,
-    model: chatStore.state.bootData?.model?.id ?? 'deepseek-flash',
-    thinking: state.settings.thinking,
-    search: state.settings.search,
-    status: 'streaming',
-    blocks: [],
-    prefix: true,
-  }
-  const controller = new AbortController()
-  const messages = [...chatStore.state.messages, userMessage, reply]
+  const reply = makeReplyPlaceholder(state.settings)
+  const previousMessages = chatStore.state.messages
+  const messages = [...previousMessages, userMessage, reply]
   chatStore.set({
-    messages,
-    conversationError: '',
     draft: '',
     attachments: [],
-    stopping: false,
-    streaming: {
-      conversationId,
-      assistantId: reply.id,
-      userId: userMessage.id,
-      controller,
-      startedAt: now,
-    },
+    editingId: null,
+    editDraft: '',
     focusRequest: chatStore.state.focusRequest + 1,
   })
   writeStored({ activeId: conversationId })
-
-  let current = reply
-  let userCurrent = userMessage
-  let started = false
-  const indexes = new Map()
-  let frame = 0
-  const flush = () => {
-    frame = 0
-    replaceAssistant(current)
-  }
-  const schedule = () => {
-    if (frame !== 0) return
-    frame = requestAnimationFrame(flush)
-  }
-  const finish = () => {
-    if (frame !== 0) {
-      cancelAnimationFrame(frame)
-      frame = 0
-    }
-    if (chatStore.state.streaming?.assistantId === current.id || chatStore.state.streaming?.userId === userCurrent.id) {
-      chatStore.set({ streaming: null, stopping: false })
-    }
-  }
-  try {
-    await streamChat({
+  await runTurnStream({
+    conversationId,
+    payload: {
       conversationId,
       text,
       files: userMessage.files,
       thinking: reply.thinking,
       search: reply.search,
-      locale: appCtx?.locale.getSnapshot().active === 'zh' ? 'zh' : 'en',
-    }, {
-      signal: controller.signal,
-      onItem(item) {
-        if (item.type === 'start') {
-          started = true
-          const hostUser = item.userMessage
-          const hostAssistantId = item.assistantMessageId
-          const previews = userCurrent.files.map(file => file.previewUrl || '')
-          const hostFiles = Array.isArray(hostUser.files)
-            ? hostUser.files.map((file, index) => ({ ...file, previewUrl: previews[index] || '' }))
-            : []
-          userCurrent = { ...hostUser, files: hostFiles }
-          current = { ...current, id: hostAssistantId }
-          if (typeof item.title === 'string' && item.title !== '') {
-            const summary = chatStore.state.conversations.find(entry => entry.id === conversationId)
-            if (summary) upsertSummary({ ...summary, title: item.title })
-          }
-          chatStore.set({
-            messages: chatStore.state.messages.map(message => {
-              if (message.id === userMessage.id) {
-                return { ...message, id: hostUser.id, createdAt: hostUser.createdAt, files: hostFiles }
-              }
-              if (message.id === reply.id) return { ...message, id: hostAssistantId }
-              return message
-            }),
-            streaming: chatStore.state.streaming === null
-              ? null
-              : { ...chatStore.state.streaming, assistantId: hostAssistantId, userId: hostUser.id },
-          })
-          return
-        }
-        if (item.type === 'event') {
-          current = applyClientEvent(current, item.event, indexes)
-          schedule()
-          return
-        }
-        if (item.type === 'title') {
-          if (typeof item.title === 'string' && item.title !== '') {
-            const conversation = chatStore.state.conversations.find(entry => entry.id === conversationId)
-            if (conversation) upsertSummary({ ...conversation, title: item.title, titleAuto: false })
-          }
-          return
-        }
-        if (item.type === 'done') {
-          if (item.message) current = { ...item.message }
-          replaceAssistant(current)
-          if (item.conversation) upsertSummary(item.conversation)
-          finish()
-          return
-        }
-        if (item.type === 'error') {
-          const info = friendlyError(item.error)
-          current = {
-            ...current,
-            status: 'error',
-            error: item.error ?? { message: info.text },
-            updatedAt: Date.now(),
-          }
-          replaceAssistant(current)
-          finish()
-          chatStore.toast(info.text, 'error')
-          if (info.action === 'settings') chatStore.set({ settingsOpen: true })
-          return
-        }
-        if (item.type === 'aborted') {
-          if (item.message) current = { ...item.message }
-          else current = { ...current, status: 'stopped', updatedAt: Date.now() }
-          replaceAssistant(current)
-          finish()
-        }
-      },
-    })
-    if (chatStore.state.streaming !== null) {
-      current = { ...current, status: 'stopped', updatedAt: Date.now() }
-      replaceAssistant(current)
-      finish()
-    }
-  } catch (error) {
-    if (controller.signal.aborted) {
-      if (!started) {
-        chatStore.set({
-          messages: chatStore.state.messages.filter(message => message.id !== userMessage.id && message.id !== reply.id),
-          draft: text,
-          attachments: sentAttachments,
-          streaming: null,
-          stopping: false,
-        })
-        return
-      }
-      current = { ...current, status: 'stopped', updatedAt: Date.now() }
-      replaceAssistant(current)
-    } else {
-      const payload = error?.payload ?? { message: error instanceof Error ? error.message : String(error) }
-      const info = friendlyError(payload, payload.message)
-      if (!started) {
-        // The Host never created the turn (auth, network, or a rejected
-        // request), so pull the optimistic bubbles back and return the text and
-        // uploaded files to the composer instead of losing them on reload.
-        chatStore.set({
-          messages: chatStore.state.messages.filter(message => message.id !== userMessage.id && message.id !== reply.id),
-          draft: text,
-          attachments: sentAttachments,
-          streaming: null,
-          stopping: false,
-        })
-        chatStore.toast(info.text, 'error')
-        if (info.action === 'settings') chatStore.set({ settingsOpen: true })
-        return
-      }
-      current = { ...current, status: 'error', error: payload, updatedAt: Date.now() }
-      replaceAssistant(current)
-      chatStore.toast(info.text, 'error')
-      if (info.action === 'settings') chatStore.set({ settingsOpen: true })
-    }
-    finish()
-  } finally {
-    markSendInFlight(false)
+      locale: streamLocale(),
+    },
+    assistant: reply,
+    initialMessages: messages,
+    userId: userMessage.id,
+    restorePreStart: () => {
+      // The Host never created the turn (auth, network or a rejected request):
+      // pull the optimistic bubbles back and return text and files to the
+      // composer instead of losing them.
+      chatStore.set({
+        messages: previousMessages,
+        draft: text,
+        attachments: sentAttachments,
+      })
+    },
+  })
+}
+
+/** Open the inline editor for one historical user message. */
+function beginEditMessage(message) {
+  if (chatStore.state.streaming !== null || sendInFlight) {
+    chatStore.toast(tr('waitStreaming'), 'warning')
+    return
   }
+  if (message?.role !== 'user') return
+  closeMenu()
+  chatStore.set({ editingId: message.id, editDraft: typeof message.content === 'string' ? message.content : '' })
+}
+
+function cancelEditMessage() {
+  chatStore.set({ editingId: null, editDraft: '' })
+}
+
+/**
+ * Save the edited question and resend it. The Host turns it into a sibling
+ * branch: everything before the question stays shared, the old answer subtree
+ * is preserved as a version, and only the new branch is sent to the model.
+ */
+async function saveEditedMessage() {
+  const state = chatStore.state
+  const id = state.editingId
+  if (id === null) return
+  if (state.streaming !== null || sendInFlight) {
+    chatStore.toast(tr('waitStreaming'), 'warning')
+    return
+  }
+  const message = state.messages.find(item => item.id === id)
+  if (message === undefined || message.role !== 'user' || state.activeId === null) {
+    chatStore.set({ editingId: null, editDraft: '' })
+    return
+  }
+  if (!state.auth?.ready) {
+    chatStore.set({ settingsOpen: true })
+    chatStore.toast(tr('noAuthBody'), 'warning')
+    return
+  }
+  const text = state.editDraft.trim()
+  const files = hostFiles(message.files)
+  if (text === '' && files.length === 0) return
+  const index = state.messages.findIndex(item => item.id === id)
+  if (index < 0) return
+  const previousMessages = state.messages
+  const conversationId = state.activeId
+  const optimisticUser = {
+    ...message,
+    id: uid(),
+    content: text,
+    createdAt: Date.now(),
+    files: (message.files ?? []).map(file => ({ ...file })),
+  }
+  const reply = makeReplyPlaceholder(state.settings)
+  const messages = [...previousMessages.slice(0, index), optimisticUser, reply]
+  chatStore.set({ editingId: null, editDraft: '', focusRequest: state.focusRequest + 1 })
+  await runTurnStream({
+    conversationId,
+    payload: {
+      conversationId,
+      mode: 'edit',
+      targetMessageId: id,
+      text,
+      files,
+      thinking: reply.thinking,
+      search: reply.search,
+      locale: streamLocale(),
+    },
+    assistant: reply,
+    initialMessages: messages,
+    userId: optimisticUser.id,
+    restorePreStart: () => chatStore.set({
+      messages: previousMessages,
+      editingId: id,
+      editDraft: text,
+    }),
+  })
+}
+
+/** Regenerate one answer as a new sibling version under the same question. */
+async function regenerateMessage(message) {
+  const state = chatStore.state
+  if (state.streaming !== null || sendInFlight) {
+    chatStore.toast(tr('waitStreaming'), 'warning')
+    return
+  }
+  if (state.activeId === null || !state.auth?.ready) {
+    if (!state.auth?.ready) chatStore.set({ settingsOpen: true })
+    return
+  }
+  const index = state.messages.findIndex(item => item.id === message?.id)
+  if (index < 1) return
+  const user = state.messages[index - 1]
+  if (user?.role !== 'user' || typeof user.id !== 'string') return
+  closeMenu()
+  const previousMessages = state.messages
+  const reply = makeReplyPlaceholder(state.settings)
+  const messages = [...previousMessages.slice(0, index), reply]
+  const conversationId = state.activeId
+  await runTurnStream({
+    conversationId,
+    payload: {
+      conversationId,
+      mode: 'regenerate',
+      targetMessageId: message.id,
+      thinking: reply.thinking,
+      search: reply.search,
+      locale: streamLocale(),
+    },
+    assistant: reply,
+    initialMessages: messages,
+    userId: user.id,
+    restorePreStart: () => chatStore.set({ messages: previousMessages }),
+  })
+}
+
+/** Resume a cut-off answer from its visible text prefix. */
+async function continueMessage(message) {
+  const state = chatStore.state
+  if (state.streaming !== null || sendInFlight) {
+    chatStore.toast(tr('waitStreaming'), 'warning')
+    return
+  }
+  if (state.activeId === null || !state.auth?.ready) {
+    if (!state.auth?.ready) chatStore.set({ settingsOpen: true })
+    return
+  }
+  if (!canContinueReply(message)) {
+    chatStore.toast(tr('cannotContinue'), 'warning')
+    return
+  }
+  closeMenu()
+  const previousMessages = state.messages
+  const index = previousMessages.findIndex(item => item.id === message.id)
+  const user = index > 0 ? previousMessages[index - 1] : null
+  const reply = { ...message, status: 'streaming', error: undefined }
+  const messages = previousMessages.map(item => (item.id === message.id ? reply : item))
+  const conversationId = state.activeId
+  await runTurnStream({
+    conversationId,
+    payload: {
+      conversationId,
+      mode: 'continue',
+      targetMessageId: message.id,
+      locale: streamLocale(),
+    },
+    assistant: reply,
+    initialMessages: messages,
+    userId: user?.role === 'user' ? user.id : null,
+    restorePreStart: () => chatStore.set({ messages: previousMessages }),
+  })
 }
 
 function stopStreaming() {
@@ -1464,6 +2094,39 @@ const chatActions = {
   loadConversation,
   renameConversation,
   requestDeleteConversation,
+  // organization
+  openConversationMenu,
+  openFolderMenu,
+  closeMenu,
+  setPinned,
+  setArchived,
+  requestFolderPrompt,
+  updateFolderPrompt,
+  closeFolderPrompt,
+  submitFolderPrompt,
+  toggleFolder,
+  requestDeleteFolder,
+  openMoveChat,
+  setMoveChatFolder,
+  closeMoveChat,
+  submitMoveChat,
+  moveConversationToFolder,
+  openFolderAdd,
+  toggleFolderAddSelection,
+  closeFolderAdd,
+  submitFolderAdd,
+  openArchive,
+  closeArchive,
+  searchHistory,
+  openSearchResult,
+  selectVersion,
+  // messages
+  beginEditMessage,
+  cancelEditMessage,
+  saveEditedMessage,
+  regenerateMessage,
+  continueMessage,
+  // settings and composer
   saveSettings,
   toggleThinking,
   toggleSearch,

@@ -16,7 +16,7 @@ const DICT_ZH = {
   agentModeFull: 'Agent 模式',
   modeSwitchLabel: '切换 Chat 与 Agent 模式',
   newChat: '新对话',
-  searchChats: '搜索对话',
+  searchChats: '搜索对话与消息',
   today: '今天',
   yesterday: '昨天',
   earlier: '更早',
@@ -111,7 +111,7 @@ const DICT_ZH = {
   modelLabel: '模型',
   modelName: 'DeepSeek V4.1 Flash',
   limitations: '限制',
-  limitationsText: '当前版本暂不支持消息分支、编辑提问、Mermaid 与数学公式渲染。',
+  limitationsText: '当前版本暂不支持 Mermaid 与数学公式渲染，代码块不做语法高亮。',
   close: '关闭',
   loading: '加载中…',
   loadFailed: '加载失败',
@@ -145,7 +145,7 @@ const DICT_ZH = {
   assistant: 'DeepSeek',
   openAgent: '返回 Agent 模式',
   copyFailed: '复制失败',
-  searchEmpty: '没有匹配的对话',
+  searchEmpty: '没有匹配的对话或消息',
   collapseSidebar: '收起侧边栏',
   expandSidebar: '展开侧边栏',
   closeSettings: '关闭设置',
@@ -210,6 +210,59 @@ const DICT_ZH = {
   modelNote: '模型由 DeepSeek Chat 服务端固定',
   switchToAgent: '切换到 Agent',
   switchToChat: '切换到 Chat',
+  // ---- conversation organization ----
+  pinnedSection: '已置顶',
+  foldersSection: '文件夹',
+  newFolder: '新建文件夹',
+  folderCreateTitle: '新建文件夹',
+  folderRenameTitle: '重命名文件夹',
+  folderNamePlaceholder: '文件夹名称',
+  create: '创建',
+  unfiled: '未分类',
+  folderEmpty: '文件夹为空',
+  moreActions: '更多操作',
+  pin: '置顶',
+  unpin: '取消置顶',
+  archive: '归档',
+  unarchive: '取消归档',
+  archivedToast: '已归档',
+  unarchivedToast: '已取消归档',
+  archiveTitle: '已归档对话',
+  archiveSubtitle: '归档的对话不会出现在历史列表中，但随时可以恢复，聊天记录也不会被删除。',
+  archiveEmpty: '没有归档的对话',
+  restore: '恢复',
+  archiveManager: '归档管理',
+  moveToFolder: '移动到文件夹…',
+  moveOutOfFolder: '移出文件夹',
+  moveChatTitle: '移动到文件夹',
+  moveChatHint: '选择一个文件夹，或移回未分类。',
+  moveChatConfirm: '移动',
+  addChatsToFolder: '移入聊天…',
+  folderAddTitle: '移入「{name}」',
+  folderAddHint: '选择要移入此文件夹的对话。',
+  folderAddEmpty: '没有可移入的对话',
+  folderAddConfirm: '移入',
+  chatMoved: '已移动对话',
+  chatsMoved: '已移动 {count} 个对话',
+  deleteFolderTitle: '删除文件夹',
+  deleteFolder: '删除文件夹',
+  renameFolder: '重命名文件夹',
+  deleteFolderMessage: '删除「{name}」后，其中的 {count} 个对话会移回未分类，聊天记录不会被删除。',
+  // ---- search ----
+  searchSearching: '搜索中…',
+  searchError: '搜索失败：{message}',
+  // ---- message versions and editing ----
+  edit: '编辑',
+  editMessage: '编辑消息',
+  editSave: '保存并发送',
+  editHint: '保存后创建新的对话分支，原来的回答保留在历史版本中。',
+  editEmpty: '消息不能为空',
+  regenerate: '重新生成',
+  continueGenerating: '继续生成',
+  cannotContinue: '这条回答还没有可继续的内容，请重新生成。',
+  versionPrev: '上一个版本',
+  versionNext: '下一个版本',
+  versionLabel: '版本 {index} / {count}',
 }
 
 const DICT_EN = {
@@ -220,7 +273,7 @@ const DICT_EN = {
   agentModeFull: 'Agent mode',
   modeSwitchLabel: 'Switch between Chat and Agent',
   newChat: 'New chat',
-  searchChats: 'Search chats',
+  searchChats: 'Search chats and messages',
   today: 'Today',
   yesterday: 'Yesterday',
   earlier: 'Earlier',
@@ -315,7 +368,7 @@ const DICT_EN = {
   modelLabel: 'Model',
   modelName: 'DeepSeek V4.1 Flash',
   limitations: 'Limitations',
-  limitationsText: 'This version does not yet support message branches, editing prompts, Mermaid diagrams, or math rendering.',
+  limitationsText: 'This version does not render Mermaid diagrams or math, and code blocks are not syntax-highlighted.',
   close: 'Close',
   loading: 'Loading…',
   loadFailed: 'Could not load',
@@ -349,7 +402,7 @@ const DICT_EN = {
   assistant: 'DeepSeek',
   openAgent: 'Back to Agent mode',
   copyFailed: 'Could not copy',
-  searchEmpty: 'No matching conversations',
+  searchEmpty: 'No matching chats or messages',
   collapseSidebar: 'Collapse sidebar',
   expandSidebar: 'Expand sidebar',
   closeSettings: 'Close settings',
@@ -412,6 +465,59 @@ const DICT_EN = {
   modelNote: 'The model is fixed by the DeepSeek Chat service',
   switchToAgent: 'Switch to Agent',
   switchToChat: 'Switch to Chat',
+  // ---- conversation organization ----
+  pinnedSection: 'Pinned',
+  foldersSection: 'Folders',
+  newFolder: 'New folder',
+  folderCreateTitle: 'New folder',
+  folderRenameTitle: 'Rename folder',
+  folderNamePlaceholder: 'Folder name',
+  create: 'Create',
+  unfiled: 'Unfiled',
+  folderEmpty: 'This folder is empty',
+  moreActions: 'More actions',
+  pin: 'Pin',
+  unpin: 'Unpin',
+  archive: 'Archive',
+  unarchive: 'Unarchive',
+  archivedToast: 'Chat archived',
+  unarchivedToast: 'Chat restored',
+  archiveTitle: 'Archived chats',
+  archiveSubtitle: 'Archived chats stay out of the history list, can be restored at any time, and are never deleted.',
+  archiveEmpty: 'No archived chats',
+  restore: 'Restore',
+  archiveManager: 'Archived chats',
+  moveToFolder: 'Move to folder…',
+  moveOutOfFolder: 'Remove from folder',
+  moveChatTitle: 'Move to folder',
+  moveChatHint: 'Pick a folder, or return the chat to the unfiled list.',
+  moveChatConfirm: 'Move',
+  addChatsToFolder: 'Add chats…',
+  folderAddTitle: 'Add to “{name}”',
+  folderAddHint: 'Choose the chats to put in this folder.',
+  folderAddEmpty: 'No chats to add',
+  folderAddConfirm: 'Add',
+  chatMoved: 'Chat moved',
+  chatsMoved: 'Moved {count} chats',
+  deleteFolderTitle: 'Delete folder',
+  deleteFolder: 'Delete folder',
+  renameFolder: 'Rename folder',
+  deleteFolderMessage: 'Delete “{name}”? Its {count} chats move back to the unfiled list and no history is deleted.',
+  // ---- search ----
+  searchSearching: 'Searching…',
+  searchError: 'Search failed: {message}',
+  // ---- message versions and editing ----
+  edit: 'Edit',
+  editMessage: 'Edit message',
+  editSave: 'Save & send',
+  editHint: 'Saving creates a new conversation branch; the original answers stay available as versions.',
+  editEmpty: 'The message cannot be empty',
+  regenerate: 'Regenerate',
+  continueGenerating: 'Continue generating',
+  cannotContinue: 'This answer has no text to continue from. Try regenerating instead.',
+  versionPrev: 'Previous version',
+  versionNext: 'Next version',
+  versionLabel: 'Version {index} / {count}',
 }
 
 /* ---- 20-store.js ---- */
@@ -533,6 +639,7 @@ const chatStore = {
     auth: null,
     settings: { authMode: 'auto', thinking: false, search: false, systemPrompt: '' },
     conversations: [],
+    folders: [],
     workspaces: [],
     limits: { maxFiles: MAX_FILES, maxUploadBytes: MAX_UPLOAD_MB, maxUserDataBytes: MAX_USER_DATA_MB * 1024 * 1024 },
     activeId: typeof stored.activeId === 'string' ? stored.activeId : null,
@@ -564,6 +671,21 @@ const chatStore = {
     renamingId: null,
     focusRequest: 0,
     filePickRequest: 0,
+    // ---- conversation organization (sidebar) ----
+    // One floating menu at a time, anchored at the pointer. `kind` selects the
+    // item list; `id` is the conversation or folder it acts on.
+    menu: null,
+    // Create/rename folder prompt, single-chat folder picker, multi-chat folder
+    // picker and the archive manager are separate surfaces.
+    folderPrompt: null,
+    moveChat: null,
+    folderAdd: null,
+    archiveOpen: false,
+    // Inline editor for one historical user message.
+    editingId: null,
+    editDraft: '',
+    // Message to bring into view after loading or switching a version.
+    focusMessage: null,
   },
   listeners: new Set(),
   subscribe(listener) {
@@ -737,12 +859,142 @@ function conversationSummary(conversation) {
     titleAuto: conversation.titleAuto === true,
     createdAt: conversation.createdAt,
     updatedAt: conversation.updatedAt,
+    pinned: conversation.pinned === true,
+    pinnedAt: conversation.pinnedAt ?? null,
+    archived: conversation.archived === true,
+    archivedAt: conversation.archivedAt ?? null,
+    folderId: conversation.folderId ?? null,
     messageCount: Array.isArray(conversation.messages) ? conversation.messages.length : (conversation.messageCount ?? 0),
   }
 }
 
 function sortConversations(list) {
   return [...list].sort((left, right) => (right.updatedAt ?? 0) - (left.updatedAt ?? 0))
+}
+
+/** Sidebar ordering: most recently active first, with a stable id tie-break. */
+function byActivity(left, right) {
+  const delta = (right.updatedAt ?? 0) - (left.updatedAt ?? 0)
+  if (delta !== 0) return delta
+  return String(left.id).localeCompare(String(right.id))
+}
+
+/**
+ * Group the summaries for the sidebar: pinned chats first (always, even when
+ * they also belong to a folder), then one bucket per folder, then the unfiled
+ * chats. Archived chats are left to the archive manager. Every bucket keeps a
+ * deterministic order, so a refresh never reshuffles equal timestamps.
+ */
+function organizeSidebar(conversations, folders) {
+  const visible = conversations.filter(conversation => conversation.archived !== true)
+  const pinned = visible.filter(conversation => conversation.pinned === true).sort(byActivity)
+  const buckets = new Map(folders.map(folder => [folder.id, []]))
+  const loose = []
+  for (const conversation of visible) {
+    if (conversation.pinned === true) continue
+    const bucket = conversation.folderId !== null ? buckets.get(conversation.folderId) : undefined
+    if (bucket === undefined) loose.push(conversation)
+    else bucket.push(conversation)
+  }
+  loose.sort(byActivity)
+  for (const bucket of buckets.values()) bucket.sort(byActivity)
+  return {
+    pinned,
+    folders: folders.map(folder => ({ folder, conversations: buckets.get(folder.id) ?? [] })),
+    loose,
+    archivedCount: conversations.filter(conversation => conversation.archived === true).length,
+  }
+}
+
+/** Replace the sidebar snapshot from a Host organization response. */
+function applyOrganization(data) {
+  const patch = {}
+  if (Array.isArray(data?.summaries)) patch.conversations = sortConversations(data.summaries)
+  if (Array.isArray(data?.folders)) patch.folders = data.folders
+  if (Object.keys(patch).length > 0) chatStore.set(patch)
+}
+
+/** Visible answer text of one assistant reply. */
+function messageBodyText(message) {
+  return (message?.blocks ?? [])
+    .filter(block => block?.type === 'text' && typeof block.text === 'string')
+    .map(block => block.text)
+    .join('')
+}
+
+/**
+ * Whether an answer can be resumed from its own visible prefix. Refused and
+ * tool-terminated answers cannot be continued; an empty answer has nothing to
+ * continue from either.
+ */
+function canContinueReply(message) {
+  if (!message || message.role !== 'assistant') return false
+  if (message.stopReason === 'refusal' || message.prefix === false) return false
+  const incomplete = message.status === 'stopped' || message.status === 'error' || message.stopReason === 'max_tokens'
+  return incomplete && messageBodyText(message).trim() !== ''
+}
+
+/** Files as the Host stores them: preview URLs never leave this browser. */
+function hostFiles(files) {
+  return (Array.isArray(files) ? files : []).flatMap((file) => {
+    if (!file || typeof file.fileId !== 'string' || file.fileId === '') return []
+    return [{
+      id: file.id,
+      fileId: file.fileId,
+      name: file.name,
+      size: file.size,
+      mimeType: file.mimeType,
+      isImage: file.isImage === true,
+    }]
+  })
+}
+
+/** Re-attach local image previews to the authoritative file metadata. */
+function withFilePreviews(messages, previousMessages) {
+  const previews = new Map()
+  for (const message of Array.isArray(previousMessages) ? previousMessages : []) {
+    for (const file of message?.files ?? []) {
+      if (file?.fileId && file.previewUrl) previews.set(file.fileId, file.previewUrl)
+    }
+  }
+  if (previews.size === 0) return messages
+  return messages.map((message) => {
+    if (!Array.isArray(message?.files) || message.files.length === 0) return message
+    let changed = false
+    const files = message.files.map((file) => {
+      const previewUrl = file?.fileId ? previews.get(file.fileId) : undefined
+      if (!previewUrl || file.previewUrl === previewUrl) return file
+      changed = true
+      return { ...file, previewUrl }
+    })
+    return changed ? { ...message, files } : message
+  })
+}
+
+/** Locale tag for one stream request. */
+function streamLocale() {
+  return appCtx?.locale.getSnapshot().active === 'zh' ? 'zh' : 'en'
+}
+
+function currentModelId() {
+  return chatStore.state.bootData?.model?.id ?? 'deepseek-flash'
+}
+
+/** A fresh assistant placeholder for an optimistic branch. */
+function makeReplyPlaceholder(settings) {
+  const now = Date.now()
+  return {
+    id: uid(),
+    role: 'assistant',
+    createdAt: now,
+    updatedAt: now,
+    model: currentModelId(),
+    thinking: settings.thinking === true,
+    search: settings.search === true,
+    status: 'streaming',
+    blocks: [],
+    prefix: true,
+  }
 }
 
 /**
@@ -896,6 +1148,7 @@ async function ensureBoot(force = false) {
         auth: data.auth,
         settings: data.settings,
         conversations: data.conversations ?? [],
+        folders: Array.isArray(data.folders) ? data.folders : [],
         workspaces: Array.isArray(data.workspaces) ? data.workspaces : [],
         limits: normalizeLimits(data.limits),
       })
@@ -925,7 +1178,7 @@ async function ensureBoot(force = false) {
 
 let conversationLoadSequence = 0
 
-async function loadConversation(id, { quiet = false } = {}) {
+async function loadConversation(id, { quiet = false, focusMessageId = '' } = {}) {
   if (chatStore.state.streaming !== null) {
     if (chatStore.state.streaming.conversationId !== id) {
       chatStore.toast(tr('waitStreaming'), 'warning')
@@ -939,16 +1192,21 @@ async function loadConversation(id, { quiet = false } = {}) {
   }
   clearComposer()
   const sequence = ++conversationLoadSequence
-  chatStore.set({ activeId: id, conversationLoading: true, conversationError: '' })
+  chatStore.set({ activeId: id, conversationLoading: true, conversationError: '', editingId: null, editDraft: '' })
   writeStored({ activeId: id })
   try {
-    const data = await hostJson('/api/deepseek-chat/conversation', { action: 'get', id })
+    const body = { action: 'get', id }
+    if (typeof focusMessageId === 'string' && focusMessageId !== '') body.focusMessageId = focusMessageId
+    const data = await hostJson('/api/deepseek-chat/conversation', body)
     if (sequence !== conversationLoadSequence) return
-    chatStore.set({
+    const patch = {
       messages: Array.isArray(data.conversation?.messages) ? data.conversation.messages : [],
       conversationLoading: false,
       conversationError: '',
-    })
+      focusMessage: body.focusMessageId ? { id: body.focusMessageId, at: Date.now() } : null,
+    }
+    if (Array.isArray(data.folders)) patch.folders = data.folders
+    chatStore.set(patch)
   } catch (error) {
     if (sequence !== conversationLoadSequence) return
     const message = error instanceof Error ? error.message : String(error)
@@ -1016,6 +1274,10 @@ async function newChat() {
     messages: [],
     conversationError: '',
     renamingId: null,
+    editingId: null,
+    editDraft: '',
+    focusMessage: null,
+    menu: null,
     greetingIndex: pickGreetingIndex(chatStore.state.greetingIndex),
     focusRequest: chatStore.state.focusRequest + 1,
   })
@@ -1025,11 +1287,18 @@ async function newChat() {
 async function createConversation() {
   const data = await hostJson('/api/deepseek-chat/conversation', { action: 'create' })
   const summary = conversationSummary(data.conversation)
+  const conversations = Array.isArray(data.summaries)
+    ? sortConversations(data.summaries)
+    : sortConversations([summary, ...chatStore.state.conversations])
   chatStore.set({
     activeId: data.conversation.id,
-    conversations: sortConversations([summary, ...chatStore.state.conversations]),
+    conversations,
+    ...(Array.isArray(data.folders) ? { folders: data.folders } : {}),
     messages: [],
     conversationError: '',
+    editingId: null,
+    editDraft: '',
+    focusMessage: null,
   })
   writeStored({ activeId: data.conversation.id })
   return data.conversation.id
@@ -1038,7 +1307,8 @@ async function createConversation() {
 async function renameConversation(id, title) {
   try {
     const data = await hostJson('/api/deepseek-chat/conversation', { action: 'rename', id, title })
-    upsertSummary(conversationSummary(data.conversation))
+    if (Array.isArray(data.summaries)) applyOrganization(data)
+    else upsertSummary(conversationSummary(data.conversation))
     chatStore.set({ renamingId: null })
   } catch (error) {
     chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
@@ -1057,8 +1327,9 @@ function requestDeleteConversation(id, title) {
         if (chatStore.state.streaming?.conversationId === id) stopStreaming()
         try {
           const data = await hostJson('/api/deepseek-chat/conversation', { action: 'delete', id })
-          chatStore.set({
-            conversations: sortConversations(data.summaries ?? chatStore.state.conversations.filter(item => item.id !== id)),
+          applyOrganization({
+            summaries: data.summaries ?? chatStore.state.conversations.filter(item => item.id !== id),
+            folders: data.folders,
           })
           if (chatStore.state.activeId === id) {
             clearComposer()
@@ -1066,6 +1337,9 @@ function requestDeleteConversation(id, title) {
               activeId: null,
               messages: [],
               conversationError: '',
+              editingId: null,
+              editDraft: '',
+              focusMessage: null,
               greetingIndex: pickGreetingIndex(chatStore.state.greetingIndex),
             })
             writeStored({ activeId: null })
@@ -1077,6 +1351,299 @@ function requestDeleteConversation(id, title) {
     },
   })
 }
+
+// ---------------------------------------------------------------------------
+// Conversation organization: pin, archive, folders and the floating menu.
+// ---------------------------------------------------------------------------
+
+function openConversationMenu(conversationId, x, y) {
+  chatStore.set({ menu: { kind: 'conversation', id: conversationId, x, y } })
+}
+
+function openFolderMenu(folderId, x, y) {
+  chatStore.set({ menu: { kind: 'folder', id: folderId, x, y } })
+}
+
+function closeMenu() {
+  if (chatStore.state.menu !== null) chatStore.set({ menu: null })
+}
+
+async function setPinned(id, pinned) {
+  closeMenu()
+  try {
+    const data = await hostJson('/api/deepseek-chat/conversation', { action: 'pin', id, pinned })
+    applyOrganization(data)
+  } catch (error) {
+    chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+
+async function setArchived(id, archived) {
+  closeMenu()
+  try {
+    const data = await hostJson('/api/deepseek-chat/conversation', { action: 'archive', id, archived })
+    applyOrganization(data)
+    chatStore.toast(archived ? tr('archivedToast') : tr('unarchivedToast'), 'success')
+  } catch (error) {
+    chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+
+function requestFolderPrompt(mode, folder = null) {
+  closeMenu()
+  chatStore.set({
+    folderPrompt: {
+      mode: mode === 'rename' ? 'rename' : 'create',
+      id: folder?.id ?? null,
+      draft: mode === 'rename' ? (folder?.name ?? '') : '',
+      busy: false,
+    },
+  })
+}
+
+function updateFolderPrompt(draft) {
+  const prompt = chatStore.state.folderPrompt
+  if (prompt === null) return
+  chatStore.set({ folderPrompt: { ...prompt, draft } })
+}
+
+function closeFolderPrompt() {
+  if (chatStore.state.folderPrompt?.busy === true) return
+  chatStore.set({ folderPrompt: null })
+}
+
+async function submitFolderPrompt() {
+  const prompt = chatStore.state.folderPrompt
+  if (prompt === null || prompt.busy) return
+  const name = typeof prompt.draft === 'string' ? prompt.draft.trim() : ''
+  if (name === '') return
+  chatStore.set({ folderPrompt: { ...prompt, busy: true } })
+  try {
+    const data = prompt.mode === 'rename'
+      ? await hostJson('/api/deepseek-chat/conversation', { action: 'folder.rename', id: prompt.id, name })
+      : await hostJson('/api/deepseek-chat/conversation', { action: 'folder.create', name })
+    applyOrganization(data)
+    chatStore.set({ folderPrompt: null })
+  } catch (error) {
+    const current = chatStore.state.folderPrompt
+    if (current !== null) chatStore.set({ folderPrompt: { ...current, busy: false } })
+    chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+
+async function toggleFolder(id) {
+  const folder = chatStore.state.folders.find(item => item.id === id)
+  if (folder === undefined) return
+  const collapsed = folder.collapsed !== true
+  chatStore.set({
+    folders: chatStore.state.folders.map(item => (item.id === id ? { ...item, collapsed } : item)),
+  })
+  try {
+    const data = await hostJson('/api/deepseek-chat/conversation', { action: 'folder.collapse', id, collapsed })
+    if (Array.isArray(data.folders)) chatStore.set({ folders: data.folders })
+  } catch (error) {
+    chatStore.set({
+      folders: chatStore.state.folders.map(item => (item.id === id ? { ...item, collapsed: !collapsed } : item)),
+    })
+    chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+
+function requestDeleteFolder(folder) {
+  closeMenu()
+  const count = chatStore.state.conversations.filter(item => item.folderId === folder.id).length
+  chatStore.set({
+    confirm: {
+      title: tr('deleteFolderTitle'),
+      message: tr('deleteFolderMessage', { name: folder.name, count }),
+      confirmLabel: tr('deleteConfirm'),
+      danger: true,
+      onConfirm: async () => {
+        try {
+          const data = await hostJson('/api/deepseek-chat/conversation', { action: 'folder.delete', id: folder.id })
+          applyOrganization(data)
+        } catch (error) {
+          chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+        }
+      },
+    },
+  })
+}
+
+function openMoveChat(conversationId) {
+  closeMenu()
+  const conversation = chatStore.state.conversations.find(item => item.id === conversationId)
+  if (conversation === undefined) return
+  chatStore.set({
+    moveChat: { conversationId, folderId: conversation.folderId ?? null, busy: false },
+  })
+}
+
+function setMoveChatFolder(folderId) {
+  const move = chatStore.state.moveChat
+  if (move === null) return
+  chatStore.set({ moveChat: { ...move, folderId: folderId === '' ? null : folderId } })
+}
+
+function closeMoveChat() {
+  if (chatStore.state.moveChat?.busy === true) return
+  chatStore.set({ moveChat: null })
+}
+
+/** One-click move used by the "remove from folder" menu item. */
+async function moveConversationToFolder(conversationId, folderId) {
+  closeMenu()
+  try {
+    const data = await hostJson('/api/deepseek-chat/conversation', {
+      action: 'move',
+      ids: [conversationId],
+      folderId: folderId ?? null,
+    })
+    applyOrganization(data)
+    chatStore.toast(tr('chatMoved'), 'success')
+  } catch (error) {
+    chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+
+async function submitMoveChat() {
+  const move = chatStore.state.moveChat
+  if (move === null || move.busy) return
+  chatStore.set({ moveChat: { ...move, busy: true } })
+  try {
+    const data = await hostJson('/api/deepseek-chat/conversation', {
+      action: 'move',
+      ids: [move.conversationId],
+      folderId: move.folderId,
+    })
+    applyOrganization(data)
+    chatStore.set({ moveChat: null })
+    chatStore.toast(tr('chatMoved'), 'success')
+  } catch (error) {
+    const current = chatStore.state.moveChat
+    if (current !== null) chatStore.set({ moveChat: { ...current, busy: false } })
+    chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+
+function openFolderAdd(folderId) {
+  closeMenu()
+  const folder = chatStore.state.folders.find(item => item.id === folderId)
+  if (folder === undefined) return
+  chatStore.set({ folderAdd: { folderId, name: folder.name, selected: [], busy: false } })
+}
+
+function toggleFolderAddSelection(conversationId) {
+  const add = chatStore.state.folderAdd
+  if (add === null) return
+  const selected = add.selected.includes(conversationId)
+    ? add.selected.filter(id => id !== conversationId)
+    : [...add.selected, conversationId]
+  chatStore.set({ folderAdd: { ...add, selected } })
+}
+
+function closeFolderAdd() {
+  if (chatStore.state.folderAdd?.busy === true) return
+  chatStore.set({ folderAdd: null })
+}
+
+async function submitFolderAdd() {
+  const add = chatStore.state.folderAdd
+  if (add === null || add.busy || add.selected.length === 0) return
+  chatStore.set({ folderAdd: { ...add, busy: true } })
+  try {
+    const data = await hostJson('/api/deepseek-chat/conversation', {
+      action: 'move',
+      ids: add.selected,
+      folderId: add.folderId,
+    })
+    applyOrganization(data)
+    const count = add.selected.length
+    chatStore.set({ folderAdd: null })
+    chatStore.toast(tr('chatsMoved', { count }), 'success')
+  } catch (error) {
+    const current = chatStore.state.folderAdd
+    if (current !== null) chatStore.set({ folderAdd: { ...current, busy: false } })
+    chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+
+function openArchive() {
+  closeMenu()
+  chatStore.set({ archiveOpen: true })
+}
+
+function closeArchive() {
+  chatStore.set({ archiveOpen: false })
+}
+
+function searchHistory(query) {
+  return hostJson('/api/deepseek-chat/conversation', { action: 'search', query })
+}
+
+/** Open a search hit, reopening the branch it lives on when necessary. */
+async function openSearchResult(result) {
+  if (result === null || typeof result !== 'object' || typeof result.id !== 'string') return
+  const target = typeof result.messageId === 'string' ? result.messageId : ''
+  if (result.id === chatStore.state.activeId) {
+    try {
+      const data = await hostJson('/api/deepseek-chat/conversation', {
+        action: 'get',
+        id: result.id,
+        ...(target === '' ? {} : { focusMessageId: target }),
+      })
+      if (Array.isArray(data.conversation?.messages)) {
+        chatStore.set({
+          messages: data.conversation.messages,
+          conversationLoading: false,
+          conversationError: '',
+          editingId: null,
+          editDraft: '',
+          focusMessage: target === '' ? null : { id: target, at: Date.now() },
+        })
+      }
+      if (Array.isArray(data.folders)) chatStore.set({ folders: data.folders })
+    } catch (error) {
+      chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+    }
+    return
+  }
+  await loadConversation(result.id, { focusMessageId: target })
+}
+
+/** Step one sibling version backward or forward and reopen that branch. */
+async function selectVersion(messageId, direction) {
+  const state = chatStore.state
+  if (state.activeId === null) return
+  if (state.streaming !== null || sendInFlight) {
+    chatStore.toast(tr('waitStreaming'), 'warning')
+    return
+  }
+  closeMenu()
+  try {
+    const data = await hostJson('/api/deepseek-chat/conversation', {
+      action: 'version',
+      id: state.activeId,
+      messageId,
+      direction: direction < 0 ? 'prev' : 'next',
+    })
+    if (Array.isArray(data.summaries)) applyOrganization(data)
+    const messages = data.conversation?.messages
+    if (Array.isArray(messages)) {
+      chatStore.set({
+        messages,
+        conversationError: '',
+        editingId: null,
+        editDraft: '',
+        focusMessage: { id: typeof data.selectedId === 'string' ? data.selectedId : messageId, at: Date.now() },
+      })
+    }
+  } catch (error) {
+    chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
+  }
+}
+
+
 
 let settingsSequence = 0
 let settingsChain = Promise.resolve()
@@ -1420,6 +1987,167 @@ function applyClientEvent(reply, event, indexes) {
   return next
 }
 
+/**
+ * Consume one NDJSON turn stream.
+ *
+ * `initialMessages` is the optimistic branch shown immediately; the Host's
+ * `start` frame replaces it with the authoritative active path (including new
+ * ids, version positions and file metadata). Events are folded into
+ * `assistant` and painted on the next animation frame.
+ *
+ * `restorePreStart` runs when the request failed or was cancelled before the
+ * Host acknowledged the turn: the caller decides whether that means putting the
+ * draft back in the composer (a fresh send) or restoring the previous branch
+ * (an edit or regeneration).
+ */
+async function runTurnStream({
+  conversationId, payload, assistant, initialMessages, userId = null, restorePreStart,
+}) {
+  const controller = new AbortController()
+  const holder = { controller, conversationId, assistantId: assistant.id, userId, startedAt: Date.now() }
+  chatStore.set({
+    messages: initialMessages,
+    streaming: holder,
+    stopping: false,
+    conversationError: '',
+  })
+  markSendInFlight(true)
+  let current = assistant
+  let started = false
+  let finished = false
+  const indexes = new Map()
+  let frame = 0
+  const flush = () => {
+    frame = 0
+    if (!finished) replaceAssistant(current)
+  }
+  const schedule = () => {
+    if (frame !== 0) return
+    frame = requestAnimationFrame(flush)
+  }
+  const finish = () => {
+    if (frame !== 0) {
+      cancelAnimationFrame(frame)
+      frame = 0
+    }
+    if (!finished) {
+      finished = true
+      replaceAssistant(current)
+    }
+    const streaming = chatStore.state.streaming
+    if (streaming !== null && (streaming.assistantId === current.id || streaming.assistantId === assistant.id)) {
+      chatStore.set({ streaming: null, stopping: false })
+    }
+  }
+  const restore = () => {
+    if (typeof restorePreStart === 'function') restorePreStart()
+    chatStore.set({ streaming: null, stopping: false })
+  }
+  const applyTitle = (title, titleAuto) => {
+    if (typeof title !== 'string' || title === '') return
+    const summary = chatStore.state.conversations.find(entry => entry.id === conversationId)
+    if (summary) upsertSummary({ ...summary, title, ...(titleAuto === undefined ? {} : { titleAuto }) })
+  }
+  try {
+    await streamChat(payload, {
+      signal: controller.signal,
+      onItem(item) {
+        if (item.type === 'start') {
+          started = true
+          const hostAssistantId = typeof item.assistantMessageId === 'string' && item.assistantMessageId !== ''
+            ? item.assistantMessageId
+            : current.id
+          current = { ...current, id: hostAssistantId }
+          let messages
+          if (Array.isArray(item.messages) && item.messages.length > 0) {
+            messages = withFilePreviews(item.messages, chatStore.state.messages)
+          } else {
+            // Older Host halves only send the ids; patch the optimistic branch.
+            const hostUserId = typeof item.userMessage?.id === 'string' ? item.userMessage.id : null
+            const hostFiles = Array.isArray(item.userMessage?.files) ? item.userMessage.files : null
+            messages = chatStore.state.messages.map((message) => {
+              if (message.id === assistant.id) return { ...message, id: hostAssistantId }
+              if (hostUserId !== null && message.id === userId) {
+                return { ...message, id: hostUserId, ...(hostFiles === null ? {} : { files: hostFiles }) }
+              }
+              return message
+            })
+          }
+          const streaming = chatStore.state.streaming
+          chatStore.set({
+            messages,
+            streaming: streaming === null ? null : {
+              ...streaming,
+              assistantId: hostAssistantId,
+              userId: typeof item.userMessageId === 'string' ? item.userMessageId : streaming.userId,
+            },
+          })
+          applyTitle(item.title)
+          return
+        }
+        if (item.type === 'event') {
+          current = applyClientEvent(current, item.event, indexes)
+          schedule()
+          return
+        }
+        if (item.type === 'title') {
+          applyTitle(item.title, false)
+          return
+        }
+        if (item.type === 'done') {
+          if (item.message) current = { ...item.message }
+          if (item.conversation) upsertSummary(item.conversation)
+          finish()
+          return
+        }
+        if (item.type === 'error') {
+          const info = friendlyError(item.error)
+          current = item.message
+            ? { ...item.message }
+            : { ...current, status: 'error', error: item.error ?? { message: info.text }, updatedAt: Date.now() }
+          finish()
+          chatStore.toast(info.text, 'error')
+          if (info.action === 'settings') chatStore.set({ settingsOpen: true })
+          return
+        }
+        if (item.type === 'aborted') {
+          current = item.message ? { ...item.message } : { ...current, status: 'stopped', updatedAt: Date.now() }
+          finish()
+        }
+      },
+    })
+    if (chatStore.state.streaming !== null) {
+      current = { ...current, status: 'stopped', updatedAt: Date.now() }
+      finish()
+    }
+  } catch (error) {
+    if (controller.signal.aborted) {
+      if (!started) {
+        restore()
+        return
+      }
+      current = { ...current, status: 'stopped', updatedAt: Date.now() }
+      finish()
+    } else {
+      const payloadInfo = error?.payload ?? { message: error instanceof Error ? error.message : String(error) }
+      const info = friendlyError(payloadInfo, payloadInfo.message)
+      if (!started) {
+        restore()
+        chatStore.toast(info.text, 'error')
+        if (info.action === 'settings') chatStore.set({ settingsOpen: true })
+        return
+      }
+      current = { ...current, status: 'error', error: payloadInfo, updatedAt: Date.now() }
+      finish()
+      chatStore.toast(info.text, 'error')
+      if (info.action === 'settings') chatStore.set({ settingsOpen: true })
+    }
+  } finally {
+    if (!finished) finish()
+    markSendInFlight(false)
+  }
+}
+
 async function sendMessage() {
   const state = chatStore.state
   if (state.streaming !== null) return
@@ -1478,185 +2206,193 @@ async function sendMessage() {
     })),
     createdAt: now,
   }
-  const reply = {
-    id: uid(),
-    role: 'assistant',
-    createdAt: now,
-    updatedAt: now,
-    model: chatStore.state.bootData?.model?.id ?? 'deepseek-flash',
-    thinking: state.settings.thinking,
-    search: state.settings.search,
-    status: 'streaming',
-    blocks: [],
-    prefix: true,
-  }
-  const controller = new AbortController()
-  const messages = [...chatStore.state.messages, userMessage, reply]
+  const reply = makeReplyPlaceholder(state.settings)
+  const previousMessages = chatStore.state.messages
+  const messages = [...previousMessages, userMessage, reply]
   chatStore.set({
-    messages,
-    conversationError: '',
     draft: '',
     attachments: [],
-    stopping: false,
-    streaming: {
-      conversationId,
-      assistantId: reply.id,
-      userId: userMessage.id,
-      controller,
-      startedAt: now,
-    },
+    editingId: null,
+    editDraft: '',
     focusRequest: chatStore.state.focusRequest + 1,
   })
   writeStored({ activeId: conversationId })
-
-  let current = reply
-  let userCurrent = userMessage
-  let started = false
-  const indexes = new Map()
-  let frame = 0
-  const flush = () => {
-    frame = 0
-    replaceAssistant(current)
-  }
-  const schedule = () => {
-    if (frame !== 0) return
-    frame = requestAnimationFrame(flush)
-  }
-  const finish = () => {
-    if (frame !== 0) {
-      cancelAnimationFrame(frame)
-      frame = 0
-    }
-    if (chatStore.state.streaming?.assistantId === current.id || chatStore.state.streaming?.userId === userCurrent.id) {
-      chatStore.set({ streaming: null, stopping: false })
-    }
-  }
-  try {
-    await streamChat({
+  await runTurnStream({
+    conversationId,
+    payload: {
       conversationId,
       text,
       files: userMessage.files,
       thinking: reply.thinking,
       search: reply.search,
-      locale: appCtx?.locale.getSnapshot().active === 'zh' ? 'zh' : 'en',
-    }, {
-      signal: controller.signal,
-      onItem(item) {
-        if (item.type === 'start') {
-          started = true
-          const hostUser = item.userMessage
-          const hostAssistantId = item.assistantMessageId
-          const previews = userCurrent.files.map(file => file.previewUrl || '')
-          const hostFiles = Array.isArray(hostUser.files)
-            ? hostUser.files.map((file, index) => ({ ...file, previewUrl: previews[index] || '' }))
-            : []
-          userCurrent = { ...hostUser, files: hostFiles }
-          current = { ...current, id: hostAssistantId }
-          if (typeof item.title === 'string' && item.title !== '') {
-            const summary = chatStore.state.conversations.find(entry => entry.id === conversationId)
-            if (summary) upsertSummary({ ...summary, title: item.title })
-          }
-          chatStore.set({
-            messages: chatStore.state.messages.map(message => {
-              if (message.id === userMessage.id) {
-                return { ...message, id: hostUser.id, createdAt: hostUser.createdAt, files: hostFiles }
-              }
-              if (message.id === reply.id) return { ...message, id: hostAssistantId }
-              return message
-            }),
-            streaming: chatStore.state.streaming === null
-              ? null
-              : { ...chatStore.state.streaming, assistantId: hostAssistantId, userId: hostUser.id },
-          })
-          return
-        }
-        if (item.type === 'event') {
-          current = applyClientEvent(current, item.event, indexes)
-          schedule()
-          return
-        }
-        if (item.type === 'title') {
-          if (typeof item.title === 'string' && item.title !== '') {
-            const conversation = chatStore.state.conversations.find(entry => entry.id === conversationId)
-            if (conversation) upsertSummary({ ...conversation, title: item.title, titleAuto: false })
-          }
-          return
-        }
-        if (item.type === 'done') {
-          if (item.message) current = { ...item.message }
-          replaceAssistant(current)
-          if (item.conversation) upsertSummary(item.conversation)
-          finish()
-          return
-        }
-        if (item.type === 'error') {
-          const info = friendlyError(item.error)
-          current = {
-            ...current,
-            status: 'error',
-            error: item.error ?? { message: info.text },
-            updatedAt: Date.now(),
-          }
-          replaceAssistant(current)
-          finish()
-          chatStore.toast(info.text, 'error')
-          if (info.action === 'settings') chatStore.set({ settingsOpen: true })
-          return
-        }
-        if (item.type === 'aborted') {
-          if (item.message) current = { ...item.message }
-          else current = { ...current, status: 'stopped', updatedAt: Date.now() }
-          replaceAssistant(current)
-          finish()
-        }
-      },
-    })
-    if (chatStore.state.streaming !== null) {
-      current = { ...current, status: 'stopped', updatedAt: Date.now() }
-      replaceAssistant(current)
-      finish()
-    }
-  } catch (error) {
-    if (controller.signal.aborted) {
-      if (!started) {
-        chatStore.set({
-          messages: chatStore.state.messages.filter(message => message.id !== userMessage.id && message.id !== reply.id),
-          draft: text,
-          attachments: sentAttachments,
-          streaming: null,
-          stopping: false,
-        })
-        return
-      }
-      current = { ...current, status: 'stopped', updatedAt: Date.now() }
-      replaceAssistant(current)
-    } else {
-      const payload = error?.payload ?? { message: error instanceof Error ? error.message : String(error) }
-      const info = friendlyError(payload, payload.message)
-      if (!started) {
-        // The Host never created the turn (auth, network, or a rejected
-        // request), so pull the optimistic bubbles back and return the text and
-        // uploaded files to the composer instead of losing them on reload.
-        chatStore.set({
-          messages: chatStore.state.messages.filter(message => message.id !== userMessage.id && message.id !== reply.id),
-          draft: text,
-          attachments: sentAttachments,
-          streaming: null,
-          stopping: false,
-        })
-        chatStore.toast(info.text, 'error')
-        if (info.action === 'settings') chatStore.set({ settingsOpen: true })
-        return
-      }
-      current = { ...current, status: 'error', error: payload, updatedAt: Date.now() }
-      replaceAssistant(current)
-      chatStore.toast(info.text, 'error')
-      if (info.action === 'settings') chatStore.set({ settingsOpen: true })
-    }
-    finish()
-  } finally {
-    markSendInFlight(false)
+      locale: streamLocale(),
+    },
+    assistant: reply,
+    initialMessages: messages,
+    userId: userMessage.id,
+    restorePreStart: () => {
+      // The Host never created the turn (auth, network or a rejected request):
+      // pull the optimistic bubbles back and return text and files to the
+      // composer instead of losing them.
+      chatStore.set({
+        messages: previousMessages,
+        draft: text,
+        attachments: sentAttachments,
+      })
+    },
+  })
+}
+
+/** Open the inline editor for one historical user message. */
+function beginEditMessage(message) {
+  if (chatStore.state.streaming !== null || sendInFlight) {
+    chatStore.toast(tr('waitStreaming'), 'warning')
+    return
   }
+  if (message?.role !== 'user') return
+  closeMenu()
+  chatStore.set({ editingId: message.id, editDraft: typeof message.content === 'string' ? message.content : '' })
+}
+
+function cancelEditMessage() {
+  chatStore.set({ editingId: null, editDraft: '' })
+}
+
+/**
+ * Save the edited question and resend it. The Host turns it into a sibling
+ * branch: everything before the question stays shared, the old answer subtree
+ * is preserved as a version, and only the new branch is sent to the model.
+ */
+async function saveEditedMessage() {
+  const state = chatStore.state
+  const id = state.editingId
+  if (id === null) return
+  if (state.streaming !== null || sendInFlight) {
+    chatStore.toast(tr('waitStreaming'), 'warning')
+    return
+  }
+  const message = state.messages.find(item => item.id === id)
+  if (message === undefined || message.role !== 'user' || state.activeId === null) {
+    chatStore.set({ editingId: null, editDraft: '' })
+    return
+  }
+  if (!state.auth?.ready) {
+    chatStore.set({ settingsOpen: true })
+    chatStore.toast(tr('noAuthBody'), 'warning')
+    return
+  }
+  const text = state.editDraft.trim()
+  const files = hostFiles(message.files)
+  if (text === '' && files.length === 0) return
+  const index = state.messages.findIndex(item => item.id === id)
+  if (index < 0) return
+  const previousMessages = state.messages
+  const conversationId = state.activeId
+  const optimisticUser = {
+    ...message,
+    id: uid(),
+    content: text,
+    createdAt: Date.now(),
+    files: (message.files ?? []).map(file => ({ ...file })),
+  }
+  const reply = makeReplyPlaceholder(state.settings)
+  const messages = [...previousMessages.slice(0, index), optimisticUser, reply]
+  chatStore.set({ editingId: null, editDraft: '', focusRequest: state.focusRequest + 1 })
+  await runTurnStream({
+    conversationId,
+    payload: {
+      conversationId,
+      mode: 'edit',
+      targetMessageId: id,
+      text,
+      files,
+      thinking: reply.thinking,
+      search: reply.search,
+      locale: streamLocale(),
+    },
+    assistant: reply,
+    initialMessages: messages,
+    userId: optimisticUser.id,
+    restorePreStart: () => chatStore.set({
+      messages: previousMessages,
+      editingId: id,
+      editDraft: text,
+    }),
+  })
+}
+
+/** Regenerate one answer as a new sibling version under the same question. */
+async function regenerateMessage(message) {
+  const state = chatStore.state
+  if (state.streaming !== null || sendInFlight) {
+    chatStore.toast(tr('waitStreaming'), 'warning')
+    return
+  }
+  if (state.activeId === null || !state.auth?.ready) {
+    if (!state.auth?.ready) chatStore.set({ settingsOpen: true })
+    return
+  }
+  const index = state.messages.findIndex(item => item.id === message?.id)
+  if (index < 1) return
+  const user = state.messages[index - 1]
+  if (user?.role !== 'user' || typeof user.id !== 'string') return
+  closeMenu()
+  const previousMessages = state.messages
+  const reply = makeReplyPlaceholder(state.settings)
+  const messages = [...previousMessages.slice(0, index), reply]
+  const conversationId = state.activeId
+  await runTurnStream({
+    conversationId,
+    payload: {
+      conversationId,
+      mode: 'regenerate',
+      targetMessageId: message.id,
+      thinking: reply.thinking,
+      search: reply.search,
+      locale: streamLocale(),
+    },
+    assistant: reply,
+    initialMessages: messages,
+    userId: user.id,
+    restorePreStart: () => chatStore.set({ messages: previousMessages }),
+  })
+}
+
+/** Resume a cut-off answer from its visible text prefix. */
+async function continueMessage(message) {
+  const state = chatStore.state
+  if (state.streaming !== null || sendInFlight) {
+    chatStore.toast(tr('waitStreaming'), 'warning')
+    return
+  }
+  if (state.activeId === null || !state.auth?.ready) {
+    if (!state.auth?.ready) chatStore.set({ settingsOpen: true })
+    return
+  }
+  if (!canContinueReply(message)) {
+    chatStore.toast(tr('cannotContinue'), 'warning')
+    return
+  }
+  closeMenu()
+  const previousMessages = state.messages
+  const index = previousMessages.findIndex(item => item.id === message.id)
+  const user = index > 0 ? previousMessages[index - 1] : null
+  const reply = { ...message, status: 'streaming', error: undefined }
+  const messages = previousMessages.map(item => (item.id === message.id ? reply : item))
+  const conversationId = state.activeId
+  await runTurnStream({
+    conversationId,
+    payload: {
+      conversationId,
+      mode: 'continue',
+      targetMessageId: message.id,
+      locale: streamLocale(),
+    },
+    assistant: reply,
+    initialMessages: messages,
+    userId: user?.role === 'user' ? user.id : null,
+    restorePreStart: () => chatStore.set({ messages: previousMessages }),
+  })
 }
 
 function stopStreaming() {
@@ -1881,6 +2617,39 @@ const chatActions = {
   loadConversation,
   renameConversation,
   requestDeleteConversation,
+  // organization
+  openConversationMenu,
+  openFolderMenu,
+  closeMenu,
+  setPinned,
+  setArchived,
+  requestFolderPrompt,
+  updateFolderPrompt,
+  closeFolderPrompt,
+  submitFolderPrompt,
+  toggleFolder,
+  requestDeleteFolder,
+  openMoveChat,
+  setMoveChatFolder,
+  closeMoveChat,
+  submitMoveChat,
+  moveConversationToFolder,
+  openFolderAdd,
+  toggleFolderAddSelection,
+  closeFolderAdd,
+  submitFolderAdd,
+  openArchive,
+  closeArchive,
+  searchHistory,
+  openSearchResult,
+  selectVersion,
+  // messages
+  beginEditMessage,
+  cancelEditMessage,
+  saveEditedMessage,
+  regenerateMessage,
+  continueMessage,
+  // settings and composer
   saveSettings,
   toggleThinking,
   toggleSearch,
@@ -2164,6 +2933,7 @@ const IconSearch = props => h(IconBase, props,
 const IconClose = props => h(IconBase, props, h('path', { d: 'M6 6l12 12M18 6L6 18' }))
 const IconChevronDown = props => h(IconBase, props, h('path', { d: 'M6 9l6 6 6-6' }))
 const IconChevronRight = props => h(IconBase, props, h('path', { d: 'M9 6l6 6-6 6' }))
+const IconChevronLeft = props => h(IconBase, props, h('path', { d: 'M15 6l-6 6 6 6' }))
 const IconArrowUp = props => h(IconBase, props, h('path', { d: 'M12 19V5M6 11l6-6 6 6' }))
 const IconStop = props => h(IconBase, { ...props, filled: true }, h('rect', { x: 7, y: 7, width: 10, height: 10, rx: 2.2 }))
 const IconPaperclip = props => h(IconBase, props,
@@ -2241,6 +3011,35 @@ const IconAgent = props => h(IconBase, props,
   h('rect', { x: 3.5, y: 5, width: 17, height: 14, rx: 2.5 }),
   h('path', { d: 'M7 9.5l2.5 2.5L7 14.5M12.5 14.5H17' }),
 )
+const IconMore = props => h(IconBase, { ...props, filled: true },
+  h('circle', { cx: 5.5, cy: 12, r: 1.5 }),
+  h('circle', { cx: 12, cy: 12, r: 1.5 }),
+  h('circle', { cx: 18.5, cy: 12, r: 1.5 }),
+)
+const IconPin = props => h(IconBase, props,
+  h('path', { d: 'M14.5 3.8l5.7 5.7-2.4 1.1-3.6 3.6-1 4.2-6.6-6.6 4.2-1 3.6-3.6 1.1-2.4Z' }),
+  h('path', { d: 'M10 14l-5.2 5.2' }),
+)
+const IconFolder = props => h(IconBase, props,
+  h('path', { d: 'M3.5 7.2A2.2 2.2 0 0 1 5.7 5h3.1l1.8 2.2h7.7a2.2 2.2 0 0 1 2.2 2.2v7.4a2.2 2.2 0 0 1-2.2 2.2H5.7a2.2 2.2 0 0 1-2.2-2.2V7.2Z' }),
+)
+const IconFolderPlus = props => h(IconBase, props,
+  h('path', { d: 'M3.5 7.2A2.2 2.2 0 0 1 5.7 5h3.1l1.8 2.2h7.7a2.2 2.2 0 0 1 2.2 2.2v7.4a2.2 2.2 0 0 1-2.2 2.2H5.7a2.2 2.2 0 0 1-2.2-2.2V7.2Z' }),
+  h('path', { d: 'M12 11.2v5M9.5 13.7h5' }),
+)
+const IconFolderMinus = props => h(IconBase, props,
+  h('path', { d: 'M3.5 7.2A2.2 2.2 0 0 1 5.7 5h3.1l1.8 2.2h7.7a2.2 2.2 0 0 1 2.2 2.2v7.4a2.2 2.2 0 0 1-2.2 2.2H5.7a2.2 2.2 0 0 1-2.2-2.2V7.2Z' }),
+  h('path', { d: 'M9.5 13.7h5' }),
+)
+const IconArchive = props => h(IconBase, props,
+  h('rect', { x: 3.5, y: 4.5, width: 17, height: 4.5, rx: 1.4 }),
+  h('path', { d: 'M5 9v8.2a2.3 2.3 0 0 0 2.3 2.3h9.4a2.3 2.3 0 0 0 2.3-2.3V9' }),
+  h('path', { d: 'M10 13h4' }),
+)
+const IconArrowDownToLine = props => h(IconBase, props,
+  h('path', { d: 'M12 4v11M7 10.5l5 5 5-5' }),
+  h('path', { d: 'M5 20h14' }),
+)
 
 const ICONS = {
   plus: IconPlus,
@@ -2248,6 +3047,7 @@ const ICONS = {
   close: IconClose,
   chevronDown: IconChevronDown,
   chevronRight: IconChevronRight,
+  chevronLeft: IconChevronLeft,
   arrowUp: IconArrowUp,
   stop: IconStop,
   paperclip: IconPaperclip,
@@ -2271,6 +3071,13 @@ const ICONS = {
   refresh: IconRefresh,
   chat: IconChatBubble,
   agent: IconAgent,
+  more: IconMore,
+  pin: IconPin,
+  folder: IconFolder,
+  folderPlus: IconFolderPlus,
+  folderMinus: IconFolderMinus,
+  archive: IconArchive,
+  continue: IconArrowDownToLine,
 }
 
 function Icon({ name, size = 18, className = '' }) {
@@ -2714,7 +3521,35 @@ function ProcessPanel({ message, streaming }) {
   )
 }
 
-function AssistantMessage({ message, streaming, isLast }) {
+/**
+ * Compact branch switcher shared by user questions and assistant answers.
+ * Only rendered when the sibling group has more than one version, so a normal
+ * single-path chat keeps its message actions clean.
+ */
+function VersionNav({ message }) {
+  const t = useT()
+  const busy = useChat(state => state.streaming !== null)
+  const version = message?.version
+  if (!version || !(version.count > 1)) return null
+  const index = Math.max(1, Math.min(version.count, version.index ?? 1))
+  const step = (direction) => {
+    if (busy) return
+    void chatActions.selectVersion(message.id, direction)
+  }
+  return h('span', { className: 'dsc-version', role: 'group', 'aria-label': t('versionLabel', { index, count: version.count }) },
+    h('button', {
+      type: 'button', className: 'dsc-version-button', title: t('versionPrev'), 'aria-label': t('versionPrev'),
+      disabled: busy, onClick: () => step(-1),
+    }, h(Icon, { name: 'chevronLeft', size: 13 })),
+    h('span', { className: 'dsc-version-label' }, `${index} / ${version.count}`),
+    h('button', {
+      type: 'button', className: 'dsc-version-button', title: t('versionNext'), 'aria-label': t('versionNext'),
+      disabled: busy, onClick: () => step(1),
+    }, h(Icon, { name: 'chevronRight', size: 13 })),
+  )
+}
+
+function AssistantMessage({ message, streaming, isLast, canRegenerate, highlighted }) {
   const t = useT()
   const [copied, setCopied] = React.useState(false)
   const text = messageText(message)
@@ -2722,7 +3557,12 @@ function AssistantMessage({ message, streaming, isLast }) {
   const refused = message.stopReason === 'refusal'
   const errorInfo = message.error ? friendlyError(message.error) : null
   const showTyping = streaming && text === '' && (message.blocks ?? []).length === 0
-  return h('div', { className: 'dsc-msg dsc-msg-assistant' },
+  const canContinue = !streaming && isLast && canContinueReply(message)
+  const regenerate = () => {
+    if (streaming) return
+    void chatActions.regenerateMessage(message)
+  }
+  return h('div', { className: cx('dsc-msg dsc-msg-assistant', highlighted && 'is-highlighted'), 'data-message-id': message.id },
     h('div', { className: 'dsc-msg-body' },
       h(ProcessPanel, { message, streaming }),
       refused
@@ -2767,6 +3607,20 @@ function AssistantMessage({ message, streaming, isLast }) {
                   },
                 }, h(Icon, { name: copied ? 'check' : 'copy', size: 14 }), h('span', null, copied ? t('copied') : t('copy')))
               : null,
+            canRegenerate
+              ? h('button', {
+                  type: 'button', className: 'dsc-msg-action', title: t('regenerate'), 'aria-label': t('regenerate'),
+                  onClick: regenerate,
+                }, h(Icon, { name: 'refresh', size: 14 }), h('span', null, t('regenerate')))
+              : null,
+            canContinue
+              ? h('button', {
+                  type: 'button', className: 'dsc-msg-action', title: t('continueGenerating'), 'aria-label': t('continueGenerating'),
+                  onClick: () => { void chatActions.continueMessage(message) },
+                }, h(Icon, { name: 'continue', size: 14 }), h('span', null, t('continueGenerating')))
+              : null,
+            h('span', { className: 'dsc-msg-actions-spacer' }),
+            h(VersionNav, { message }),
             message.usage
               ? h('span', { className: 'dsc-usage' }, t('usage', {
                   input: message.usage.input_tokens ?? 0,
@@ -2779,14 +3633,115 @@ function AssistantMessage({ message, streaming, isLast }) {
   )
 }
 
-function UserMessage({ message }) {
-  const files = Array.isArray(message.files) ? message.files : []
+/**
+ * Inline editor for a historical question. It keeps the bubble's own look: the
+ * textarea has no border or background of its own, and the footer sits inside
+ * the same rounded surface instead of nesting a second input card.
+ */
+function UserMessageEditor({ message }) {
+  const t = useT()
+  const draft = useChat(state => state.editDraft)
+  const textareaRef = React.useRef(null)
+  const hasFiles = Array.isArray(message.files) && message.files.length > 0
+  React.useEffect(() => {
+    const node = textareaRef.current
+    if (!node) return
+    node.focus()
+    const end = node.value.length
+    try {
+      node.setSelectionRange(end, end)
+    } catch {
+      // Selection gestures are an enhancement; focus is what matters.
+    }
+  }, [])
+  React.useEffect(() => {
+    const node = textareaRef.current
+    if (!node) return
+    node.style.height = 'auto'
+    node.style.height = `${Math.min(node.scrollHeight, 260)}px`
+  }, [draft])
+  const save = () => {
+    if (draft.trim() === '' && !hasFiles) return
+    void chatActions.saveEditedMessage()
+  }
   return h('div', { className: 'dsc-msg dsc-msg-user' },
-    h('div', { className: 'dsc-user-bubble' },
-      files.length > 0
-        ? h('div', { className: 'dsc-user-files' }, files.map(file => h(AttachmentCard, { key: file.id, file, compact: true })))
-        : null,
-      message.content !== '' ? h('div', { className: 'dsc-user-text' }, message.content) : null,
+    h('div', { className: 'dsc-user-block' },
+      h('div', { className: 'dsc-user-bubble is-editing' },
+        hasFiles
+          ? h('div', { className: 'dsc-user-files' }, message.files.map(file => h(AttachmentCard, { key: file.id, file, compact: true })))
+          : null,
+        h('textarea', {
+          ref: textareaRef,
+          className: 'dsc-user-edit-input',
+          value: draft,
+          rows: 2,
+          placeholder: t('editMessage'),
+          'aria-label': t('editMessage'),
+          onChange: (event) => chatStore.set({ editDraft: event.target.value }),
+          onKeyDown: (event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault()
+              event.stopPropagation()
+              chatActions.cancelEditMessage()
+              return
+            }
+            if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+              event.preventDefault()
+              save()
+            }
+          },
+        }),
+        h('div', { className: 'dsc-user-edit-actions' },
+          h('span', { className: 'dsc-user-edit-hint' }, t('editHint')),
+          h('button', {
+            type: 'button', className: 'dsc-text-button',
+            onClick: () => chatActions.cancelEditMessage(),
+          }, t('cancel')),
+          h('button', {
+            type: 'button', className: 'dsc-primary-button is-small',
+            disabled: draft.trim() === '' && !hasFiles,
+            onClick: save,
+          }, t('editSave')),
+        ),
+      ),
+    ),
+  )
+}
+
+function UserMessage({ message, canEdit, highlighted }) {
+  const t = useT()
+  const [copied, setCopied] = React.useState(false)
+  const files = Array.isArray(message.files) ? message.files : []
+  const content = typeof message.content === 'string' ? message.content : ''
+  return h('div', { className: cx('dsc-msg dsc-msg-user', highlighted && 'is-highlighted'), 'data-message-id': message.id },
+    h('div', { className: 'dsc-user-block' },
+      h('div', { className: 'dsc-user-bubble' },
+        files.length > 0
+          ? h('div', { className: 'dsc-user-files' }, files.map(file => h(AttachmentCard, { key: file.id, file, compact: true })))
+          : null,
+        content !== '' ? h('div', { className: 'dsc-user-text' }, content) : null,
+      ),
+      h('div', { className: 'dsc-user-actions' },
+        content !== ''
+          ? h('button', {
+              type: 'button', className: 'dsc-msg-action', title: t('copy'), 'aria-label': t('copy'),
+              onClick: () => {
+                copyToClipboard(content).then(() => {
+                  setCopied(true)
+                  setTimeout(() => setCopied(false), 1600)
+                }).catch(() => chatStore.toast(t('copyFailed'), 'error'))
+              },
+            }, h(Icon, { name: copied ? 'check' : 'copy', size: 13 }), h('span', null, copied ? t('copied') : t('copy')))
+          : null,
+        canEdit
+          ? h('button', {
+              type: 'button', className: 'dsc-msg-action', title: t('edit'), 'aria-label': t('edit'),
+              onClick: () => chatActions.beginEditMessage(message),
+            }, h(Icon, { name: 'pencil', size: 13 }), h('span', null, t('edit')))
+          : null,
+        h('span', { className: 'dsc-msg-actions-spacer' }),
+        h(VersionNav, { message }),
+      ),
     ),
   )
 }
@@ -2806,12 +3761,36 @@ function Thread() {
   const activeId = useChat(state => state.activeId)
   const conversationLoading = useChat(state => state.conversationLoading)
   const conversationError = useChat(state => state.conversationError)
+  const editingId = useChat(state => state.editingId)
+  const focusMessage = useChat(state => state.focusMessage)
+  const [highlight, setHighlight] = React.useState(null)
   const ref = React.useRef(null)
   useAutoScroll(ref, [messages, activeId, streaming?.assistantId])
   React.useEffect(() => {
     const node = ref.current
     if (node) node.scrollTop = node.scrollHeight
   }, [activeId])
+  // Bring a searched or version-switched message into view and mark it briefly.
+  // The frame wait lets the new branch finish painting before measuring.
+  React.useEffect(() => {
+    if (focusMessage === null || typeof focusMessage.id !== 'string' || focusMessage.id === '') return undefined
+    const id = focusMessage.id
+    setHighlight(id)
+    let frame = 0
+    const find = () => {
+      const container = ref.current
+      if (!container) return
+      const selector = `[data-message-id="${id.replace(/["\\]/g, '\\$&')}"]`
+      const target = container.querySelector(selector)
+      if (target) target.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    }
+    frame = requestAnimationFrame(find)
+    const timer = setTimeout(() => setHighlight(null), 2200)
+    return () => {
+      if (frame !== 0) cancelAnimationFrame(frame)
+      clearTimeout(timer)
+    }
+  }, [focusMessage])
   if (conversationLoading) {
     return h('div', { className: 'dsc-thread dsc-thread-loading' }, h(Spinner, { size: 22 }))
   }
@@ -2831,16 +3810,25 @@ function Thread() {
   return h('div', { className: cx('dsc-thread', messages.length === 0 && 'is-empty'), ref, 'aria-label': tr('appTitle') },
     messages.length === 0
       ? h(EmptyState, null)
-      : h('div', { className: 'dsc-thread-inner' }, messages.map((message, index) => (
-          message.role === 'user'
-            ? h(UserMessage, { key: message.id, message })
-            : h(AssistantMessage, {
-                key: message.id,
-                message,
-                streaming: streaming?.assistantId === message.id,
-                isLast: index === messages.length - 1,
-              })
-        ))),
+      : h('div', { className: 'dsc-thread-inner' }, messages.map((message, index) => {
+          if (message.role === 'user') {
+            if (editingId === message.id) return h(UserMessageEditor, { key: message.id, message })
+            return h(UserMessage, {
+              key: message.id,
+              message,
+              canEdit: streaming === null,
+              highlighted: highlight === message.id,
+            })
+          }
+          return h(AssistantMessage, {
+            key: message.id,
+            message,
+            streaming: streaming?.assistantId === message.id,
+            isLast: index === messages.length - 1,
+            canRegenerate: streaming === null && index > 0 && messages[index - 1]?.role === 'user',
+            highlighted: highlight === message.id,
+          })
+        })),
   )
 }
 
@@ -3006,7 +3994,19 @@ function Composer() {
   )
 }
 
-function ConversationItem({ conversation, active, renaming, onOpen, onRename, onDelete }) {
+/** Pointer position for a floating menu, falling back to the trigger's box. */
+function menuPoint(event) {
+  const rect = event?.currentTarget?.getBoundingClientRect?.()
+  const x = typeof event?.clientX === 'number' && event.clientX > 0
+    ? event.clientX
+    : (rect !== undefined && rect !== null ? rect.right - 8 : 48)
+  const y = typeof event?.clientY === 'number' && event.clientY > 0
+    ? event.clientY
+    : (rect !== undefined && rect !== null ? rect.bottom + 4 : 96)
+  return { x, y }
+}
+
+function ConversationItem({ conversation, active, renaming, onOpen, onRename, onMenu }) {
   const t = useT()
   const [value, setValue] = React.useState(conversation.title || '')
   const inputRef = React.useRef(null)
@@ -3048,34 +4048,134 @@ function ConversationItem({ conversation, active, renaming, onOpen, onRename, on
       }),
     )
   }
+  const title = conversation.title || t('newChatTitle')
   return h('div', {
-    className: cx('dsc-chat-item', active && 'is-active'),
-    title: conversation.title || t('newChatTitle'),
+    className: cx('dsc-chat-item', active && 'is-active', conversation.pinned && 'is-pinned'),
+    title,
+    onContextMenu: (event) => {
+      event.preventDefault()
+      const point = menuPoint(event)
+      chatActions.openConversationMenu(conversation.id, point.x, point.y)
+    },
   },
     h('button', {
       type: 'button',
       className: 'dsc-chat-item-main',
       onClick: onOpen,
     },
-      h('span', { className: 'dsc-chat-item-title' }, conversation.title || t('newChatTitle')),
+      conversation.pinned
+        ? h('span', { className: 'dsc-chat-item-pin', 'aria-hidden': 'true' }, h(Icon, { name: 'pin', size: 11 }))
+        : null,
+      h('span', { className: 'dsc-chat-item-title' }, title),
       h('span', { className: 'dsc-chat-item-time' }, relativeTime(conversation.updatedAt, t)),
     ),
-    h('span', { className: 'dsc-chat-item-actions' },
+    h('button', {
+      type: 'button', className: 'dsc-chat-item-more', title: t('moreActions'), 'aria-label': t('moreActions'),
+      onClick: (event) => {
+        event.stopPropagation()
+        const point = menuPoint(event)
+        chatActions.openConversationMenu(conversation.id, point.x, point.y)
+      },
+    }, h(Icon, { name: 'more', size: 15 })),
+  )
+}
+
+function FolderSection({ folder, conversations, activeId, renamingId, renderItem }) {
+  const t = useT()
+  const collapsed = folder.collapsed === true
+  return h('div', { className: cx('dsc-folder', collapsed && 'is-collapsed') },
+    h('div', {
+      className: 'dsc-folder-head',
+      onContextMenu: (event) => {
+        event.preventDefault()
+        const point = menuPoint(event)
+        chatActions.openFolderMenu(folder.id, point.x, point.y)
+      },
+    },
       h('button', {
-        type: 'button', className: 'dsc-icon-button is-small', title: t('rename'), 'aria-label': t('rename'),
+        type: 'button', className: 'dsc-folder-toggle',
+        'aria-expanded': !collapsed,
+        title: folder.name,
+        onClick: () => chatActions.toggleFolder(folder.id),
+      },
+        h('span', { className: 'dsc-folder-chevron' }, h(Icon, { name: collapsed ? 'chevronRight' : 'chevronDown', size: 12 })),
+        h('span', { className: 'dsc-folder-icon' }, h(Icon, { name: 'folder', size: 14 })),
+        h('span', { className: 'dsc-folder-name' }, folder.name),
+        h('span', { className: 'dsc-folder-count' }, String(conversations.length)),
+      ),
+      h('button', {
+        type: 'button', className: 'dsc-chat-item-more', title: t('moreActions'), 'aria-label': t('moreActions'),
         onClick: (event) => {
           event.stopPropagation()
-          chatStore.set({ renamingId: conversation.id })
+          const point = menuPoint(event)
+          chatActions.openFolderMenu(folder.id, point.x, point.y)
         },
-      }, h(Icon, { name: 'pencil', size: 13 })),
-      h('button', {
-        type: 'button', className: 'dsc-icon-button is-small is-danger', title: t('delete'), 'aria-label': t('delete'),
-        onClick: (event) => {
-          event.stopPropagation()
-          chatActions.requestDeleteConversation(conversation.id, conversation.title)
-        },
-      }, h(Icon, { name: 'trash', size: 13 })),
+      }, h(Icon, { name: 'more', size: 15 })),
     ),
+    collapsed
+      ? null
+      : h('div', { className: 'dsc-folder-items' },
+          conversations.length === 0
+            ? h('div', { className: 'dsc-folder-empty' }, t('folderEmpty'))
+            : conversations.map(renderItem),
+        ),
+  )
+}
+
+/** Highlight the query inside a search snippet without rendering raw HTML. */
+function HighlightedSnippet({ text, query }) {
+  const needle = typeof query === 'string' ? query.trim() : ''
+  if (needle === '' || typeof text !== 'string') return text
+  const lower = text.toLowerCase()
+  const target = needle.toLowerCase()
+  const parts = []
+  let index = 0
+  for (;;) {
+    const found = lower.indexOf(target, index)
+    if (found < 0) break
+    if (found > index) parts.push(text.slice(index, found))
+    parts.push(h('mark', { key: `mark-${found}`, className: 'dsc-search-mark' }, text.slice(found, found + target.length)))
+    index = found + target.length
+  }
+  if (parts.length === 0) return text
+  if (index < text.length) parts.push(text.slice(index))
+  return parts
+}
+
+function SearchResults({ query, pending, results, error, activeId, onOpen }) {
+  const t = useT()
+  if (error !== '') {
+    return h('div', { className: 'dsc-list-empty' }, t('searchError', { message: error }))
+  }
+  if (pending) {
+    return h('div', { className: 'dsc-search-state' }, h(Spinner, { size: 14 }), t('searchSearching'))
+  }
+  if (results.length === 0) {
+    return h('div', { className: 'dsc-list-empty' }, t('searchEmpty'))
+  }
+  return h('div', { className: 'dsc-search-results' },
+    results.map(result => h('button', {
+      key: result.id,
+      type: 'button',
+      className: cx('dsc-search-result', result.id === activeId && 'is-active'),
+      onClick: () => onOpen(result),
+    },
+      h('span', { className: 'dsc-search-result-head' },
+        h('span', { className: 'dsc-search-result-title' }, result.title || t('newChatTitle')),
+        result.pinned
+          ? h('span', { className: 'dsc-search-result-badge', title: t('pinnedSection') }, h(Icon, { name: 'pin', size: 11 }))
+          : null,
+        result.archived
+          ? h('span', { className: 'dsc-search-result-badge', title: t('archiveTitle') }, h(Icon, { name: 'archive', size: 11 }))
+          : null,
+      ),
+      result.titleMatch && !result.snippet
+        ? h('span', { className: 'dsc-search-result-meta' }, relativeTime(result.updatedAt, t))
+        : null,
+      result.snippet
+        ? h('span', { className: 'dsc-search-result-snippet' }, h(HighlightedSnippet, { text: result.snippet, query }))
+        : null,
+    )),
   )
 }
 
@@ -3196,14 +4296,36 @@ function SidebarResizer({ onDraggingChange }) {
 function Sidebar() {
   const t = useT()
   const conversations = useChat(state => state.conversations)
+  const folders = useChat(state => state.folders)
   const activeId = useChat(state => state.activeId)
   const renamingId = useChat(state => state.renamingId)
   const auth = useChat(state => state.auth)
   const [query, setQuery] = React.useState('')
-  const filtered = query.trim() === ''
-    ? conversations
-    : conversations.filter(item => (item.title || '').toLowerCase().includes(query.trim().toLowerCase()))
-  const groups = groupConversations(filtered, t)
+  const [search, setSearch] = React.useState({ query: '', pending: false, results: [], error: '' })
+  const searchSequence = React.useRef(0)
+  const searchRef = React.useRef(null)
+  React.useEffect(() => {
+    const text = query.trim()
+    if (text === '') {
+      searchSequence.current += 1
+      setSearch({ query: '', pending: false, results: [], error: '' })
+      return undefined
+    }
+    const sequence = ++searchSequence.current
+    setSearch(previous => ({ ...previous, query: text, pending: true, error: '' }))
+    // Local history is small: one short debounce and a Host-side scan is
+    // enough, so no separate search index or service is needed.
+    const timer = setTimeout(() => {
+      chatActions.searchHistory(text).then((data) => {
+        if (sequence !== searchSequence.current) return
+        setSearch({ query: text, pending: false, results: Array.isArray(data?.results) ? data.results : [], error: '' })
+      }).catch((error) => {
+        if (sequence !== searchSequence.current) return
+        setSearch({ query: text, pending: false, results: [], error: error instanceof Error ? error.message : String(error) })
+      })
+    }, 220)
+    return () => clearTimeout(timer)
+  }, [query])
   const closeOnMobile = () => {
     // Same breakpoint as the drawer presentation; between 769-1024px the
     // sidebar is still a column and selecting a conversation must not hide it.
@@ -3222,6 +4344,35 @@ function Sidebar() {
     void chatActions.loadConversation(id)
     closeOnMobile()
   }
+  const renderConversation = conversation => h(ConversationItem, {
+    key: conversation.id,
+    conversation,
+    active: conversation.id === activeId,
+    renaming: renamingId === conversation.id,
+    onOpen: () => select(conversation.id),
+    onRename: (value) => {
+      if (value.trim() === conversation.title) {
+        chatStore.set({ renamingId: null })
+        return
+      }
+      void chatActions.renameConversation(conversation.id, value)
+    },
+  })
+  // Archived chats leave the normal list but stay searchable and manageable in
+  // the archive dialog. Pinned chats stay pinned even when they also belong to
+  // a folder: the pinned section is their only home until they are unpinned.
+  const groups = organizeSidebar(conversations, folders)
+  const pinned = groups.pinned
+  const loose = groups.loose
+  const folderItems = new Map(groups.folders.map(entry => [entry.folder.id, entry.conversations]))
+  const archivedCount = groups.archivedCount
+  const visibleCount = groups.pinned.length + groups.loose.length
+    + groups.folders.reduce((total, entry) => total + entry.conversations.length, 0)
+  const groupBlock = (key, label, items) => h('div', { className: 'dsc-chat-group', key },
+    h('div', { className: 'dsc-chat-group-label' }, label),
+    items.map(renderConversation),
+  )
+  const searching = query.trim() !== ''
   return h('aside', { className: 'dsc-sidebar-inner' },
     h('div', { className: 'dsc-sidebar-brand' },
       h('div', { className: 'dsc-brand-lockup' }, h(DeepSeekLockup, { height: 24 })),
@@ -3234,39 +4385,86 @@ function Sidebar() {
       type: 'button', className: 'dsc-new-chat',
       onClick: () => { void chatActions.newChat(); closeOnMobile() },
     }, h(Icon, { name: 'plus', size: 15 }), h('span', null, t('newChat'))),
-    h('label', { className: 'dsc-search' },
+    h('div', {
+      className: 'dsc-search',
+      onMouseDown: (event) => {
+        // Keep the whole field clickable while letting the clear button win.
+        if (typeof event.target?.closest === 'function' && event.target.closest('button') !== null) return
+        searchRef.current?.focus()
+      },
+    },
       h(Icon, { name: 'search', size: 15 }),
       h('input', {
+        ref: searchRef,
         className: 'dsc-search-input',
         value: query,
         placeholder: t('searchChats'),
         'aria-label': t('searchChats'),
         onChange: (event) => setQuery(event.target.value),
+        onKeyDown: (event) => {
+          if (event.key === 'Escape' && query !== '') {
+            event.preventDefault()
+            setQuery('')
+          }
+        },
       }),
+      searching
+        ? h('button', {
+            type: 'button', className: 'dsc-search-clear', title: t('clear'), 'aria-label': t('clear'),
+            onMouseDown: (event) => event.preventDefault(),
+            onClick: () => { setQuery(''); searchRef.current?.focus() },
+          }, h(Icon, { name: 'close', size: 12 }))
+        : null,
     ),
     h('div', { className: 'dsc-chat-list' },
-      groups.length === 0
-        ? h('div', { className: 'dsc-list-empty' }, query.trim() === '' ? t('noChats') : t('searchEmpty'))
-        : groups.map(group => h('div', { className: 'dsc-chat-group', key: group.key },
-            h('div', { className: 'dsc-chat-group-label' }, group.label),
-            group.items.map(conversation => h(ConversationItem, {
-              key: conversation.id,
-              conversation,
-              active: conversation.id === activeId,
-              renaming: renamingId === conversation.id,
-              onOpen: () => select(conversation.id),
-              onRename: (value) => {
-                if (value.trim() === conversation.title) {
-                  chatStore.set({ renamingId: null })
-                  return
-                }
-                void chatActions.renameConversation(conversation.id, value)
-              },
-              onDelete: () => chatActions.requestDeleteConversation(conversation.id, conversation.title),
-            })),
-          )),
+      searching
+        ? h(SearchResults, {
+            query: search.query,
+            pending: search.pending,
+            results: search.results,
+            error: search.error,
+            activeId,
+            onOpen: (result) => {
+              void chatActions.openSearchResult(result)
+              closeOnMobile()
+            },
+          })
+        : h(React.Fragment, null,
+            pinned.length > 0 ? groupBlock('pinned', t('pinnedSection'), pinned) : null,
+            h('div', { className: 'dsc-list-toolbar' },
+              h('span', { className: 'dsc-list-toolbar-label' }, t('foldersSection')),
+              h('button', {
+                type: 'button', className: 'dsc-icon-button is-small', title: t('newFolder'),
+                'aria-label': t('newFolder'),
+                onClick: () => chatActions.requestFolderPrompt('create'),
+              }, h(Icon, { name: 'folderPlus', size: 14 })),
+            ),
+            folders.length > 0
+              ? h('div', { className: 'dsc-folder-list' }, folders.map(folder => h(FolderSection, {
+                  key: folder.id,
+                  folder,
+                  conversations: folderItems.get(folder.id) ?? [],
+                  activeId,
+                  renamingId,
+                  renderItem: renderConversation,
+                })))
+              : null,
+            loose.length > 0
+              ? (folders.length > 0
+                  ? groupBlock('unfiled', t('unfiled'), loose)
+                  : groupConversations(loose, t).map(group => groupBlock(group.key, group.label, group.items)))
+              : null,
+            visibleCount === 0 ? h('div', { className: 'dsc-list-empty' }, t('noChats')) : null,
+          ),
     ),
     h('div', { className: 'dsc-sidebar-foot' },
+      h('button', {
+        type: 'button', className: 'dsc-foot-action',
+        title: t('archiveManager'),
+        onClick: () => chatActions.openArchive(),
+      }, h(Icon, { name: 'archive', size: 16 }), h('span', null, t('archiveManager')),
+        archivedCount > 0 ? h('span', { className: 'dsc-foot-count' }, String(archivedCount)) : null,
+      ),
       h('button', {
         type: 'button', className: 'dsc-foot-action',
         title: t('chatSettings'),
@@ -3557,6 +4755,11 @@ function ChatRoot() {
   const handoff = useChat(state => state.handoff)
   const sidebarOpen = useChat(state => state.sidebarOpen)
   const sidebarWidth = useChat(state => state.sidebarWidth)
+  const menu = useChat(state => state.menu)
+  const folderPrompt = useChat(state => state.folderPrompt)
+  const moveChat = useChat(state => state.moveChat)
+  const folderAdd = useChat(state => state.folderAdd)
+  const archiveOpen = useChat(state => state.archiveOpen)
   const [resizing, setResizing] = React.useState(false)
   const rootRef = React.useRef(null)
   const sidebarRef = React.useRef(null)
@@ -3594,6 +4797,30 @@ function ChatRoot() {
           chatStore.set({ settingsOpen: false })
           return
         }
+        if (chatStore.state.menu !== null) {
+          chatActions.closeMenu()
+          return
+        }
+        if (chatStore.state.folderPrompt !== null) {
+          chatActions.closeFolderPrompt()
+          return
+        }
+        if (chatStore.state.moveChat !== null) {
+          chatActions.closeMoveChat()
+          return
+        }
+        if (chatStore.state.folderAdd !== null) {
+          chatActions.closeFolderAdd()
+          return
+        }
+        if (chatStore.state.archiveOpen === true) {
+          chatActions.closeArchive()
+          return
+        }
+        if (chatStore.state.editingId !== null) {
+          chatActions.cancelEditMessage()
+          return
+        }
         // On the narrow drawer presentation Escape dismisses the sidebar, the
         // same gesture as the native drawer.
         if (chatStore.state.sidebarOpen && typeof window !== 'undefined' && window.innerWidth <= 768) {
@@ -3606,8 +4833,8 @@ function ChatRoot() {
       if (!root) return
       // A dialog traps focus on its own; otherwise the surface and the shared
       // switch form one scope, so Tab never reaches the native Agent UI that
-      // stays mounted underneath.
-      const modal = root.querySelector('.dsc-modal, .dsc-confirm')
+      // stays mounted underneath. An open menu keeps focus among its items.
+      const modal = root.querySelector('.dsc-modal, .dsc-confirm, .dsc-menu')
       const scope = modal ?? root
       // The share switch is a fixed-position shell entry; its own buttons are
       // laid out inside it, so they carry an offsetParent while the pill does not.
@@ -3667,8 +4894,15 @@ function ChatRoot() {
         : h(BootView, { error: bootError, onRetry: () => { void chatActions.ensureBoot(true) } }),
     ),
     settingsOpen ? h(SettingsDialog, null) : null,
-    confirm !== null ? h(ConfirmDialog, null) : null,
     handoff !== null ? h(HandoffDialog, null) : null,
+    folderPrompt !== null ? h(FolderPromptDialog, null) : null,
+    moveChat !== null ? h(MoveChatDialog, null) : null,
+    folderAdd !== null ? h(FolderAddDialog, null) : null,
+    archiveOpen ? h(ArchiveDialog, null) : null,
+    // The confirmation sits on top of whichever surface raised it (the archive
+    // manager, a folder picker or the sidebar menu).
+    confirm !== null ? h(ConfirmDialog, null) : null,
+    menu !== null ? h(ContextMenu, null) : null,
   )
 }
 
@@ -3993,6 +5227,377 @@ function HandoffDialog() {
           disabled: !canSend || workspaces.length === 0,
           onClick: () => { void chatActions.submitHandoff() },
         }, handoff.busy ? t('handoffSending') : t('handoffSend')),
+      ),
+    ),
+  )
+}
+
+/**
+ * One floating menu for conversation and folder actions. It is anchored at the
+ * pointer (right-click or the row's "···"), clamped into the window, and closes
+ * on an outside click or Escape.
+ */
+function ContextMenu() {
+  const t = useT()
+  const menu = useChat(state => state.menu)
+  const conversations = useChat(state => state.conversations)
+  const folders = useChat(state => state.folders)
+  const ref = React.useRef(null)
+  const [position, setPosition] = React.useState(null)
+  React.useLayoutEffect(() => {
+    if (menu === null) {
+      setPosition(null)
+      return
+    }
+    const rect = ref.current?.getBoundingClientRect()
+    const width = rect?.width ?? 210
+    const height = rect?.height ?? 260
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 0
+    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 0
+    setPosition({
+      left: Math.max(8, Math.min(menu.x, viewportWidth - width - 8)),
+      top: Math.max(8, Math.min(menu.y, viewportHeight - height - 8)),
+    })
+  }, [menu])
+  if (menu === null) return null
+  let items = []
+  if (menu.kind === 'conversation') {
+    const conversation = conversations.find(item => item.id === menu.id)
+    if (conversation === undefined) return null
+    items = [
+      {
+        key: 'rename',
+        icon: 'pencil',
+        label: t('rename'),
+        onSelect: () => {
+          chatStore.set({ menu: null, renamingId: conversation.id })
+        },
+      },
+      {
+        key: 'pin',
+        icon: 'pin',
+        label: conversation.pinned ? t('unpin') : t('pin'),
+        onSelect: () => { void chatActions.setPinned(conversation.id, conversation.pinned !== true) },
+      },
+    ]
+    if (folders.length > 0) {
+      items.push({
+        key: 'move',
+        icon: 'folder',
+        label: t('moveToFolder'),
+        onSelect: () => chatActions.openMoveChat(conversation.id),
+      })
+    }
+    if (conversation.folderId !== null) {
+      items.push({
+        key: 'unfile',
+        icon: 'folderMinus',
+        label: t('moveOutOfFolder'),
+        onSelect: () => { void chatActions.moveConversationToFolder(conversation.id, null) },
+      })
+    }
+    items.push(
+      {
+        key: 'archive',
+        icon: 'archive',
+        label: conversation.archived ? t('unarchive') : t('archive'),
+        onSelect: () => { void chatActions.setArchived(conversation.id, conversation.archived !== true) },
+      },
+      null,
+      {
+        key: 'delete',
+        icon: 'trash',
+        label: t('delete'),
+        danger: true,
+        onSelect: () => {
+          chatActions.closeMenu()
+          chatActions.requestDeleteConversation(conversation.id, conversation.title)
+        },
+      },
+    )
+  } else {
+    const folder = folders.find(item => item.id === menu.id)
+    if (folder === undefined) return null
+    items = [
+      {
+        key: 'rename',
+        icon: 'pencil',
+        label: t('renameFolder'),
+        onSelect: () => chatActions.requestFolderPrompt('rename', folder),
+      },
+      {
+        key: 'add',
+        icon: 'plus',
+        label: t('addChatsToFolder'),
+        onSelect: () => chatActions.openFolderAdd(folder.id),
+      },
+      null,
+      {
+        key: 'delete',
+        icon: 'trash',
+        label: t('deleteFolder'),
+        danger: true,
+        onSelect: () => chatActions.requestDeleteFolder(folder),
+      },
+    ]
+  }
+  const moveFocus = (event) => {
+    const buttons = [...(ref.current?.querySelectorAll('[role="menuitem"]') ?? [])]
+    if (buttons.length === 0) return
+    const current = buttons.indexOf(document.activeElement)
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      buttons[(current + 1 + buttons.length) % buttons.length].focus()
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      buttons[(current - 1 + buttons.length) % buttons.length].focus()
+    } else if (event.key === 'Escape') {
+      event.preventDefault()
+      event.stopPropagation()
+      chatActions.closeMenu()
+    }
+  }
+  return h(React.Fragment, null,
+    h('div', {
+      className: 'dsc-menu-backdrop',
+      onMouseDown: () => chatActions.closeMenu(),
+      onContextMenu: (event) => {
+        event.preventDefault()
+        chatActions.closeMenu()
+      },
+    }),
+    h('div', {
+      ref,
+      className: 'dsc-menu',
+      role: 'menu',
+      'aria-label': t('moreActions'),
+      style: position === null ? { left: `${menu.x}px`, top: `${menu.y}px` } : position,
+      onKeyDown: moveFocus,
+      onContextMenu: (event) => event.preventDefault(),
+    },
+      items.map((item, index) => (item === null
+        ? h('div', { key: `separator-${index}`, className: 'dsc-menu-separator', role: 'separator' })
+        : h('button', {
+            key: item.key,
+            type: 'button',
+            role: 'menuitem',
+            className: cx('dsc-menu-item', item.danger && 'is-danger'),
+            autoFocus: index === 0,
+            onClick: item.onSelect,
+          },
+            h(Icon, { name: item.icon, size: 15 }),
+            h('span', null, item.label),
+          ))),
+    ),
+  )
+}
+
+/** Create or rename a folder. Enter submits, Escape closes via the shell. */
+function FolderPromptDialog() {
+  const t = useT()
+  const prompt = useChat(state => state.folderPrompt)
+  const inputRef = React.useRef(null)
+  React.useEffect(() => {
+    if (prompt === null) return undefined
+    const timer = setTimeout(() => inputRef.current?.select(), 30)
+    return () => clearTimeout(timer)
+  }, [prompt?.mode, prompt?.id])
+  if (prompt === null) return null
+  const title = prompt.mode === 'rename' ? t('folderRenameTitle') : t('folderCreateTitle')
+  return h('div', {
+    className: 'dsc-modal-backdrop',
+    onMouseDown: (event) => { if (event.target === event.currentTarget) chatActions.closeFolderPrompt() },
+  },
+    h('form', {
+      className: 'dsc-confirm',
+      role: 'dialog',
+      'aria-modal': 'true',
+      'aria-label': title,
+      onSubmit: (event) => {
+        event.preventDefault()
+        void chatActions.submitFolderPrompt()
+      },
+    },
+      h('h2', null, title),
+      h('input', {
+        ref: inputRef,
+        className: 'dsc-input dsc-folder-name',
+        value: prompt.draft,
+        maxLength: 60,
+        placeholder: t('folderNamePlaceholder'),
+        'aria-label': t('folderNamePlaceholder'),
+        onChange: (event) => chatActions.updateFolderPrompt(event.target.value),
+      }),
+      h('div', { className: 'dsc-confirm-actions' },
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button', onClick: () => chatActions.closeFolderPrompt(),
+        }, t('cancel')),
+        h('button', {
+          type: 'submit', className: 'dsc-primary-button',
+          disabled: prompt.busy || prompt.draft.trim() === '',
+        }, prompt.mode === 'rename' ? t('save') : t('create')),
+      ),
+    ),
+  )
+}
+
+/** Pick a folder (or the unfiled area) for one conversation. */
+function MoveChatDialog() {
+  const t = useT()
+  const move = useChat(state => state.moveChat)
+  const folders = useChat(state => state.folders)
+  if (move === null) return null
+  const options = [{ id: null, name: t('unfiled') }, ...folders.map(folder => ({ id: folder.id, name: folder.name }))]
+  return h('div', {
+    className: 'dsc-modal-backdrop',
+    onMouseDown: (event) => { if (event.target === event.currentTarget) chatActions.closeMoveChat() },
+  },
+    h('div', { className: 'dsc-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('moveChatTitle') },
+      h('header', { className: 'dsc-modal-head' },
+        h('div', null,
+          h('h2', null, t('moveChatTitle')),
+          h('p', { className: 'dsc-modal-sub' }, t('moveChatHint')),
+        ),
+        h('button', {
+          type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
+          autoFocus: true, onClick: () => chatActions.closeMoveChat(),
+        }, h(Icon, { name: 'close', size: 18 })),
+      ),
+      h('div', { className: 'dsc-modal-body' },
+        h('div', { className: 'dsc-dialog-list', role: 'radiogroup', 'aria-label': t('moveChatTitle') },
+          options.map(option => h('button', {
+            key: option.id ?? 'unfiled',
+            type: 'button',
+            role: 'radio',
+            'aria-checked': move.folderId === option.id,
+            className: cx('dsc-choice', move.folderId === option.id && 'is-selected'),
+            onClick: () => chatActions.setMoveChatFolder(option.id ?? ''),
+          },
+            h('span', { className: 'dsc-choice-icon' }, h(Icon, { name: option.id === null ? 'folderMinus' : 'folder', size: 16 })),
+            h('span', { className: 'dsc-choice-label' }, option.name),
+            move.folderId === option.id ? h(Icon, { name: 'check', size: 15 }) : null,
+          )),
+        ),
+      ),
+      h('footer', { className: 'dsc-modal-foot' },
+        h('div', { className: 'dsc-modal-foot-note' }),
+        h('button', { type: 'button', className: 'dsc-secondary-button', onClick: () => chatActions.closeMoveChat() }, t('cancel')),
+        h('button', {
+          type: 'button', className: 'dsc-primary-button', disabled: move.busy,
+          onClick: () => { void chatActions.submitMoveChat() },
+        }, t('moveChatConfirm')),
+      ),
+    ),
+  )
+}
+
+/** Move one or more conversations into a folder from the folder's own menu. */
+function FolderAddDialog() {
+  const t = useT()
+  const add = useChat(state => state.folderAdd)
+  const conversations = useChat(state => state.conversations)
+  if (add === null) return null
+  const candidates = conversations
+    .filter(conversation => conversation.archived !== true && conversation.folderId !== add.folderId)
+    .sort(byActivity)
+  return h('div', {
+    className: 'dsc-modal-backdrop',
+    onMouseDown: (event) => { if (event.target === event.currentTarget) chatActions.closeFolderAdd() },
+  },
+    h('div', { className: 'dsc-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('folderAddTitle', { name: add.name }) },
+      h('header', { className: 'dsc-modal-head' },
+        h('div', null,
+          h('h2', null, t('folderAddTitle', { name: add.name })),
+          h('p', { className: 'dsc-modal-sub' }, t('folderAddHint')),
+        ),
+        h('button', {
+          type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
+          autoFocus: true, onClick: () => chatActions.closeFolderAdd(),
+        }, h(Icon, { name: 'close', size: 18 })),
+      ),
+      h('div', { className: 'dsc-modal-body' },
+        candidates.length === 0
+          ? h('div', { className: 'dsc-list-empty' }, t('folderAddEmpty'))
+          : h('div', { className: 'dsc-dialog-list' },
+              candidates.map(conversation => {
+                const selected = add.selected.includes(conversation.id)
+                return h('button', {
+                  key: conversation.id,
+                  type: 'button',
+                  role: 'checkbox',
+                  'aria-checked': selected,
+                  className: cx('dsc-choice', selected && 'is-selected'),
+                  onClick: () => chatActions.toggleFolderAddSelection(conversation.id),
+                },
+                  h('span', { className: 'dsc-choice-check' }, selected ? h(Icon, { name: 'check', size: 14 }) : null),
+                  h('span', { className: 'dsc-choice-label' }, conversation.title || t('newChatTitle')),
+                  conversation.pinned ? h('span', { className: 'dsc-choice-hint' }, h(Icon, { name: 'pin', size: 12 })) : null,
+                )
+              }),
+            ),
+      ),
+      h('footer', { className: 'dsc-modal-foot' },
+        h('div', { className: 'dsc-modal-foot-note' }, add.selected.length > 0 ? String(add.selected.length) : ''),
+        h('button', { type: 'button', className: 'dsc-secondary-button', onClick: () => chatActions.closeFolderAdd() }, t('cancel')),
+        h('button', {
+          type: 'button', className: 'dsc-primary-button',
+          disabled: add.busy || add.selected.length === 0,
+          onClick: () => { void chatActions.submitFolderAdd() },
+        }, t('folderAddConfirm')),
+      ),
+    ),
+  )
+}
+
+/** Archived chats: the only place they are listed, with restore and delete. */
+function ArchiveDialog() {
+  const t = useT()
+  const open = useChat(state => state.archiveOpen)
+  const conversations = useChat(state => state.conversations)
+  const folders = useChat(state => state.folders)
+  if (!open) return null
+  const archived = conversations
+    .filter(conversation => conversation.archived === true)
+    .sort((left, right) => (right.archivedAt ?? right.updatedAt) - (left.archivedAt ?? left.updatedAt))
+  const folderName = folderId => folders.find(folder => folder.id === folderId)?.name ?? ''
+  return h('div', {
+    className: 'dsc-modal-backdrop',
+    onMouseDown: (event) => { if (event.target === event.currentTarget) chatActions.closeArchive() },
+  },
+    h('div', { className: 'dsc-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('archiveTitle') },
+      h('header', { className: 'dsc-modal-head' },
+        h('div', null,
+          h('h2', null, t('archiveTitle')),
+          h('p', { className: 'dsc-modal-sub' }, t('archiveSubtitle')),
+        ),
+        h('button', {
+          type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
+          autoFocus: true, onClick: () => chatActions.closeArchive(),
+        }, h(Icon, { name: 'close', size: 18 })),
+      ),
+      h('div', { className: 'dsc-modal-body' },
+        archived.length === 0
+          ? h('div', { className: 'dsc-list-empty' }, t('archiveEmpty'))
+          : h('div', { className: 'dsc-archive-list' },
+              archived.map(conversation => h('div', { key: conversation.id, className: 'dsc-archive-item' },
+                h('div', { className: 'dsc-archive-item-main' },
+                  h('span', { className: 'dsc-archive-item-title' }, conversation.title || t('newChatTitle')),
+                  h('span', { className: 'dsc-archive-item-meta' },
+                    `${relativeTime(conversation.archivedAt ?? conversation.updatedAt, t)} · ${t('messageCount', { count: conversation.messageCount ?? 0 })}${conversation.folderId === null ? '' : ` · ${folderName(conversation.folderId)}`}`,
+                  ),
+                ),
+                h('div', { className: 'dsc-archive-actions' },
+                  h('button', {
+                    type: 'button', className: 'dsc-secondary-button is-small-compact',
+                    onClick: () => { void chatActions.setArchived(conversation.id, false) },
+                  }, t('restore')),
+                  h('button', {
+                    type: 'button', className: 'dsc-icon-button is-small is-danger', title: t('delete'), 'aria-label': t('delete'),
+                    onClick: () => chatActions.requestDeleteConversation(conversation.id, conversation.title),
+                  }, h(Icon, { name: 'trash', size: 14 })),
+                ),
+              )),
+            ),
       ),
     ),
   )
@@ -4415,23 +6020,31 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
 }
 .dsc-chat-item.is-active .dsc-chat-item-title { font-weight: 550; }
 .dsc-chat-item-time { flex: none; font-size: 11px; color: var(--dsc-muted); }
-.dsc-chat-item-actions {
+/* One hover action per row: everything else lives in its "···" menu. */
+.dsc-chat-item-more {
   position: absolute;
   right: 5px;
   top: 50%;
   transform: translateY(-50%);
   display: none;
   align-items: center;
-  gap: 1px;
-  padding-left: 14px;
-  background: linear-gradient(to right, transparent, var(--dsc-sidebar) 30%);
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: var(--dsc-sidebar);
+  color: var(--dsc-muted);
 }
-.dsc-chat-item:hover .dsc-chat-item-actions,
-.dsc-chat-item:focus-within .dsc-chat-item-actions,
-.dsc-chat-item.is-active .dsc-chat-item-actions { display: flex; }
+.dsc-chat-item-more:hover { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-chat-item:hover .dsc-chat-item-more,
+.dsc-chat-item:focus-within .dsc-chat-item-more,
+.dsc-chat-item.is-active .dsc-chat-item-more { display: inline-flex; }
 .dsc-chat-item:hover .dsc-chat-item-time,
 .dsc-chat-item:focus-within .dsc-chat-item-time,
 .dsc-chat-item.is-active .dsc-chat-item-time { visibility: hidden; }
+.dsc-chat-item-pin { display: inline-flex; flex: none; color: var(--dsc-muted); }
 .dsc-chat-item.is-renaming { background: var(--dsc-layer); border: 1px solid var(--dsc-border-strong); }
 .dsc-rename-input {
   width: 100%;
@@ -4443,6 +6056,112 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   font-size: 13px;
 }
 .dsc-list-empty { padding: 22px 10px; text-align: center; color: var(--dsc-muted); font-size: 12.4px; line-height: 1.6; }
+/* ---------- folders ---------- */
+.dsc-list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 26px;
+  margin: 10px 2px 0;
+  padding: 0 4px 0 8px;
+}
+.dsc-list-toolbar-label { font-size: 11.5px; font-weight: 600; letter-spacing: 0.01em; color: var(--dsc-muted); }
+.dsc-folder-list { margin-top: 2px; }
+.dsc-folder { margin-top: 1px; }
+.dsc-folder-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 4px 0 2px;
+  border-radius: var(--dsc-radius);
+}
+.dsc-folder-head:hover { background: var(--dsc-hover); }
+.dsc-folder-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--dsc-text);
+  font-size: 13px;
+  font-weight: 550;
+  text-align: left;
+}
+.dsc-folder-chevron { display: inline-flex; flex: none; width: 12px; color: var(--dsc-muted); }
+.dsc-folder-icon { display: inline-flex; flex: none; color: var(--dsc-muted); }
+.dsc-folder-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dsc-folder-count { flex: none; font-size: 11px; color: var(--dsc-muted); }
+.dsc-folder-head .dsc-chat-item-more { position: static; transform: none; background: transparent; flex: none; }
+.dsc-folder-head:hover .dsc-chat-item-more,
+.dsc-folder-head:focus-within .dsc-chat-item-more { display: inline-flex; }
+.dsc-folder-items { padding-left: 10px; }
+.dsc-folder-empty { padding: 5px 10px 8px 26px; font-size: 11.8px; color: var(--dsc-muted); }
+.dsc-foot-count {
+  margin-left: auto;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--dsc-field);
+  color: var(--dsc-muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+/* ---------- history search ---------- */
+.dsc-search-clear {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsc-muted);
+}
+.dsc-search-clear:hover { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-search-state { display: flex; align-items: center; gap: 8px; padding: 18px 10px; font-size: 12.4px; color: var(--dsc-muted); }
+.dsc-search-results { display: flex; flex-direction: column; gap: 2px; padding-top: 4px; }
+.dsc-search-result {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  padding: 8px 9px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--dsc-text);
+  text-align: left;
+}
+.dsc-search-result:hover { background: var(--dsc-hover); }
+.dsc-search-result.is-active { background: var(--dsc-active); }
+.dsc-search-result-head { display: flex; align-items: center; gap: 5px; width: 100%; min-width: 0; }
+.dsc-search-result-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 550; }
+.dsc-search-result-badge { display: inline-flex; flex: none; color: var(--dsc-muted); }
+.dsc-search-result-meta { font-size: 11px; color: var(--dsc-muted); }
+.dsc-search-result-snippet {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 11.8px;
+  line-height: 1.55;
+  color: var(--dsc-muted);
+  word-break: break-word;
+}
+.dsc-search-mark { padding: 0 1px; border-radius: 3px; background: var(--dsc-brand-soft-strong); color: inherit; }
 /* The foot keeps the native sidebar's spacing-only separation: no extra rule. */
 .dsc-sidebar-foot { flex: none; padding-top: 6px; }
 .dsc-foot-action {
@@ -4698,6 +6417,7 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
 /* ---------- messages ---------- */
 .dsc-msg { display: flex; width: 100%; min-width: 0; }
 .dsc-msg-user { justify-content: flex-end; padding-left: 10%; }
+.dsc-user-block { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; max-width: 100%; min-width: 0; }
 .dsc-user-bubble {
   max-width: 100%;
   padding: 10px 15px;
@@ -4710,8 +6430,62 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
 }
 .dsc-user-text { white-space: pre-wrap; word-break: break-word; }
 .dsc-user-files { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 7px; }
+.dsc-user-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 2px;
+  opacity: 0;
+  transition: opacity var(--dsc-fast) ease;
+}
+.dsc-msg-user:hover .dsc-user-actions,
+.dsc-msg-user:focus-within .dsc-user-actions { opacity: 1; }
+/* Inline question editor: the textarea itself stays borderless inside the
+   bubble, and the footer lives on the same surface instead of a nested card. */
+.dsc-user-bubble.is-editing { width: min(660px, 100%); padding: 9px 13px 7px; }
+.dsc-user-edit-input {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  max-height: 260px;
+  padding: 2px 1px;
+  border: 0;
+  outline: 0;
+  resize: none;
+  background: transparent;
+  color: var(--dsc-text);
+  font-size: 14.6px;
+  line-height: 1.68;
+}
+.dsc-user-edit-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-top: 4px; }
+.dsc-user-edit-hint { flex: 1; min-width: 0; font-size: 10.9px; line-height: 1.5; color: var(--dsc-muted); }
+.dsc-primary-button.is-small { height: 29px; padding: 0 12px; font-size: 12px; }
 .dsc-msg-assistant { align-items: flex-start; padding-right: 2%; }
 .dsc-msg-body { flex: 1; min-width: 0; }
+.dsc-msg-actions-spacer { flex: 1; }
+.dsc-version { display: inline-flex; align-items: center; gap: 1px; flex: none; color: var(--dsc-muted); }
+.dsc-version-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsc-muted);
+}
+.dsc-version-button:hover { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-version-button:disabled { opacity: 0.4; }
+.dsc-version-label { min-width: 30px; text-align: center; font-size: 11.2px; font-variant-numeric: tabular-nums; }
+.dsc-msg.is-highlighted .dsc-user-bubble,
+.dsc-msg.is-highlighted .dsc-msg-body { border-radius: 16px; animation: dsc-flash 1.9s ease; }
+@keyframes dsc-flash {
+  0% { box-shadow: 0 0 0 3px var(--dsc-brand-soft-strong); }
+  72% { box-shadow: 0 0 0 3px var(--dsc-brand-soft-strong); }
+  100% { box-shadow: 0 0 0 3px transparent; }
+}
 
 /* ---------- attachments ---------- */
 .dsc-attach {
@@ -4982,7 +6756,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-source .dsc-icon { color: var(--dsc-muted); margin-top: 2px; }
 
 /* ---------- message actions / notices ---------- */
-.dsc-msg-actions { display: flex; align-items: center; gap: 2px; margin-top: 7px; opacity: 0; transition: opacity var(--dsc-fast) ease; }
+.dsc-msg-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin-top: 7px; opacity: 0; transition: opacity var(--dsc-fast) ease; }
 .dsc-msg-assistant:hover .dsc-msg-actions,
 .dsc-msg-assistant:focus-within .dsc-msg-actions,
 .dsc-msg-actions.is-last { opacity: 1; }
@@ -5323,6 +7097,82 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-confirm p { margin: 0; font-size: 12.9px; line-height: 1.62; color: var(--dsc-muted); }
 .dsc-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 
+/* ---------- popup menu ---------- */
+.dsc-menu-backdrop { position: fixed; inset: 0; z-index: 26; background: transparent; }
+.dsc-menu {
+  position: fixed;
+  z-index: 27;
+  min-width: 198px;
+  padding: 5px;
+  border: 1px solid var(--dsc-border);
+  border-radius: 11px;
+  background: var(--dsc-layer);
+  box-shadow: var(--dsc-shadow);
+  animation: dsc-rise 0.12s ease;
+}
+.dsc-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 32px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--dsc-text);
+  font-size: 12.8px;
+  text-align: left;
+}
+.dsc-menu-item:hover { background: var(--dsc-hover); }
+.dsc-menu-item .dsc-icon { color: var(--dsc-muted); }
+.dsc-menu-item.is-danger { color: var(--dsc-error); }
+.dsc-menu-item.is-danger .dsc-icon { color: var(--dsc-error); }
+.dsc-menu-separator { height: 1px; margin: 4px 6px; background: var(--dsc-border); }
+
+/* ---------- folder pickers / archive manager ---------- */
+.dsc-folder-name { margin-top: 12px; }
+.dsc-dialog-list { display: flex; flex-direction: column; gap: 2px; max-height: 48vh; overflow-y: auto; }
+.dsc-choice {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 38px;
+  padding: 6px 9px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--dsc-text);
+  text-align: left;
+  font-size: 12.9px;
+}
+.dsc-choice:hover { background: var(--dsc-hover); }
+.dsc-choice.is-selected { border-color: color-mix(in srgb, var(--dsc-brand) 20%, transparent); background: var(--dsc-brand-soft); }
+.dsc-choice-icon { display: inline-flex; flex: none; color: var(--dsc-muted); }
+.dsc-choice-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dsc-choice-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border: 1px solid var(--dsc-border-strong);
+  border-radius: 5px;
+  color: var(--dsc-link);
+}
+.dsc-choice.is-selected .dsc-choice-check { border-color: var(--dsc-brand); background: var(--dsc-brand-soft); }
+.dsc-choice-hint { display: inline-flex; flex: none; color: var(--dsc-muted); }
+.dsc-secondary-button.is-small-compact { height: 29px; padding: 0 10px; font-size: 12px; }
+.dsc-archive-list { display: flex; flex-direction: column; gap: 2px; }
+.dsc-archive-item { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-bottom: 1px solid var(--dsc-border); }
+.dsc-archive-item:last-child { border-bottom: 0; }
+.dsc-archive-item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dsc-archive-item-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 550; }
+.dsc-archive-item-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.2px; color: var(--dsc-muted); }
+.dsc-archive-actions { display: flex; align-items: center; gap: 4px; flex: none; }
+
 /* ---------- toasts ---------- */
 .dsc-toasts { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 40; display: flex; flex-direction: column; gap: 7px; align-items: center; pointer-events: none; width: min(560px, calc(100% - 32px)); }
 .dsc-toast { display: flex; align-items: center; gap: 7px; max-width: 100%; padding: 9px 13px; border: 1px solid var(--dsc-border); border-radius: 10px; background: var(--dsc-layer); box-shadow: var(--dsc-shadow-soft); font-size: 12.5px; color: var(--dsc-text); animation: dsc-toast-in 0.16s ease; }
@@ -5352,6 +7202,13 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   .dsc-handoff-button { padding: 0 9px; }
 }
 @media (max-width: 768px) {
+  /* Touch has no hover: keep the row menu and message actions reachable, and
+     drop the timestamp that the menu button would otherwise cover. */
+  .dsc-chat-item-time { display: none; }
+  .dsc-chat-item-more,
+  .dsc-folder-head .dsc-chat-item-more { display: inline-flex; }
+  .dsc-msg-actions,
+  .dsc-user-actions { opacity: 1; }
   /* Narrow windows keep the native drawer posture: the Chat sidebar overlays
      the content instead of taking a column, and the resize handle is moot. */
   .dsc-sidebar-column {
@@ -5399,6 +7256,12 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   .dsc-thread { padding: 16px 12px 8px; }
   .dsc-composer-wrap { padding: 4px 10px 8px; }
   .dsc-user-bubble { font-size: 14.2px; }
+  .dsc-user-edit-hint { display: none; }
+  .dsc-user-bubble.is-editing { width: 100%; }
+  /* Icon-only message actions leave room for copy, regenerate, continue and the
+     version switcher on a phone-width content column. */
+  .dsc-msg-action { width: 27px; padding: 0; justify-content: center; }
+  .dsc-msg-action span { display: none; }
   .dsc-md { font-size: 14.4px; }
   .dsc-modal-backdrop { padding: 10px; }
   .dsc-modal { max-height: 94vh; border-radius: 14px; }
@@ -5456,6 +7319,15 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     SettingsDialog,
     HandoffDialog,
     AssistantMessage,
+    UserMessage,
+    UserMessageEditor,
+    VersionNav,
+    SearchResults,
+    ContextMenu,
+    FolderPromptDialog,
+    MoveChatDialog,
+    FolderAddDialog,
+    ArchiveDialog,
     Composer,
     EmptyState,
     Sidebar,
@@ -5473,6 +7345,11 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     greetingUserName,
     greetingText,
     pickGreetingIndex,
+    canContinueReply,
+    messageBodyText,
+    menuPoint,
+    organizeSidebar,
+    byActivity,
     GREETINGS,
     SIDEBAR_MIN,
     SIDEBAR_MAX,

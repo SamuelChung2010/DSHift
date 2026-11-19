@@ -130,10 +130,11 @@ function collectText(node, out = []) {
 }
 
 const bootstrap = {
-  version: 1,
+  version: 2,
   model: { id: 'deepseek-flash', name: 'DeepSeek V4.1 Flash' },
   settings: { authMode: 'auto', thinking: true, search: true, systemPrompt: '' },
   conversations: [{ id: 'c1', title: '测试对话', titleAuto: false, createdAt: 1, updatedAt: 2, messageCount: 2 }],
+  folders: [],
   auth: {
     ready: true, mode: 'auto', source: 'account',
     chatKeyConfigured: false, dshKeyConfigured: false, accountSignedIn: true, canStoreKey: true,
@@ -527,4 +528,259 @@ if (rollbackState.messages.length !== 0 || rollbackState.draft !== 'oops' || rol
   throw new Error('pre-stream rollback did not restore the composer')
 }
 console.log('ROLLBACK_OK')
+
+// ---- conversation organization: grouping, ordering and continuable answers ----
+console.log('ORGANIZE_START')
+const sidebarGroups = captured.organizeSidebar([
+  { id: 'c1', pinned: true, pinnedAt: 10, archived: false, folderId: null, updatedAt: 10 },
+  { id: 'c2', pinned: true, pinnedAt: 20, archived: false, folderId: 'f1', updatedAt: 20 },
+  { id: 'c3', pinned: false, archived: false, folderId: 'f1', updatedAt: 30 },
+  { id: 'c4', pinned: false, archived: false, folderId: null, updatedAt: 40 },
+  { id: 'c5', pinned: false, archived: true, folderId: null, updatedAt: 50 },
+], [{ id: 'f1', name: '工作', collapsed: false, createdAt: 1 }])
+if (sidebarGroups.pinned.map(item => item.id).join(',') !== 'c2,c1') throw new Error('pinned chats must follow activity order')
+if (sidebarGroups.folders[0].conversations.map(item => item.id).join(',') !== 'c3') throw new Error('folder contents are wrong')
+if (sidebarGroups.loose.map(item => item.id).join(',') !== 'c4') throw new Error('unfiled contents are wrong')
+if (sidebarGroups.archivedCount !== 1) throw new Error('archived chats must leave the list')
+const tiedGroups = captured.organizeSidebar([
+  { id: 'b', updatedAt: 5, pinned: false, archived: false, folderId: null },
+  { id: 'a', updatedAt: 5, pinned: false, archived: false, folderId: null },
+], [])
+if (tiedGroups.loose.map(item => item.id).join(',') !== 'a,b') throw new Error('equal activity timestamps must stay deterministic')
+if (captured.canContinueReply({ role: 'assistant', status: 'stopped', blocks: [{ type: 'text', text: 'half' }] }) !== true) throw new Error('a stopped answer with text must be continuable')
+if (captured.canContinueReply({ role: 'assistant', status: 'stopped', blocks: [{ type: 'text', text: '   ' }] }) !== false) throw new Error('an empty answer cannot be continued')
+if (captured.canContinueReply({ role: 'assistant', status: 'done', stopReason: 'end_turn', blocks: [{ type: 'text', text: 'full' }] }) !== false) throw new Error('a complete answer is not continuable')
+if (captured.canContinueReply({ role: 'assistant', status: 'error', prefix: false, blocks: [{ type: 'text', text: 'x' }] }) !== false) throw new Error('a tool-terminated answer cannot be continued')
+console.log('ORGANIZE_OK')
+
+// ---- new surfaces render without a browser ----
+captured.chatStore.set({
+  conversations: [
+    { id: 'c1', title: '测试对话', createdAt: 1, updatedAt: 9, pinned: true, pinnedAt: 5, archived: false, folderId: 'f1', messageCount: 2 },
+    { id: 'c2', title: '已归档对话', createdAt: 1, updatedAt: 2, pinned: false, archived: true, archivedAt: 9, folderId: null, messageCount: 4 },
+  ],
+  folders: [{ id: 'f1', name: '工作', collapsed: false, createdAt: 1 }],
+})
+const versionedUser = { ...userMessage, version: { index: 1, count: 2 } }
+const versionedAssistant = { ...assistant, version: { index: 2, count: 3 } }
+render('UserMessage-versioned', captured.UserMessage, { message: versionedUser, canEdit: true })
+render('AssistantMessage-versioned', captured.AssistantMessage, { message: versionedAssistant, streaming: false, isLast: true, canRegenerate: true })
+render('VersionNav', captured.VersionNav, { message: versionedAssistant })
+render('SearchResults', captured.SearchResults, {
+  query: 'alpha',
+  pending: false,
+  results: [{
+    id: 'c1', title: 'Alpha chat', snippet: '…an alpha match…', titleMatch: false,
+    onActivePath: true, pinned: true, archived: false, updatedAt: 2,
+  }],
+  error: '',
+  activeId: 'c1',
+  onOpen() {},
+})
+render('SearchResults-empty', captured.SearchResults, {
+  query: 'x', pending: false, results: [], error: '', activeId: null, onOpen() {},
+})
+captured.chatStore.set({ editingId: 'u1', editDraft: '你好\n第二行' })
+render('UserMessageEditor', captured.UserMessageEditor, { message: userMessage })
+captured.chatStore.set({ editingId: null, editDraft: '' })
+captured.chatStore.set({ menu: { kind: 'conversation', id: 'c1', x: 120, y: 140 } })
+render('ContextMenu-conversation', captured.ContextMenu)
+captured.chatStore.set({ menu: { kind: 'folder', id: 'f1', x: 120, y: 140 } })
+render('ContextMenu-folder', captured.ContextMenu)
+captured.chatStore.set({ menu: null, folderPrompt: { mode: 'create', id: null, draft: '', busy: false } })
+render('FolderPromptDialog', captured.FolderPromptDialog)
+captured.chatStore.set({ folderPrompt: { mode: 'rename', id: 'f1', draft: '工作', busy: false } })
+render('FolderPromptDialog-rename', captured.FolderPromptDialog)
+captured.chatStore.set({ folderPrompt: null, moveChat: { conversationId: 'c1', folderId: null, busy: false } })
+render('MoveChatDialog', captured.MoveChatDialog)
+captured.chatStore.set({ moveChat: null, folderAdd: { folderId: 'f1', name: '工作', selected: ['c1'], busy: false } })
+render('FolderAddDialog', captured.FolderAddDialog)
+captured.chatStore.set({ folderAdd: null, archiveOpen: true })
+render('ArchiveDialog', captured.ArchiveDialog)
+render('ChatRoot-archive', captured.ChatRoot)
+captured.chatStore.set({ archiveOpen: false })
+console.log('ORG_SURFACES_OK')
+
+// ---- edit, regenerate, continue, version switch and search jump ----
+const flowSettings = { authMode: 'auto', thinking: false, search: false, systemPrompt: '' }
+const originalUser = { id: 'u1', role: 'user', content: 'original', files: [], createdAt: 1 }
+const originalReply = {
+  id: 'a1', role: 'assistant', createdAt: 2, updatedAt: 2, status: 'done',
+  blocks: [{ type: 'text', text: 'old answer', citations: [] }], usage: { input_tokens: 1, output_tokens: 1 },
+}
+let lastStreamBody = null
+const ndjsonResponse = (lines) => {
+  const encoder = new TextEncoder()
+  return new Response(new ReadableStream({
+    start(controller) {
+      for (const line of lines) controller.enqueue(encoder.encode(`${JSON.stringify(line)}\n`))
+      controller.close()
+    },
+  }), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })
+}
+
+console.log('EDIT_FLOW_START')
+context.fetch = async (url, init) => {
+  if (!String(url).includes('/api/deepseek-chat/stream')) {
+    return new Response(JSON.stringify({ error: { message: `unexpected ${url}` } }), { status: 500 })
+  }
+  lastStreamBody = JSON.parse(init.body)
+  const messages = [
+    { id: 'u9', role: 'user', content: 'edited question', files: [], createdAt: 5, version: { index: 2, count: 2 } },
+    { id: 'a9', role: 'assistant', createdAt: 6, updatedAt: 6, model: 'deepseek-flash', thinking: false, search: false, status: 'streaming', blocks: [], prefix: true },
+  ]
+  return ndjsonResponse([
+    { type: 'start', conversationId: 'c1', userMessageId: 'u9', assistantMessageId: 'a9', title: 'Hi', messages },
+    { type: 'event', event: { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } } },
+    { type: 'event', event: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'new answer' } } },
+    {
+      type: 'done',
+      message: { id: 'a9', role: 'assistant', createdAt: 6, updatedAt: 7, model: 'deepseek-flash', thinking: false, search: false, status: 'done', blocks: [{ type: 'text', text: 'new answer', citations: [] }], version: { index: 1, count: 1 } },
+      conversation: { id: 'c1', title: 'Hi', titleAuto: false, createdAt: 1, updatedAt: 7, pinned: false, pinnedAt: null, archived: false, archivedAt: null, folderId: null, messageCount: 2 },
+    },
+  ])
+}
+captured.chatStore.set({
+  activeId: 'c1', messages: [originalUser, originalReply], streaming: null, editingId: 'u1', editDraft: 'edited question',
+  boot: 'ready', auth: readyAuth, settings: flowSettings, attachments: [], draft: '',
+})
+await captured.chatActions.saveEditedMessage()
+if (lastStreamBody === null || lastStreamBody.mode !== 'edit' || lastStreamBody.targetMessageId !== 'u1') {
+  throw new Error('editing must stream a branch for the edited message')
+}
+if (captured.chatStore.state.messages.map(item => item.id).join(',') !== 'u9,a9') throw new Error('editing must replace the visible branch')
+if (captured.chatStore.state.messages[0].version.count !== 2) throw new Error('the edited question must report its version position')
+if (captured.chatStore.state.messages[1].blocks[0].text !== 'new answer') throw new Error('the edited answer did not settle')
+if (captured.chatStore.state.editingId !== null) throw new Error('the editor must close after saving')
+console.log('EDIT_FLOW_OK')
+
+console.log('REGENERATE_FLOW_START')
+context.fetch = async (url, init) => {
+  lastStreamBody = JSON.parse(init.body)
+  const messages = [
+    { id: 'u1', role: 'user', content: 'original', files: [], createdAt: 1 },
+    { id: 'a7', role: 'assistant', createdAt: 8, updatedAt: 8, model: 'deepseek-flash', thinking: false, search: false, status: 'streaming', blocks: [], prefix: true, version: { index: 2, count: 2 } },
+  ]
+  return ndjsonResponse([
+    { type: 'start', conversationId: 'c1', userMessageId: 'u1', assistantMessageId: 'a7', title: 'Hi', messages },
+    { type: 'event', event: { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } } },
+    { type: 'event', event: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'regenerated' } } },
+    {
+      type: 'done',
+      message: { id: 'a7', role: 'assistant', createdAt: 8, updatedAt: 9, model: 'deepseek-flash', thinking: false, search: false, status: 'done', blocks: [{ type: 'text', text: 'regenerated', citations: [] }], version: { index: 2, count: 2 } },
+      conversation: { id: 'c1', title: 'Hi', titleAuto: false, createdAt: 1, updatedAt: 9, pinned: false, pinnedAt: null, archived: false, archivedAt: null, folderId: null, messageCount: 2 },
+    },
+  ])
+}
+captured.chatStore.set({ activeId: 'c1', messages: [originalUser, originalReply], streaming: null, editingId: null, editDraft: '', auth: readyAuth })
+await captured.chatActions.regenerateMessage(captured.chatStore.state.messages[1])
+if (lastStreamBody.mode !== 'regenerate' || lastStreamBody.targetMessageId !== 'a1') throw new Error('regeneration must target the answer')
+if (captured.chatStore.state.messages[1].version.count !== 2) throw new Error('the regenerated answer must report both versions')
+if (captured.chatStore.state.messages[1].blocks[0].text !== 'regenerated') throw new Error('the regenerated answer did not settle')
+console.log('REGENERATE_FLOW_OK')
+
+console.log('CONTINUE_FLOW_START')
+const stoppedReply = {
+  id: 'a1', role: 'assistant', createdAt: 2, updatedAt: 3, model: 'deepseek-flash', thinking: false, search: false,
+  status: 'stopped', stopReason: 'end_turn', blocks: [{ type: 'text', text: '半截', citations: [] }], prefix: true,
+}
+context.fetch = async (url, init) => {
+  lastStreamBody = JSON.parse(init.body)
+  return ndjsonResponse([
+    { type: 'start', conversationId: 'c1', userMessageId: 'u1', assistantMessageId: 'a1', title: 'Hi', messages: [originalUser, { ...stoppedReply, status: 'streaming' }] },
+    { type: 'event', event: { type: 'content_block_start', index: 1, content_block: { type: 'text', text: '' } } },
+    { type: 'event', event: { type: 'content_block_delta', index: 1, delta: { type: 'text_delta', text: '继续' } } },
+    {
+      type: 'done',
+      message: { ...stoppedReply, status: 'done', updatedAt: 9, continueCount: 1, blocks: [{ type: 'text', text: '半截', citations: [] }, { type: 'text', text: '继续', citations: [] }] },
+      conversation: { id: 'c1', title: 'Hi', titleAuto: false, createdAt: 1, updatedAt: 9, pinned: false, pinnedAt: null, archived: false, archivedAt: null, folderId: null, messageCount: 2 },
+    },
+  ])
+}
+captured.chatStore.set({ activeId: 'c1', messages: [originalUser, stoppedReply], streaming: null, auth: readyAuth })
+await captured.chatActions.continueMessage(captured.chatStore.state.messages[1])
+if (lastStreamBody.mode !== 'continue' || lastStreamBody.targetMessageId !== 'a1') throw new Error('continuation must target the cut-off answer')
+if (captured.chatStore.state.messages.length !== 2) throw new Error('continuation must not add a turn')
+if (captured.chatStore.state.messages[1].blocks.map(block => block.text).join('') !== '半截继续') throw new Error('the continuation was not appended')
+if (captured.chatStore.state.messages[1].status !== 'done') throw new Error('the continued answer did not settle')
+console.log('CONTINUE_FLOW_OK')
+
+console.log('VERSION_FLOW_START')
+context.fetch = async (url, init) => {
+  const body = JSON.parse(init.body)
+  if (body.action !== 'version') throw new Error(`unexpected action ${body.action}`)
+  return new Response(JSON.stringify({
+    conversation: {
+      id: 'c1', title: 'Hi',
+      messages: [
+        { id: 'u2', role: 'user', content: 'older question', files: [], createdAt: 1, version: { index: 1, count: 2 } },
+        { id: 'a2', role: 'assistant', createdAt: 2, updatedAt: 2, status: 'done', blocks: [{ type: 'text', text: 'older answer', citations: [] }] },
+      ],
+    },
+    selectedId: 'u2',
+    summaries: [{ id: 'c1', title: 'Hi', updatedAt: 9, pinned: false, archived: false, folderId: null, messageCount: 2 }],
+    folders: [],
+  }), { status: 200, headers: { 'content-type': 'application/json' } })
+}
+captured.chatStore.set({ activeId: 'c1', messages: [originalUser, originalReply], streaming: null })
+await captured.chatActions.selectVersion('u9', -1)
+if (captured.chatStore.state.messages.map(item => item.id).join(',') !== 'u2,a2') throw new Error('a version switch must load the other branch')
+if (captured.chatStore.state.focusMessage?.id !== 'u2') throw new Error('a version switch must focus the selected message')
+console.log('VERSION_FLOW_OK')
+
+console.log('SEARCH_JUMP_START')
+context.fetch = async (url, init) => {
+  const body = JSON.parse(init.body)
+  if (body.action !== 'get' || body.focusMessageId !== 'a2') throw new Error('a search jump must focus the matched message')
+  return new Response(JSON.stringify({
+    conversation: {
+      id: 'c1', title: 'Hi',
+      messages: [
+        { id: 'u2', role: 'user', content: 'q', files: [], createdAt: 1 },
+        { id: 'a2', role: 'assistant', createdAt: 2, updatedAt: 2, status: 'done', blocks: [{ type: 'text', text: 'older answer', citations: [] }] },
+      ],
+    },
+    folders: [],
+  }), { status: 200, headers: { 'content-type': 'application/json' } })
+}
+captured.chatStore.set({ activeId: 'c1', messages: [originalUser, originalReply], streaming: null })
+await captured.chatActions.openSearchResult({ id: 'c1', messageId: 'a2', onActivePath: true })
+if (captured.chatStore.state.messages.map(item => item.id).join(',') !== 'u2,a2') throw new Error('a search jump must open the matching branch')
+if (captured.chatStore.state.focusMessage?.id !== 'a2') throw new Error('a search jump must focus the matching message')
+console.log('SEARCH_JUMP_OK')
+
+console.log('ORGANIZE_FLOW_START')
+context.fetch = async (url, init) => {
+  const body = JSON.parse(init.body)
+  if (body.action === 'pin') {
+    return new Response(JSON.stringify({
+      conversation: { id: 'c1', title: 'Hi', messages: [], pinned: true, pinnedAt: 5, updatedAt: 9, archived: false, folderId: null, messageCount: 1 },
+      summaries: [{ id: 'c1', title: 'Hi', updatedAt: 9, pinned: true, pinnedAt: 5, archived: false, folderId: null, messageCount: 1 }],
+      folders: [],
+    }), { status: 200, headers: { 'content-type': 'application/json' } })
+  }
+  if (body.action === 'folder.create') {
+    return new Response(JSON.stringify({
+      folder: { id: 'f9', name: '工作', collapsed: false, createdAt: 5 },
+      summaries: [],
+      folders: [{ id: 'f9', name: '工作', collapsed: false, createdAt: 5 }],
+    }), { status: 200, headers: { 'content-type': 'application/json' } })
+  }
+  throw new Error(`unexpected action ${body.action}`)
+}
+captured.chatStore.set({
+  conversations: [{ id: 'c1', title: 'Hi', updatedAt: 9, pinned: false, archived: false, folderId: null, messageCount: 1 }],
+  folders: [],
+  menu: { kind: 'conversation', id: 'c1', x: 10, y: 10 },
+})
+await captured.chatActions.setPinned('c1', true)
+if (captured.chatStore.state.conversations[0].pinned !== true) throw new Error('pinning did not update the summary')
+if (captured.chatStore.state.menu !== null) throw new Error('the menu must close after the action')
+captured.chatActions.requestFolderPrompt('create')
+captured.chatActions.updateFolderPrompt('工作')
+await captured.chatActions.submitFolderPrompt()
+if (captured.chatStore.state.folders.length !== 1 || captured.chatStore.state.folders[0].name !== '工作') throw new Error('folder creation did not reach the store')
+if (captured.chatStore.state.folderPrompt !== null) throw new Error('the folder prompt must close')
+console.log('ORGANIZE_FLOW_OK')
+
 console.log('SMOKE_OK')

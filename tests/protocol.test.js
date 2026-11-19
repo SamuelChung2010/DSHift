@@ -1,8 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  applyEvent, buildHandoffRequest, buildRequestMessages, conversationSummary, createLatestReminder,
-  fallbackHandoffBrief, getReplyText, replySources, settleReply, titleFromUserMessage,
+  applyEvent, buildContinuationMessages, buildHandoffRequest, buildRequestMessages, canContinueReply,
+  conversationSummary, continuationPrefill, createLatestReminder, fallbackHandoffBrief, getReplyText,
+  replyIsIncomplete, replySources, settleReply, titleFromUserMessage,
 } from '../lib/protocol.js'
 
 function assistant(overrides = {}) {
@@ -176,4 +177,41 @@ test('falls back to a local handoff brief without a model round', () => {
   assert.match(brief, /## 验收标准/)
   const empty = fallbackHandoffBrief([], { locale: 'en' })
   assert.match(empty, /^## Goal/)
+})
+
+test('builds a continuation request from the visible answer prefix', () => {
+  const stopped = settleReply({ ...assistant({ id: 'a1' }), blocks: [
+    { type: 'thinking', thinking: '推理', signature: 's', startedAt: 1, endedAt: 2 },
+    { type: 'text', text: 'Hello wor', citations: [] },
+  ] }, 'stopped', 5)
+  assert.equal(replyIsIncomplete(stopped), true)
+  assert.equal(canContinueReply(stopped), true)
+  assert.equal(continuationPrefill(stopped), 'Hello wor')
+  assert.equal(continuationPrefill({ ...stopped, blocks: [{ type: 'text', text: 'Hello world  \n', citations: [] }] }), 'Hello world')
+
+  const previousReply = settleReply({ ...assistant({ id: 'a0' }), blocks: [{ type: 'text', text: 'earlier answer', citations: [] }] }, 'done', 1)
+  const built = buildContinuationMessages(
+    [user('u0', 'earlier question'), previousReply, user('u1', 'current question'), stopped],
+    'a1',
+    { reminder: 'rem' },
+  )
+  assert.equal(built.length, 5)
+  assert.equal(built[0].role, 'user')
+  assert.equal(built[1].role, 'assistant')
+  assert.equal(built[2].role, 'latest_reminder')
+  assert.equal(built[3].role, 'user')
+  assert.equal(built[4].role, 'assistant')
+  assert.equal(built[4].content[0].type, 'text')
+  assert.equal(built[4].content[0].text, 'Hello wor')
+  // Reasoning blocks are never replayed as a prefill.
+  assert.equal(built[4].content.some(block => block.type === 'thinking'), false)
+
+  // A result without a usable prefix or without a matching question is not continuable.
+  assert.equal(canContinueReply({ ...stopped, status: 'done', stopReason: 'end_turn' }), false)
+  assert.equal(canContinueReply({ ...stopped, stopReason: 'max_tokens' }), true)
+  assert.equal(canContinueReply({ ...stopped, prefix: false }), false)
+  assert.equal(canContinueReply({ ...stopped, stopReason: 'refusal' }), false)
+  assert.equal(canContinueReply({ ...stopped, blocks: [{ type: 'text', text: '   ', citations: [] }] }), false)
+  assert.equal(buildContinuationMessages([stopped], 'a1'), null)
+  assert.equal(buildContinuationMessages([user('u1', 'q'), stopped], 'missing'), null)
 })

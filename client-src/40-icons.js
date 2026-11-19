@@ -22,6 +22,7 @@ const IconSearch = props => h(IconBase, props,
 const IconClose = props => h(IconBase, props, h('path', { d: 'M6 6l12 12M18 6L6 18' }))
 const IconChevronDown = props => h(IconBase, props, h('path', { d: 'M6 9l6 6 6-6' }))
 const IconChevronRight = props => h(IconBase, props, h('path', { d: 'M9 6l6 6-6 6' }))
+const IconChevronLeft = props => h(IconBase, props, h('path', { d: 'M15 6l-6 6 6 6' }))
 const IconArrowUp = props => h(IconBase, props, h('path', { d: 'M12 19V5M6 11l6-6 6 6' }))
 const IconStop = props => h(IconBase, { ...props, filled: true }, h('rect', { x: 7, y: 7, width: 10, height: 10, rx: 2.2 }))
 const IconPaperclip = props => h(IconBase, props,
@@ -99,6 +100,35 @@ const IconAgent = props => h(IconBase, props,
   h('rect', { x: 3.5, y: 5, width: 17, height: 14, rx: 2.5 }),
   h('path', { d: 'M7 9.5l2.5 2.5L7 14.5M12.5 14.5H17' }),
 )
+const IconMore = props => h(IconBase, { ...props, filled: true },
+  h('circle', { cx: 5.5, cy: 12, r: 1.5 }),
+  h('circle', { cx: 12, cy: 12, r: 1.5 }),
+  h('circle', { cx: 18.5, cy: 12, r: 1.5 }),
+)
+const IconPin = props => h(IconBase, props,
+  h('path', { d: 'M14.5 3.8l5.7 5.7-2.4 1.1-3.6 3.6-1 4.2-6.6-6.6 4.2-1 3.6-3.6 1.1-2.4Z' }),
+  h('path', { d: 'M10 14l-5.2 5.2' }),
+)
+const IconFolder = props => h(IconBase, props,
+  h('path', { d: 'M3.5 7.2A2.2 2.2 0 0 1 5.7 5h3.1l1.8 2.2h7.7a2.2 2.2 0 0 1 2.2 2.2v7.4a2.2 2.2 0 0 1-2.2 2.2H5.7a2.2 2.2 0 0 1-2.2-2.2V7.2Z' }),
+)
+const IconFolderPlus = props => h(IconBase, props,
+  h('path', { d: 'M3.5 7.2A2.2 2.2 0 0 1 5.7 5h3.1l1.8 2.2h7.7a2.2 2.2 0 0 1 2.2 2.2v7.4a2.2 2.2 0 0 1-2.2 2.2H5.7a2.2 2.2 0 0 1-2.2-2.2V7.2Z' }),
+  h('path', { d: 'M12 11.2v5M9.5 13.7h5' }),
+)
+const IconFolderMinus = props => h(IconBase, props,
+  h('path', { d: 'M3.5 7.2A2.2 2.2 0 0 1 5.7 5h3.1l1.8 2.2h7.7a2.2 2.2 0 0 1 2.2 2.2v7.4a2.2 2.2 0 0 1-2.2 2.2H5.7a2.2 2.2 0 0 1-2.2-2.2V7.2Z' }),
+  h('path', { d: 'M9.5 13.7h5' }),
+)
+const IconArchive = props => h(IconBase, props,
+  h('rect', { x: 3.5, y: 4.5, width: 17, height: 4.5, rx: 1.4 }),
+  h('path', { d: 'M5 9v8.2a2.3 2.3 0 0 0 2.3 2.3h9.4a2.3 2.3 0 0 0 2.3-2.3V9' }),
+  h('path', { d: 'M10 13h4' }),
+)
+const IconArrowDownToLine = props => h(IconBase, props,
+  h('path', { d: 'M12 4v11M7 10.5l5 5 5-5' }),
+  h('path', { d: 'M5 20h14' }),
+)
 
 const ICONS = {
   plus: IconPlus,
@@ -106,6 +136,7 @@ const ICONS = {
   close: IconClose,
   chevronDown: IconChevronDown,
   chevronRight: IconChevronRight,
+  chevronLeft: IconChevronLeft,
   arrowUp: IconArrowUp,
   stop: IconStop,
   paperclip: IconPaperclip,
@@ -129,6 +160,13 @@ const ICONS = {
   refresh: IconRefresh,
   chat: IconChatBubble,
   agent: IconAgent,
+  more: IconMore,
+  pin: IconPin,
+  folder: IconFolder,
+  folderPlus: IconFolderPlus,
+  folderMinus: IconFolderMinus,
+  archive: IconArchive,
+  continue: IconArrowDownToLine,
 }
 
 function Icon({ name, size = 18, className = '' }) {
