@@ -59,6 +59,7 @@ dsh-chat 在 DeepSeek Harness 中加入一个原生的 **DeepSeek Chat 模式**�
 - **内容渲染**：代码高亮（语言标识、一键复制、长代码内部滚动、明暗两套配色）、LaTeX 公式（行内与独立公式块）、Mermaid 图表（失败时保留源代码）、表格、引用块、超链接与图片
 - **历史记录**：会话列表、重命名、删除、本地持久化、会话内搜索
 - **聊天记录导入**：把 DeepSeek App / 网页版导出的 ZIP 合并进 Chat 历史，保留标题、时间、思考、搜索来源、分支版本与可恢复的图片；全程在本机解析，不上传导出数据
+- **导入后提取记忆**：导入完成后可选分析部分导入会话，先预览候选、确认后才写入长期记忆；默认不分析、只发送勾选的会话，已分析过的会话会标记并默认跳过，提取失败不影响已导入的聊天
 - **交给 Agent**：把当前对话整理成可编辑的任务说明，可直接选择或新建 Harness 工作区，然后创建真实的 Agent 会话并把说明作为首条提示，切换到 Agent 继续开发
 - 中英文界面、明暗主题、窗口缩放与移动端布局
 
@@ -100,7 +101,7 @@ Chat 设置 → **长期记忆** 是一套与会话历史分开的本地记忆�
 - **管理与隐私**：按分类筛选，手动新增、编辑、删除，清空全部记忆（需确认）；每条记忆记录来源（手动 / 来自对话 / 导入自 ChatGPT、Claude、Gemini 等）与更新时间。删除会留下墓碑，旧聊天之后的自动提取不能把它加回来。
 - **从其他 AI 导入**：两步式弹窗。第一步复制一段英文、与平台无关的导出提示词发给其他 AI（Instructions / Identity / Career / Projects / Preferences 五类，每条 `[YYYY-MM-DD] - 内容`，未知日期用 `[unknown]`，整个结果放在单个代码块里）；第二步把结果粘贴回来，本地解析、预览、编辑、勾选后合并导入。重复、冲突或可能包含敏感信息的条目会被标记，并允许逐条选择跳过、合并或更新；重复粘贴同一份导出不会产生重复记忆。非结构化文本可以显式同意后交给 DeepSeek 整理，默认不发送。
 
-与未来 DeepSeek 聊天记录导入（ZIP）的整合接口见 [docs/memory-integration.md](docs/memory-integration.md)：聊天记录导入分支只需把已解析的会话消息交给 `extract.session` 分析和 `import` 合并，不读取 ZIP、不共享第二套记忆库，也不会在启动时扫描历史。
+与 DeepSeek 聊天记录导入（ZIP）的整合已经打通：导入完成页会出现可选的「提取长期记忆」入口，也可以在「长期记忆」页重新打开。弹窗先列出可分析的导入会话（已分析过的带标记、默认跳过），说明每个会话一次额外 API 调用及可能费用，只有用户确认后才逐个调用 `extract.imported`；候选记忆沿用 `preview` 的重复/冲突/敏感标记，确认后走同一个 `import` 合并入口。分析只读取当前分支消息，不修改 `state.json` 的消息树；分析成功的时间写在会话 `source.memoryExtractedAt`，所以同一批历史不会重复发送，除非用户显式勾选「重新分析」。详见 [docs/memory-integration.md](docs/memory-integration.md)。
 
 ## 来源与引用
 
@@ -227,7 +228,7 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 - 模型与推理等级偏好：`$DSH_HOME/deepseek-chat/model-config.json`（按会话 id 记录覆盖项 + 新对话默认值）
 - 长期记忆：`$DSH_HOME/deepseek-chat/memory.json`（原子写入）——开启状态、记忆条目、来源、概述缓存、修订号与删除墓碑。它与 `state.json` 的聊天记录完全分开，不覆盖、不迁移聊天历史；文件损坏时会隔离为 `memory.json.corrupt-<时间戳>` 并从空记忆启动，聊天不受影响
 - 上传文件：由 DeepSeek Files API 托管，插件只保存 `file_id` 和展示元数据；附件会随编辑后的用户消息保留
-- 导入的会话写在同一个 `state.json` 里，只多一个 `source` 来源字段；导入前备份为 `state.json.import-backup-<时间戳>`
+- 导入的会话写在同一个 `state.json` 里，只多一个 `source` 来源字段（含最近一次记忆提取时间 `memoryExtractedAt`）；导入前备份为 `state.json.import-backup-<时间戳>`
 - 导入暂存：`$DSH_HOME/deepseek-chat/imports/staging/<token>/export.zip`，导入结束或 30 分钟未开始即删除
 - 导入图片：`$DSH_HOME/deepseek-chat/imports/media/<sha256>.<ext>`（内容寻址，只增不删）
 - 删除会话只删除本地记录和该会话的模型偏好，不删除 DeepSeek 侧已上传的文件
@@ -266,6 +267,7 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 - 导入大量会话会让 `state.json` 变大（几百个会话约几十 MB），每次保存都要重写整份文档；建议只勾选需要的会话（可导入会话超过 100 个时弹窗会提示）。
 - 导入是单任务的：同一时间只允许一个导入任务，取消后会保留已写入的批次。
 - 导入只恢复导出中确实存在的内容：`TOOL_FIND` / `TOOL_IMAGE_SEARCH` 等没有正文的片段不会进入消息；导出中缺少字节的附件只保留元数据。
+- 导入后的记忆提取是用户主动发起的：默认不分析任何会话，每个被分析的会话会产生一次额外 DeepSeek 调用与相应费用。分析成功后会写入 `source.memoryExtractedAt` 并在下次默认跳过；失败不写标记，也不修改已导入的聊天，可以重新选择后再试。
 - 文件夹整理通过菜单完成，未实现拖拽排序（避免引入拖拽依赖）。
 - 生成过程中需先停止回复，才能切换会话、编辑消息或新建对话。
 - `deepseek-v4-pro` 不支持图片理解；含图片的消息会在发送前被拒绝并提示切换模型。
@@ -294,6 +296,6 @@ node tools/check-mermaid.js        # Mermaid 解析、几何与错误回退
 node tools/check-memory-client.js  # 跨平台记忆导出提示词与本地解析器
 ```
 
-测试覆盖：`tests/store.test.js`（v1→v2 迁移与备份、文件夹/置顶/归档、搜索、分支与版本切换）、`tests/protocol.test.js`（上下文构造与续写前缀）、`tests/conversation.test.js`（Host 路由与 send/edit/regenerate/continue 端到端）、`tests/workspace.test.js`（项目文件夹创建、工作区注册与交接）、`tests/import.test.js`（导出预览、导入、去重、重启持久化、取消、损坏会话隔离、路径穿越与解压上限）、`tests/import-convert.test.js`（片段映射、分支选择、来源字段、存储合并与请求构造）、`tests/model-config.test.js`、`tests/service-stream.test.js`、`tests/api.test.js`、`tests/profile.test.js`、`tests/host-entry.test.js`、`tests/memory-store.test.js`（记忆持久化、去重/合并、导入幂等、墓碑、概述修订、损坏恢复）、`tests/memory-service.test.js`（检索与预算、提取门控、概述并发、Ask or Update 增删改确认、历史会话提取接口）、`tests/memory-conversation.test.js`（记忆注入真实流式请求、关闭/删除后停止注入、后台提取成功与失败、memory 路由端到端）、`tests/memory-import.test.js`（跨平台导出解析器）。导入测试的样本由 `tests/support/export-fixture.js` 现场生成，不包含任何真实聊天记录。
+测试覆盖：`tests/store.test.js`（v1→v2 迁移与备份、文件夹/置顶/归档、搜索、分支与版本切换、导入会话的记忆分析标记）、`tests/protocol.test.js`（上下文构造与续写前缀）、`tests/conversation.test.js`（Host 路由与 send/edit/regenerate/continue 端到端）、`tests/workspace.test.js`（项目文件夹创建、工作区注册与交接）、`tests/import.test.js`（导出预览、导入、去重、重启持久化、取消、损坏会话隔离、路径穿越与解压上限）、`tests/import-convert.test.js`（片段映射、分支选择、来源字段、存储合并与请求构造）、`tests/model-config.test.js`、`tests/service-stream.test.js`、`tests/api.test.js`、`tests/profile.test.js`、`tests/host-entry.test.js`、`tests/memory-store.test.js`（记忆持久化、去重/合并、导入幂等、墓碑、概述修订、损坏恢复）、`tests/memory-service.test.js`（检索与预算、提取门控、概述并发、Ask or Update 增删改确认、历史会话提取接口）、`tests/memory-conversation.test.js`（记忆注入真实流式请求、关闭/删除后停止注入、后台提取成功与失败、memory 路由端到端、导入会话的选择性提取/确认/去重/失败隔离）、`tests/memory-import.test.js`（跨平台导出解析器）。导入测试的样本由 `tests/support/export-fixture.js` 现场生成，不包含任何真实聊天记录。
 
 安装：在 DSH 的 Plugins 页面选择本地目录，或由 Agent 使用 `plugin_manager install_bundle` 安装本目录。发布包也可以使用 `.tgz` 直接安装；`.zip` 需先解压，安装目标为解压后的目录（DSH 不接受 `.zip` 文件本身）。本机开发时 profile 里用 `link:` 指向本仓库即可。

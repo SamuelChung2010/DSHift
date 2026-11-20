@@ -1813,6 +1813,7 @@ function ChatRoot() {
   const folderAdd = useChat(state => state.folderAdd)
   const archiveOpen = useChat(state => state.archiveOpen)
   const importOpen = useChat(state => state.importOpen)
+  const importMemoryOpen = useChat(state => state.importMemoryOpen)
   const [resizing, setResizing] = React.useState(false)
   const rootRef = React.useRef(null)
   const sidebarRef = React.useRef(null)
@@ -1968,6 +1969,9 @@ function ChatRoot() {
     folderAdd !== null ? h(FolderAddDialog, null) : null,
     archiveOpen ? h(ArchiveDialog, null) : null,
     importOpen ? h(ImportDialog, null) : null,
+    importMemoryOpen
+      ? h(ImportMemoryDialog, { onClose: () => chatActions.closeImportMemory() })
+      : null,
     // The confirmation sits on top of whichever surface raised it (the archive
     // manager, a folder picker or the sidebar menu).
     confirm !== null ? h(ConfirmDialog, null) : null,

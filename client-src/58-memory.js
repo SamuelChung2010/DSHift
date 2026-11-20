@@ -747,10 +747,16 @@ function MemorySettingsPane() {
     ),
     h('div', { className: 'dsc-memory-footer' },
       h('p', { className: 'dsc-field-hint' }, t('memoryImportHint')),
-      h('button', {
-        type: 'button', className: 'dsc-secondary-button',
-        onClick: () => setImportOpen(true),
-      }, h(Icon, { name: 'brain', size: 15 }), t('memoryImportOpen')),
+      h('div', { className: 'dsc-memory-footer-actions' },
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button',
+          onClick: () => chatActions.openImportMemory(),
+        }, h(Icon, { name: 'import', size: 15 }), t('memoryExtractFromChats')),
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button',
+          onClick: () => setImportOpen(true),
+        }, h(Icon, { name: 'brain', size: 15 }), t('memoryImportOpen')),
+      ),
     ),
     importDialog,
   )
@@ -1055,6 +1061,336 @@ function MemoryImportDialog({ onClose, onImported }) {
       h('div', { className: 'dsc-modal-body' },
         error !== '' ? h('p', { className: 'dsc-field-hint is-warning' }, error) : null,
         step === 'prompt' ? promptStep : step === 'paste' ? pasteStep : previewStep,
+      ),
+      h('div', { className: 'dsc-modal-foot' }, footer),
+    ),
+  )
+}
+
+/**
+ * Optional memory pass over imported chats. Opened from the import result or
+ * from the memory settings tab with an explicit batch of conversation ids.
+ * Nothing is sent until the user confirms the cost notice; the analysis marks
+ * the conversations it covered and returns preview candidates only. Saving
+ * reuses the ordinary memory `import` action, so merge/dedupe/tombstones stay
+ * in one place and a failure here can never touch the imported chat itself.
+ */
+function ImportMemoryDialog({ onClose }) {
+  const t = useT()
+  const batch = useChat(state => state.importMemoryBatch)
+  const conversations = useChat(state => state.conversations)
+  const rows = React.useMemo(() => {
+    const byId = new Map((Array.isArray(conversations) ? conversations : []).map(item => [item.id, item]))
+    return (Array.isArray(batch) ? batch : []).map(id => byId.get(id)).filter(item => item !== undefined)
+  }, [batch, conversations])
+  const [selected, setSelected] = React.useState(() => new Set(
+    (Array.isArray(chatStore.state.importMemoryBatch) ? chatStore.state.importMemoryBatch : []).filter((id) => {
+      const conversation = (chatStore.state.conversations ?? []).find(item => item.id === id)
+      return conversation !== undefined && typeof conversation.source?.memoryExtractedAt !== 'number'
+    }),
+  ))
+  const [reanalyze, setReanalyze] = React.useState(false)
+  const [consent, setConsent] = React.useState(false)
+  const [step, setStep] = React.useState('pick')
+  const [items, setItems] = React.useState([])
+  const [meta, setMeta] = React.useState(null)
+  const [busy, setBusy] = React.useState('')
+  const [error, setError] = React.useState('')
+  const alive = React.useRef(true)
+
+  React.useEffect(() => {
+    alive.current = true
+    return () => { alive.current = false }
+  }, [])
+
+  const close = () => {
+    if (typeof onClose === 'function') onClose()
+  }
+
+  const dismiss = () => {
+    if (busy === '') close()
+  }
+
+  const extracted = row => typeof row?.source?.memoryExtractedAt === 'number'
+  const isSelectable = row => reanalyze || !extracted(row)
+  const selectableRows = rows.filter(isSelectable)
+  const selectedRows = rows.filter(row => selected.has(row.id) && isSelectable(row))
+  const selectedCount = selectedRows.length
+
+  const toggleRow = (id) => {
+    setSelected((previous) => {
+      const next = new Set(previous)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const selectAll = () => {
+    setSelected(new Set(selectableRows.map(row => row.id)))
+  }
+
+  const clearSelection = () => setSelected(new Set())
+
+  const analyze = async () => {
+    if (busy !== '' || selectedCount === 0) return
+    const ids = selectedRows.map(row => row.id)
+    const count = ids.length
+    setConsent(false)
+    setError('')
+    setBusy('analyze')
+    try {
+      const data = await memoryRequest({
+        action: 'extract.imported',
+        conversationIds: ids,
+        reanalyze,
+        consent: true,
+        locale: streamLocale(),
+      })
+      if (!alive.current) return
+      chatActions.markImportMemoryAnalyzed(data?.analyzedIds)
+      const entries = Array.isArray(data?.entries) ? data.entries : []
+      const failed = Array.isArray(data?.failed) ? data.failed : []
+      setMeta({ analyzed: data?.analyzed ?? 0, failed: failed.length, count: entries.length })
+      if (entries.length === 0) {
+        setStep('pick')
+        if (failed.length > 0) setError(t('memoryExtractFailed', { message: memoryErrorText(failed[0].reason) }))
+        else setError(t('memoryExtractEmpty'))
+        if ((data?.analyzed ?? 0) > 0) chatStore.toast(t('memoryExtractDoneEmpty', { count: data.analyzed }), 'info')
+        return
+      }
+      setItems(entries.map(row => memoryImportRow(row, null)))
+      setStep('preview')
+      if (failed.length > 0) chatStore.toast(t('memoryExtractPartial', { count: failed.length }), 'warning')
+    } catch (fetchError) {
+      if (alive.current) setError(t('memoryExtractFailed', { message: memoryErrorText(fetchError) }))
+    } finally {
+      if (alive.current) setBusy('')
+    }
+  }
+
+  const patchItem = (index, patch) => {
+    setItems(previous => previous.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)))
+  }
+
+  const toggleItem = (index) => {
+    setItems(previous => previous.map((item, itemIndex) => {
+      if (itemIndex !== index) return item
+      const isOn = !item.selected
+      const fallback = item.match?.kind === 'duplicate' ? 'merge' : item.match?.kind === 'conflict' ? 'update' : 'auto'
+      return { ...item, selected: isOn, mode: isOn ? (item.mode === 'skip' ? fallback : item.mode) : 'skip' }
+    }))
+  }
+
+  const selectItemMode = (index, mode) => {
+    patchItem(index, { mode, selected: mode !== 'skip' })
+  }
+
+  const confirmedEntries = () => items
+    .filter(item => item.selected && item.mode !== 'skip' && item.content.trim() !== '')
+    .map((item) => {
+      const entry = { content: item.content.trim(), category: item.category, mode: item.mode }
+      const date = memoryImportDate(item.date)
+      if (date !== undefined) entry.date = date
+      return entry
+    })
+
+  const confirmImport = async () => {
+    if (busy !== '') return
+    const entries = confirmedEntries()
+    if (entries.length === 0) {
+      chatStore.toast(t('memoryImportNoneSelected'), 'error')
+      return
+    }
+    setBusy('import')
+    try {
+      const data = await memoryRequest({ action: 'import', platform: 'other', entries })
+      if (!alive.current) return
+      const result = data?.result ?? {}
+      chatStore.toast(t('memoryImportDone', {
+        added: result.added ?? 0,
+        merged: result.merged ?? 0,
+        updated: result.updated ?? 0,
+        skipped: result.skipped ?? 0,
+      }), 'success')
+      close()
+    } catch (fetchError) {
+      if (alive.current) chatStore.toast(memoryErrorText(fetchError), 'error')
+    } finally {
+      if (alive.current) setBusy('')
+    }
+  }
+
+  const pickBody = h(Fragment, null,
+    h('p', { className: 'dsc-field-hint' }, t('memoryExtractIntro')),
+    h('div', { className: 'dsc-memory-notice' },
+      h(Icon, { name: 'warning', size: 16 }),
+      h('div', { className: 'dsc-memory-notice-body' },
+        h('strong', null, t('memoryExtractCostTitle')),
+        h('p', null, t('memoryExtractCostBody', { count: selectedCount })),
+      ),
+    ),
+    h('div', { className: 'dsc-import-toolbar' },
+      h('button', {
+        type: 'button',
+        className: cx('dsc-import-check-all', selectedCount > 0 && 'is-on'),
+        onClick: selectedCount > 0 && selectedCount === selectableRows.length ? clearSelection : selectAll,
+      }, h('span', { className: 'dsc-choice-check' },
+        selectedCount > 0 ? h(Icon, { name: 'check', size: 12 }) : null,
+      ), t('memoryExtractSelectAll')),
+      h('span', { className: 'dsc-import-count' }, t('memoryExtractSelected', { count: selectedCount })),
+    ),
+    rows.length === 0
+      ? h('p', { className: 'dsc-memory-empty' }, t('memoryExtractNoImports'))
+      : h('div', { className: 'dsc-import-list' }, rows.map((row) => {
+          const done = extracted(row)
+          const disabled = done && !reanalyze
+          const isOn = selected.has(row.id) && !disabled
+          return h('button', {
+            key: row.id,
+            type: 'button',
+            role: 'checkbox',
+            'aria-checked': isOn,
+            disabled,
+            className: cx('dsc-import-item', isOn && 'is-selected', disabled && 'is-imported'),
+            onClick: () => toggleRow(row.id),
+          },
+            h('span', { className: 'dsc-choice-check' }, isOn ? h(Icon, { name: 'check', size: 13 }) : null),
+            h('span', { className: 'dsc-import-item-main' },
+              h('span', { className: 'dsc-import-item-title' }, row.title || t('newChatTitle')),
+              h('span', { className: 'dsc-import-item-meta' },
+                t('messageCount', { count: row.messageCount ?? 0 }),
+              ),
+            ),
+            done ? h('span', { className: 'dsc-import-badge' }, t('memoryExtractAlready')) : null,
+          )
+        })),
+    rows.some(extracted)
+      ? h('label', { className: 'dsc-memory-preview-check' },
+          h('input', {
+            type: 'checkbox',
+            checked: reanalyze,
+            onChange: event => setReanalyze(event.target.checked),
+          }),
+          h('span', null, t('memoryExtractReanalyze')),
+        )
+      : null,
+    busy === 'analyze'
+      ? h('div', { className: 'dsc-memory-state' },
+          h(Icon, { name: 'refresh', size: 16 }),
+          t('memoryExtractAnalyzing', { count: selectedCount }),
+        )
+      : null,
+    consent
+      ? h('div', { className: 'dsc-memory-consent' },
+          h('p', { className: 'dsc-memory-consent-text' }, t('memoryExtractConsent', { count: selectedCount })),
+          h('div', { className: 'dsc-memory-consent-actions' },
+            h('button', {
+              type: 'button', className: 'dsc-secondary-button',
+              onClick: () => setConsent(false),
+            }, t('cancel')),
+            h('button', {
+              type: 'button', className: 'dsc-primary-button',
+              onClick: () => { void analyze() },
+            }, t('memoryExtractConsentConfirm')),
+          ),
+        )
+      : null,
+  )
+
+  const previewBody = h(Fragment, null,
+    h('p', { className: 'dsc-field-hint' }, t('memoryImportPreviewSubtitle')),
+    meta !== null
+      ? h('p', { className: 'dsc-field-hint' }, t('memoryExtractAnalyzedNote', { analyzed: meta.analyzed, count: items.length }))
+      : null,
+    h('p', { className: 'dsc-memory-preview-count' }, t('memoryImportSelectCount', { count: confirmedEntries().length })),
+    h('div', { className: 'dsc-memory-preview' },
+      items.map((item, index) => h('div', {
+        key: item.key,
+        className: cx('dsc-memory-preview-row', item.selected && 'is-selected'),
+      },
+        h('label', { className: 'dsc-memory-preview-check' },
+          h('input', { type: 'checkbox', checked: item.selected, onChange: () => toggleItem(index) }),
+          h('span', null, t('memoryImportItemLabel', { index: index + 1 })),
+        ),
+        h('textarea', {
+          className: 'dsc-memory-input',
+          rows: 2,
+          maxLength: MEMORY_IMPORT_MAX_CONTENT,
+          value: item.content,
+          'aria-label': t('memoryImportItemLabel', { index: index + 1 }),
+          onChange: event => patchItem(index, { content: event.target.value }),
+        }),
+        h('div', { className: 'dsc-memory-preview-controls' },
+          h('select', {
+            className: 'dsc-select', value: item.category, 'aria-label': t('memoryImportCategory'),
+            onChange: event => patchItem(index, { category: event.target.value }),
+          }, memoryCategoryIds.map(id => h('option', { key: id, value: id }, memoryCategoryLabel(id, t)))),
+          item.match !== null ? h('select', {
+            className: 'dsc-select dsc-memory-mode', value: item.mode, 'aria-label': t('memoryImportMode'),
+            onChange: event => selectItemMode(index, event.target.value),
+          }, [
+            ['skip', 'memoryImportModeSkip'],
+            ['merge', 'memoryImportModeMerge'],
+            ['update', 'memoryImportModeUpdate'],
+          ].map(([value, key]) => h('option', { key: value, value }, t(key)))) : null,
+        ),
+        h('div', { className: 'dsc-memory-preview-badges' },
+          item.match?.kind === 'duplicate' ? h('span', { className: 'dsc-memory-badge is-duplicate' }, t('memoryImportBadgeDuplicate')) : null,
+          item.match?.kind === 'conflict' ? h('span', { className: 'dsc-memory-badge is-exists' }, t('memoryImportBadgeConflict')) : null,
+          item.sensitive ? h('span', { className: 'dsc-memory-badge is-sensitive' }, t('memoryImportBadgeSensitive')) : null,
+        ),
+        item.match !== null ? h('p', { className: 'dsc-memory-preview-existing' }, t('memoryImportExisting', { content: item.match.content })) : null,
+      )),
+    ),
+  )
+
+  const footer = step === 'preview'
+    ? h(Fragment, null,
+        h('span', { className: 'dsc-modal-foot-note' }, t('memoryImportMergeNote')),
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button', disabled: busy !== '',
+          onClick: () => setStep('pick'),
+        }, t('memoryImportBack')),
+        h('button', {
+          type: 'button', className: 'dsc-primary-button',
+          disabled: busy !== '' || confirmedEntries().length === 0,
+          onClick: () => { void confirmImport() },
+        }, busy === 'import' ? t('memoryImportImporting') : t('memoryImportConfirm', { count: confirmedEntries().length })),
+      )
+    : h(Fragment, null,
+        h('span', { className: 'dsc-modal-foot-note' }, t('memoryExtractFooterNote')),
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button', disabled: busy !== '',
+          onClick: dismiss,
+        }, t('close')),
+        h('button', {
+          type: 'button', className: 'dsc-primary-button',
+          disabled: busy !== '' || selectedCount === 0 || consent,
+          onClick: () => setConsent(true),
+        }, busy === 'analyze' ? t('memoryExtractAnalyzingShort') : t('memoryExtractAnalyze')),
+      )
+
+  return h(ModalBackdrop, { className: 'dsc-memory-extract', onDismiss: dismiss },
+    h('div', {
+      className: 'dsc-modal dsc-memory-extract-modal',
+      role: 'dialog',
+      'aria-modal': 'true',
+      'aria-label': t('memoryExtractTitle'),
+    },
+      h('header', { className: 'dsc-modal-head' },
+        h('div', null,
+          h('h2', null, t('memoryExtractTitle')),
+          h('p', { className: 'dsc-modal-sub' }, t('memoryExtractSubtitle')),
+        ),
+        h('button', {
+          type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
+          autoFocus: true, onClick: dismiss,
+        }, h(Icon, { name: 'close', size: 18 })),
+      ),
+      h('div', { className: 'dsc-modal-body' },
+        error !== '' ? h('p', { className: 'dsc-field-hint is-warning' }, error) : null,
+        step === 'preview' ? previewBody : pickBody,
       ),
       h('div', { className: 'dsc-modal-foot' }, footer),
     ),

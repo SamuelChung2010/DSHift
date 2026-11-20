@@ -1523,6 +1523,7 @@ const doneTree = captured.ImportDialog()
 const statValues = collectByClass(doneTree, 'dsc-import-stat-value').map(node => collectionText(node))
 if (statValues.join(',') !== '2,1,1') throw new Error(`the result must count imported, skipped and failed: ${statValues.join(',')}`)
 if (collectByClass(doneTree, 'dsc-import-failure').length !== 1) throw new Error('a failed conversation must be listed')
+if (collectByClass(doneTree, 'dsc-import-memory').length !== 1) throw new Error('an imported batch must offer the optional memory pass')
 
 captured.chatStore.set({ importView: importView({ step: 'pick', error: 'NOT_A_ZIP' }) })
 if (collectByClass(captured.ImportDialog(), 'dsc-import-error').length !== 1) throw new Error('a read failure must be shown in the dialog')
@@ -1559,5 +1560,39 @@ const importTree = React.createElement(captured.MemoryImportDialog, { onClose: (
 if (collectByClass(importTree, 'dsc-memory-import').length === 0) throw new Error('the import dialog must mount its own native <dialog>')
 if (collectByClass(importTree, 'dsc-memory-prompt').length !== 1) throw new Error('the import dialog must show the copyable prompt')
 console.log('MEMORY_OK')
+
+// ---------------------------------------------------------------------------
+// Optional memory extraction from imported chats: choosing is separate from
+// confirming the model calls, and an analyzed chat is badged, never hidden.
+// ---------------------------------------------------------------------------
+console.log('IMPORT_MEMORY_START')
+captured.chatStore.set({
+  importMemoryOpen: true,
+  importMemoryBatch: ['conv-imported'],
+  conversations: [{
+    id: 'conv-imported',
+    title: 'Imported project chat',
+    messageCount: 6,
+    updatedAt: 10,
+    source: { kind: 'deepseek', id: 'export-1', importedAt: 5, memoryExtractedAt: null },
+  }],
+})
+const extractTree = React.createElement(captured.ImportMemoryDialog, { onClose: () => {} })
+if (collectByClass(extractTree, 'dsc-memory-extract-modal').length !== 1) throw new Error('the extract dialog must mount its own modal')
+if (collectByClass(extractTree, 'dsc-import-item').length !== 1) throw new Error('the extract dialog must list the imported conversation')
+if (!collectionText(extractTree).includes(captured.DICTS.zh.memoryExtractTitle)) throw new Error('the extract dialog must name its purpose')
+if (collectByClass(extractTree, 'dsc-memory-consent').length !== 0) throw new Error('no consent may appear before the user asks to analyze')
+captured.chatStore.set({
+  conversations: [{
+    id: 'conv-imported',
+    title: 'Imported project chat',
+    messageCount: 6,
+    updatedAt: 10,
+    source: { kind: 'deepseek', id: 'export-1', importedAt: 5, memoryExtractedAt: 9 },
+  }],
+})
+const analyzedTree = React.createElement(captured.ImportMemoryDialog, { onClose: () => {} })
+if (collectByClass(analyzedTree, 'dsc-import-badge').length !== 1) throw new Error('an analyzed conversation must be badged')
+console.log('IMPORT_MEMORY_OK')
 
 console.log('SMOKE_OK')

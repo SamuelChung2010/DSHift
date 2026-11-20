@@ -1154,6 +1154,23 @@ function ImportDialog() {
     result?.media?.restored > 0
       ? h('p', { className: 'dsc-import-hint' }, `${t('importImages', { count: result.media.restored })} · ${t('importMediaNote')}`)
       : null,
+    (result?.imported ?? 0) > 0
+      ? h('div', { className: 'dsc-import-memory' },
+          h('span', { className: 'dsc-import-memory-icon' }, h(Icon, { name: 'brain', size: 18 })),
+          h('div', { className: 'dsc-import-memory-copy' },
+            h('span', { className: 'dsc-import-memory-title' }, t('importMemoryTitle')),
+            h('p', { className: 'dsc-import-memory-hint' }, t('importMemoryBody')),
+          ),
+          h('button', {
+            type: 'button',
+            className: 'dsc-secondary-button',
+            // Capture the batch before closing: closing clears the import view.
+            onClick: () => {
+              if (chatActions.openImportMemory(view.selected)) close()
+            },
+          }, t('importMemoryOpen')),
+        )
+      : null,
     Array.isArray(result?.failures) && result.failures.length > 0
       ? h('div', { className: 'dsc-import-failures' },
           h('div', { className: 'dsc-import-failures-title' }, t('importFailedList')),

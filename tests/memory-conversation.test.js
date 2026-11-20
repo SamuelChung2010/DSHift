@@ -436,3 +436,100 @@ test('analyzes a supplied session for the history-import integration', async () 
     assert.equal(service.memoryStore.list()[0].source.label, '旧会话')
   })
 })
+
+test('analyzes imported conversations for memory only after consent and only once', async () => {
+  await withService(async ({ service, routes }) => {
+    const env = { service, routes }
+    const { added } = await service.store.adoptConversations([{
+      title: '导入的项目会话',
+      createdAt: 1,
+      updatedAt: 2,
+      source: { kind: 'deepseek', id: 'export-conv-1', importedAt: 1 },
+      messages: [
+        { id: 'u1', role: 'user', content: '我在用 TypeScript 开发 dsh-chat 插件', createdAt: 1 },
+        { id: 'a1', role: 'assistant', status: 'done', createdAt: 2, blocks: [{ type: 'text', text: '了解。' }] },
+      ],
+    }])
+    const id = added[0]
+    const calls = []
+    globalThis.fetch = async (_url, init) => {
+      calls.push(JSON.parse(init.body))
+      return textResponse('{"memories":[{"category":"projects","content":"用户正在用 TypeScript 开发 dsh-chat 插件"}]}')
+    }
+
+    const denied = await call(env, '/api/deepseek-chat/memory', {
+      action: 'extract.imported', conversationIds: [id],
+    })
+    assert.equal(denied.status, 400)
+    assert.equal(denied.value.error.code, 'CONSENT_REQUIRED')
+    assert.equal(calls.length, 0, 'no model call before explicit consent')
+
+    const first = await call(env, '/api/deepseek-chat/memory', {
+      action: 'extract.imported', conversationIds: [id], consent: true, locale: 'zh',
+    })
+    assert.equal(first.status, 200, JSON.stringify(first.value))
+    assert.equal(first.value.analyzed, 1)
+    assert.deepEqual(first.value.analyzedIds, [id])
+    assert.equal(first.value.entries.length, 1)
+    assert.match(first.value.entries[0].content, /TypeScript/)
+    assert.equal(first.value.count, undefined, 'analysis returns a preview, not a saved store')
+    assert.equal(calls.length, 1)
+    assert.equal(typeof service.store.getConversation(id).source.memoryExtractedAt, 'number')
+
+    const detail = await conversation(env, { action: 'get', id })
+    assert.equal(detail.conversation.messages.length, 2)
+    assert.equal(detail.conversation.messages[0].content, '我在用 TypeScript 开发 dsh-chat 插件')
+
+    const second = await call(env, '/api/deepseek-chat/memory', {
+      action: 'extract.imported', conversationIds: [id], consent: true, locale: 'zh',
+    })
+    assert.equal(second.value.analyzed, 0)
+    assert.equal(second.value.skipped[0].reason, 'already-extracted')
+    assert.equal(calls.length, 1, 'the same history is not sent twice')
+
+    const expanded = await call(env, '/api/deepseek-chat/memory', {
+      action: 'extract.imported', conversationIds: [id], consent: true, reanalyze: true, locale: 'zh',
+    })
+    assert.equal(expanded.value.analyzed, 1)
+    assert.equal(calls.length, 2)
+
+    const confirmed = await call(env, '/api/deepseek-chat/memory', {
+      action: 'import',
+      platform: 'other',
+      entries: expanded.value.entries.map(entry => ({ content: entry.content, category: entry.category })),
+    })
+    assert.equal(confirmed.value.result.added, 1)
+    assert.equal(service.memoryStore.list().length, 1)
+  })
+})
+
+test('a failed imported-memory extraction leaves the imported chat untouched', async () => {
+  await withService(async ({ service, routes }) => {
+    const env = { service, routes }
+    const { added } = await service.store.adoptConversations([{
+      title: '导入的失败会话',
+      createdAt: 5,
+      updatedAt: 6,
+      source: { kind: 'deepseek', id: 'export-conv-2', importedAt: 5 },
+      messages: [{ id: 'u1', role: 'user', content: '记住我喜欢简洁的回答', createdAt: 5 }],
+    }])
+    const id = added[0]
+    globalThis.fetch = async () => new Response(JSON.stringify({ error: { message: 'upstream down' } }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    })
+    const result = await call(env, '/api/deepseek-chat/memory', {
+      action: 'extract.imported', conversationIds: [id], consent: true, locale: 'zh',
+    })
+    assert.equal(result.status, 200)
+    assert.equal(result.value.analyzed, 0)
+    assert.equal(result.value.failed.length, 1)
+    assert.equal(result.value.entries.length, 0)
+    // No marker is written for a failed analysis, and the chat survives intact.
+    assert.equal(service.store.getConversation(id).source.memoryExtractedAt, null)
+    const detail = await conversation(env, { action: 'get', id })
+    assert.equal(detail.conversation.messages.length, 1)
+    assert.equal(detail.conversation.messages[0].content, '记住我喜欢简洁的回答')
+    assert.equal(service.memoryStore.list().length, 0)
+  })
+})

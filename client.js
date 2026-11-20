@@ -502,6 +502,32 @@ const DICT_ZH = {
   memoryImportImporting: '正在导入…',
   memoryImportNoneSelected: '请至少选择一条记忆。',
   memoryImportDone: '导入完成：新增 {added}、合并 {merged}、更新 {updated}、跳过 {skipped}',
+  // ---- optional memory extraction from imported chats ----
+  importMemoryTitle: '从这次导入中提取长期记忆',
+  importMemoryBody: '可选：分析刚导入的会话，预览候选记忆，确认后才会写入。不会自动分析，也不会影响聊天。',
+  importMemoryOpen: '选择会话…',
+  memoryExtractFromChats: '从导入的聊天记录提取',
+  memoryExtractTitle: '从聊天记录提取记忆',
+  memoryExtractSubtitle: '可选：分析导入的历史会话，把值得长期记住的信息加入记忆。只有你确认后才会调用 API。',
+  memoryExtractIntro: '选择要分析的会话。默认不会分析或发送任何内容；已分析过的会话默认跳过。',
+  memoryExtractCostTitle: '会产生额外 API 调用',
+  memoryExtractCostBody: '每个会话会请求一次 DeepSeek，可能产生额外用量费用；本次只会发送你勾选的 {count} 个会话。',
+  memoryExtractSelectAll: '全选可分析的会话',
+  memoryExtractSelected: '已选 {count} 个会话',
+  memoryExtractAnalyze: '分析所选会话',
+  memoryExtractAnalyzingShort: '正在分析…',
+  memoryExtractConsent: '将把 {count} 个会话的对话内容发送到 DeepSeek API 提取记忆，并产生相应费用。已导入的聊天不会被修改。',
+  memoryExtractConsentConfirm: '确认并开始分析',
+  memoryExtractAnalyzing: '正在逐个分析 {count} 个会话…',
+  memoryExtractAlready: '已分析',
+  memoryExtractReanalyze: '重新分析已提取过的会话（会再次产生 API 调用）',
+  memoryExtractFooterNote: '默认不会分析任何内容。',
+  memoryExtractAnalyzedNote: '已分析 {analyzed} 个会话，发现 {count} 条候选记忆',
+  memoryExtractDoneEmpty: '已分析 {count} 个会话，但没有发现新的长期记忆。',
+  memoryExtractEmpty: '没有提取到值得长期记住的信息。',
+  memoryExtractFailed: '记忆提取失败：{message}。已导入的聊天不受影响。',
+  memoryExtractPartial: '{count} 个会话分析失败；已导入的聊天不受影响。',
+  memoryExtractNoImports: '没有可分析的导入会话。',
 }
 
 const DICT_EN = {
@@ -996,6 +1022,32 @@ const DICT_EN = {
   memoryImportImporting: 'Importing…',
   memoryImportNoneSelected: 'Select at least one memory.',
   memoryImportDone: 'Import complete: added {added}, merged {merged}, updated {updated}, skipped {skipped}',
+  // ---- optional memory extraction from imported chats ----
+  importMemoryTitle: 'Extract long-term memory from this import',
+  importMemoryBody: 'Optional: analyze the chats you just imported and preview candidates. Nothing is written until you confirm, and the import itself is untouched.',
+  importMemoryOpen: 'Choose chats…',
+  memoryExtractFromChats: 'Extract from imported chats',
+  memoryExtractTitle: 'Extract memory from chats',
+  memoryExtractSubtitle: 'Optional: analyze imported conversations and keep durable facts. The API is only called after you confirm.',
+  memoryExtractIntro: 'Choose the conversations to analyze. Nothing is analyzed or sent by default; chats analyzed before are skipped.',
+  memoryExtractCostTitle: 'This makes extra API calls',
+  memoryExtractCostBody: 'Each conversation costs one DeepSeek request and may incur usage fees; only the {count} selected chats are sent.',
+  memoryExtractSelectAll: 'Select all analyzable chats',
+  memoryExtractSelected: '{count} chats selected',
+  memoryExtractAnalyze: 'Analyze selected chats',
+  memoryExtractAnalyzingShort: 'Analyzing…',
+  memoryExtractConsent: 'This sends {count} conversations to the DeepSeek API to extract memory and may incur costs. Imported chats are never modified.',
+  memoryExtractConsentConfirm: 'Confirm and analyze',
+  memoryExtractAnalyzing: 'Analyzing {count} conversations…',
+  memoryExtractAlready: 'Analyzed',
+  memoryExtractReanalyze: 'Re-analyze conversations that were analyzed before (extra API calls)',
+  memoryExtractFooterNote: 'Nothing is analyzed by default.',
+  memoryExtractAnalyzedNote: 'Analyzed {analyzed} conversations and found {count} candidates',
+  memoryExtractDoneEmpty: 'Analyzed {count} conversations; no new long-term memory was found.',
+  memoryExtractEmpty: 'No durable memory was found.',
+  memoryExtractFailed: 'Memory extraction failed: {message}. Imported chats are unaffected.',
+  memoryExtractPartial: '{count} conversations could not be analyzed; imported chats are unaffected.',
+  memoryExtractNoImports: 'No imported conversation is available to analyze.',
 }
 
 /* ---- 20-store.js ---- */
@@ -1177,6 +1229,10 @@ const chatStore = {
     // upload never allocates state for a closed surface.
     importOpen: false,
     importView: null,
+    // Optional follow-up after an import: analyze the imported chats for
+    // long-term memory. Opening the dialog never starts a model call.
+    importMemoryOpen: false,
+    importMemoryBatch: [],
   },
   listeners: new Set(),
   subscribe(listener) {
@@ -3971,6 +4027,44 @@ async function cancelImport() {
   }
 }
 
+/**
+ * Open the optional memory-extraction pass over imported chats. `sourceIds`
+ * narrows it to the just-finished import batch; omitting it lists every
+ * imported conversation. Nothing is sent anywhere until the user confirms.
+ */
+function openImportMemory(sourceIds = null) {
+  const wanted = Array.isArray(sourceIds) ? new Set(sourceIds) : null
+  const conversations = Array.isArray(chatStore.state.conversations) ? chatStore.state.conversations : []
+  const batch = conversations
+    .filter(conversation => conversation?.source !== null && typeof conversation?.source === 'object')
+    .filter(conversation => wanted === null || wanted.has(conversation.source.id))
+    .map(conversation => conversation.id)
+  if (batch.length === 0) {
+    chatStore.toast(tr('memoryExtractNoImports'), 'warning')
+    return false
+  }
+  chatStore.set({ importMemoryOpen: true, importMemoryBatch: batch })
+  return true
+}
+
+function closeImportMemory() {
+  chatStore.set({ importMemoryOpen: false, importMemoryBatch: [] })
+}
+
+/** Reflect a finished analysis in the local list without a full bootstrap. */
+function markImportMemoryAnalyzed(ids) {
+  const marked = new Set(Array.isArray(ids) ? ids : [])
+  if (marked.size === 0) return
+  const at = Date.now()
+  const conversations = (chatStore.state.conversations ?? []).map((conversation) => {
+    if (!marked.has(conversation.id) || conversation.source === null || typeof conversation.source !== 'object') {
+      return conversation
+    }
+    return { ...conversation, source: { ...conversation.source, memoryExtractedAt: at } }
+  })
+  chatStore.set({ conversations })
+}
+
 const chatActions = {
   openChat,
   closeChat,
@@ -4053,6 +4147,10 @@ const chatActions = {
   selectAllImport,
   startImport,
   cancelImport,
+  // Optional post-import long-term-memory extraction
+  openImportMemory,
+  closeImportMemory,
+  markImportMemoryAnalyzed,
 }
 
 /* ---- 30-markdown.js ---- */
@@ -10364,6 +10462,7 @@ function ChatRoot() {
   const folderAdd = useChat(state => state.folderAdd)
   const archiveOpen = useChat(state => state.archiveOpen)
   const importOpen = useChat(state => state.importOpen)
+  const importMemoryOpen = useChat(state => state.importMemoryOpen)
   const [resizing, setResizing] = React.useState(false)
   const rootRef = React.useRef(null)
   const sidebarRef = React.useRef(null)
@@ -10519,6 +10618,9 @@ function ChatRoot() {
     folderAdd !== null ? h(FolderAddDialog, null) : null,
     archiveOpen ? h(ArchiveDialog, null) : null,
     importOpen ? h(ImportDialog, null) : null,
+    importMemoryOpen
+      ? h(ImportMemoryDialog, { onClose: () => chatActions.closeImportMemory() })
+      : null,
     // The confirmation sits on top of whichever surface raised it (the archive
     // manager, a folder picker or the sidebar menu).
     confirm !== null ? h(ConfirmDialog, null) : null,
@@ -11683,6 +11785,23 @@ function ImportDialog() {
     result?.media?.restored > 0
       ? h('p', { className: 'dsc-import-hint' }, `${t('importImages', { count: result.media.restored })} · ${t('importMediaNote')}`)
       : null,
+    (result?.imported ?? 0) > 0
+      ? h('div', { className: 'dsc-import-memory' },
+          h('span', { className: 'dsc-import-memory-icon' }, h(Icon, { name: 'brain', size: 18 })),
+          h('div', { className: 'dsc-import-memory-copy' },
+            h('span', { className: 'dsc-import-memory-title' }, t('importMemoryTitle')),
+            h('p', { className: 'dsc-import-memory-hint' }, t('importMemoryBody')),
+          ),
+          h('button', {
+            type: 'button',
+            className: 'dsc-secondary-button',
+            // Capture the batch before closing: closing clears the import view.
+            onClick: () => {
+              if (chatActions.openImportMemory(view.selected)) close()
+            },
+          }, t('importMemoryOpen')),
+        )
+      : null,
     Array.isArray(result?.failures) && result.failures.length > 0
       ? h('div', { className: 'dsc-import-failures' },
           h('div', { className: 'dsc-import-failures-title' }, t('importFailedList')),
@@ -12556,10 +12675,16 @@ function MemorySettingsPane() {
     ),
     h('div', { className: 'dsc-memory-footer' },
       h('p', { className: 'dsc-field-hint' }, t('memoryImportHint')),
-      h('button', {
-        type: 'button', className: 'dsc-secondary-button',
-        onClick: () => setImportOpen(true),
-      }, h(Icon, { name: 'brain', size: 15 }), t('memoryImportOpen')),
+      h('div', { className: 'dsc-memory-footer-actions' },
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button',
+          onClick: () => chatActions.openImportMemory(),
+        }, h(Icon, { name: 'import', size: 15 }), t('memoryExtractFromChats')),
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button',
+          onClick: () => setImportOpen(true),
+        }, h(Icon, { name: 'brain', size: 15 }), t('memoryImportOpen')),
+      ),
     ),
     importDialog,
   )
@@ -12864,6 +12989,336 @@ function MemoryImportDialog({ onClose, onImported }) {
       h('div', { className: 'dsc-modal-body' },
         error !== '' ? h('p', { className: 'dsc-field-hint is-warning' }, error) : null,
         step === 'prompt' ? promptStep : step === 'paste' ? pasteStep : previewStep,
+      ),
+      h('div', { className: 'dsc-modal-foot' }, footer),
+    ),
+  )
+}
+
+/**
+ * Optional memory pass over imported chats. Opened from the import result or
+ * from the memory settings tab with an explicit batch of conversation ids.
+ * Nothing is sent until the user confirms the cost notice; the analysis marks
+ * the conversations it covered and returns preview candidates only. Saving
+ * reuses the ordinary memory `import` action, so merge/dedupe/tombstones stay
+ * in one place and a failure here can never touch the imported chat itself.
+ */
+function ImportMemoryDialog({ onClose }) {
+  const t = useT()
+  const batch = useChat(state => state.importMemoryBatch)
+  const conversations = useChat(state => state.conversations)
+  const rows = React.useMemo(() => {
+    const byId = new Map((Array.isArray(conversations) ? conversations : []).map(item => [item.id, item]))
+    return (Array.isArray(batch) ? batch : []).map(id => byId.get(id)).filter(item => item !== undefined)
+  }, [batch, conversations])
+  const [selected, setSelected] = React.useState(() => new Set(
+    (Array.isArray(chatStore.state.importMemoryBatch) ? chatStore.state.importMemoryBatch : []).filter((id) => {
+      const conversation = (chatStore.state.conversations ?? []).find(item => item.id === id)
+      return conversation !== undefined && typeof conversation.source?.memoryExtractedAt !== 'number'
+    }),
+  ))
+  const [reanalyze, setReanalyze] = React.useState(false)
+  const [consent, setConsent] = React.useState(false)
+  const [step, setStep] = React.useState('pick')
+  const [items, setItems] = React.useState([])
+  const [meta, setMeta] = React.useState(null)
+  const [busy, setBusy] = React.useState('')
+  const [error, setError] = React.useState('')
+  const alive = React.useRef(true)
+
+  React.useEffect(() => {
+    alive.current = true
+    return () => { alive.current = false }
+  }, [])
+
+  const close = () => {
+    if (typeof onClose === 'function') onClose()
+  }
+
+  const dismiss = () => {
+    if (busy === '') close()
+  }
+
+  const extracted = row => typeof row?.source?.memoryExtractedAt === 'number'
+  const isSelectable = row => reanalyze || !extracted(row)
+  const selectableRows = rows.filter(isSelectable)
+  const selectedRows = rows.filter(row => selected.has(row.id) && isSelectable(row))
+  const selectedCount = selectedRows.length
+
+  const toggleRow = (id) => {
+    setSelected((previous) => {
+      const next = new Set(previous)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const selectAll = () => {
+    setSelected(new Set(selectableRows.map(row => row.id)))
+  }
+
+  const clearSelection = () => setSelected(new Set())
+
+  const analyze = async () => {
+    if (busy !== '' || selectedCount === 0) return
+    const ids = selectedRows.map(row => row.id)
+    const count = ids.length
+    setConsent(false)
+    setError('')
+    setBusy('analyze')
+    try {
+      const data = await memoryRequest({
+        action: 'extract.imported',
+        conversationIds: ids,
+        reanalyze,
+        consent: true,
+        locale: streamLocale(),
+      })
+      if (!alive.current) return
+      chatActions.markImportMemoryAnalyzed(data?.analyzedIds)
+      const entries = Array.isArray(data?.entries) ? data.entries : []
+      const failed = Array.isArray(data?.failed) ? data.failed : []
+      setMeta({ analyzed: data?.analyzed ?? 0, failed: failed.length, count: entries.length })
+      if (entries.length === 0) {
+        setStep('pick')
+        if (failed.length > 0) setError(t('memoryExtractFailed', { message: memoryErrorText(failed[0].reason) }))
+        else setError(t('memoryExtractEmpty'))
+        if ((data?.analyzed ?? 0) > 0) chatStore.toast(t('memoryExtractDoneEmpty', { count: data.analyzed }), 'info')
+        return
+      }
+      setItems(entries.map(row => memoryImportRow(row, null)))
+      setStep('preview')
+      if (failed.length > 0) chatStore.toast(t('memoryExtractPartial', { count: failed.length }), 'warning')
+    } catch (fetchError) {
+      if (alive.current) setError(t('memoryExtractFailed', { message: memoryErrorText(fetchError) }))
+    } finally {
+      if (alive.current) setBusy('')
+    }
+  }
+
+  const patchItem = (index, patch) => {
+    setItems(previous => previous.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)))
+  }
+
+  const toggleItem = (index) => {
+    setItems(previous => previous.map((item, itemIndex) => {
+      if (itemIndex !== index) return item
+      const isOn = !item.selected
+      const fallback = item.match?.kind === 'duplicate' ? 'merge' : item.match?.kind === 'conflict' ? 'update' : 'auto'
+      return { ...item, selected: isOn, mode: isOn ? (item.mode === 'skip' ? fallback : item.mode) : 'skip' }
+    }))
+  }
+
+  const selectItemMode = (index, mode) => {
+    patchItem(index, { mode, selected: mode !== 'skip' })
+  }
+
+  const confirmedEntries = () => items
+    .filter(item => item.selected && item.mode !== 'skip' && item.content.trim() !== '')
+    .map((item) => {
+      const entry = { content: item.content.trim(), category: item.category, mode: item.mode }
+      const date = memoryImportDate(item.date)
+      if (date !== undefined) entry.date = date
+      return entry
+    })
+
+  const confirmImport = async () => {
+    if (busy !== '') return
+    const entries = confirmedEntries()
+    if (entries.length === 0) {
+      chatStore.toast(t('memoryImportNoneSelected'), 'error')
+      return
+    }
+    setBusy('import')
+    try {
+      const data = await memoryRequest({ action: 'import', platform: 'other', entries })
+      if (!alive.current) return
+      const result = data?.result ?? {}
+      chatStore.toast(t('memoryImportDone', {
+        added: result.added ?? 0,
+        merged: result.merged ?? 0,
+        updated: result.updated ?? 0,
+        skipped: result.skipped ?? 0,
+      }), 'success')
+      close()
+    } catch (fetchError) {
+      if (alive.current) chatStore.toast(memoryErrorText(fetchError), 'error')
+    } finally {
+      if (alive.current) setBusy('')
+    }
+  }
+
+  const pickBody = h(Fragment, null,
+    h('p', { className: 'dsc-field-hint' }, t('memoryExtractIntro')),
+    h('div', { className: 'dsc-memory-notice' },
+      h(Icon, { name: 'warning', size: 16 }),
+      h('div', { className: 'dsc-memory-notice-body' },
+        h('strong', null, t('memoryExtractCostTitle')),
+        h('p', null, t('memoryExtractCostBody', { count: selectedCount })),
+      ),
+    ),
+    h('div', { className: 'dsc-import-toolbar' },
+      h('button', {
+        type: 'button',
+        className: cx('dsc-import-check-all', selectedCount > 0 && 'is-on'),
+        onClick: selectedCount > 0 && selectedCount === selectableRows.length ? clearSelection : selectAll,
+      }, h('span', { className: 'dsc-choice-check' },
+        selectedCount > 0 ? h(Icon, { name: 'check', size: 12 }) : null,
+      ), t('memoryExtractSelectAll')),
+      h('span', { className: 'dsc-import-count' }, t('memoryExtractSelected', { count: selectedCount })),
+    ),
+    rows.length === 0
+      ? h('p', { className: 'dsc-memory-empty' }, t('memoryExtractNoImports'))
+      : h('div', { className: 'dsc-import-list' }, rows.map((row) => {
+          const done = extracted(row)
+          const disabled = done && !reanalyze
+          const isOn = selected.has(row.id) && !disabled
+          return h('button', {
+            key: row.id,
+            type: 'button',
+            role: 'checkbox',
+            'aria-checked': isOn,
+            disabled,
+            className: cx('dsc-import-item', isOn && 'is-selected', disabled && 'is-imported'),
+            onClick: () => toggleRow(row.id),
+          },
+            h('span', { className: 'dsc-choice-check' }, isOn ? h(Icon, { name: 'check', size: 13 }) : null),
+            h('span', { className: 'dsc-import-item-main' },
+              h('span', { className: 'dsc-import-item-title' }, row.title || t('newChatTitle')),
+              h('span', { className: 'dsc-import-item-meta' },
+                t('messageCount', { count: row.messageCount ?? 0 }),
+              ),
+            ),
+            done ? h('span', { className: 'dsc-import-badge' }, t('memoryExtractAlready')) : null,
+          )
+        })),
+    rows.some(extracted)
+      ? h('label', { className: 'dsc-memory-preview-check' },
+          h('input', {
+            type: 'checkbox',
+            checked: reanalyze,
+            onChange: event => setReanalyze(event.target.checked),
+          }),
+          h('span', null, t('memoryExtractReanalyze')),
+        )
+      : null,
+    busy === 'analyze'
+      ? h('div', { className: 'dsc-memory-state' },
+          h(Icon, { name: 'refresh', size: 16 }),
+          t('memoryExtractAnalyzing', { count: selectedCount }),
+        )
+      : null,
+    consent
+      ? h('div', { className: 'dsc-memory-consent' },
+          h('p', { className: 'dsc-memory-consent-text' }, t('memoryExtractConsent', { count: selectedCount })),
+          h('div', { className: 'dsc-memory-consent-actions' },
+            h('button', {
+              type: 'button', className: 'dsc-secondary-button',
+              onClick: () => setConsent(false),
+            }, t('cancel')),
+            h('button', {
+              type: 'button', className: 'dsc-primary-button',
+              onClick: () => { void analyze() },
+            }, t('memoryExtractConsentConfirm')),
+          ),
+        )
+      : null,
+  )
+
+  const previewBody = h(Fragment, null,
+    h('p', { className: 'dsc-field-hint' }, t('memoryImportPreviewSubtitle')),
+    meta !== null
+      ? h('p', { className: 'dsc-field-hint' }, t('memoryExtractAnalyzedNote', { analyzed: meta.analyzed, count: items.length }))
+      : null,
+    h('p', { className: 'dsc-memory-preview-count' }, t('memoryImportSelectCount', { count: confirmedEntries().length })),
+    h('div', { className: 'dsc-memory-preview' },
+      items.map((item, index) => h('div', {
+        key: item.key,
+        className: cx('dsc-memory-preview-row', item.selected && 'is-selected'),
+      },
+        h('label', { className: 'dsc-memory-preview-check' },
+          h('input', { type: 'checkbox', checked: item.selected, onChange: () => toggleItem(index) }),
+          h('span', null, t('memoryImportItemLabel', { index: index + 1 })),
+        ),
+        h('textarea', {
+          className: 'dsc-memory-input',
+          rows: 2,
+          maxLength: MEMORY_IMPORT_MAX_CONTENT,
+          value: item.content,
+          'aria-label': t('memoryImportItemLabel', { index: index + 1 }),
+          onChange: event => patchItem(index, { content: event.target.value }),
+        }),
+        h('div', { className: 'dsc-memory-preview-controls' },
+          h('select', {
+            className: 'dsc-select', value: item.category, 'aria-label': t('memoryImportCategory'),
+            onChange: event => patchItem(index, { category: event.target.value }),
+          }, memoryCategoryIds.map(id => h('option', { key: id, value: id }, memoryCategoryLabel(id, t)))),
+          item.match !== null ? h('select', {
+            className: 'dsc-select dsc-memory-mode', value: item.mode, 'aria-label': t('memoryImportMode'),
+            onChange: event => selectItemMode(index, event.target.value),
+          }, [
+            ['skip', 'memoryImportModeSkip'],
+            ['merge', 'memoryImportModeMerge'],
+            ['update', 'memoryImportModeUpdate'],
+          ].map(([value, key]) => h('option', { key: value, value }, t(key)))) : null,
+        ),
+        h('div', { className: 'dsc-memory-preview-badges' },
+          item.match?.kind === 'duplicate' ? h('span', { className: 'dsc-memory-badge is-duplicate' }, t('memoryImportBadgeDuplicate')) : null,
+          item.match?.kind === 'conflict' ? h('span', { className: 'dsc-memory-badge is-exists' }, t('memoryImportBadgeConflict')) : null,
+          item.sensitive ? h('span', { className: 'dsc-memory-badge is-sensitive' }, t('memoryImportBadgeSensitive')) : null,
+        ),
+        item.match !== null ? h('p', { className: 'dsc-memory-preview-existing' }, t('memoryImportExisting', { content: item.match.content })) : null,
+      )),
+    ),
+  )
+
+  const footer = step === 'preview'
+    ? h(Fragment, null,
+        h('span', { className: 'dsc-modal-foot-note' }, t('memoryImportMergeNote')),
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button', disabled: busy !== '',
+          onClick: () => setStep('pick'),
+        }, t('memoryImportBack')),
+        h('button', {
+          type: 'button', className: 'dsc-primary-button',
+          disabled: busy !== '' || confirmedEntries().length === 0,
+          onClick: () => { void confirmImport() },
+        }, busy === 'import' ? t('memoryImportImporting') : t('memoryImportConfirm', { count: confirmedEntries().length })),
+      )
+    : h(Fragment, null,
+        h('span', { className: 'dsc-modal-foot-note' }, t('memoryExtractFooterNote')),
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button', disabled: busy !== '',
+          onClick: dismiss,
+        }, t('close')),
+        h('button', {
+          type: 'button', className: 'dsc-primary-button',
+          disabled: busy !== '' || selectedCount === 0 || consent,
+          onClick: () => setConsent(true),
+        }, busy === 'analyze' ? t('memoryExtractAnalyzingShort') : t('memoryExtractAnalyze')),
+      )
+
+  return h(ModalBackdrop, { className: 'dsc-memory-extract', onDismiss: dismiss },
+    h('div', {
+      className: 'dsc-modal dsc-memory-extract-modal',
+      role: 'dialog',
+      'aria-modal': 'true',
+      'aria-label': t('memoryExtractTitle'),
+    },
+      h('header', { className: 'dsc-modal-head' },
+        h('div', null,
+          h('h2', null, t('memoryExtractTitle')),
+          h('p', { className: 'dsc-modal-sub' }, t('memoryExtractSubtitle')),
+        ),
+        h('button', {
+          type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
+          autoFocus: true, onClick: dismiss,
+        }, h(Icon, { name: 'close', size: 18 })),
+      ),
+      h('div', { className: 'dsc-modal-body' },
+        error !== '' ? h('p', { className: 'dsc-field-hint is-warning' }, error) : null,
+        step === 'preview' ? previewBody : pickBody,
       ),
       h('div', { className: 'dsc-modal-foot' }, footer),
     ),
@@ -15183,6 +15638,21 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-import-failure { display: flex; align-items: baseline; gap: 8px; font-size: 11.6px; }
 .dsc-import-failure-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dsc-import-failure-reason { flex: none; color: var(--dsc-muted); font-family: var(--dsc-mono); font-size: 10.4px; }
+.dsc-import-memory {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--dsc-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--dsc-layer2) 46%, transparent);
+}
+.dsc-import-memory-icon { display: inline-flex; flex: none; color: var(--dsc-link); }
+.dsc-import-memory-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.dsc-import-memory-title { font-size: 12.8px; font-weight: 570; }
+.dsc-import-memory-hint { margin: 0; font-size: 11.4px; line-height: 1.55; color: var(--dsc-muted); }
+.dsc-import-memory .dsc-secondary-button { flex: none; }
 .dsc-answer-notice { margin: 10px 0 0; }
 .dsc-notice.is-warn {
   border-color: color-mix(in srgb, var(--dsc-warn) 24%, transparent);
@@ -15259,6 +15729,10 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-switch:disabled { opacity: 0.45; cursor: default; }
 .dsc-memory-import .dsc-modal { width: min(760px, 100%); }
 .dsc-memory-import .dsc-modal-foot { flex-wrap: wrap; }
+.dsc-memory-extract .dsc-modal { width: min(640px, 100%); }
+.dsc-modal.dsc-memory-extract-modal { width: min(640px, 100%); }
+.dsc-memory-extract .dsc-modal-foot { flex-wrap: wrap; }
+.dsc-memory-footer-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .dsc-memory-import-intro { margin: 0; font-size: 12.4px; line-height: 1.65; color: var(--dsc-muted); }
 .dsc-memory-import-field { display: flex; flex-direction: column; gap: 7px; }
 .dsc-memory-prompt-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -15288,6 +15762,9 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   .dsc-memory-ask .dsc-primary-button { align-self: flex-end; }
   .dsc-memory-footer { flex-direction: column; align-items: stretch; }
   .dsc-memory-footer .dsc-secondary-button { justify-content: center; }
+  .dsc-memory-footer-actions { justify-content: center; }
+  .dsc-import-memory { align-items: flex-start; flex-wrap: wrap; }
+  .dsc-import-memory .dsc-secondary-button { width: 100%; justify-content: center; }
   .dsc-memory-row-foot { flex-wrap: wrap; }
   .dsc-memory-preview-controls { flex-wrap: wrap; }
   .dsc-memory-mode { max-width: none; }
@@ -15470,6 +15947,7 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     FolderAddDialog,
     ArchiveDialog,
     ImportDialog,
+    ImportMemoryDialog,
     filterImportRows,
     importDateLabel,
     Composer,

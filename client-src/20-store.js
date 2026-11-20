@@ -176,6 +176,10 @@ const chatStore = {
     // upload never allocates state for a closed surface.
     importOpen: false,
     importView: null,
+    // Optional follow-up after an import: analyze the imported chats for
+    // long-term memory. Opening the dialog never starts a model call.
+    importMemoryOpen: false,
+    importMemoryBatch: [],
   },
   listeners: new Set(),
   subscribe(listener) {
@@ -2970,6 +2974,44 @@ async function cancelImport() {
   }
 }
 
+/**
+ * Open the optional memory-extraction pass over imported chats. `sourceIds`
+ * narrows it to the just-finished import batch; omitting it lists every
+ * imported conversation. Nothing is sent anywhere until the user confirms.
+ */
+function openImportMemory(sourceIds = null) {
+  const wanted = Array.isArray(sourceIds) ? new Set(sourceIds) : null
+  const conversations = Array.isArray(chatStore.state.conversations) ? chatStore.state.conversations : []
+  const batch = conversations
+    .filter(conversation => conversation?.source !== null && typeof conversation?.source === 'object')
+    .filter(conversation => wanted === null || wanted.has(conversation.source.id))
+    .map(conversation => conversation.id)
+  if (batch.length === 0) {
+    chatStore.toast(tr('memoryExtractNoImports'), 'warning')
+    return false
+  }
+  chatStore.set({ importMemoryOpen: true, importMemoryBatch: batch })
+  return true
+}
+
+function closeImportMemory() {
+  chatStore.set({ importMemoryOpen: false, importMemoryBatch: [] })
+}
+
+/** Reflect a finished analysis in the local list without a full bootstrap. */
+function markImportMemoryAnalyzed(ids) {
+  const marked = new Set(Array.isArray(ids) ? ids : [])
+  if (marked.size === 0) return
+  const at = Date.now()
+  const conversations = (chatStore.state.conversations ?? []).map((conversation) => {
+    if (!marked.has(conversation.id) || conversation.source === null || typeof conversation.source !== 'object') {
+      return conversation
+    }
+    return { ...conversation, source: { ...conversation.source, memoryExtractedAt: at } }
+  })
+  chatStore.set({ conversations })
+}
+
 const chatActions = {
   openChat,
   closeChat,
@@ -3052,4 +3094,8 @@ const chatActions = {
   selectAllImport,
   startImport,
   cancelImport,
+  // Optional post-import long-term-memory extraction
+  openImportMemory,
+  closeImportMemory,
+  markImportMemoryAnalyzed,
 }

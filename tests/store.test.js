@@ -320,3 +320,40 @@ test('edits and regenerations add sibling branches without losing any history', 
     await fs.rm(dir, { recursive: true, force: true })
   }
 })
+
+test('marks imported conversations as memory-analyzed without touching their messages', async () => {
+  const { dir, store } = await tempStore()
+  try {
+    const { added } = await store.adoptConversations([{
+      title: '导入的会话',
+      createdAt: 1,
+      updatedAt: 2,
+      source: { kind: 'deepseek', id: 'export-1', importedAt: 3 },
+      messages: [
+        { id: 'u1', role: 'user', content: '我住在上海', createdAt: 1 },
+        { id: 'a1', role: 'assistant', status: 'done', createdAt: 2, blocks: [{ type: 'text', text: '记住了' }] },
+      ],
+    }])
+    const id = added[0]
+    const created = await store.createConversation()
+    assert.equal(store.getConversation(id).source.memoryExtractedAt, null)
+    // Only imported conversations can carry the marker.
+    assert.deepEqual(await store.markMemoryExtracted([created.id, 'missing'], 42), [])
+    assert.deepEqual(await store.markMemoryExtracted([id, 'missing'], 42), [id])
+    await store.flush()
+
+    const again = new ChatStore(dir, { logger: { warn() {} } })
+    await again.load()
+    const loaded = again.getConversation(id)
+    assert.equal(loaded.source.memoryExtractedAt, 42)
+    assert.equal(loaded.source.kind, 'deepseek')
+    // The marker is memory metadata: the imported chat itself is unchanged.
+    assert.equal(loaded.title, '导入的会话')
+    assert.equal(loaded.updatedAt, 2)
+    assert.equal(loaded.messages.length, 2)
+    assert.equal(loaded.messages[0].content, '我住在上海')
+    assert.equal(again.getConversation(created.id).source, null)
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true })
+  }
+})
