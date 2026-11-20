@@ -31,10 +31,17 @@ test('host entry registers owner-only routes and disposes them', async () => {
     '/api/deepseek-chat/stream',
     '/api/deepseek-chat/settings',
     '/api/deepseek-chat/model',
+    '/api/deepseek-chat/memory',
     '/api/deepseek-chat/key',
     '/api/deepseek-chat/workspace',
     '/api/deepseek-chat/handoff',
     '/api/deepseek-chat/handoff/send',
+    '/api/deepseek-chat/import/upload',
+    '/api/deepseek-chat/import/start',
+    '/api/deepseek-chat/import/status',
+    '/api/deepseek-chat/import/cancel',
+    '/api/deepseek-chat/import/discard',
+    '/api/deepseek-chat/import/media',
   ])
   await cleanups[0]()
 })

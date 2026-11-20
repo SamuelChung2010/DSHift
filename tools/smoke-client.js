@@ -168,12 +168,12 @@ const bootstrap = {
   model: { id: 'deepseek-flash', name: 'DeepSeek V4.1 Flash' },
   models: [
     {
-      id: 'deepseek-flash', name: 'DeepSeek V4.1 Flash', shortName: 'V4.1 Flash',
+      id: 'deepseek-flash', name: 'DeepSeek V4.1 Flash', displayName: 'DeepSeek-V4.1-Flash', shortName: 'V4.1 Flash',
       descriptionKey: 'modelFlashDesc',
       capabilities: { vision: true, documents: true, search: true, thinking: true, efforts: ['low', 'high', 'max'] },
     },
     {
-      id: 'deepseek-v4-pro', name: 'DeepSeek V4 Pro', shortName: 'V4 Pro',
+      id: 'deepseek-v4-pro', name: 'DeepSeek V4 Pro', displayName: 'DeepSeek-V4-Pro', shortName: 'V4 Pro',
       descriptionKey: 'modelProDesc',
       capabilities: { vision: false, documents: true, search: true, thinking: true, efforts: ['low', 'high', 'max'] },
     },
@@ -1125,20 +1125,23 @@ if (quickTools.length !== 2) throw new Error(`search and deep thinking need dire
 if (quickTools.map(node => node.props['data-tool']).join(',') !== 'web-search,deep-thinking') throw new Error('the quick toggles must be search then deep thinking')
 if (quickTools.some(node => node.props['aria-pressed'] !== true)) throw new Error('both direct toggles must show their on state')
 if (collectByClass(composerTree, 'dsc-active-tool').length !== 0) throw new Error('toggles must not become removable chips')
-if (collectByClass(composerTree, 'dsc-effort-trigger').length !== 1) throw new Error('thinking on must expose the effort control')
-const effortTrigger = collectByClass(composerTree, 'dsc-effort-trigger')[0]
-if (!collectionText(effortTrigger).includes('高')) throw new Error('the effort control must show the current tier')
+if (collectByClass(composerTree, 'dsc-effort-trigger').length !== 0) throw new Error('effort must live in the model seat, not a second trigger')
+const effortSeat = collectByClass(composerTree, 'dsc-model-effort')
+if (effortSeat.length !== 1) throw new Error('the model seat must show the current effort')
+if (!collectionText(effortSeat[0]).includes('High')) throw new Error('the model seat must carry the current tier')
+const modelSeat = collectByClass(composerTree, 'dsc-model-trigger')[0]
+if (!collectionText(modelSeat).includes('DeepSeek-V4.1-Flash')) throw new Error('the model seat must use the API-style display name')
 const editor = collectByClass(composerTree, 'dsc-editor-field')[0]
 if (typeof editor.props.onKeyDown !== 'function') throw new Error('the editor must own Enter handling')
 if (!String(editor.props.value).includes('你好')) throw new Error('the editor must show the draft')
 console.log('COMPOSER_STRUCTURE_OK')
 
-// The effort control is always present for a thinking-capable model, showing
-// Off while thinking is disabled, so toggling never moves the model chip.
+// The effort value is always present beside the model, showing Off while
+// thinking is disabled, so toggling never moves the model seat.
 captured.chatStore.set({ settings: { authMode: 'auto', thinking: false, search: true, systemPrompt: '' } })
 composerTree = React.createElement(captured.Composer)
-const offEffort = collectByClass(composerTree, 'dsc-effort-trigger')
-if (offEffort.length !== 1 || !collectionText(offEffort[0]).includes('关闭')) throw new Error('effort must stay visible and show Off while thinking is off')
+const offEffort = collectByClass(composerTree, 'dsc-model-effort')
+if (offEffort.length !== 1 || !collectionText(offEffort[0]).includes('Off')) throw new Error('the model seat must show Off while thinking is off')
 captured.chatStore.set({ settings: { authMode: 'auto', thinking: true, search: true, systemPrompt: '' } })
 
 // Enter / Shift+Enter / IME / Ctrl+Enter preference.
@@ -1200,7 +1203,7 @@ if (captured.modelById('deepseek-v4-pro').capabilities.vision !== false) throw n
 if (captured.modelCapability(captured.modelById('deepseek-flash'), 'vision') !== true) throw new Error('flash must be marked vision-capable')
 if (captured.modelEfforts(captured.modelById('deepseek-flash')).join(',') !== 'low,high,max') throw new Error('only real effort tiers may be offered')
 const chip = captured.modelChipLabel(captured.modelById('deepseek-v4-pro'), true, 'max')
-if (!chip.includes('V4 Pro') || !chip.includes('最高')) throw new Error(`unexpected model chip label: ${chip}`)
+if (!chip.includes('V4 Pro') || !chip.includes('Max')) throw new Error(`unexpected model chip label: ${chip}`)
 captured.chatStore.set({ modelChoice: { model: 'deepseek-v4-pro', effort: 'max' }, modelConfig: bootstrap.modelConfig })
 const choice = captured.currentModelChoice()
 if (choice.model.id !== 'deepseek-v4-pro' || choice.effort !== 'max') throw new Error('the stored model choice must be used')
@@ -1213,17 +1216,16 @@ captured.chatStore.set({
   modelChoice: { model: 'deepseek-v4-pro', effort: 'max' },
   settings: { authMode: 'auto', thinking: true, search: true, systemPrompt: '' },
 })
-if (captured.modelTriggerLabel(captured.modelById('deepseek-v4-pro')) !== 'V4 Pro') throw new Error('the model chip must use the short name')
+if (captured.modelTriggerLabel(captured.modelById('deepseek-v4-pro')) !== 'DeepSeek-V4-Pro') throw new Error('the model seat must use the API-style display name')
+if (captured.modelDisplayName({ name: 'DeepSeek V4 Pro' }) !== 'DeepSeek V4 Pro') throw new Error('a model without a display name must fall back to its catalog name')
+if (captured.modelDisplayName({ name: 'DeepSeek V4 Pro', version: 'DeepSeek-V4-Pro-0813' }) !== 'DeepSeek-V4-Pro') throw new Error('an older Host catalog must derive the native display name from version')
 const modelMenuTree = React.createElement(captured.ModelMenu)
 const modelTriggerNode = collectByClass(modelMenuTree, 'dsc-model-trigger')[0]
 if (modelTriggerNode === undefined) throw new Error('the compact model menu needs a trigger')
 const modelTriggerText = collectionText(modelTriggerNode)
-if (!modelTriggerText.includes('V4 Pro') || modelTriggerText.includes('最高')) throw new Error(`the model chip must not carry the effort: ${modelTriggerText}`)
+if (!modelTriggerText.includes('DeepSeek-V4-Pro') || !modelTriggerText.includes('Max')) throw new Error(`the model seat must carry both values: ${modelTriggerText}`)
 if (!captured.modelNotes(captured.modelById('deepseek-v4-pro')).join(' ').includes('不支持图片')) throw new Error('a text-only model must carry its one-line limitation')
 if (captured.modelNotes(captured.modelById('deepseek-flash')).length !== 0) throw new Error('flash has no limitation to advertise')
-const effortMenuTree = React.createElement(captured.EffortMenu)
-const effortTriggerNode = collectByClass(effortMenuTree, 'dsc-effort-trigger')[0]
-if (effortTriggerNode === undefined || !collectionText(effortTriggerNode).includes('最高')) throw new Error('the effort control must show the current tier')
 // A model without the capability disables the matching direct button in place.
 const textOnly = {
   id: 'text-only', name: 'Text Only', shortName: 'Text',
@@ -1237,7 +1239,7 @@ composerTree = React.createElement(captured.Composer)
 const disabledTools = collectByClass(composerTree, 'dsc-tool-toggle')
 if (disabledTools.length !== 2 || disabledTools.some(node => node.props.disabled !== true)) throw new Error('unsupported capabilities must disable the direct buttons')
 if (!disabledTools.every(node => String(node.props.title).includes('不支持'))) throw new Error('a disabled tool must explain why')
-if (collectByClass(composerTree, 'dsc-effort-trigger').length !== 0) throw new Error('a model without thinking must not show an effort control')
+if (collectByClass(composerTree, 'dsc-model-effort').length !== 0) throw new Error('a model without thinking must not show an effort value')
 captured.chatStore.set({
   models: bootstrap.models, modelChoice: { model: 'deepseek-flash', effort: 'high' },
   settings: { authMode: 'auto', thinking: true, search: true, systemPrompt: '' },
@@ -1436,5 +1438,179 @@ const quoteTree = React.createElement(captured.Markdown, { text: '> 引用 **重
 if (collectByClass(quoteTree, 'dsc-quote').length !== 1) throw new Error('block quotes must render')
 if (collectByClass(quoteTree, 'dsc-list').length !== 1) throw new Error('lists inside quotes must render')
 console.log('RENDERING_OK')
+
+// ---------------------------------------------------------------------------
+// Chat history import: every dialog step renders from store state alone.
+// ---------------------------------------------------------------------------
+console.log('IMPORT_START')
+const importRows = [
+  { sourceId: 's1', title: '年度计划', messageCount: 8, createdAt: Date.UTC(2026, 9, 1, 4, 0), updatedAt: Date.UTC(2026, 9, 2, 4, 0), imported: false },
+  { sourceId: 's2', title: 'Rust 生命周期笔记', messageCount: 2, createdAt: Date.UTC(2026, 8, 20, 4, 0), updatedAt: Date.UTC(2026, 8, 20, 5, 0), imported: true },
+  { sourceId: 's3', title: 'Weekly review', messageCount: 14, createdAt: null, updatedAt: null, imported: false },
+]
+const importView = (patch) => ({
+  step: 'pick',
+  fileName: '',
+  fileSize: 0,
+  token: '',
+  conversations: [],
+  selected: [],
+  filter: '',
+  stats: { total: 0, imported: 0, importable: 0 },
+  progress: { done: 0, total: 0 },
+  jobId: '',
+  cancelling: false,
+  result: null,
+  error: '',
+  ...patch,
+})
+if (captured.filterImportRows(importRows, 'rust').length !== 1) throw new Error('the preview filter must match titles case-insensitively')
+if (captured.filterImportRows(importRows, '  ').length !== 3) throw new Error('a blank filter must keep every row')
+if (captured.importDateLabel(null, captured.DICTS ? key => captured.DICTS.zh[key] ?? key : key => key) !== captured.DICTS.zh.importDateUnknown) {
+  throw new Error('a missing export date must be reported as unknown')
+}
+
+captured.chatStore.set({ importOpen: true, importView: importView({}) })
+const pickTree = captured.ImportDialog()
+if (collectByClass(pickTree, 'dsc-import-drop').length !== 1) throw new Error('the pick step must render one drop zone')
+const fileInput = collectByClass(pickTree, 'dsc-import-input')[0]
+if (fileInput?.props?.type !== 'file' || !String(fileInput?.props?.accept).includes('.zip')) {
+  throw new Error('the pick step must offer a ZIP file input')
+}
+if (!collectionText(pickTree).includes(captured.DICTS.zh.importDropTitle)) throw new Error('the drop zone must name its action')
+// The sidebar entry and the mounted dialog are the only ways in.
+const importEntries = collectByClass(React.createElement(captured.Sidebar), 'dsc-foot-action')
+  .filter(node => collectionText(node).includes(captured.DICTS.zh.importOpen))
+if (importEntries.length !== 1) throw new Error('the sidebar must offer one import entry')
+const rootWithImport = React.createElement(captured.ChatRoot)
+if (collectByClass(rootWithImport, 'dsc-import-modal').length !== 1) throw new Error('ChatRoot must mount the import dialog while it is open')
+
+captured.chatStore.set({
+  importView: importView({
+    step: 'preview', token: 'tok', fileName: 'deepseek_data.zip', fileSize: 141_850_492,
+    conversations: importRows, selected: ['s1', 's3'],
+    stats: { total: 3, imported: 1, importable: 2 },
+  }),
+})
+const previewTree = captured.ImportDialog()
+const itemRows = collectByClass(previewTree, 'dsc-import-item')
+if (itemRows.length !== 3) throw new Error(`the preview must list every conversation: ${itemRows.length}`)
+if (itemRows.filter(row => row.props['aria-checked'] === true).length !== 2) throw new Error('selected rows must be checked')
+if (itemRows.filter(row => row.props.disabled === true).length !== 1) throw new Error('an imported row must not be selectable again')
+if (collectByClass(previewTree, 'dsc-import-badge').length !== 1) throw new Error('an imported row must be badged')
+if (!collectionText(previewTree).includes('已选 2 个，可导入 2 个')) throw new Error('the selection count must be shown')
+if (collectByClass(previewTree, 'dsc-import-filter-input').length !== 1) throw new Error('the preview must offer a title filter')
+const startButton = collectByClass(previewTree, 'dsc-primary-button')[0]
+if (startButton?.props?.disabled === true) throw new Error('the import button must be enabled with a selection')
+
+captured.chatStore.set({ importView: importView({ step: 'importing', token: 'tok', jobId: 'job-1', progress: { done: 120, total: 300 } }) })
+const importingTree = captured.ImportDialog()
+const bar = collectByClass(importingTree, 'dsc-import-bar')[0]
+if (bar?.props?.role !== 'progressbar' || bar?.props['aria-valuenow'] !== 40) throw new Error('the progress bar must report its percentage')
+if (collectByClass(importingTree, 'dsc-import-bar-fill')[0]?.props?.style?.width !== '40%') throw new Error('the progress fill must follow the count')
+
+captured.chatStore.set({
+  importView: importView({
+    step: 'done',
+    result: {
+      id: 'job-1', state: 'done', total: 3, done: 3, imported: 2, skipped: 1, failed: 1,
+      media: { restored: 4, bytes: 1024, omitted: 0 },
+      failures: [{ sourceId: 's3', title: 'Weekly review', code: 'BAD_SESSION', reason: 'broken' }],
+    },
+  }),
+})
+const doneTree = captured.ImportDialog()
+const statValues = collectByClass(doneTree, 'dsc-import-stat-value').map(node => collectionText(node))
+if (statValues.join(',') !== '2,1,1') throw new Error(`the result must count imported, skipped and failed: ${statValues.join(',')}`)
+if (collectByClass(doneTree, 'dsc-import-failure').length !== 1) throw new Error('a failed conversation must be listed')
+if (collectByClass(doneTree, 'dsc-import-memory').length !== 1) throw new Error('an imported batch must offer the optional memory pass')
+
+captured.chatStore.set({ importView: importView({ step: 'pick', error: 'NOT_A_ZIP' }) })
+if (collectByClass(captured.ImportDialog(), 'dsc-import-error').length !== 1) throw new Error('a read failure must be shown in the dialog')
+
+captured.chatActions.closeImport()
+if (captured.chatStore.state.importOpen !== false || captured.chatStore.state.importView !== null) {
+  throw new Error('closing the dialog must clear its state')
+}
+console.log('IMPORT_OK')
+
+// ---------------------------------------------------------------------------
+// Long-term memory: parser, prompt contract and the two new UI surfaces.
+// ---------------------------------------------------------------------------
+console.log('MEMORY_START')
+const parsedExport = captured.parseMemoryExport([
+  '## Instructions',
+  '- [2026-01-02] - Always answer in Chinese.',
+  '## Identity',
+  '- [unknown] - I am Alex and I live in Singapore.',
+].join('\n'))
+if (parsedExport.entries.length !== 2) throw new Error(`the memory parser must read both records: ${parsedExport.entries.length}`)
+if (parsedExport.entries[0].category !== 'instruction' || parsedExport.entries[1].category !== 'identity') {
+  throw new Error('the memory parser must keep the category headings')
+}
+if (parsedExport.entries[1].date !== 'unknown') throw new Error('the memory parser must keep an unknown date marker')
+for (const phrase of ['Instructions', 'Identity', 'Career', 'Projects', 'Preferences', '[YYYY-MM-DD]', '[unknown]', 'fenced code block']) {
+  if (!captured.MEMORY_IMPORT_PROMPT.includes(phrase)) throw new Error(`the import prompt is missing ${phrase}`)
+}
+// The pane paints a loading state before its Host fetch resolves, so rendering
+// it here exercises the mount path without a network round trip.
+render('MemorySettingsPane', captured.MemorySettingsPane)
+render('MemoryImportDialog', captured.MemoryImportDialog, { onClose: () => {}, onImported: () => {} })
+const importTree = React.createElement(captured.MemoryImportDialog, { onClose: () => {}, onImported: () => {} })
+if (collectByClass(importTree, 'dsc-memory-import').length === 0) throw new Error('the import dialog must mount its own native <dialog>')
+if (collectByClass(importTree, 'dsc-memory-prompt').length !== 1) throw new Error('the import dialog must show the copyable prompt')
+console.log('MEMORY_OK')
+
+// ---------------------------------------------------------------------------
+// Optional memory extraction from imported chats: choosing is separate from
+// confirming the model calls, and an analyzed chat is badged, never hidden.
+// ---------------------------------------------------------------------------
+console.log('IMPORT_MEMORY_START')
+captured.chatStore.set({
+  importMemoryOpen: true,
+  importMemoryBatch: ['conv-imported'],
+  conversations: [{
+    id: 'conv-imported',
+    title: 'Imported project chat',
+    messageCount: 6,
+    updatedAt: 10,
+    source: { kind: 'deepseek', id: 'export-1', importedAt: 5, memoryExtractedAt: null },
+  }],
+})
+const extractTree = React.createElement(captured.ImportMemoryDialog, { onClose: () => {} })
+if (collectByClass(extractTree, 'dsc-memory-extract-modal').length !== 1) throw new Error('the extract dialog must mount its own modal')
+if (collectByClass(extractTree, 'dsc-import-item').length !== 1) throw new Error('the extract dialog must list the imported conversation')
+if (collectByClass(extractTree, 'dsc-import-item').some(row => row.props['aria-checked'] === true)) throw new Error('no imported conversation may be preselected for analysis')
+if (!collectionText(extractTree).includes(captured.DICTS.zh.memoryExtractTitle)) throw new Error('the extract dialog must name its purpose')
+if (collectByClass(extractTree, 'dsc-memory-consent').length !== 0) throw new Error('no consent may appear before the user asks to analyze')
+captured.chatStore.set({
+  conversations: [{
+    id: 'conv-imported',
+    title: 'Imported project chat',
+    messageCount: 6,
+    updatedAt: 10,
+    source: { kind: 'deepseek', id: 'export-1', importedAt: 5, memoryExtractedAt: 9 },
+  }],
+})
+const analyzedTree = React.createElement(captured.ImportMemoryDialog, { onClose: () => {} })
+if (collectByClass(analyzedTree, 'dsc-import-badge').length !== 1) throw new Error('an analyzed conversation must be badged')
+console.log('IMPORT_MEMORY_OK')
+
+captured.chatStore.set({
+  importMemoryOpen: true,
+  importMemoryBatch: ['conv-imported'],
+  boot: 'ready',
+  open: true,
+  conversations: [{
+    id: 'conv-imported',
+    title: 'Imported project chat',
+    messageCount: 6,
+    updatedAt: 10,
+    source: { kind: 'deepseek-export', id: 'export-1', importedAt: 5, memoryExtractedAt: null },
+  }],
+})
+const rootTree = React.createElement(captured.ChatRoot)
+if (collectByClass(rootTree, 'dsc-memory-extract-modal').length !== 1) throw new Error('ChatRoot must mount the import-memory dialog while it is open')
+captured.chatStore.set({ importMemoryOpen: false, importMemoryBatch: [] })
 
 console.log('SMOKE_OK')

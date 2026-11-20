@@ -171,6 +171,18 @@ const chatStore = {
     editDraft: '',
     // Message to bring into view after loading or switching a version.
     focusMessage: null,
+    // ---- DeepSeek export import (sidebar) ----
+    // Every step of the import dialog. `null` keeps the dialog unmounted, so an
+    // upload never allocates state for a closed surface.
+    importOpen: false,
+    importView: null,
+    // Optional follow-up after an import: analyze the imported chats for
+    // long-term memory. Opening the dialog never starts a model call.
+    importMemoryOpen: false,
+    importMemoryBatch: [],
+    // Bumped after the extraction dialog saves memories, so a settings pane
+    // that stayed mounted underneath it reloads its snapshot.
+    memoryChangedAt: 0,
   },
   listeners: new Set(),
   subscribe(listener) {
@@ -420,8 +432,7 @@ function canContinueReply(message) {
 }
 
 /** Files as the Host stores them: preview URLs never leave this browser. */
-function hostFiles(files) {
-  return (Array.isArray(files) ? files : []).flatMap((file) => {
+function hostFiles(files) {  return (Array.isArray(files) ? files : []).flatMap((file) => {
     if (!file || typeof file.fileId !== 'string' || file.fileId === '') return []
     return [{
       id: file.id,
@@ -451,6 +462,66 @@ function withFilePreviews(messages, previousMessages) {
       if (!previewUrl || file.previewUrl === previewUrl) return file
       changed = true
       return { ...file, previewUrl }
+    })
+    return changed ? { ...message, files } : message
+  })
+}
+
+/**
+ * Preview URLs for images recovered by a history import.
+ *
+ * The bytes live only on this Host, so they are read through the same Host
+ * transport as every other API call and handed to the page as a blob URL. That
+ * keeps the preview working no matter how the Chat surface is served (origin,
+ * base path or a desktop transport) and never persists a URL in the history
+ * document. Requests are made once per content address.
+ */
+const importedMediaUrls = new Map()
+
+/**
+ * Resolve one imported media handle, starting the read on first use.
+ * @returns the blob URL when it is already loaded, otherwise ''.
+ */
+function importedMediaUrl(media) {
+  if (typeof media !== 'string' || media === '') return ''
+  const known = importedMediaUrls.get(media)
+  if (known !== undefined) return known
+  importedMediaUrls.set(media, '')
+  hostFetch(`/api/deepseek-chat/import/media?f=${encodeURIComponent(media)}`)
+    .then(response => (response.ok ? response.blob() : null))
+    .then((blob) => {
+      if (blob === null) {
+        importedMediaUrls.delete(media)
+        return
+      }
+      importedMediaUrls.set(media, URL.createObjectURL(blob))
+      // One repaint is enough to attach the preview to every message that
+      // references this image, without touching the stored history.
+      chatStore.emit()
+    })
+    .catch(() => {
+      importedMediaUrls.delete(media)
+    })
+  return ''
+}
+
+/**
+ * Attach preview URLs to the attachments of an imported conversation.
+ *
+ * A file the browser uploaded carries its own object URL; a file restored from
+ * an import does not, because the plugin only stores the content address of the
+ * bytes next to its history.
+ */
+function withImportedMedia(messages) {
+  return (Array.isArray(messages) ? messages : []).map((message) => {
+    if (!Array.isArray(message?.files) || message.files.length === 0) return message
+    let changed = false
+    const files = message.files.map((file) => {
+      if (file?.local !== true) return file
+      const url = importedMediaUrl(file.media)
+      if (url === '' || file.previewUrl === url) return file
+      changed = true
+      return { ...file, previewUrl: url }
     })
     return changed ? { ...message, files } : message
   })
@@ -689,7 +760,7 @@ async function loadConversation(id, { quiet = false, focusMessageId = '' } = {})
     const data = await hostJson('/api/deepseek-chat/conversation', body)
     if (sequence !== conversationLoadSequence) return
     const patch = {
-      messages: Array.isArray(data.conversation?.messages) ? data.conversation.messages : [],
+      messages: withImportedMedia(Array.isArray(data.conversation?.messages) ? data.conversation.messages : []),
       conversationLoading: false,
       conversationError: '',
       focusMessage: body.focusMessageId ? { id: body.focusMessageId, at: Date.now() } : null,
@@ -1089,7 +1160,7 @@ async function openSearchResult(result) {
       })
       if (Array.isArray(data.conversation?.messages)) {
         chatStore.set({
-          messages: data.conversation.messages,
+          messages: withImportedMedia(data.conversation.messages),
           conversationLoading: false,
           conversationError: '',
           editingId: null,
@@ -1669,7 +1740,7 @@ async function runTurnStream({
           current = { ...current, id: hostAssistantId }
           let messages
           if (Array.isArray(item.messages) && item.messages.length > 0) {
-            messages = withFilePreviews(item.messages, chatStore.state.messages)
+            messages = withImportedMedia(withFilePreviews(item.messages, chatStore.state.messages))
           } else {
             // Older Host halves only send the ids; patch the optimistic branch.
             const hostUserId = typeof item.userMessage?.id === 'string' ? item.userMessage.id : null
@@ -2614,6 +2685,336 @@ async function submitHandoff() {
   chatStore.toast(tr('handoffSent'), 'success')
 }
 
+// ---- DeepSeek chat-export import -------------------------------------------------
+
+/** Largest export this Host accepts, published by the bootstrap. */
+const IMPORT_DEFAULT_MAX_BYTES = 512 * 1024 * 1024
+
+/** Error codes the dialog can explain in the user's language. */
+const IMPORT_ERROR_KEYS = {
+  NOT_ZIP: 'importUnsupported',
+  ARCHIVE_DAMAGED: 'importUnsupported',
+  ARCHIVE_UNSUPPORTED: 'importUnsupported',
+  ARCHIVE_CLOSED: 'importUnsupported',
+  MISSING_MANIFEST: 'importUnsupported',
+  MISSING_INDEX: 'importUnsupported',
+  BAD_EXPORT: 'importUnsupported',
+  BAD_SESSION: 'importUnsupported',
+  UNSUPPORTED_VERSION: 'importUnsupported',
+  EMPTY_UPLOAD: 'importUnsupported',
+  NO_CONVERSATIONS: 'importEmpty',
+  ARCHIVE_TOO_LARGE: 'importTooLarge',
+}
+
+let importPollTimer = 0
+let importPollSequence = 0
+
+function importMaxBytes() {
+  const value = chatStore.state.bootData?.import?.maxUploadBytes
+  return typeof value === 'number' && value > 0 ? value : IMPORT_DEFAULT_MAX_BYTES
+}
+
+/** Whether this Host half offers the import, so an older Host never shows a dead surface. */
+function importAvailable() {
+  return chatStore.state.bootData?.import?.enabled === true
+}
+
+function emptyImportView() {
+  return {
+    step: 'pick',
+    fileName: '',
+    fileSize: 0,
+    token: '',
+    conversations: [],
+    selected: [],
+    filter: '',
+    stats: { total: 0, imported: 0, importable: 0 },
+    progress: { done: 0, total: 0 },
+    jobId: '',
+    cancelling: false,
+    result: null,
+    error: '',
+  }
+}
+
+/** Patch the open dialog; a closed dialog ignores every late update. */
+function importPatch(patch) {
+  const current = chatStore.state.importView
+  if (current === null) return
+  chatStore.set({ importView: { ...current, ...patch } })
+}
+
+/** One translated explanation for an import failure. */
+function importErrorMessage(error) {
+  const code = error?.payload?.code
+  if (code === 'ARCHIVE_TOO_LARGE') return tr('importTooLarge', { size: formatSize(importMaxBytes()) })
+  if (code === 'BUSY') return tr('importBusy')
+  const key = code === undefined ? undefined : IMPORT_ERROR_KEYS[code]
+  if (key !== undefined) return tr(key)
+  return error instanceof Error ? error.message : String(error)
+}
+
+/** Drop the staged archive of a dialog that is closing without importing. */
+function discardImportToken(token) {
+  if (typeof token !== 'string' || token === '') return Promise.resolve()
+  return hostJson('/api/deepseek-chat/import/discard', { token }).catch(() => undefined)
+}
+
+async function openImport() {
+  if (chatStore.state.importOpen) return
+  // The availability flag comes from the bootstrap, so a Host half that predates
+  // the import answers with a clear message instead of a dead dialog.
+  await ensureBoot()
+  if (!importAvailable()) {
+    chatStore.toast(tr('importUnavailable'), 'warning')
+    return
+  }
+  chatStore.set({ importOpen: true, importView: emptyImportView() })
+}
+
+function closeImport() {
+  const view = chatStore.state.importView
+  if (view === null) return
+  // Closing during an import would hide the only place progress is shown; the
+  // dialog stays until the job settles or the user cancels it.
+  if (view.step === 'importing') return
+  importPollSequence += 1
+  if (importPollTimer !== 0) {
+    clearTimeout(importPollTimer)
+    importPollTimer = 0
+  }
+  if (view.token !== '' && view.step !== 'done') void discardImportToken(view.token)
+  chatStore.set({ importOpen: false, importView: null })
+}
+
+/** Read one chosen file: upload it to the Host, then show the preview. */
+async function selectImportFile(file) {
+  const view = chatStore.state.importView
+  if (view === null || view.step === 'parsing' || view.step === 'importing') return
+  const name = typeof file?.name === 'string' ? file.name : ''
+  if (!/\.zip$/i.test(name)) {
+    importPatch({ error: tr('importUnsupported') })
+    return
+  }
+  if (typeof file.size === 'number' && file.size > importMaxBytes()) {
+    importPatch({ error: tr('importTooLarge', { size: formatSize(importMaxBytes()) }) })
+    return
+  }
+  if (view.token !== '') void discardImportToken(view.token)
+  importPatch({
+    step: 'parsing',
+    fileName: name,
+    fileSize: typeof file.size === 'number' ? file.size : 0,
+    token: '',
+    error: '',
+    conversations: [],
+    selected: [],
+    result: null,
+    progress: { done: 0, total: 0 },
+    jobId: '',
+  })
+  try {
+    const response = await hostFetch('/api/deepseek-chat/import/upload', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/zip',
+        'x-file-name': encodeURIComponent(name),
+      },
+      body: file,
+    })
+    const text = await response.text()
+    let data
+    try {
+      data = JSON.parse(text)
+    } catch {
+      throw new Error(text || `HTTP ${response.status}`)
+    }
+    if (!response.ok) {
+      const error = new Error(data?.error?.message || `HTTP ${response.status}`)
+      error.payload = data?.error
+      throw error
+    }
+    // The dialog was closed while the file was being read.
+    if (chatStore.state.importView === null) {
+      void discardImportToken(data?.token)
+      return
+    }
+    const conversations = Array.isArray(data?.conversations) ? data.conversations : []
+    importPatch({
+      step: 'preview',
+      token: typeof data?.token === 'string' ? data.token : '',
+      conversations,
+      selected: conversations.filter(item => item?.imported !== true).map(item => item.sourceId),
+      stats: data?.stats ?? { total: conversations.length, imported: 0, importable: conversations.length },
+      error: conversations.length === 0 ? tr('importEmpty') : '',
+    })
+  } catch (error) {
+    if (chatStore.state.importView === null) return
+    importPatch({ step: 'pick', token: '', error: tr('importReadFailed', { message: importErrorMessage(error) }) })
+  }
+}
+
+function setImportFilter(filter) {
+  importPatch({ filter: typeof filter === 'string' ? filter : '' })
+}
+
+function toggleImportConversation(sourceId) {
+  const view = chatStore.state.importView
+  if (view === null || view.step !== 'preview' || typeof sourceId !== 'string') return
+  const selected = view.selected.includes(sourceId)
+    ? view.selected.filter(id => id !== sourceId)
+    : [...view.selected, sourceId]
+  importPatch({ selected })
+}
+
+/** Select or clear every conversation this export can actually import. */
+function selectAllImport(select) {
+  const view = chatStore.state.importView
+  if (view === null || view.step !== 'preview') return
+  const importable = view.conversations.filter(item => item.imported !== true).map(item => item.sourceId)
+  importPatch({ selected: select === false ? [] : importable })
+}
+
+/** Start the Host-side job and follow its progress. */
+async function startImport() {
+  const view = chatStore.state.importView
+  if (view === null || view.step !== 'preview' || view.token === '') return
+  if (view.selected.length === 0) {
+    chatStore.toast(tr('importNothing'), 'warning')
+    return
+  }
+  importPatch({ step: 'importing', error: '', progress: { done: 0, total: view.selected.length }, cancelling: false })
+  try {
+    const data = await hostJson('/api/deepseek-chat/import/start', { token: view.token, ids: view.selected })
+    const job = data?.job
+    if (job === null || typeof job?.id !== 'string') throw new Error('the Host returned no import job')
+    importPatch({ jobId: job.id, progress: { done: job.done ?? 0, total: job.total ?? view.selected.length } })
+    followImport(job)
+  } catch (error) {
+    const message = importErrorMessage(error)
+    importPatch({ step: 'preview', error: message })
+    chatStore.toast(message, 'error')
+  }
+}
+
+/** Poll one running job until it settles, then refresh the sidebar. */
+function followImport(job) {
+  const sequence = ++importPollSequence
+  const schedule = (delay) => {
+    if (importPollTimer !== 0) clearTimeout(importPollTimer)
+    importPollTimer = setTimeout(() => {
+      importPollTimer = 0
+      void tick()
+    }, delay)
+  }
+  const tick = async () => {
+    if (sequence !== importPollSequence) return
+    let data
+    try {
+      data = await hostJson(`/api/deepseek-chat/import/status?job=${encodeURIComponent(job.id)}`)
+    } catch (error) {
+      // A failed poll is not a failed import: the Host keeps the job and keeps
+      // writing, so the dialog reports the read problem and tries again.
+      if (sequence !== importPollSequence) return
+      importPatch({ error: importErrorMessage(error) })
+      schedule(900)
+      return
+    }
+    if (sequence !== importPollSequence) return
+    const latest = data?.job
+    if (latest === null || latest === undefined) {
+      importPatch({ error: tr('importReadFailed', { message: 'job expired' }) })
+      return
+    }
+    if (latest.state === 'running') {
+      importPatch({ progress: { done: latest.done ?? 0, total: latest.total ?? 0 } })
+      schedule(350)
+      return
+    }
+    finishImport(latest, data)
+  }
+  schedule(120)
+}
+
+/** Publish the result, apply the refreshed history, and toast the outcome. */
+function finishImport(job, data) {
+  const current = chatStore.state.importView ?? emptyImportView()
+  chatStore.set({
+    importView: {
+      ...current,
+      step: 'done',
+      result: job,
+      jobId: '',
+      cancelling: false,
+      progress: { done: job.total ?? 0, total: job.total ?? 0 },
+      error: job.state === 'failed' ? String(job.error ?? '') : '',
+    },
+  })
+  const patch = {}
+  if (Array.isArray(data?.conversations)) patch.conversations = data.conversations
+  if (Array.isArray(data?.folders)) patch.folders = data.folders
+  if (Object.keys(patch).length > 0) chatStore.set(patch)
+  if (job.state === 'failed') {
+    chatStore.toast(job.error ? String(job.error) : tr('importDoneFailed', { count: job.failed ?? 0 }), 'error')
+    return
+  }
+  if (job.state === 'cancelled') {
+    chatStore.toast(tr('importCanceled'), 'warning')
+    return
+  }
+  chatStore.toast(tr('importDoneImported', { count: job.imported ?? 0 }), 'success')
+}
+
+/** Ask the Host to stop after the conversation it is handling. */
+async function cancelImport() {
+  const view = chatStore.state.importView
+  if (view === null || view.step !== 'importing' || view.jobId === '') return
+  importPatch({ cancelling: true })
+  try {
+    await hostJson('/api/deepseek-chat/import/cancel', { job: view.jobId })
+  } catch (error) {
+    importPatch({ cancelling: false, error: importErrorMessage(error) })
+  }
+}
+
+/**
+ * Open the optional memory-extraction pass over imported chats. `sourceIds`
+ * narrows it to the just-finished import batch; omitting it lists every
+ * imported conversation. Nothing is sent anywhere until the user confirms.
+ */
+function openImportMemory(sourceIds = null) {
+  const wanted = Array.isArray(sourceIds) ? new Set(sourceIds) : null
+  const conversations = Array.isArray(chatStore.state.conversations) ? chatStore.state.conversations : []
+  const batch = conversations
+    .filter(conversation => conversation?.source !== null && typeof conversation?.source === 'object')
+    .filter(conversation => wanted === null || wanted.has(conversation.source.id))
+    .map(conversation => conversation.id)
+  if (batch.length === 0) {
+    chatStore.toast(tr('memoryExtractNoImports'), 'warning')
+    return false
+  }
+  chatStore.set({ importMemoryOpen: true, importMemoryBatch: batch })
+  return true
+}
+
+function closeImportMemory() {
+  chatStore.set({ importMemoryOpen: false, importMemoryBatch: [] })
+}
+
+/** Reflect a finished analysis in the local list without a full bootstrap. */
+function markImportMemoryAnalyzed(ids) {
+  const marked = new Set(Array.isArray(ids) ? ids : [])
+  if (marked.size === 0) return
+  const at = Date.now()
+  const conversations = (chatStore.state.conversations ?? []).map((conversation) => {
+    if (!marked.has(conversation.id) || conversation.source === null || typeof conversation.source !== 'object') {
+      return conversation
+    }
+    return { ...conversation, source: { ...conversation.source, memoryExtractedAt: at } }
+  })
+  chatStore.set({ conversations })
+}
+
 const chatActions = {
   openChat,
   closeChat,
@@ -2687,4 +3088,17 @@ const chatActions = {
   pickHandoffWorkspaceDirectory,
   createHandoffWorkspace,
   submitHandoff,
+  // DeepSeek chat-export import
+  openImport,
+  closeImport,
+  selectImportFile,
+  setImportFilter,
+  toggleImportConversation,
+  selectAllImport,
+  startImport,
+  cancelImport,
+  // Optional post-import long-term-memory extraction
+  openImportMemory,
+  closeImportMemory,
+  markImportMemoryAnalyzed,
 }

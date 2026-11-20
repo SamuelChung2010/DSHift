@@ -294,10 +294,12 @@ const DICT_ZH = {
   versionLabel: '版本 {index} / {count}',
   // Composer tools menu
   toolsMenu: '工具',
+  addFiles: '添加图片或文件',
+  fileSection: '文件',
   uploadFiles: '上传图片或文件',
   uploadFilesHint: 'PDF、Word、PPT、图片与文本',
   webSearchHint: '从网络查找最新信息',
-  deepThinkHint: '先推理再回答，可调整思考强度',
+  deepThinkHint: '先推理再回答，可调整推理等级',
   toolOn: '已开启',
   toolOff: '已关闭',
   toolUploading: '正在上传',
@@ -319,22 +321,22 @@ const DICT_ZH = {
   modelCapFiles: '文件解析',
   modelCapSearch: '联网搜索',
   modelCapThinking: '深度思考',
-  modelUnsupportedImage: '当前模型不支持图片理解，请切换到 DeepSeek V4.1 Flash。',
+  modelUnsupportedImage: '当前模型不支持图片理解，请切换到 DeepSeek-V4.1-Flash。',
   modelConfigFailed: '模型设置保存失败：{message}',
-  modelUnavailable: '该模型当前不可用，已切换回 DeepSeek V4.1 Flash，请重试。',
+  modelUnavailable: '该模型当前不可用，已切换回 DeepSeek-V4.1-Flash，请重试。',
   modelAppliedToChat: '仅对当前对话生效',
   modelAppliedToDefault: '新对话默认使用',
-  thinkingEffort: '思考强度',
-  effortOff: '关闭',
+  thinkingEffort: '推理等级',
+  effortOff: 'Off',
   effortOffHint: '不展示思考过程，直接回答',
-  effortLow: '低',
-  effortHigh: '高',
-  effortMax: '最高',
+  effortLow: 'Low',
+  effortHigh: 'High',
+  effortMax: 'Max',
   effortLowHint: '更快，适合简单问题',
   effortHighHint: '平衡速度与准确度',
   effortMaxHint: '最充分，耗时更长',
-  effortNeedsThinking: '开启深度思考后可选择思考强度',
-  effortUnsupported: '当前模型不支持思考强度设置',
+  effortNeedsThinking: '开启深度思考后可选择推理等级',
+  effortUnsupported: '当前模型不支持推理等级设置',
   // Sources
   sourceSummary: '来源 · {count}',
   sourceDomainFallback: '网页',
@@ -349,6 +351,192 @@ const DICT_ZH = {
   mermaidFailed: '图表渲染失败',
   mathFailed: '公式渲染失败',
   streamingDiagram: '生成完成后绘制图表',
+  // Chat history import
+  importOpen: '导入聊天记录',
+  importTitle: '导入聊天记录',
+  importSubtitle: '从 DeepSeek 官方导出的 ZIP 文件中恢复会话。文件只在本机解析，不会上传。',
+  importDropTitle: '拖入 ZIP 文件，或点击选择',
+  importDropHint: '支持 DeepSeek App / 网页版导出的聊天记录压缩包',
+  importChooseFile: '选择文件',
+  importParsing: '正在解析导出文件…',
+  importParsingHint: '大文件需要几秒钟；解析完成后可以挑选要导入的会话。',
+  importReadFailed: '无法读取该文件：{message}',
+  importFileMeta: '{size} · {count} 个会话',
+  importAlreadyImported: '已导入',
+  importSelectAll: '全选',
+  importFilter: '筛选标题',
+  importSelected: '已选 {count} 个，可导入 {total} 个',
+  importAllImported: '这份导出里的会话都已经导入过了，无需重复导入。',
+  importStart: '开始导入',
+  importImporting: '正在导入…',
+  importProgress: '{done} / {total}',
+  importCancel: '取消导入',
+  importCancelling: '正在停止…',
+  importStatImported: '导入成功',
+  importStatSkipped: '跳过',
+  importStatFailed: '失败',
+  importDoneImported: '成功导入 {count} 个会话',
+  importDoneFailed: '有 {count} 个会话未能导入',
+  importDoneHint: '导入的聊天已经出现在历史列表中，可以像原有聊天一样阅读、搜索、管理和继续对话。',
+  importSkippedHint: '已导入过的会话不会重复创建。',
+  importFailedList: '未导入的会话',
+  importClose: '完成',
+  importExit: '关闭',
+  importEmpty: '没有找到可导入的会话',
+  importCanceled: '导入已取消，已经导入的会话会保留。',
+  importNothing: '没有选择任何会话。',
+  importUnsupported: '这个文件不是 DeepSeek 官网导出的聊天记录 ZIP。',
+  importUnavailable: '当前版本不支持导入聊天记录，请升级后重试。',
+  importLargeHint: '一次导入很多会话会让历史文件明显变大；只挑选需要的会话可以让 Chat 保持流畅。',
+  importDateUnknown: '日期未知',
+  importImages: '图片 {count} 张',
+  importBusy: '另一个导入任务正在进行，请稍后再试。',
+  importMediaNote: '图片以本地文件保存，不占用 DeepSeek 额度。',
+  importTooLarge: '文件超过 {size} 上限。',
+  // ---- long-term memory ----
+  settingsGeneralTab: '通用',
+  settingsMemoryTab: '长期记忆',
+  settingsTabsLabel: '设置分区',
+  memorySectionTitle: '长期记忆',
+  memoryMasterLabel: '启用长期记忆',
+  memoryMasterHint: '让 DeepSeek 记住你说过的重要信息，并在之后的对话中使用。',
+  memoryAutoExtractLabel: '自动记忆提取',
+  memoryAutoExtractHint: '开启后会从对话中自动提取值得记住的信息。',
+  memoryPrivacyHint: '开启后会把对话片段发送到 DeepSeek API 处理，可能产生额外用量费用。敏感个人信息不会被自动保存。',
+  memoryAutoExtractDisabledHint: '先开启长期记忆，才能启用自动提取。',
+  memoryLoading: '正在加载长期记忆…',
+  memoryLoadFailed: '长期记忆加载失败',
+  memoryOutdatedTitle: '当前插件版本不支持长期记忆',
+  memoryOutdatedHint: '请重载插件后再试。',
+  memorySummarySection: '记忆概述',
+  memorySummaryEmpty: '还没有概述。添加记忆后可以点“重新整理”生成。',
+  memorySummaryNever: '尚未生成',
+  memorySummaryUpdated: '最后更新：{time}',
+  memoryRegenerate: '重新整理',
+  memorySummaryRetry: '重试整理',
+  memorySummaryBusy: '正在整理…',
+  memorySummaryFailed: '整理失败，已保留之前的概述。',
+  memorySummaryStaleHint: '记忆有变化，概述待更新。',
+  memoryAskPlaceholder: '问点什么，或告诉我需要记住 / 忘记什么',
+  memoryAskSubmit: '发送',
+  memoryAsking: '正在处理…',
+  memoryAskDisabledHint: '长期记忆已关闭，开启后才能提问或修改记忆。',
+  memoryAppliedAdded: '已新增 {count} 条',
+  memoryAppliedUpdated: '已更新 {count} 条',
+  memoryAppliedDeleted: '已删除 {count} 条',
+  memoryPendingHint: '确认要删除这些记忆吗？',
+  memoryConfirmDelete: '确认删除',
+  memoryListSection: '全部记忆',
+  memoryLimitHint: '{count} / {max} 条记忆',
+  memoryClearAction: '清空所有记忆',
+  memoryClearTitle: '清空所有记忆？',
+  memoryClearMessage: '所有 {count} 条长期记忆都会被永久删除，此操作无法撤销。',
+  memoryClearConfirm: '确认清空',
+  memoryClearedToast: '已清空 {count} 条记忆',
+  memoryDeletedToast: '已删除这条记忆',
+  memoryDeleteTitle: '删除这条记忆？',
+  memoryDeleteMessage: '「{preview}」将被永久删除。',
+  memoryDeleteConfirm: '确认删除',
+  memoryEmpty: '还没有记忆。手动添加一条，或在对话里告诉 DeepSeek 需要记住什么。',
+  memoryEmptyFiltered: '这个分类下还没有记忆。',
+  memoryFilterAll: '全部',
+  memoryAddPlaceholder: '一条需要记住的信息…',
+  memoryAddSubmit: '添加',
+  memoryAddedToast: '已添加记忆',
+  memoryAddDuplicateToast: '这条记忆已经存在',
+  memoryAddMergedToast: '已合并到已有记忆',
+  memorySavedToast: '已保存',
+  memorySourceManual: '手动',
+  memorySourceConversation: '来自对话',
+  memorySourceAgent: '自动提取',
+  memorySourceImport: '导入自 {platform}',
+  memorySourceUnknown: '其他来源',
+  memoryPlatformChatgpt: 'ChatGPT',
+  memoryPlatformClaude: 'Claude',
+  memoryPlatformGemini: 'Gemini',
+  memoryPlatformOther: '其他或未指定',
+  memoryCatInstruction: '指令',
+  memoryCatIdentity: '身份',
+  memoryCatCareer: '职业',
+  memoryCatProjects: '项目',
+  memoryCatPreferences: '偏好',
+  memoryImportOpen: '从其他 AI 导入记忆',
+  memoryImportHint: '把其他 AI 记住的关于你的信息合并进来。',
+  memoryImportTitle: '从其他 AI 导入记忆',
+  memoryImportSubtitle: '只合并，不会覆盖或清空已有记忆。',
+  memoryImportIntro: '将以下提示词发送给 ChatGPT、Claude、Gemini 或其他 AI，让它整理已有记忆，然后复制结果回来。',
+  memoryImportPromptLabel: '提示词',
+  memoryImportCopyPrompt: '复制提示词',
+  memoryImportStep: '第 {current} 步 / 共 {total} 步',
+  memoryImportNext: '下一步：粘贴结果',
+  memoryImportBack: '上一步',
+  memoryImportPlatform: '平台',
+  memoryImportPasteLabel: '粘贴 AI 返回的内容',
+  memoryImportPastePlaceholder: '把 AI 返回的完整内容粘贴到这里…',
+  memoryImportParse: '解析并预览',
+  memoryImportParsing: '正在解析…',
+  memoryImportRecognized: '已识别 {count} 条记忆。',
+  memoryImportSkipped: '跳过 {count} 行',
+  memoryImportEmpty: '没有识别到记忆，请检查粘贴的内容。',
+  memoryImportFailed: '解析失败：{message}',
+  memoryImportAssist: 'AI 帮我整理',
+  memoryImportAssisting: '正在整理…',
+  memoryImportConsentText: '将把粘贴的内容发送到 DeepSeek API 处理，可能产生费用。确认吗？',
+  memoryImportConsentConfirm: '确认并整理',
+  memoryImportAssistFailed: 'AI 整理失败：{message}',
+  memoryImportAssistTruncated: '内容较长，只整理了前一部分。',
+  memoryImportPreviewSubtitle: '确认要导入的内容；导入只合并，不会覆盖或清空已有记忆。',
+  memoryImportSelectCount: '已选择 {count} 条',
+  memoryImportItemLabel: '第 {index} 条',
+  memoryImportCategory: '分类',
+  memoryImportMode: '处理方式',
+  memoryImportModeSkip: '跳过',
+  memoryImportModeMerge: '合并',
+  memoryImportModeUpdate: '更新',
+  memoryImportBadgeDuplicate: '已存在',
+  memoryImportBadgeConflict: '可能重复或冲突',
+  memoryImportBadgeSensitive: '可能包含敏感信息',
+  memoryImportExisting: '已有：{content}',
+  memoryImportMergeNote: '导入只合并，不会覆盖或清空已有记忆。',
+  memoryImportConfirm: '导入 {count} 条记忆',
+  memoryImportImporting: '正在导入…',
+  memoryImportNoneSelected: '请至少选择一条记忆。',
+  memoryImportDone: '导入完成：新增 {added}、合并 {merged}、更新 {updated}、跳过 {skipped}',
+  // ---- optional memory extraction from imported chats ----
+  importMemoryTitle: '从这次导入中提取长期记忆',
+  importMemoryBody: '可选：分析刚导入的会话，预览候选记忆，确认后才会写入。不会自动分析，也不会影响聊天。',
+  importMemoryOpen: '选择会话…',
+  memoryExtractFromChats: '从导入的聊天记录提取',
+  memoryExtractTitle: '从聊天记录提取记忆',
+  memoryExtractSubtitle: '可选：分析导入的历史会话，把值得长期记住的信息加入记忆。只有你确认后才会调用 API。',
+  memoryExtractIntro: '选择要分析的会话。默认不会分析或发送任何内容；已分析过的会话默认跳过。',
+  memoryExtractCostTitle: '会产生额外 API 调用',
+  memoryExtractCostBody: '每个会话会请求一次 DeepSeek，可能产生额外用量费用；本次只会发送你勾选的 {count} 个会话。',
+  memoryExtractSelectAll: '全选可分析的会话',
+  memoryExtractSelected: '已选 {count} 个会话',
+  memoryExtractAnalyze: '分析所选会话',
+  memoryExtractAnalyzingShort: '正在分析…',
+  memoryExtractConsent: '将把 {count} 个会话的对话内容发送到 DeepSeek API 提取记忆，并产生相应费用。已导入的聊天不会被修改。',
+  memoryExtractConsentConfirm: '确认并开始分析',
+  memoryExtractAlready: '已分析',
+  memoryExtractReanalyze: '重新分析已提取过的会话（会再次产生 API 调用）',
+  memoryExtractFooterNote: '默认不会分析任何内容。',
+  memoryExtractAnalyzedNote: '已分析 {analyzed} 个会话，发现 {count} 条候选记忆',
+  memoryExtractDoneEmpty: '已分析 {count} 个会话，但没有发现新的长期记忆。',
+  memoryExtractEmpty: '没有提取到值得长期记住的信息。',
+  memoryExtractFailed: '记忆提取失败：{message}。已导入的聊天不受影响。',
+  memoryExtractPartial: '{count} 个会话分析失败；已导入的聊天不受影响。',
+  memoryExtractNoImports: '没有可分析的导入会话。',
+  memoryExtractTooMany: '一次最多分析 {max} 个会话，请减少选择。',
+  memoryExtractSelectAllCapped: '一次最多分析 {max} 个会话，已选择前 {max} 个。',
+  memoryExtractSkipped: '已跳过 {count} 个会话（已分析或不可用）。',
+  memoryExtractPreviewWarning: '关闭对话框会丢弃这次候选；已分析的会话仍会保留「已分析」标记。',
+  memoryExtractSourceLabel: '导入的聊天记录',
+  memoryExtractStop: '停止分析',
+  memoryExtractStopping: '正在停止…',
+  memoryExtractProgress: '已分析 {done} / {total} 个会话',
+  memoryExtractCancelled: '已停止，完成 {count} 个会话的分析。',
+  memoryExtractAllSkipped: '{count} 个会话已分析过或没有可分析的内容，没有发出新的分析请求。',
 }
 
 const DICT_EN = {
@@ -635,10 +823,12 @@ const DICT_EN = {
   versionLabel: 'Version {index} / {count}',
   // Composer tools menu
   toolsMenu: 'Tools',
+  addFiles: 'Add images or files',
+  fileSection: 'File',
   uploadFiles: 'Upload images or files',
   uploadFilesHint: 'PDF, Word, PPT, images and text',
   webSearchHint: 'Look up current information on the web',
-  deepThinkHint: 'Reason before answering; pick how hard it thinks',
+  deepThinkHint: 'Reason before answering; pick the reasoning effort',
   toolOn: 'On',
   toolOff: 'Off',
   toolUploading: 'Uploading',
@@ -660,12 +850,12 @@ const DICT_EN = {
   modelCapFiles: 'Files',
   modelCapSearch: 'Web search',
   modelCapThinking: 'Thinking',
-  modelUnsupportedImage: 'This model cannot read images. Switch to DeepSeek V4.1 Flash.',
+  modelUnsupportedImage: 'This model cannot read images. Switch to DeepSeek-V4.1-Flash.',
   modelConfigFailed: 'Could not save the model setting: {message}',
-  modelUnavailable: 'That model is unavailable. Switched back to DeepSeek V4.1 Flash; please retry.',
+  modelUnavailable: 'That model is unavailable. Switched back to DeepSeek-V4.1-Flash; please retry.',
   modelAppliedToChat: 'Applies to this conversation',
   modelAppliedToDefault: 'Default for new conversations',
-  thinkingEffort: 'Thinking effort',
+  thinkingEffort: 'Reasoning effort',
   effortOff: 'Off',
   effortOffHint: 'Answer directly without showing reasoning',
   effortLow: 'Low',
@@ -674,8 +864,8 @@ const DICT_EN = {
   effortLowHint: 'Faster, for simple questions',
   effortHighHint: 'Balanced speed and quality',
   effortMaxHint: 'Most thorough, slower',
-  effortNeedsThinking: 'Turn on deep thinking to choose an effort',
-  effortUnsupported: 'This model has no effort setting',
+  effortNeedsThinking: 'Turn on deep thinking to choose a reasoning effort',
+  effortUnsupported: 'This model has no reasoning effort setting',
   // Sources
   sourceSummary: 'Sources · {count}',
   sourceDomainFallback: 'Web',
@@ -690,6 +880,192 @@ const DICT_EN = {
   mermaidFailed: 'Diagram failed to render',
   mathFailed: 'Formula failed to render',
   streamingDiagram: 'Diagram appears when the answer finishes',
+  // Chat history import
+  importOpen: 'Import chats',
+  importTitle: 'Import chats',
+  importSubtitle: 'Restore conversations from a DeepSeek export ZIP. The file is parsed on this machine and never uploaded.',
+  importDropTitle: 'Drop a ZIP file here, or click to choose',
+  importDropHint: 'Accepts the chat export from the DeepSeek app or website',
+  importChooseFile: 'Choose file',
+  importParsing: 'Reading the export…',
+  importParsingHint: 'Large files take a few seconds; you can pick conversations once it is read.',
+  importReadFailed: 'That file could not be read: {message}',
+  importFileMeta: '{size} · {count} conversations',
+  importAlreadyImported: 'Imported',
+  importSelectAll: 'Select all',
+  importFilter: 'Filter titles',
+  importSelected: '{count} selected, {total} importable',
+  importAllImported: 'Every conversation in this export is already imported.',
+  importStart: 'Import',
+  importImporting: 'Importing…',
+  importProgress: '{done} / {total}',
+  importCancel: 'Cancel import',
+  importCancelling: 'Stopping…',
+  importStatImported: 'Imported',
+  importStatSkipped: 'Skipped',
+  importStatFailed: 'Failed',
+  importDoneImported: 'Imported {count} conversations',
+  importDoneFailed: '{count} conversations could not be imported',
+  importDoneHint: 'The imported chats are in your history and work like any other: reading, search, management and continuing the conversation.',
+  importSkippedHint: 'A conversation that was already imported is never created twice.',
+  importFailedList: 'Conversations not imported',
+  importClose: 'Done',
+  importExit: 'Close',
+  importEmpty: 'No importable conversation was found',
+  importCanceled: 'Import cancelled; the chats imported so far are kept.',
+  importNothing: 'No conversation was selected.',
+  importUnsupported: 'This file is not a DeepSeek chat export ZIP.',
+  importUnavailable: 'This version cannot import chats. Update DeepSeek Harness and try again.',
+  importLargeHint: 'Importing many conversations makes the history file much larger; picking only what you need keeps Chat fast.',
+  importDateUnknown: 'Date unknown',
+  importImages: '{count} images',
+  importBusy: 'Another import is already running. Try again in a moment.',
+  importMediaNote: 'Images are stored locally and cost no DeepSeek usage.',
+  importTooLarge: 'The file exceeds the {size} limit.',
+  // ---- long-term memory ----
+  settingsGeneralTab: 'General',
+  settingsMemoryTab: 'Memory',
+  settingsTabsLabel: 'Settings sections',
+  memorySectionTitle: 'Long-term memory',
+  memoryMasterLabel: 'Enable long-term memory',
+  memoryMasterHint: 'Let DeepSeek remember important details and use them in later conversations.',
+  memoryAutoExtractLabel: 'Auto-extract memories',
+  memoryAutoExtractHint: 'When on, useful details are extracted from your conversations automatically.',
+  memoryPrivacyHint: 'When on, conversation excerpts are sent to the DeepSeek API, which may incur extra usage charges. Sensitive personal information is not saved automatically.',
+  memoryAutoExtractDisabledHint: 'Turn on long-term memory first to enable auto-extraction.',
+  memoryLoading: 'Loading long-term memory…',
+  memoryLoadFailed: 'Could not load long-term memory',
+  memoryOutdatedTitle: 'This plugin version does not support long-term memory',
+  memoryOutdatedHint: 'Reload the plugin and try again.',
+  memorySummarySection: 'Memory summary',
+  memorySummaryEmpty: 'No summary yet. Add memories and choose Regenerate.',
+  memorySummaryNever: 'Not generated yet',
+  memorySummaryUpdated: 'Last updated {time}',
+  memoryRegenerate: 'Regenerate',
+  memorySummaryRetry: 'Retry',
+  memorySummaryBusy: 'Regenerating…',
+  memorySummaryFailed: 'Regeneration failed; the previous summary is kept.',
+  memorySummaryStaleHint: 'Memories changed; the summary is out of date.',
+  memoryAskPlaceholder: 'Ask something, or tell me what to remember / forget',
+  memoryAskSubmit: 'Send',
+  memoryAsking: 'Working…',
+  memoryAskDisabledHint: 'Long-term memory is off; turn it on to ask or change memories.',
+  memoryAppliedAdded: 'Added {count}',
+  memoryAppliedUpdated: 'Updated {count}',
+  memoryAppliedDeleted: 'Deleted {count}',
+  memoryPendingHint: 'Delete these memories?',
+  memoryConfirmDelete: 'Delete',
+  memoryListSection: 'All memories',
+  memoryLimitHint: '{count} / {max} memories',
+  memoryClearAction: 'Clear all memories',
+  memoryClearTitle: 'Clear all memories?',
+  memoryClearMessage: 'All {count} memories will be deleted permanently. This cannot be undone.',
+  memoryClearConfirm: 'Clear all',
+  memoryClearedToast: 'Cleared {count} memories',
+  memoryDeletedToast: 'Memory deleted',
+  memoryDeleteTitle: 'Delete this memory?',
+  memoryDeleteMessage: '“{preview}” will be deleted permanently.',
+  memoryDeleteConfirm: 'Delete',
+  memoryEmpty: 'No memories yet. Add one, or tell DeepSeek something to remember in a chat.',
+  memoryEmptyFiltered: 'No memories in this category.',
+  memoryFilterAll: 'All',
+  memoryAddPlaceholder: 'Something to remember…',
+  memoryAddSubmit: 'Add',
+  memoryAddedToast: 'Memory added',
+  memoryAddDuplicateToast: 'That memory already exists',
+  memoryAddMergedToast: 'Merged into an existing memory',
+  memorySavedToast: 'Saved',
+  memorySourceManual: 'Manual',
+  memorySourceConversation: 'From a conversation',
+  memorySourceAgent: 'Auto-extracted',
+  memorySourceImport: 'Imported from {platform}',
+  memorySourceUnknown: 'Other source',
+  memoryPlatformChatgpt: 'ChatGPT',
+  memoryPlatformClaude: 'Claude',
+  memoryPlatformGemini: 'Gemini',
+  memoryPlatformOther: 'Other / unspecified',
+  memoryCatInstruction: 'Instructions',
+  memoryCatIdentity: 'Identity',
+  memoryCatCareer: 'Career',
+  memoryCatProjects: 'Projects',
+  memoryCatPreferences: 'Preferences',
+  memoryImportOpen: 'Import from another AI',
+  memoryImportHint: 'Merge what another AI remembers about you into long-term memory.',
+  memoryImportTitle: 'Import memories from another AI',
+  memoryImportSubtitle: 'Import only merges; existing memory is never overwritten or cleared.',
+  memoryImportIntro: 'Send the prompt below to ChatGPT, Claude, Gemini, or another AI to organize the memories it already has, then paste the result back here.',
+  memoryImportPromptLabel: 'Prompt',
+  memoryImportCopyPrompt: 'Copy prompt',
+  memoryImportStep: 'Step {current} of {total}',
+  memoryImportNext: 'Next: paste the result',
+  memoryImportBack: 'Back',
+  memoryImportPlatform: 'Platform',
+  memoryImportPasteLabel: 'Paste the AI response',
+  memoryImportPastePlaceholder: 'Paste the full response here…',
+  memoryImportParse: 'Parse and preview',
+  memoryImportParsing: 'Parsing…',
+  memoryImportRecognized: 'Recognized {count} memories.',
+  memoryImportSkipped: 'Skipped {count} lines',
+  memoryImportEmpty: 'No memories recognized. Check the pasted text.',
+  memoryImportFailed: 'Could not parse: {message}',
+  memoryImportAssist: 'Let AI structure it',
+  memoryImportAssisting: 'Structuring…',
+  memoryImportConsentText: 'The pasted text will be sent to the DeepSeek API for processing and may incur charges. Continue?',
+  memoryImportConsentConfirm: 'Confirm and structure',
+  memoryImportAssistFailed: 'AI structuring failed: {message}',
+  memoryImportAssistTruncated: 'The text was long; only part of it was structured.',
+  memoryImportPreviewSubtitle: 'Review what will be imported. Import only merges; existing memory is never overwritten or cleared.',
+  memoryImportSelectCount: '{count} selected',
+  memoryImportItemLabel: 'Record {index}',
+  memoryImportCategory: 'Category',
+  memoryImportMode: 'Action',
+  memoryImportModeSkip: 'Skip',
+  memoryImportModeMerge: 'Merge',
+  memoryImportModeUpdate: 'Update',
+  memoryImportBadgeDuplicate: 'Already exists',
+  memoryImportBadgeConflict: 'Possible duplicate or conflict',
+  memoryImportBadgeSensitive: 'May contain sensitive info',
+  memoryImportExisting: 'Existing: {content}',
+  memoryImportMergeNote: 'Import only merges; existing memory is never overwritten or cleared.',
+  memoryImportConfirm: 'Import {count} memories',
+  memoryImportImporting: 'Importing…',
+  memoryImportNoneSelected: 'Select at least one memory.',
+  memoryImportDone: 'Import complete: added {added}, merged {merged}, updated {updated}, skipped {skipped}',
+  // ---- optional memory extraction from imported chats ----
+  importMemoryTitle: 'Extract long-term memory from this import',
+  importMemoryBody: 'Optional: analyze the chats you just imported and preview candidates. Nothing is written until you confirm, and the import itself is untouched.',
+  importMemoryOpen: 'Choose chats…',
+  memoryExtractFromChats: 'Extract from imported chats',
+  memoryExtractTitle: 'Extract memory from chats',
+  memoryExtractSubtitle: 'Optional: analyze imported conversations and keep durable facts. The API is only called after you confirm.',
+  memoryExtractIntro: 'Choose the conversations to analyze. Nothing is analyzed or sent by default; chats analyzed before are skipped.',
+  memoryExtractCostTitle: 'This makes extra API calls',
+  memoryExtractCostBody: 'Each conversation costs one DeepSeek request and may incur usage fees; only the {count} selected chats are sent.',
+  memoryExtractSelectAll: 'Select all analyzable chats',
+  memoryExtractSelected: '{count} chats selected',
+  memoryExtractAnalyze: 'Analyze selected chats',
+  memoryExtractAnalyzingShort: 'Analyzing…',
+  memoryExtractConsent: 'This sends {count} conversations to the DeepSeek API to extract memory and may incur costs. Imported chats are never modified.',
+  memoryExtractConsentConfirm: 'Confirm and analyze',
+  memoryExtractAlready: 'Analyzed',
+  memoryExtractReanalyze: 'Re-analyze conversations that were analyzed before (extra API calls)',
+  memoryExtractFooterNote: 'Nothing is analyzed by default.',
+  memoryExtractAnalyzedNote: 'Analyzed {analyzed} conversations and found {count} candidates',
+  memoryExtractDoneEmpty: 'Analyzed {count} conversations; no new long-term memory was found.',
+  memoryExtractEmpty: 'No durable memory was found.',
+  memoryExtractFailed: 'Memory extraction failed: {message}. Imported chats are unaffected.',
+  memoryExtractPartial: '{count} conversations could not be analyzed; imported chats are unaffected.',
+  memoryExtractNoImports: 'No imported conversation is available to analyze.',
+  memoryExtractTooMany: 'Analyze at most {max} conversations at a time. Deselect some first.',
+  memoryExtractSelectAllCapped: 'At most {max} conversations per run; the first {max} were selected.',
+  memoryExtractSkipped: '{count} conversations were skipped (already analyzed or unavailable).',
+  memoryExtractPreviewWarning: 'Closing this dialog discards these candidates; the analyzed mark stays on the conversations.',
+  memoryExtractSourceLabel: 'Imported chats',
+  memoryExtractStop: 'Stop',
+  memoryExtractStopping: 'Stopping…',
+  memoryExtractProgress: 'Analyzed {done} of {total} conversations',
+  memoryExtractCancelled: 'Stopped; {count} conversations were analyzed.',
+  memoryExtractAllSkipped: '{count} conversations were already analyzed or had nothing to analyze; no new request was sent.',
 }
 
 /* ---- 20-store.js ---- */
@@ -866,6 +1242,18 @@ const chatStore = {
     editDraft: '',
     // Message to bring into view after loading or switching a version.
     focusMessage: null,
+    // ---- DeepSeek export import (sidebar) ----
+    // Every step of the import dialog. `null` keeps the dialog unmounted, so an
+    // upload never allocates state for a closed surface.
+    importOpen: false,
+    importView: null,
+    // Optional follow-up after an import: analyze the imported chats for
+    // long-term memory. Opening the dialog never starts a model call.
+    importMemoryOpen: false,
+    importMemoryBatch: [],
+    // Bumped after the extraction dialog saves memories, so a settings pane
+    // that stayed mounted underneath it reloads its snapshot.
+    memoryChangedAt: 0,
   },
   listeners: new Set(),
   subscribe(listener) {
@@ -1115,8 +1503,7 @@ function canContinueReply(message) {
 }
 
 /** Files as the Host stores them: preview URLs never leave this browser. */
-function hostFiles(files) {
-  return (Array.isArray(files) ? files : []).flatMap((file) => {
+function hostFiles(files) {  return (Array.isArray(files) ? files : []).flatMap((file) => {
     if (!file || typeof file.fileId !== 'string' || file.fileId === '') return []
     return [{
       id: file.id,
@@ -1146,6 +1533,66 @@ function withFilePreviews(messages, previousMessages) {
       if (!previewUrl || file.previewUrl === previewUrl) return file
       changed = true
       return { ...file, previewUrl }
+    })
+    return changed ? { ...message, files } : message
+  })
+}
+
+/**
+ * Preview URLs for images recovered by a history import.
+ *
+ * The bytes live only on this Host, so they are read through the same Host
+ * transport as every other API call and handed to the page as a blob URL. That
+ * keeps the preview working no matter how the Chat surface is served (origin,
+ * base path or a desktop transport) and never persists a URL in the history
+ * document. Requests are made once per content address.
+ */
+const importedMediaUrls = new Map()
+
+/**
+ * Resolve one imported media handle, starting the read on first use.
+ * @returns the blob URL when it is already loaded, otherwise ''.
+ */
+function importedMediaUrl(media) {
+  if (typeof media !== 'string' || media === '') return ''
+  const known = importedMediaUrls.get(media)
+  if (known !== undefined) return known
+  importedMediaUrls.set(media, '')
+  hostFetch(`/api/deepseek-chat/import/media?f=${encodeURIComponent(media)}`)
+    .then(response => (response.ok ? response.blob() : null))
+    .then((blob) => {
+      if (blob === null) {
+        importedMediaUrls.delete(media)
+        return
+      }
+      importedMediaUrls.set(media, URL.createObjectURL(blob))
+      // One repaint is enough to attach the preview to every message that
+      // references this image, without touching the stored history.
+      chatStore.emit()
+    })
+    .catch(() => {
+      importedMediaUrls.delete(media)
+    })
+  return ''
+}
+
+/**
+ * Attach preview URLs to the attachments of an imported conversation.
+ *
+ * A file the browser uploaded carries its own object URL; a file restored from
+ * an import does not, because the plugin only stores the content address of the
+ * bytes next to its history.
+ */
+function withImportedMedia(messages) {
+  return (Array.isArray(messages) ? messages : []).map((message) => {
+    if (!Array.isArray(message?.files) || message.files.length === 0) return message
+    let changed = false
+    const files = message.files.map((file) => {
+      if (file?.local !== true) return file
+      const url = importedMediaUrl(file.media)
+      if (url === '' || file.previewUrl === url) return file
+      changed = true
+      return { ...file, previewUrl: url }
     })
     return changed ? { ...message, files } : message
   })
@@ -1384,7 +1831,7 @@ async function loadConversation(id, { quiet = false, focusMessageId = '' } = {})
     const data = await hostJson('/api/deepseek-chat/conversation', body)
     if (sequence !== conversationLoadSequence) return
     const patch = {
-      messages: Array.isArray(data.conversation?.messages) ? data.conversation.messages : [],
+      messages: withImportedMedia(Array.isArray(data.conversation?.messages) ? data.conversation.messages : []),
       conversationLoading: false,
       conversationError: '',
       focusMessage: body.focusMessageId ? { id: body.focusMessageId, at: Date.now() } : null,
@@ -1784,7 +2231,7 @@ async function openSearchResult(result) {
       })
       if (Array.isArray(data.conversation?.messages)) {
         chatStore.set({
-          messages: data.conversation.messages,
+          messages: withImportedMedia(data.conversation.messages),
           conversationLoading: false,
           conversationError: '',
           editingId: null,
@@ -2364,7 +2811,7 @@ async function runTurnStream({
           current = { ...current, id: hostAssistantId }
           let messages
           if (Array.isArray(item.messages) && item.messages.length > 0) {
-            messages = withFilePreviews(item.messages, chatStore.state.messages)
+            messages = withImportedMedia(withFilePreviews(item.messages, chatStore.state.messages))
           } else {
             // Older Host halves only send the ids; patch the optimistic branch.
             const hostUserId = typeof item.userMessage?.id === 'string' ? item.userMessage.id : null
@@ -3309,6 +3756,336 @@ async function submitHandoff() {
   chatStore.toast(tr('handoffSent'), 'success')
 }
 
+// ---- DeepSeek chat-export import -------------------------------------------------
+
+/** Largest export this Host accepts, published by the bootstrap. */
+const IMPORT_DEFAULT_MAX_BYTES = 512 * 1024 * 1024
+
+/** Error codes the dialog can explain in the user's language. */
+const IMPORT_ERROR_KEYS = {
+  NOT_ZIP: 'importUnsupported',
+  ARCHIVE_DAMAGED: 'importUnsupported',
+  ARCHIVE_UNSUPPORTED: 'importUnsupported',
+  ARCHIVE_CLOSED: 'importUnsupported',
+  MISSING_MANIFEST: 'importUnsupported',
+  MISSING_INDEX: 'importUnsupported',
+  BAD_EXPORT: 'importUnsupported',
+  BAD_SESSION: 'importUnsupported',
+  UNSUPPORTED_VERSION: 'importUnsupported',
+  EMPTY_UPLOAD: 'importUnsupported',
+  NO_CONVERSATIONS: 'importEmpty',
+  ARCHIVE_TOO_LARGE: 'importTooLarge',
+}
+
+let importPollTimer = 0
+let importPollSequence = 0
+
+function importMaxBytes() {
+  const value = chatStore.state.bootData?.import?.maxUploadBytes
+  return typeof value === 'number' && value > 0 ? value : IMPORT_DEFAULT_MAX_BYTES
+}
+
+/** Whether this Host half offers the import, so an older Host never shows a dead surface. */
+function importAvailable() {
+  return chatStore.state.bootData?.import?.enabled === true
+}
+
+function emptyImportView() {
+  return {
+    step: 'pick',
+    fileName: '',
+    fileSize: 0,
+    token: '',
+    conversations: [],
+    selected: [],
+    filter: '',
+    stats: { total: 0, imported: 0, importable: 0 },
+    progress: { done: 0, total: 0 },
+    jobId: '',
+    cancelling: false,
+    result: null,
+    error: '',
+  }
+}
+
+/** Patch the open dialog; a closed dialog ignores every late update. */
+function importPatch(patch) {
+  const current = chatStore.state.importView
+  if (current === null) return
+  chatStore.set({ importView: { ...current, ...patch } })
+}
+
+/** One translated explanation for an import failure. */
+function importErrorMessage(error) {
+  const code = error?.payload?.code
+  if (code === 'ARCHIVE_TOO_LARGE') return tr('importTooLarge', { size: formatSize(importMaxBytes()) })
+  if (code === 'BUSY') return tr('importBusy')
+  const key = code === undefined ? undefined : IMPORT_ERROR_KEYS[code]
+  if (key !== undefined) return tr(key)
+  return error instanceof Error ? error.message : String(error)
+}
+
+/** Drop the staged archive of a dialog that is closing without importing. */
+function discardImportToken(token) {
+  if (typeof token !== 'string' || token === '') return Promise.resolve()
+  return hostJson('/api/deepseek-chat/import/discard', { token }).catch(() => undefined)
+}
+
+async function openImport() {
+  if (chatStore.state.importOpen) return
+  // The availability flag comes from the bootstrap, so a Host half that predates
+  // the import answers with a clear message instead of a dead dialog.
+  await ensureBoot()
+  if (!importAvailable()) {
+    chatStore.toast(tr('importUnavailable'), 'warning')
+    return
+  }
+  chatStore.set({ importOpen: true, importView: emptyImportView() })
+}
+
+function closeImport() {
+  const view = chatStore.state.importView
+  if (view === null) return
+  // Closing during an import would hide the only place progress is shown; the
+  // dialog stays until the job settles or the user cancels it.
+  if (view.step === 'importing') return
+  importPollSequence += 1
+  if (importPollTimer !== 0) {
+    clearTimeout(importPollTimer)
+    importPollTimer = 0
+  }
+  if (view.token !== '' && view.step !== 'done') void discardImportToken(view.token)
+  chatStore.set({ importOpen: false, importView: null })
+}
+
+/** Read one chosen file: upload it to the Host, then show the preview. */
+async function selectImportFile(file) {
+  const view = chatStore.state.importView
+  if (view === null || view.step === 'parsing' || view.step === 'importing') return
+  const name = typeof file?.name === 'string' ? file.name : ''
+  if (!/\.zip$/i.test(name)) {
+    importPatch({ error: tr('importUnsupported') })
+    return
+  }
+  if (typeof file.size === 'number' && file.size > importMaxBytes()) {
+    importPatch({ error: tr('importTooLarge', { size: formatSize(importMaxBytes()) }) })
+    return
+  }
+  if (view.token !== '') void discardImportToken(view.token)
+  importPatch({
+    step: 'parsing',
+    fileName: name,
+    fileSize: typeof file.size === 'number' ? file.size : 0,
+    token: '',
+    error: '',
+    conversations: [],
+    selected: [],
+    result: null,
+    progress: { done: 0, total: 0 },
+    jobId: '',
+  })
+  try {
+    const response = await hostFetch('/api/deepseek-chat/import/upload', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/zip',
+        'x-file-name': encodeURIComponent(name),
+      },
+      body: file,
+    })
+    const text = await response.text()
+    let data
+    try {
+      data = JSON.parse(text)
+    } catch {
+      throw new Error(text || `HTTP ${response.status}`)
+    }
+    if (!response.ok) {
+      const error = new Error(data?.error?.message || `HTTP ${response.status}`)
+      error.payload = data?.error
+      throw error
+    }
+    // The dialog was closed while the file was being read.
+    if (chatStore.state.importView === null) {
+      void discardImportToken(data?.token)
+      return
+    }
+    const conversations = Array.isArray(data?.conversations) ? data.conversations : []
+    importPatch({
+      step: 'preview',
+      token: typeof data?.token === 'string' ? data.token : '',
+      conversations,
+      selected: conversations.filter(item => item?.imported !== true).map(item => item.sourceId),
+      stats: data?.stats ?? { total: conversations.length, imported: 0, importable: conversations.length },
+      error: conversations.length === 0 ? tr('importEmpty') : '',
+    })
+  } catch (error) {
+    if (chatStore.state.importView === null) return
+    importPatch({ step: 'pick', token: '', error: tr('importReadFailed', { message: importErrorMessage(error) }) })
+  }
+}
+
+function setImportFilter(filter) {
+  importPatch({ filter: typeof filter === 'string' ? filter : '' })
+}
+
+function toggleImportConversation(sourceId) {
+  const view = chatStore.state.importView
+  if (view === null || view.step !== 'preview' || typeof sourceId !== 'string') return
+  const selected = view.selected.includes(sourceId)
+    ? view.selected.filter(id => id !== sourceId)
+    : [...view.selected, sourceId]
+  importPatch({ selected })
+}
+
+/** Select or clear every conversation this export can actually import. */
+function selectAllImport(select) {
+  const view = chatStore.state.importView
+  if (view === null || view.step !== 'preview') return
+  const importable = view.conversations.filter(item => item.imported !== true).map(item => item.sourceId)
+  importPatch({ selected: select === false ? [] : importable })
+}
+
+/** Start the Host-side job and follow its progress. */
+async function startImport() {
+  const view = chatStore.state.importView
+  if (view === null || view.step !== 'preview' || view.token === '') return
+  if (view.selected.length === 0) {
+    chatStore.toast(tr('importNothing'), 'warning')
+    return
+  }
+  importPatch({ step: 'importing', error: '', progress: { done: 0, total: view.selected.length }, cancelling: false })
+  try {
+    const data = await hostJson('/api/deepseek-chat/import/start', { token: view.token, ids: view.selected })
+    const job = data?.job
+    if (job === null || typeof job?.id !== 'string') throw new Error('the Host returned no import job')
+    importPatch({ jobId: job.id, progress: { done: job.done ?? 0, total: job.total ?? view.selected.length } })
+    followImport(job)
+  } catch (error) {
+    const message = importErrorMessage(error)
+    importPatch({ step: 'preview', error: message })
+    chatStore.toast(message, 'error')
+  }
+}
+
+/** Poll one running job until it settles, then refresh the sidebar. */
+function followImport(job) {
+  const sequence = ++importPollSequence
+  const schedule = (delay) => {
+    if (importPollTimer !== 0) clearTimeout(importPollTimer)
+    importPollTimer = setTimeout(() => {
+      importPollTimer = 0
+      void tick()
+    }, delay)
+  }
+  const tick = async () => {
+    if (sequence !== importPollSequence) return
+    let data
+    try {
+      data = await hostJson(`/api/deepseek-chat/import/status?job=${encodeURIComponent(job.id)}`)
+    } catch (error) {
+      // A failed poll is not a failed import: the Host keeps the job and keeps
+      // writing, so the dialog reports the read problem and tries again.
+      if (sequence !== importPollSequence) return
+      importPatch({ error: importErrorMessage(error) })
+      schedule(900)
+      return
+    }
+    if (sequence !== importPollSequence) return
+    const latest = data?.job
+    if (latest === null || latest === undefined) {
+      importPatch({ error: tr('importReadFailed', { message: 'job expired' }) })
+      return
+    }
+    if (latest.state === 'running') {
+      importPatch({ progress: { done: latest.done ?? 0, total: latest.total ?? 0 } })
+      schedule(350)
+      return
+    }
+    finishImport(latest, data)
+  }
+  schedule(120)
+}
+
+/** Publish the result, apply the refreshed history, and toast the outcome. */
+function finishImport(job, data) {
+  const current = chatStore.state.importView ?? emptyImportView()
+  chatStore.set({
+    importView: {
+      ...current,
+      step: 'done',
+      result: job,
+      jobId: '',
+      cancelling: false,
+      progress: { done: job.total ?? 0, total: job.total ?? 0 },
+      error: job.state === 'failed' ? String(job.error ?? '') : '',
+    },
+  })
+  const patch = {}
+  if (Array.isArray(data?.conversations)) patch.conversations = data.conversations
+  if (Array.isArray(data?.folders)) patch.folders = data.folders
+  if (Object.keys(patch).length > 0) chatStore.set(patch)
+  if (job.state === 'failed') {
+    chatStore.toast(job.error ? String(job.error) : tr('importDoneFailed', { count: job.failed ?? 0 }), 'error')
+    return
+  }
+  if (job.state === 'cancelled') {
+    chatStore.toast(tr('importCanceled'), 'warning')
+    return
+  }
+  chatStore.toast(tr('importDoneImported', { count: job.imported ?? 0 }), 'success')
+}
+
+/** Ask the Host to stop after the conversation it is handling. */
+async function cancelImport() {
+  const view = chatStore.state.importView
+  if (view === null || view.step !== 'importing' || view.jobId === '') return
+  importPatch({ cancelling: true })
+  try {
+    await hostJson('/api/deepseek-chat/import/cancel', { job: view.jobId })
+  } catch (error) {
+    importPatch({ cancelling: false, error: importErrorMessage(error) })
+  }
+}
+
+/**
+ * Open the optional memory-extraction pass over imported chats. `sourceIds`
+ * narrows it to the just-finished import batch; omitting it lists every
+ * imported conversation. Nothing is sent anywhere until the user confirms.
+ */
+function openImportMemory(sourceIds = null) {
+  const wanted = Array.isArray(sourceIds) ? new Set(sourceIds) : null
+  const conversations = Array.isArray(chatStore.state.conversations) ? chatStore.state.conversations : []
+  const batch = conversations
+    .filter(conversation => conversation?.source !== null && typeof conversation?.source === 'object')
+    .filter(conversation => wanted === null || wanted.has(conversation.source.id))
+    .map(conversation => conversation.id)
+  if (batch.length === 0) {
+    chatStore.toast(tr('memoryExtractNoImports'), 'warning')
+    return false
+  }
+  chatStore.set({ importMemoryOpen: true, importMemoryBatch: batch })
+  return true
+}
+
+function closeImportMemory() {
+  chatStore.set({ importMemoryOpen: false, importMemoryBatch: [] })
+}
+
+/** Reflect a finished analysis in the local list without a full bootstrap. */
+function markImportMemoryAnalyzed(ids) {
+  const marked = new Set(Array.isArray(ids) ? ids : [])
+  if (marked.size === 0) return
+  const at = Date.now()
+  const conversations = (chatStore.state.conversations ?? []).map((conversation) => {
+    if (!marked.has(conversation.id) || conversation.source === null || typeof conversation.source !== 'object') {
+      return conversation
+    }
+    return { ...conversation, source: { ...conversation.source, memoryExtractedAt: at } }
+  })
+  chatStore.set({ conversations })
+}
+
 const chatActions = {
   openChat,
   closeChat,
@@ -3382,6 +4159,19 @@ const chatActions = {
   pickHandoffWorkspaceDirectory,
   createHandoffWorkspace,
   submitHandoff,
+  // DeepSeek chat-export import
+  openImport,
+  closeImport,
+  selectImportFile,
+  setImportFilter,
+  toggleImportConversation,
+  selectAllImport,
+  startImport,
+  cancelImport,
+  // Optional post-import long-term-memory extraction
+  openImportMemory,
+  closeImportMemory,
+  markImportMemoryAnalyzed,
 }
 
 /* ---- 30-markdown.js ---- */
@@ -6877,7 +7667,9 @@ const IconClose = props => h(IconBase, props, h('path', { d: 'M6 6l12 12M18 6L6 
 const IconChevronDown = props => h(IconBase, props, h('path', { d: 'M6 9l6 6 6-6' }))
 const IconChevronRight = props => h(IconBase, props, h('path', { d: 'M9 6l6 6-6 6' }))
 const IconChevronLeft = props => h(IconBase, props, h('path', { d: 'M15 6l-6 6 6 6' }))
-const IconArrowUp = props => h(IconBase, props, h('path', { d: 'M12 19V5M6 11l6-6 6 6' }))
+const IconArrowUp = props => h(IconBase, { ...props, filled: true },
+  h('path', { d: 'M12 4.2 19.8 12l-2.1 2.1-3.7-3.7V20h-4v-9.6L6.3 14.1 4.2 12 12 4.2Z' }),
+)
 const IconStop = props => h(IconBase, { ...props, filled: true }, h('rect', { x: 7, y: 7, width: 10, height: 10, rx: 2.2 }))
 const IconPaperclip = props => h(IconBase, props,
   h('path', { d: 'M20 11.5l-8.4 8.4a5 5 0 0 1-7.1-7.1l8.5-8.5a3.4 3.4 0 0 1 4.8 4.8l-8.5 8.5a1.8 1.8 0 0 1-2.5-2.5l7.8-7.8' }),
@@ -6983,6 +7775,11 @@ const IconArrowDownToLine = props => h(IconBase, props,
   h('path', { d: 'M12 4v11M7 10.5l5 5 5-5' }),
   h('path', { d: 'M5 20h14' }),
 )
+/** Restore into the history: an arrow going down into an open tray. */
+const IconImport = props => h(IconBase, props,
+  h('path', { d: 'M12 3.5v9.5M8.2 9.4l3.8 3.8 3.8-3.8' }),
+  h('path', { d: 'M4.5 14.5v2.8A2.7 2.7 0 0 0 7.2 20h9.6a2.7 2.7 0 0 0 2.7-2.7v-2.8' }),
+)
 
 const ICONS = {
   plus: IconPlus,
@@ -7021,6 +7818,7 @@ const ICONS = {
   folderMinus: IconFolderMinus,
   archive: IconArchive,
   continue: IconArrowDownToLine,
+  import: IconImport,
 }
 
 function Icon({ name, size = 18, className = '' }) {
@@ -7039,12 +7837,12 @@ function Icon({ name, size = 18, className = '' }) {
  * Arrow keys move through the items, Home/End jump, Escape and Tab close.
  */
 
-const POPOVER_GAP = 8
+const POPOVER_GAP = 4
 /** Space a flipped panel must leave for the trigger line. */
 const POPOVER_PREFERRED = 180
 
 function popoverItemSelector() {
-  return '[role="menuitem"],[role="menuitemradio"],[role="menuitemcheckbox"],.dsc-popover-item'
+  return '[role="menuitem"],[role="menuitemradio"],[role="menuitemcheckbox"]'
 }
 
 /**
@@ -7074,15 +7872,15 @@ function useOutsideDismiss(open, onClose, panelRef, triggerRef) {
  * viewport. Re-measures on resize and on any layout scroll (the thread above
  * the composer scrolls independently of the window).
  *
- * Composer popovers are aligned to the whole rounded input, not to the small
- * control that opened them: "above" means above the composer's top edge, so a
- * menu never covers the text the user is writing. The extra distance is
- * published as a CSS custom property on the panel.
+ * The "+" card uses the native Harness command-menu geometry: it is as wide as
+ * the whole composer and opens 4px above its top edge instead of hugging the
+ * 28px trigger. The model menu stays anchored to its trigger, right-aligned.
+ * The extra distance is published as a CSS custom property on the panel.
  *
- * @returns `{ placement, maxHeight, gap }` - "top" opens above the trigger.
+ * @returns `{ placement, maxHeight, offset, left, width, right }` - "top" opens above.
  */
-function usePopupPlacement(open, triggerRef, panelRef) {
-  const [layout, setLayout] = React.useState({ placement: 'top', maxHeight: null, gap: 0 })
+function usePopupPlacement(open, triggerRef, panelRef, { alignToComposer = false } = {}) {
+  const [layout, setLayout] = React.useState({ placement: 'top', maxHeight: null, offset: 8, left: null, width: null, right: null })
   React.useLayoutEffect(() => {
     if (!open) return () => {}
     const update = () => {
@@ -7090,23 +7888,53 @@ function usePopupPlacement(open, triggerRef, panelRef) {
       const panel = panelRef.current
       if (!trigger || !panel) return
       const rect = trigger.getBoundingClientRect()
-      const composer = trigger.closest?.('.dsc-composer')
-      const composerTop = composer?.getBoundingClientRect?.().top ?? rect.top
-      const gap = Math.max(0, Math.round(rect.top - composerTop))
+      const composer = alignToComposer ? trigger.closest?.('.dsc-composer') : null
+      const composerRect = composer?.getBoundingClientRect?.() ?? null
+      const anchorTop = composerRect?.top ?? rect.top
+      const anchorBottom = composerRect?.bottom ?? rect.bottom
       const viewport = window.innerHeight || 0
+      const viewportWidth = window.innerWidth || 0
       const natural = panel.offsetHeight || panel.scrollHeight || 0
-      const spaceAbove = composerTop - POPOVER_GAP - 8
-      const spaceBelow = viewport - rect.bottom - POPOVER_GAP - 8
+      const spaceAbove = anchorTop - POPOVER_GAP - 8
+      const spaceBelow = viewport - anchorBottom - POPOVER_GAP - 8
       const placement = spaceAbove >= Math.min(natural, POPOVER_PREFERRED) || spaceAbove >= spaceBelow
         ? 'top'
         : 'bottom'
       const available = placement === 'top' ? spaceAbove : spaceBelow
       const maxHeight = available > 120 ? Math.min(available, 520) : null
-      const nextGap = placement === 'top' ? gap : 0
+      let offset = 8
+      if (alignToComposer && composerRect !== null) {
+        offset = placement === 'top'
+          ? Math.max(POPOVER_GAP, Math.round(rect.top - composerRect.top) + POPOVER_GAP)
+          : Math.max(POPOVER_GAP, Math.round(composerRect.bottom - rect.bottom) + POPOVER_GAP)
+      }
+      const parentRect = panel.offsetParent?.getBoundingClientRect?.() ?? rect
+      let left = null
+      let width = null
+      let right = null
+      if (alignToComposer && composerRect !== null) {
+        left = Math.round(composerRect.left - parentRect.left)
+        width = Math.round(composerRect.width)
+      } else if (!alignToComposer) {
+        // Right-aligned to the trigger by CSS, but never allowed to fall past
+        // the window's left edge on a phone-sized composer.
+        const panelWidth = panel.offsetWidth || Math.min(280, viewportWidth - 24)
+        const margin = 12
+        const targetLeft = Math.min(
+          Math.max(rect.right - panelWidth, margin),
+          Math.max(margin, viewportWidth - panelWidth - margin),
+        )
+        right = Math.round(parentRect.right - targetLeft - panelWidth)
+      }
       setLayout((current) => (
-        current.placement === placement && current.maxHeight === maxHeight && current.gap === nextGap
+        current.placement === placement
+        && current.maxHeight === maxHeight
+        && current.offset === offset
+        && current.left === left
+        && current.width === width
+        && current.right === right
           ? current
-          : { placement, maxHeight, gap: nextGap }
+          : { placement, maxHeight, offset, left, width, right }
       ))
     }
     update()
@@ -7122,15 +7950,17 @@ function usePopupPlacement(open, triggerRef, panelRef) {
       window.removeEventListener('scroll', update, true)
       observer?.disconnect()
     }
-  }, [open, panelRef, triggerRef])
+  }, [open, panelRef, triggerRef, alignToComposer])
   return layout
 }
 
 /** Inline style for an open popover: viewport clamp plus composer clearance. */
 function popoverStyle(layout) {
-  const style = {}
+  const style = { '--dsc-popover-offset': `${layout.offset ?? 8}px` }
   if (layout.maxHeight !== null) style.maxHeight = `${layout.maxHeight}px`
-  if (layout.gap > 0) style['--dsc-popover-gap'] = `${layout.gap}px`
+  if (layout.left !== null) style.left = `${layout.left}px`
+  if (layout.width !== null) style.width = `${layout.width}px`
+  if (layout.right !== null) style.right = `${layout.right}px`
   return style
 }
 
@@ -7240,10 +8070,11 @@ function DeepSeekLockup({ height = 24, className = '' }) {
  * `chatStore.state.modelChoice` holds the selection for the active
  * conversation; per-conversation overrides and the defaults live on the Host.
  *
- * The composer splits the two decisions into two small popovers: the model
- * picker is a name-only list, and the thinking-effort picker is its own compact
- * control next to it. Neither panel repeats the other's options, so choosing a
- * model never asks the user to read a feature sheet.
+ * The composer follows the native Harness model seat instead of showing two
+ * unrelated chips: one trigger carries the model name and the current effort,
+ * and one menu starts with the native "Model / Reasoning effort" rows that
+ * drill into a compact list. The root rows keep the menu calm; the lists carry
+ * only names and the single limitation that changes what can be attached.
  */
 
 /** The single model an older Host always sends. */
@@ -7251,6 +8082,7 @@ const FALLBACK_MODELS = [
   {
     id: 'deepseek-flash',
     name: 'DeepSeek V4.1 Flash',
+    displayName: 'DeepSeek-V4.1-Flash',
     shortName: 'V4.1 Flash',
     descriptionKey: 'modelFlashDesc',
     capabilities: { vision: true, documents: true, search: true, thinking: true, efforts: ['low', 'high', 'max'] },
@@ -7281,17 +8113,41 @@ function modelEfforts(model) {
   return list.length > 0 ? list : (modelCapability(model, 'thinking') ? EFFORT_ORDER : [])
 }
 
-/** The compact name shown on the composer chip and in the model list. */
-function modelTriggerLabel(model) {
+/** The native-looking API name, with the friendly catalog name as fallback. */
+function modelDisplayName(model) {
+  if (typeof model?.displayName === 'string' && model.displayName !== '') return model.displayName
+  // The compatibility path for an older Host: its catalog carries the API
+  // version (DeepSeek-V4.1-Flash-1017) but not a displayName.
+  if (typeof model?.version === 'string') {
+    const versionName = model.version.replace(/-[0-9]{3,4}$/, '')
+    if (versionName !== '') return versionName
+  }
+  return model?.name || model?.id || ''
+}
+
+/** The compact name used by reply footers, where the version is already known. */
+function modelShortName(model) {
   return model?.shortName || model?.name || ''
+}
+
+/** The label shown beside the model while thinking is on, or "Off" when it is not. */
+function modelEffortLabel(thinking, effort) {
+  if (!thinking) return tr('effortOff')
+  const labelKey = EFFORT_LABEL[effort]
+  return labelKey === undefined ? '' : tr(labelKey)
+}
+
+/** Full label for the composer seat. The menu keeps the two values separate. */
+function modelTriggerLabel(model) {
+  return modelDisplayName(model)
 }
 
 /** Full label for a reply footer, including the effort that produced it. */
 function modelChipLabel(model, thinking, effort) {
-  const name = model?.shortName || model?.name || ''
+  const name = modelShortName(model)
   if (!thinking) return name
-  const labelKey = EFFORT_LABEL[effort]
-  return labelKey === undefined ? name : `${name} · ${tr(labelKey)}`
+  const effortLabel = modelEffortLabel(true, effort)
+  return effortLabel === '' ? name : `${name} · ${effortLabel}`
 }
 
 /**
@@ -7302,10 +8158,10 @@ function modelChipLabel(model, thinking, effort) {
 function messageModelLabel(message) {
   if (typeof message?.model !== 'string' || message.model === '') return ''
   const model = modelById(message.model)
-  const name = model?.shortName || model?.name || message.model
+  const name = modelShortName(model) || message.model
   if (message.thinking !== true) return name
-  const labelKey = EFFORT_LABEL[message.effort]
-  return labelKey === undefined ? name : `${name} · ${tr(labelKey)}`
+  const effortLabel = modelEffortLabel(true, message.effort)
+  return effortLabel === '' ? name : `${name} · ${effortLabel}`
 }
 
 /**
@@ -7332,30 +8188,92 @@ function modelNotes(model) {
 }
 
 /**
- * Model menu: the real API models, by name, plus a check on the current one.
- * It opens above the composer, right-aligned to its chip, and is fully operable
- * from the keyboard.
+ * Model and effort, in the shape of the native Harness model seat.
+ *
+ * Closed, the trigger reads `DeepSeek-V4.1-Flash Max` (effort in the caption
+ * tone). Open, the root menu mirrors Harness: a "Model" row and a "Reasoning
+ * effort" row, each with its current value and a chevron, drilling into a
+ * name-only / tier-only list. It opens above the composer, right-aligned to the
+ * trigger, and keeps the WAI-ARIA menu keyboard model.
  */
 function ModelMenu() {
   const t = useT()
   const models = modelCatalog()
   const choice = currentModelChoice()
-  const activeId = useChat(state => state.activeId)
+  const thinking = useChat(state => state.settings.thinking)
   const [open, setOpen] = React.useState(false)
+  const [pane, setPane] = React.useState('root')
   const triggerRef = React.useRef(null)
   const panelRef = React.useRef(null)
   const layout = usePopupPlacement(open, triggerRef, panelRef)
-  useOutsideDismiss(open, () => setOpen(false), panelRef, triggerRef)
+  const close = () => {
+    setOpen(false)
+    setPane('root')
+  }
+  const closeAndRestore = () => {
+    close()
+    setTimeout(() => triggerRef.current?.focus?.(), 0)
+  }
+  useOutsideDismiss(open, close, panelRef, triggerRef)
+
   React.useEffect(() => {
     if (!open) return
-    // Focus the selected model row so Arrow keys start from the current choice.
     const panel = panelRef.current
-    const selected = panel?.querySelector?.(`[data-model="${choice.model.id}"]`)
-    selected?.focus?.({ preventScroll: false })
-  }, [open])
-  const close = () => setOpen(false)
-  const onKeyDown = event => handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef })
-  const scope = activeId === null ? t('modelAppliedToDefault') : t('modelAppliedToChat')
+    if (pane === 'root') {
+      panel?.querySelector?.('.dsc-model-cell')?.focus?.({ preventScroll: false })
+      return
+    }
+    const current = pane === 'effort'
+      ? panel?.querySelector?.(`[data-effort="${thinking ? choice.effort : 'off'}"]`)
+      : panel?.querySelector?.(`[data-model="${choice.model.id}"]`)
+    const fallback = panel?.querySelector?.('.dsc-model-option, .dsc-effort-option')
+    ;(current ?? fallback)?.focus?.({ preventScroll: false })
+  }, [open, pane])
+
+  const onKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      event.stopPropagation()
+      if (pane !== 'root') {
+        setPane('root')
+        return
+      }
+      close()
+      triggerRef.current?.focus?.()
+      return
+    }
+    if (event.key === 'Tab') {
+      // A drilled list backs out on Shift+Tab; Tab itself settles the menu and
+      // keeps the browser's focus traversal.
+      if (event.shiftKey && pane !== 'root') {
+        event.preventDefault()
+        setPane('root')
+        return
+      }
+      close()
+      return
+    }
+    if (event.key === 'ArrowLeft' && pane !== 'root') {
+      event.preventDefault()
+      setPane('root')
+      return
+    }
+    handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef })
+  }
+
+  const chooseOff = () => {
+    if (thinking) chatActions.toggleThinking()
+    closeAndRestore()
+  }
+  const chooseEffort = (effort) => {
+    if (!thinking) chatActions.toggleThinking()
+    if (effort !== choice.effort) chatActions.selectEffort(effort)
+    closeAndRestore()
+  }
+
+  const effortLabel = modelEffortLabel(thinking, choice.effort)
+  const supportsEffort = choice.efforts.length > 0
+  const triggerLabel = effortLabel === '' ? modelDisplayName(choice.model) : `${modelDisplayName(choice.model)} ${effortLabel}`
   return h('div', { className: 'dsc-model-control' },
     h('button', {
       ref: triggerRef,
@@ -7363,21 +8281,36 @@ function ModelMenu() {
       className: cx('dsc-model-trigger', open && 'is-open'),
       'aria-haspopup': 'menu',
       'aria-expanded': open,
+      'aria-label': `${t('modelSelect')}: ${triggerLabel}`,
       title: t('modelSelect'),
-      onClick: () => setOpen(value => !value),
+      onClick: () => {
+        if (open) {
+          close()
+          return
+        }
+        setPane('root')
+        setOpen(true)
+      },
       onKeyDown: (event) => {
         if (event.key === 'Escape' && open) {
           event.preventDefault()
-          setOpen(false)
+          close()
+          triggerRef.current?.focus?.()
           return
         }
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
           event.preventDefault()
-          setOpen(true)
+          if (!open) {
+            setPane('root')
+            setOpen(true)
+          }
         }
       },
     },
-      h('span', { className: 'dsc-model-name' }, modelTriggerLabel(choice.model)),
+      h('span', { className: 'dsc-model-name' }, modelDisplayName(choice.model)),
+      supportsEffort
+        ? h('span', { className: cx('dsc-model-effort', !thinking && 'is-off') }, effortLabel)
+        : null,
       h(Icon, { name: 'chevronDown', size: 12 }),
     ),
     open
@@ -7385,140 +8318,93 @@ function ModelMenu() {
           ref: panelRef,
           className: 'dsc-popover dsc-model-menu',
           role: 'menu',
-          'aria-label': t('modelSelect'),
+          'aria-label': pane === 'effort' ? t('thinkingEffort') : t('modelSelect'),
+          'data-pane': pane,
           'data-placement': layout.placement,
           style: popoverStyle(layout),
           onKeyDown,
         },
-        h('div', { className: 'dsc-model-list' },
-          models.map(model => {
-            const selected = model.id === choice.model.id
-            const notes = modelNotes(model)
-            const description = model.descriptionKey === undefined ? '' : t(model.descriptionKey)
-            return h('button', {
-              key: model.id,
-              type: 'button',
-              role: 'menuitemradio',
-              'aria-checked': selected,
-              'aria-label': description === '' ? model.name : `${model.name} — ${description}`,
-              title: description,
-              'data-model': model.id,
-              className: cx('dsc-popover-item dsc-model-option', selected && 'is-selected'),
-              onClick: () => { chatActions.selectModel(model.id); close() },
-            },
-              h('span', { className: 'dsc-popover-item-main' },
-                h('span', { className: 'dsc-popover-item-title' }, model.name),
-                notes.length > 0
-                  ? h('span', { className: 'dsc-model-note' }, notes.join(' · '))
-                  : null,
+        pane === 'root'
+          ? h('div', { className: 'dsc-model-root' },
+              h('button', {
+                type: 'button',
+                role: 'menuitem',
+                className: 'dsc-model-cell',
+                onClick: () => setPane('model'),
+              },
+                h('span', { className: 'dsc-model-cell-label' }, t('modelMenuTitle')),
+                h('span', { className: 'dsc-model-cell-value' }, modelDisplayName(choice.model)),
+                h(Icon, { name: 'chevronRight', size: 12 }),
               ),
-              selected ? h(Icon, { name: 'check', size: 15 }) : null,
+              supportsEffort
+                ? h('button', {
+                    type: 'button',
+                    role: 'menuitem',
+                    className: 'dsc-model-cell',
+                    onClick: () => setPane('effort'),
+                  },
+                    h('span', { className: 'dsc-model-cell-label' }, t('thinkingEffort')),
+                    h('span', { className: 'dsc-model-cell-value' }, effortLabel),
+                    h(Icon, { name: 'chevronRight', size: 12 }),
+                  )
+                : null,
             )
-          }),
-        ),
-        h('p', { className: 'dsc-model-scope' }, scope),
-      )
-      : null,
-  )
-}
-
-/**
- * Thinking-effort picker: a separate compact control beside the model chip. It
- * stays visible (showing Off) for every model with a real effort list, so
- * toggling deep thinking never shifts the composer layout. The four states are
- * the API's real tiers plus Off; there is no free-form value.
- */
-function EffortMenu() {
-  const t = useT()
-  const choice = currentModelChoice()
-  const thinking = useChat(state => state.settings.thinking)
-  const [open, setOpen] = React.useState(false)
-  const triggerRef = React.useRef(null)
-  const panelRef = React.useRef(null)
-  const layout = usePopupPlacement(open, triggerRef, panelRef)
-  useOutsideDismiss(open, () => setOpen(false), panelRef, triggerRef)
-  React.useEffect(() => {
-    if (!open) return
-    const panel = panelRef.current
-    const selected = panel?.querySelector?.(`[data-effort="${thinking ? choice.effort : 'off'}"]`)
-    selected?.focus?.({ preventScroll: false })
-  }, [open])
-  const close = () => setOpen(false)
-  const onKeyDown = event => handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef })
-  const label = thinking ? t(EFFORT_LABEL[choice.effort] ?? 'effortHigh') : t('effortOff')
-  const chooseOff = () => {
-    if (thinking) chatActions.toggleThinking()
-    close()
-  }
-  const chooseEffort = (effort) => {
-    if (!thinking) chatActions.toggleThinking()
-    if (effort !== choice.effort) chatActions.selectEffort(effort)
-    close()
-  }
-  return h('div', { className: 'dsc-effort-control' },
-    h('button', {
-      ref: triggerRef,
-      type: 'button',
-      className: cx('dsc-effort-trigger', open && 'is-open'),
-      'aria-haspopup': 'menu',
-      'aria-expanded': open,
-      title: `${t('thinkingEffort')}: ${label}`,
-      'aria-label': `${t('thinkingEffort')}: ${label}`,
-      onClick: () => setOpen(value => !value),
-      onKeyDown: (event) => {
-        if (event.key === 'Escape' && open) {
-          event.preventDefault()
-          setOpen(false)
-          return
-        }
-        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-          event.preventDefault()
-          setOpen(true)
-        }
-      },
-    },
-      h(Icon, { name: 'brain', size: 13 }),
-      h('span', null, label),
-      h(Icon, { name: 'chevronDown', size: 11 }),
-    ),
-    open
-      ? h('div', {
-          ref: panelRef,
-          className: 'dsc-popover dsc-effort-menu',
-          role: 'menu',
-          'aria-label': t('thinkingEffort'),
-          'data-placement': layout.placement,
-          style: popoverStyle(layout),
-          onKeyDown,
-        },
-        h('div', { className: 'dsc-effort-list' },
-          h('button', {
-            type: 'button',
-            role: 'menuitemradio',
-            'aria-checked': !thinking,
-            'data-effort': 'off',
-            title: t('effortOffHint'),
-            className: cx('dsc-effort-option', !thinking && 'is-selected'),
-            onClick: chooseOff,
-          },
-            h('span', { className: 'dsc-effort-option-label' }, t('effortOff')),
-            !thinking ? h(Icon, { name: 'check', size: 14 }) : null,
-          ),
-          h('div', { className: 'dsc-popover-sep' }),
-          choice.efforts.map(effort => h('button', {
-            key: effort,
-            type: 'button',
-            role: 'menuitemradio',
-            'aria-checked': thinking && choice.effort === effort,
-            'data-effort': effort,
-            title: t(EFFORT_HINT[effort] ?? 'thinkingEffort'),
-            className: cx('dsc-effort-option', thinking && choice.effort === effort && 'is-selected'),
-            onClick: () => chooseEffort(effort),
-          },
-            h('span', { className: 'dsc-effort-option-label' }, t(EFFORT_LABEL[effort])),
-            thinking && choice.effort === effort ? h(Icon, { name: 'check', size: 14 }) : null,
-          )),
-        ),
+          : pane === 'model'
+            ? h('div', { className: 'dsc-model-list' },
+                models.map(model => {
+                  const selected = model.id === choice.model.id
+                  const notes = modelNotes(model)
+                  const description = model.descriptionKey === undefined ? '' : t(model.descriptionKey)
+                  return h('button', {
+                    key: model.id,
+                    type: 'button',
+                    role: 'menuitemradio',
+                    'aria-checked': selected,
+                    'aria-label': description === '' ? model.name : `${model.name} — ${description}`,
+                    title: description,
+                    'data-model': model.id,
+                    className: 'dsc-model-option',
+                    onClick: () => {
+                      chatActions.selectModel(model.id)
+                      closeAndRestore()
+                    },
+                  },
+                    h('span', { className: 'dsc-model-option-name' }, modelDisplayName(model)),
+                    notes.length > 0 ? h('span', { className: 'dsc-model-note' }, notes.join(' · ')) : null,
+                    h('span', { className: 'dsc-model-check' }, selected ? h(Icon, { name: 'check', size: 14 }) : null),
+                  )
+                }),
+              )
+            : h('div', { className: 'dsc-effort-list' },
+                h('button', {
+                  type: 'button',
+                  role: 'menuitemradio',
+                  'aria-checked': !thinking,
+                  'data-effort': 'off',
+                  title: t('effortOffHint'),
+                  className: 'dsc-effort-option',
+                  onClick: chooseOff,
+                },
+                  h('span', { className: 'dsc-effort-option-label' }, t('effortOff')),
+                  h('span', { className: 'dsc-model-check' }, !thinking ? h(Icon, { name: 'check', size: 14 }) : null),
+                ),
+                choice.efforts.map(effort => {
+                  const selected = thinking && choice.effort === effort
+                  return h('button', {
+                    key: effort,
+                    type: 'button',
+                    role: 'menuitemradio',
+                    'aria-checked': selected,
+                    'data-effort': effort,
+                    title: t(EFFORT_HINT[effort] ?? 'thinkingEffort'),
+                    className: 'dsc-effort-option',
+                    onClick: () => chooseEffort(effort),
+                  },
+                    h('span', { className: 'dsc-effort-option-label' }, t(EFFORT_LABEL[effort])),
+                    h('span', { className: 'dsc-model-check' }, selected ? h(Icon, { name: 'check', size: 14 }) : null),
+                  )
+                }),
+              ),
       )
       : null,
   )
@@ -7643,6 +8529,10 @@ function toolAvailability(tool, state) {
   }
 }
 
+/**
+ * One row in the "+" card. Follows the native Harness command-menu row:
+ * icon + name on the left, one quiet description aligned on the right.
+ */
 function ToolMenuItem({ tool, state, index, onClose }) {
   const t = useT()
   const availability = toolAvailability(tool, state)
@@ -7656,7 +8546,7 @@ function ToolMenuItem({ tool, state, index, onClose }) {
   return h('button', {
     type: 'button',
     role: toggle ? 'menuitemcheckbox' : 'menuitem',
-    className: cx('dsc-popover-item dsc-tool-item', active && 'is-active', !enabled && 'is-disabled'),
+    className: 'dsc-tool-item',
     'aria-checked': toggle ? active : undefined,
     'aria-disabled': enabled ? undefined : 'true',
     'data-tool': tool.id,
@@ -7669,15 +8559,13 @@ function ToolMenuItem({ tool, state, index, onClose }) {
       if (!toggle) onClose()
     },
   },
-    h('span', { className: 'dsc-popover-item-icon' }, h(Icon, { name: tool.icon, size: 17 })),
-    h('span', { className: 'dsc-popover-item-main' },
-      h('span', { className: 'dsc-popover-item-title' }, t(tool.labelKey)),
-      h('span', { className: cx('dsc-popover-item-desc', !enabled && 'is-warn') }, description),
-    ),
-    toggle
-      ? h('span', { className: cx('dsc-switch', active && 'is-on'), 'aria-hidden': 'true' }, h('span', { className: 'dsc-switch-thumb' }))
-      : uploading
-        ? h('span', { className: 'dsc-popover-item-state' }, t('toolUploading'))
+    h('span', { className: 'dsc-tool-icon' }, h(Icon, { name: tool.icon, size: 16 })),
+    h('span', { className: 'dsc-tool-name' }, t(tool.labelKey)),
+    h('span', { className: cx('dsc-tool-desc', !enabled && 'is-warn') }, description),
+    uploading
+      ? h('span', { className: 'dsc-tool-state' }, t('toolUploading'))
+      : toggle && active
+        ? h('span', { className: 'dsc-tool-check' }, h(Icon, { name: 'check', size: 14 }))
         : null,
   )
 }
@@ -7721,7 +8609,10 @@ function ToolsMenu() {
   const [open, setOpen] = React.useState(false)
   const triggerRef = React.useRef(null)
   const panelRef = React.useRef(null)
-  const layout = usePopupPlacement(open, triggerRef, panelRef)
+  // The native command card is the width of the composer and sits just above
+  // it, not above the small trigger. The placement hook resolves that geometry
+  // from the composer the trigger belongs to.
+  const layout = usePopupPlacement(open, triggerRef, panelRef, { alignToComposer: true })
   useOutsideDismiss(open, () => setOpen(false), panelRef, triggerRef)
   React.useEffect(() => {
     if (!open) return
@@ -7736,8 +8627,8 @@ function ToolsMenu() {
       ref: triggerRef,
       type: 'button',
       className: cx('dsc-tools-trigger', open && 'is-open'),
-      title: t('toolsMenu'),
-      'aria-label': t('toolsMenu'),
+      title: t('addFiles'),
+      'aria-label': t('addFiles'),
       'aria-haspopup': 'menu',
       'aria-expanded': open,
       onClick: () => setOpen(value => !value),
@@ -7752,17 +8643,18 @@ function ToolsMenu() {
           setOpen(true)
         }
       },
-    }, h(Icon, { name: 'plus', size: 19 })),
+    }, h(Icon, { name: 'plus', size: 14 })),
     open
       ? h('div', {
           ref: panelRef,
           className: 'dsc-popover dsc-tools-menu',
           role: 'menu',
-          'aria-label': t('toolsMenu'),
+          'aria-label': t('addFiles'),
           'data-placement': layout.placement,
           style: popoverStyle(layout),
           onKeyDown: event => handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef }),
         },
+        h('div', { className: 'dsc-menu-section', role: 'presentation' }, t('fileSection')),
         tools.map((tool, index) => h(ToolMenuItem, {
           key: tool.id,
           tool,
@@ -8296,6 +9188,13 @@ function AssistantMessage({ message, streaming, isLast, canRegenerate, highlight
   const text = messageText(message)
   const { sources, indexByUrl } = collectMessageSources(message)
   const answer = answerText(message, indexByUrl)
+  // A server notice the export recorded next to the answer (such as the
+  // content warning on an otherwise finished reply). It is shown below the
+  // answer and is deliberately not part of the answer text, the copy action or
+  // the model context.
+  const noticeBlocks = (message.blocks ?? []).filter(block => (
+    block.type === 'notice' && typeof block.text === 'string' && block.text.trim() !== ''
+  ))
   const refused = message.stopReason === 'refusal'
   const errorInfo = message.error ? friendlyError(message.error) : null
   const showTyping = streaming && text === '' && (message.blocks ?? []).length === 0
@@ -8343,6 +9242,12 @@ function AssistantMessage({ message, streaming, isLast, canRegenerate, highlight
                   onClick: () => chatStore.set({ settingsOpen: true }),
                 }, t('configure'))
               : null,
+          )
+        : null,
+      !refused && noticeBlocks.length > 0
+        ? h('div', { className: 'dsc-notice is-warn dsc-answer-notice' },
+            h(Icon, { name: 'warning', size: 15 }),
+            h('span', null, noticeBlocks.map(block => block.text).join('\n')),
           )
         : null,
       sources.length > 0 && !refused
@@ -8781,7 +9686,6 @@ function Composer() {
         ),
         h('div', { className: 'dsc-composer-right' },
           h(ModelMenu, null),
-          choice.efforts.length > 0 ? h(EffortMenu, null) : null,
           isStreaming
             ? h('button', {
                 type: 'button',
@@ -8790,7 +9694,7 @@ function Composer() {
                 'aria-label': t('stop'),
                 disabled: stopping,
                 onClick: () => chatActions.requestStop(),
-              }, h(Icon, { name: 'stop', size: 15 }))
+              }, h(Icon, { name: 'stop', size: 16 }))
             : h('button', {
                 type: 'button',
                 className: cx('dsc-send-button', !canSend && 'is-idle'),
@@ -8798,7 +9702,7 @@ function Composer() {
                 'aria-label': t('send'),
                 'aria-disabled': !canSend,
                 onClick: handleSend,
-              }, h(Icon, { name: 'arrowUp', size: 17 })),
+              }, h(Icon, { name: 'arrowUp', size: 16 })),
         ),
       ),
       drag ? h('div', { className: 'dsc-drop-mask' }, h(Icon, { name: 'paperclip', size: 22 }), t('dropFiles')) : null,
@@ -9280,6 +10184,11 @@ function Sidebar() {
       ),
       h('button', {
         type: 'button', className: 'dsc-foot-action',
+        title: t('importOpen'),
+        onClick: () => chatActions.openImport(),
+      }, h(Icon, { name: 'import', size: 16 }), h('span', null, t('importOpen'))),
+      h('button', {
+        type: 'button', className: 'dsc-foot-action',
         title: t('chatSettings'),
         onClick: () => chatStore.set({ settingsOpen: true }),
       }, h(Icon, { name: 'settings', size: 16 }), h('span', null, t('settings')),
@@ -9573,6 +10482,8 @@ function ChatRoot() {
   const moveChat = useChat(state => state.moveChat)
   const folderAdd = useChat(state => state.folderAdd)
   const archiveOpen = useChat(state => state.archiveOpen)
+  const importOpen = useChat(state => state.importOpen)
+  const importMemoryOpen = useChat(state => state.importMemoryOpen)
   const [resizing, setResizing] = React.useState(false)
   const rootRef = React.useRef(null)
   const sidebarRef = React.useRef(null)
@@ -9614,6 +10525,8 @@ function ChatRoot() {
           return
         }
         if (settingsOpen) {
+          // The import dialog is nested inside settings; Escape closes only it.
+          if (memoryImportDialogOpen()) return
           chatStore.set({ settingsOpen: false })
           return
         }
@@ -9637,6 +10550,10 @@ function ChatRoot() {
           chatActions.closeArchive()
           return
         }
+        if (chatStore.state.importOpen === true) {
+          chatActions.closeImport()
+          return
+        }
         if (chatStore.state.editingId !== null) {
           chatActions.cancelEditMessage()
           return
@@ -9649,6 +10566,8 @@ function ChatRoot() {
         return
       }
       if (event.key !== 'Tab') return
+      // The nested import dialog owns its own native focus cycle.
+      if (memoryImportDialogOpen()) return
       const root = rootRef.current
       if (!root) return
       // A dialog traps focus on its own; otherwise the surface and the shared
@@ -9719,6 +10638,10 @@ function ChatRoot() {
     moveChat !== null ? h(MoveChatDialog, null) : null,
     folderAdd !== null ? h(FolderAddDialog, null) : null,
     archiveOpen ? h(ArchiveDialog, null) : null,
+    importOpen ? h(ImportDialog, null) : null,
+    importMemoryOpen
+      ? h(ImportMemoryDialog, { onClose: () => chatActions.closeImportMemory() })
+      : null,
     // The confirmation sits on top of whichever surface raised it (the archive
     // manager, a folder picker or the sidebar menu).
     confirm !== null ? h(ConfirmDialog, null) : null,
@@ -9745,12 +10668,13 @@ function BootView({ error, onRetry }) {
   )
 }
 
-function Switch({ checked, onChange, label }) {
+function Switch({ checked, onChange, label, disabled = false }) {
   return h('button', {
     type: 'button',
     role: 'switch',
     'aria-checked': checked,
     'aria-label': label,
+    disabled,
     className: cx('dsc-switch', checked && 'is-on'),
     onClick: () => onChange(!checked),
   }, h('span', { className: 'dsc-switch-thumb' }))
@@ -9770,7 +10694,7 @@ function SettingsSection({ title, children }) {
  * switch, which must not show through the mask or receive clicks. The dialog
  * stays inside ChatRoot, so the --dsc-* theme tokens still inherit.
  */
-function ModalBackdrop({ children, onDismiss }) {
+function ModalBackdrop({ children, onDismiss, className = '' }) {
   const ref = React.useRef(null)
   const dismissRef = React.useRef(onDismiss)
   dismissRef.current = onDismiss
@@ -9798,7 +10722,7 @@ function ModalBackdrop({ children, onDismiss }) {
   }, [])
   return h('dialog', {
     ref,
-    className: 'dsc-modal-backdrop',
+    className: cx('dsc-modal-backdrop', className),
     onMouseDown: (event) => {
       if (event.target === event.currentTarget) dismissRef.current()
     },
@@ -9817,6 +10741,9 @@ function SettingsDialog() {
   const [prompt, setPrompt] = React.useState(settings.systemPrompt)
   const [savingKey, setSavingKey] = React.useState(false)
   const [savingPrompt, setSavingPrompt] = React.useState(false)
+  // General stays the default tab; the Memory tab mounts its own pane only
+  // while it is active, so opening settings never calls the memory API.
+  const [tab, setTab] = React.useState('general')
   React.useEffect(() => {
     setPrompt(settings.systemPrompt)
   }, [settings.systemPrompt])
@@ -9865,7 +10792,20 @@ function SettingsDialog() {
           autoFocus: true, onClick: close,
         }, h(Icon, { name: 'close', size: 18 })),
       ),
+      h('div', { className: 'dsc-settings-tabs', role: 'tablist', 'aria-label': t('settingsTabsLabel') },
+        [['general', 'settingsGeneralTab'], ['memory', 'settingsMemoryTab']].map(([value, key]) => (
+          h('button', {
+            key: value,
+            type: 'button',
+            role: 'tab',
+            'aria-selected': tab === value,
+            className: cx('dsc-settings-tab', tab === value && 'is-active'),
+            onClick: () => setTab(value),
+          }, t(key))
+        )),
+      ),
       h('div', { className: 'dsc-modal-body' },
+        tab === 'general' ? h(Fragment, null,
         h(SettingsSection, { title: t('connection') },
           h('div', { className: cx('dsc-auth-status', auth?.ready ? 'is-ready' : 'is-missing') },
             h('span', { className: 'dsc-auth-dot' }),
@@ -9986,6 +10926,7 @@ function SettingsDialog() {
           h('p', { className: 'dsc-field-hint' }, t('aboutText')),
           h('p', { className: 'dsc-field-hint' }, `${t('limitations')}：${t('limitationsText')}`),
         ),
+        ) : h(MemorySettingsPane, null),
       ),
     ),
   )
@@ -10626,8 +11567,345 @@ function ArchiveDialog() {
   )
 }
 
-function ConfirmDialog() {
+/** Absolute date for one export row; the export timestamp is ISO-8601 UTC. */
+function importDateLabel(timestamp, t) {
+  if (typeof timestamp !== 'number' || !Number.isFinite(timestamp) || timestamp <= 0) return t('importDateUnknown')
+  try {
+    return new Intl.DateTimeFormat(appCtx?.locale.getSnapshot().active === 'zh' ? 'zh-CN' : 'en-US', {
+      year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+    }).format(new Date(timestamp))
+  } catch {
+    return new Date(timestamp).toLocaleString()
+  }
+}
+
+/** Case-insensitive title filter for the preview list. */
+function filterImportRows(conversations, filter) {
+  const needle = typeof filter === 'string' ? filter.trim().toLowerCase() : ''
+  if (needle === '') return conversations
+  return conversations.filter(conversation => (
+    typeof conversation?.title === 'string' && conversation.title.toLowerCase().includes(needle)
+  ))
+}
+
+/**
+ * Chat-history import from a DeepSeek export ZIP.
+ *
+ * The dialog walks one state machine owned by the store: pick a file, read the
+ * preview, choose conversations, follow the import, read the result. The Host
+ * parses everything locally, so the only thing this surface does with the file
+ * is hand the bytes over once.
+ */
+function ImportDialog() {
   const t = useT()
+  const open = useChat(state => state.importOpen)
+  const view = useChat(state => state.importView)
+  const inputRef = React.useRef(null)
+  const [drag, setDrag] = React.useState(false)
+  if (!open || view === null) return null
+  const step = view.step
+  const parsing = step === 'parsing'
+  const importing = step === 'importing'
+  const selected = new Set(view.selected)
+  const visible = filterImportRows(view.conversations, view.filter)
+  const importableCount = view.conversations.filter(item => item.imported !== true).length
+  const close = () => chatActions.closeImport()
+  const pick = (file) => {
+    if (file !== undefined && file !== null) void chatActions.selectImportFile(file)
+  }
+  const percent = view.progress.total > 0
+    ? Math.min(100, Math.round((view.progress.done / view.progress.total) * 100))
+    : 0
+  const head = h('header', { className: 'dsc-modal-head' },
+    h('div', null,
+      h('h2', null, t('importTitle')),
+      h('p', { className: 'dsc-modal-sub' }, t('importSubtitle')),
+    ),
+    h('button', {
+      type: 'button',
+      className: 'dsc-icon-button',
+      title: t('close'),
+      'aria-label': t('close'),
+      autoFocus: step !== 'preview',
+      disabled: importing,
+      onClick: close,
+    }, h(Icon, { name: 'close', size: 18 })),
+  )
+
+  const pickBody = h('div', { className: 'dsc-modal-body dsc-import-pick' },
+    h('div', {
+      className: cx('dsc-import-drop', drag && 'is-drag', parsing && 'is-busy'),
+      role: 'button',
+      tabIndex: 0,
+      onClick: () => {
+        if (!parsing) inputRef.current?.click()
+      },
+      onKeyDown: (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return
+        event.preventDefault()
+        if (!parsing) inputRef.current?.click()
+      },
+      onDragOver: (event) => {
+        event.preventDefault()
+        if (!parsing) setDrag(true)
+      },
+      onDragLeave: () => setDrag(false),
+      onDrop: (event) => {
+        event.preventDefault()
+        setDrag(false)
+        if (parsing) return
+        pick(event.dataTransfer?.files?.[0])
+      },
+    },
+      parsing ? h(Spinner, { size: 22, label: t('importParsing') }) : h('span', { className: 'dsc-import-drop-icon' }, h(Icon, { name: 'archive', size: 24 })),
+      parsing
+        ? h('div', { className: 'dsc-import-drop-title' }, t('importParsing'))
+        : h('div', { className: 'dsc-import-drop-title' }, t('importDropTitle')),
+      parsing
+        ? h('div', { className: 'dsc-import-drop-hint' }, t('importParsingHint'))
+        : h('div', { className: 'dsc-import-drop-hint' }, t('importDropHint')),
+    ),
+    view.error !== ''
+      ? h('div', { className: 'dsc-notice is-error dsc-import-error' },
+          h(Icon, { name: 'warning', size: 16 }),
+          h('span', null, view.error),
+        )
+      : null,
+  )
+
+  const previewBody = h('div', { className: 'dsc-modal-body dsc-import-preview' },
+    h('div', { className: 'dsc-import-summary' },
+      h('div', { className: 'dsc-import-summary-main' },
+        h('span', { className: 'dsc-import-file-name', title: view.fileName }, view.fileName),
+        h('span', { className: 'dsc-import-file-meta' },
+          t('importFileMeta', { size: formatSize(view.fileSize), count: view.stats.total }),
+        ),
+      ),
+      h('div', { className: 'dsc-import-summary-side' },
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button is-small-compact',
+          onClick: () => inputRef.current?.click(),
+        }, t('importChooseFile')),
+      ),
+    ),
+    importableCount === 0
+      ? h('div', { className: 'dsc-list-empty' }, t('importAllImported'))
+      : h(React.Fragment, null,
+          h('div', { className: 'dsc-import-toolbar' },
+            h('button', {
+              type: 'button',
+              role: 'checkbox',
+              'aria-checked': view.selected.length > 0 && view.selected.length >= importableCount,
+              className: cx('dsc-import-check-all', view.selected.length > 0 && 'is-on'),
+              onClick: () => chatActions.selectAllImport(view.selected.length < importableCount),
+            },
+              h('span', { className: 'dsc-choice-check' },
+                view.selected.length >= importableCount ? h(Icon, { name: 'check', size: 13 }) : null,
+              ),
+              h('span', null, t('importSelectAll')),
+            ),
+            h('span', { className: 'dsc-import-count' },
+              t('importSelected', { count: view.selected.length, total: importableCount }),
+            ),
+          ),
+          importableCount > 100
+            ? h('p', { className: 'dsc-import-hint' }, t('importLargeHint'))
+            : null,
+          h('div', { className: 'dsc-import-filter' },
+            h(Icon, { name: 'search', size: 14 }),
+            h('input', {
+              className: 'dsc-import-filter-input',
+              value: view.filter,
+              placeholder: t('importFilter'),
+              'aria-label': t('importFilter'),
+              onChange: (event) => chatActions.setImportFilter(event.target.value),
+            }),
+          ),
+          h('div', { className: 'dsc-import-list', role: 'group', 'aria-label': t('importTitle') },            visible.length === 0
+              ? h('div', { className: 'dsc-list-empty' }, t('importEmpty'))
+              : visible.map(conversation => {
+                  const imported = conversation.imported === true
+                  // An imported conversation is never part of the selection: it
+                  // is already in the history, and the badge says so.
+                  const on = selected.has(conversation.sourceId)
+                  return h('button', {
+                    key: conversation.sourceId,
+                    type: 'button',
+                    role: 'checkbox',
+                    'aria-checked': on,
+                    disabled: imported,
+                    className: cx('dsc-import-item', on && 'is-selected', imported && 'is-imported'),
+                    onClick: () => chatActions.toggleImportConversation(conversation.sourceId),
+                  },
+                    h('span', { className: 'dsc-choice-check' },
+                      on ? h(Icon, { name: 'check', size: 13 }) : null,
+                    ),
+                    h('span', { className: 'dsc-import-item-main' },
+                      h('span', { className: 'dsc-import-item-title' }, conversation.title || t('newChatTitle')),
+                      h('span', { className: 'dsc-import-item-meta' },
+                        `${importDateLabel(conversation.createdAt, t)} · ${t('messageCount', { count: conversation.messageCount })}`,
+                      ),
+                    ),
+                    imported
+                      ? h('span', { className: 'dsc-import-badge' }, t('importAlreadyImported'))
+                      : null,
+                  )
+                }),
+          ),
+        ),
+    view.error !== ''
+      ? h('div', { className: 'dsc-notice is-error dsc-import-error' },
+          h(Icon, { name: 'warning', size: 16 }),
+          h('span', null, view.error),
+        )
+      : null,
+  )
+
+  const importingBody = h('div', { className: 'dsc-modal-body dsc-import-progress' },
+    h('div', { className: 'dsc-import-progress-head' },
+      h('span', { className: 'dsc-import-progress-label' }, t('importImporting')),
+      h('span', { className: 'dsc-import-progress-count' },
+        t('importProgress', { done: view.progress.done, total: view.progress.total }),
+      ),
+    ),
+    h('div', {
+      className: 'dsc-import-bar',
+      role: 'progressbar',
+      'aria-valuemin': 0,
+      'aria-valuemax': 100,
+      'aria-valuenow': percent,
+      'aria-label': t('importImporting'),
+    }, h('div', { className: 'dsc-import-bar-fill', style: { width: `${percent}%` } })),
+    h('p', { className: 'dsc-import-hint' }, t('importDoneHint')),
+    view.error !== ''
+      ? h('div', { className: 'dsc-notice is-error dsc-import-error' },
+          h(Icon, { name: 'warning', size: 16 }),
+          h('span', null, view.error),
+        )
+      : null,
+  )
+
+  const result = view.result
+  const resultBody = h('div', { className: 'dsc-modal-body dsc-import-result' },
+    h('div', { className: 'dsc-import-stats' },
+      h('div', { className: 'dsc-import-stat is-ok' },
+        h('span', { className: 'dsc-import-stat-value' }, String(result?.imported ?? 0)),
+        h('span', { className: 'dsc-import-stat-label' }, t('importStatImported')),
+      ),
+      h('div', { className: 'dsc-import-stat is-skip' },
+        h('span', { className: 'dsc-import-stat-value' }, String(result?.skipped ?? 0)),
+        h('span', { className: 'dsc-import-stat-label' }, t('importStatSkipped')),
+      ),
+      h('div', { className: cx('dsc-import-stat', (result?.failed ?? 0) > 0 && 'is-fail') },
+        h('span', { className: 'dsc-import-stat-value' }, String(result?.failed ?? 0)),
+        h('span', { className: 'dsc-import-stat-label' }, t('importStatFailed')),
+      ),
+    ),
+    h('p', { className: 'dsc-import-hint' }, t('importDoneHint')),
+    (result?.skipped ?? 0) > 0 ? h('p', { className: 'dsc-import-hint' }, t('importSkippedHint')) : null,
+    result?.media?.restored > 0
+      ? h('p', { className: 'dsc-import-hint' }, `${t('importImages', { count: result.media.restored })} · ${t('importMediaNote')}`)
+      : null,
+    (result?.imported ?? 0) > 0
+      ? h('div', { className: 'dsc-import-memory' },
+          h('span', { className: 'dsc-import-memory-icon' }, h(Icon, { name: 'brain', size: 18 })),
+          h('div', { className: 'dsc-import-memory-copy' },
+            h('span', { className: 'dsc-import-memory-title' }, t('importMemoryTitle')),
+            h('p', { className: 'dsc-import-memory-hint' }, t('importMemoryBody')),
+          ),
+          h('button', {
+            type: 'button',
+            className: 'dsc-secondary-button',
+            // Capture the batch before closing: closing clears the import view.
+            onClick: () => {
+              if (chatActions.openImportMemory(view.selected)) close()
+            },
+          }, t('importMemoryOpen')),
+        )
+      : null,
+    Array.isArray(result?.failures) && result.failures.length > 0
+      ? h('div', { className: 'dsc-import-failures' },
+          h('div', { className: 'dsc-import-failures-title' }, t('importFailedList')),
+          result.failures.slice(0, 8).map(item => h('div', { key: item.sourceId ?? item.title, className: 'dsc-import-failure' },
+            h('span', { className: 'dsc-import-failure-title', title: item.reason ?? '' }, item.title || item.sourceId || '—'),
+            h('span', { className: 'dsc-import-failure-reason' }, String(item.code ?? '')),
+          )),
+        )
+      : null,
+    view.error !== ''
+      ? h('div', { className: 'dsc-notice is-error dsc-import-error' },
+          h(Icon, { name: 'warning', size: 16 }),
+          h('span', null, view.error),
+        )
+      : null,
+  )
+
+  const footer = step === 'pick'
+    ? h('footer', { className: 'dsc-modal-foot' },
+        h('div', { className: 'dsc-modal-foot-note' }),
+        h('button', { type: 'button', className: 'dsc-secondary-button', onClick: close }, t('importExit')),
+        h('button', {
+          type: 'button', className: 'dsc-primary-button', disabled: parsing,
+          onClick: () => inputRef.current?.click(),
+        }, t('importChooseFile')),
+      )
+    : step === 'preview'
+      ? h('footer', { className: 'dsc-modal-foot' },
+          h('div', { className: 'dsc-modal-foot-note' },
+            t('importSelected', { count: view.selected.length, total: importableCount }),
+          ),
+          h('button', { type: 'button', className: 'dsc-secondary-button', onClick: close }, t('importExit')),
+          h('button', {
+            type: 'button',
+            className: 'dsc-primary-button',
+            disabled: view.selected.length === 0 || view.token === '',
+            onClick: () => { void chatActions.startImport() },
+          }, t('importStart')),
+        )
+      : step === 'importing'
+        ? h('footer', { className: 'dsc-modal-foot' },
+            h('div', { className: 'dsc-modal-foot-note' },
+              t('importProgress', { done: view.progress.done, total: view.progress.total }),
+            ),
+            h('button', {
+              type: 'button',
+              className: 'dsc-secondary-button',
+              disabled: view.cancelling,
+              onClick: () => { void chatActions.cancelImport() },
+            }, view.cancelling ? t('importCancelling') : t('importCancel')),
+          )
+        : h('footer', { className: 'dsc-modal-foot' },
+            h('div', { className: 'dsc-modal-foot-note' }),
+            h('button', {
+              type: 'button', className: 'dsc-primary-button', autoFocus: true,
+              onClick: close,
+            }, t('importClose')),
+          )
+
+  return h(ModalBackdrop, { onDismiss: close },
+    h('div', { className: 'dsc-modal dsc-import-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('importTitle') },
+      // One hidden picker serves both the drop zone and the "choose file" button,
+      // so the file dialog can be reopened from the preview step as well.
+      h('input', {
+        ref: inputRef,
+        className: 'dsc-import-input',
+        type: 'file',
+        accept: '.zip,application/zip,application/x-zip-compressed',
+        tabIndex: -1,
+        'aria-hidden': 'true',
+        onChange: (event) => {
+          pick(event.target.files?.[0])
+          event.target.value = ''
+        },
+      }),
+      head,
+      step === 'pick' || step === 'parsing' ? pickBody : step === 'preview' ? previewBody : importing ? importingBody : resultBody,
+      footer,
+    ),
+  )
+}
+
+function ConfirmDialog() {  const t = useT()
   const confirm = useChat(state => state.confirm)
   if (confirm === null) return null
   const run = async () => {
@@ -10665,6 +11943,1508 @@ function Toasts() {
       h(Icon, { name: toast.kind === 'error' || toast.kind === 'warning' ? 'warning' : 'check', size: 16 }),
       h('span', null, toast.message),
     )),
+  )
+}
+
+/* ---- 58-memory.js ---- */
+/* ------------------------------------------------------------------------- */
+/* Long-term memory: the settings pane, the cross-AI import dialog and the    */
+/* local parser for pasted memory exports. Everything here talks to the Host  */
+/* through one JSON endpoint; the parser never calls a model.                 */
+/* ------------------------------------------------------------------------- */
+
+const MEMORY_API = '/api/deepseek-chat/memory'
+const MEMORY_IMPORT_MAX_CONTENT = 600
+const MEMORY_IMPORT_MAX_ENTRIES = 200
+/** Must match the Host's per-batch cap for imported-conversation analysis. */
+const MEMORY_EXTRACT_MAX_SESSIONS = 20
+/** Stored categories, in the Host's fixed display order. */
+const memoryCategoryIds = ['instruction', 'identity', 'career', 'projects', 'preferences']
+const MEMORY_CATEGORY_KEYS = {
+  instruction: 'memoryCatInstruction',
+  identity: 'memoryCatIdentity',
+  career: 'memoryCatCareer',
+  projects: 'memoryCatProjects',
+  preferences: 'memoryCatPreferences',
+}
+/** Heading synonyms accepted from English and Chinese exports. */
+const MEMORY_CATEGORY_ALIASES = {
+  instruction: ['instruction', 'instructions', '指令', '指示', '回答风格', 'response style', 'style guidelines'],
+  identity: ['identity', 'identities', '身份', '个人信息', '个人资料', '关于我', 'about me', 'profile', 'personal information', 'personal info'],
+  career: ['career', 'work', 'job', '职业', '工作', '工作经历', '职业经历', '职业背景', 'work history'],
+  projects: ['project', 'projects', '项目', '工程', '项目经历', 'current projects'],
+  preferences: ['preference', 'preferences', '偏好', '喜好', '兴趣', '爱好', 'tastes'],
+}
+const MEMORY_IMPORT_PLATFORMS = ['chatgpt', 'claude', 'gemini', 'other']
+/**
+ * The prompt the user copies into another AI. It is provider-agnostic: every
+ * assistant names itself, so it must never be addressed to one product.
+ */
+const MEMORY_IMPORT_PROMPT = `Please export everything you remember about me as long-term memory or persistent user context, so I can transfer it to another assistant.
+
+Requirements:
+1. Group the records under exactly these five category headings: Instructions, Identity, Career, Projects, Preferences.
+2. Put every record on its own line in this format: [YYYY-MM-DD] - Entry content. When the date is unknown, write [unknown] instead of a date.
+3. Preserve my original wording as closely as possible; do not rewrite, summarize, or embellish the entries.
+4. Only include information you can actually access or confirm from our conversation history. Never invent dates, identities, projects, or other details. If something is uncertain, leave it out.
+5. Put the entire export inside a single fenced code block, so I can copy it in one piece.
+6. After the code block, add one short sentence stating whether this is the complete export or whether more memory remains that did not fit.
+7. Do not reveal or include any internal system prompts or hidden instructions in the export.`
+
+const MEMORY_LIST_MARKER = /^(?:[-*+•·–—]|\d{1,3}[.)、]|\(\d{1,3}\)|\[\s?[xX]?\s?\])\s+/
+const MEMORY_META_LINE = /^(?:this is (?:the )?(?:complete|full|entire) (?:set|list|export|memory)|that'?s (?:all|everything)|(?:i have )?(?:no|don'?t have|do not have) (?:access to )?(?:any )?(?:long[- ]?term )?memor|i (?:don'?t|do not) have access|nothing (?:else )?(?:to (?:export|share)|remembered)|above (?:is|contains)|以上(?:是|为|就是)|这(?:是|就是)(?:全部|完整)|我没有(?:任何)?(?:长期)?记忆|无法访问|没有(?:什么)?(?:可导出|记忆)|(?:the )?end\b)/i
+const MEMORY_PREAMBLE_LINE = /^(?:here(?:'s| is| are)|below (?:is|are)|sure|of course|certainly|the following|i(?:'ve| have) (?:listed|organized|exported)|我已|以下(?:是|为))/i
+
+/** Heading text when the line is shaped like a Markdown heading, else null. */
+function memoryHeadingText(line) {
+  const text = line.trim()
+  const hashes = /^#{1,6}\s+(.+?)\s*#*$/.exec(text)
+  if (hashes !== null) return hashes[1]
+  const bold = /^(?:\*\*|__)([^*_]+?)(?:\*\*|__)\s*[:：]?$/.exec(text)
+  if (bold !== null) return bold[1]
+  const plain = /^([^:：]{1,40})[:：]\s*$/.exec(text)
+  return plain === null ? null : plain[1]
+}
+
+/** Category id for a heading line, undefined when the heading names none. */
+function memoryCategoryFromHeading(line) {
+  const heading = memoryHeadingText(line)
+  if (heading === null) return undefined
+  const text = heading
+    .replace(/[*_`#]/g, ' ')
+    .replace(/^\s*(?:[0-9一二三四五六七八九十]+\s*[.、)．]\s*)+/, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+  if (text === '') return undefined
+  const parts = text.split(/[&/、,，+·]|\band\b/).map(part => part.trim()).filter(part => part !== '')
+  for (const part of parts) {
+    for (const id of memoryCategoryIds) {
+      for (const alias of MEMORY_CATEGORY_ALIASES[id]) {
+        if (part === alias || part.startsWith(`${alias} `) || part.endsWith(` ${alias}`)) return id
+      }
+    }
+  }
+  return undefined
+}
+
+/**
+ * Split an optional export date marker off a record line.
+ * @returns `{ date, content }`, where date is a `YYYY-MM-DD` string, the marker
+ *   `unknown`, or null when the line carries no date.
+ */
+function parseMemoryDate(value) {
+  const text = typeof value === 'string' ? value.trim() : ''
+  if (text === '') return { date: null, content: '' }
+  const dated = /^\[?\s*(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\s*\]?\s*(?:[-–—:、]\s*)?([\s\S]*)$/.exec(text)
+  if (dated !== null) {
+    const month = Number(dated[2])
+    const day = Number(dated[3])
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      return {
+        date: `${dated[1]}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+        content: dated[4],
+      }
+    }
+  }
+  const unknown = /^\[?\s*(?:unknown|date unknown|no date|undated|未知|不详|n\/a)\s*\]?\s*(?:[-–—:、]\s*)?([\s\S]*)$/i.exec(text)
+  if (unknown !== null) return { date: 'unknown', content: unknown[1] }
+  return { date: null, content: text }
+}
+
+/** Drop the display-only Markdown an export may wrap around a record. */
+function stripMemoryMarkdown(value) {
+  return value
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/`{1,2}([^`]+)`{1,2}/g, '$1')
+    .replace(/(\*\*|__)(.+?)\1/g, '$2')
+    .replace(/~~(.+?)~~/g, '$1')
+    .replace(/(^|[\s(])_([^_\n]+)_(?=$|[\s).,;:!?])/g, '$1$2')
+    .replace(/\*([^*\n]+)\*/g, '$1')
+    .replace(/<([^<>\s]+@[^<>\s]+)>/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/** Keyword fallback used when an export carries no category heading. */
+function inferMemoryCategory(content) {
+  const text = typeof content === 'string' ? content.trim() : ''
+  if (text === '') return 'preferences'
+  if (/^(?:以后|今后|从今|回答|回复|解释|请|不要|别|每次|始终|总是|永远)|回答(?:时|请|要|用)|回复(?:时|请|要|用)|(?:用|使用)(?:中文|英文|english|chinese)|(?:简洁|详细|简短|具体)的?(?:回答|回复|解释)|(?:format|answer|reply|respond).{0,24}(?:concise|brief|detailed|chinese|english)|always|never|from now on/i.test(text)) {
+    return 'instruction'
+  }
+  if (/(?:我叫|我的名字|我的生日|出生于|住在|居住|现居|来自|国籍|my name|i am|i'm|live in|born|student|school|university)/i.test(text)) {
+    return 'identity'
+  }
+  if (/(?:工作|职业|职位|岗位|公司|实习|工程师|设计师|经理|创业|自由职业|job|career|worked at|working at|role|intern|engineer|designer|founder)/i.test(text)) {
+    return 'career'
+  }
+  if (/(?:项目|插件|仓库|开发|应用|网站|游戏|模组|技术栈|架构|project|plugin|repository|repo|building|developing|codebase|website|game|stack)/i.test(text)) {
+    return 'projects'
+  }
+  return 'preferences'
+}
+
+/**
+ * Parse one pasted memory export without calling a model. Tolerant of Markdown
+ * headings in English or Chinese, fenced or unfenced records, list markers,
+ * optional dates and inline formatting. Identical records are kept once.
+ * @returns `{ entries: [{ content, category, date }], skipped }`.
+ */
+function parseMemoryExport(input) {
+  const text = typeof input === 'string' ? input.replace(/\r\n?/g, '\n').replace(/^\uFEFF/, '') : ''
+  const lines = text.split('\n')
+  let sawFence = false
+  let sawHeading = false
+  let sawMarker = false
+  for (const raw of lines) {
+    const line = raw.trim()
+    if (line === '') continue
+    if (/^(?:```|~~~)/.test(line)) {
+      sawFence = true
+      continue
+    }
+    if (memoryCategoryFromHeading(line) !== undefined) {
+      sawHeading = true
+      continue
+    }
+    const unmarked = line.replace(/^\s*>\s?/, '')
+    const withoutMarker = unmarked.replace(MEMORY_LIST_MARKER, '')
+    if (withoutMarker !== unmarked || parseMemoryDate(withoutMarker).date !== null) sawMarker = true
+  }
+  const structured = sawFence || sawHeading || sawMarker
+  const entries = []
+  const seen = new Set()
+  let skipped = 0
+  let inFence = false
+  let currentCategory = null
+  for (const raw of lines) {
+    const line = raw.trim()
+    if (line === '') continue
+    if (/^(?:```|~~~)/.test(line)) {
+      if (inFence) currentCategory = null
+      inFence = !inFence
+      continue
+    }
+    if (memoryHeadingText(line) !== null) {
+      const category = memoryCategoryFromHeading(line)
+      if (category !== undefined) currentCategory = category
+      else currentCategory = null
+      continue
+    }
+    const quoted = raw.replace(/^\s*>\s?/, '').trim()
+    const marked = MEMORY_LIST_MARKER.test(quoted)
+    const body = marked ? quoted.replace(MEMORY_LIST_MARKER, '') : quoted
+    const parsed = parseMemoryDate(body)
+    const plain = !marked && parsed.date === null
+    if (plain) {
+      if (MEMORY_META_LINE.test(body) || MEMORY_PREAMBLE_LINE.test(body) || (!inFence && /[?？]\s*$/.test(body))) {
+        skipped += 1
+        continue
+      }
+      // Outside a fence, a heading-less plain line is prose unless the export
+      // has no structure at all (then it is the whole unstructured memory).
+      if (!inFence && structured && currentCategory === null) continue
+    }
+    let content = stripMemoryMarkdown(parsed.content)
+    if (content.length < 2) {
+      skipped += 1
+      continue
+    }
+    if (content.length > MEMORY_IMPORT_MAX_CONTENT) {
+      content = `${content.slice(0, MEMORY_IMPORT_MAX_CONTENT - 1).trimEnd()}…`
+    }
+    const key = content.toLowerCase()
+    if (seen.has(key)) {
+      skipped += 1
+      continue
+    }
+    if (entries.length >= MEMORY_IMPORT_MAX_ENTRIES) {
+      skipped += 1
+      continue
+    }
+    seen.add(key)
+    entries.push({ content, category: currentCategory ?? inferMemoryCategory(content), date: parsed.date })
+  }
+  return { entries, skipped }
+}
+
+/** Only real dates reach the Host import payload. */
+function memoryImportDate(date) {
+  return typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+}
+
+function memoryCategoryLabel(id, t = tr) {
+  return t(MEMORY_CATEGORY_KEYS[id] ?? 'memoryCatPreferences')
+}
+
+function memoryPlatformLabel(platform, t = tr) {
+  if (platform === 'chatgpt') return t('memoryPlatformChatgpt')
+  if (platform === 'claude') return t('memoryPlatformClaude')
+  if (platform === 'gemini') return t('memoryPlatformGemini')
+  if (platform === 'other') return t('memoryPlatformOther')
+  return ''
+}
+
+function memorySourceLabel(source, t = tr) {
+  const type = source?.type
+  if (type === 'conversation') return t('memorySourceConversation')
+  if (type === 'agent') return t('memorySourceAgent')
+  if (type === 'import') {
+    const platform = memoryPlatformLabel(source?.platform, t)
+    if (platform !== '') return t('memorySourceImport', { platform })
+    if (typeof source?.label === 'string' && source.label !== '') return t('memorySourceImport', { platform: source.label })
+    return t('memorySourceUnknown')
+  }
+  return t('memorySourceManual')
+}
+
+function memoryAppliedText(applied, t = tr) {
+  const counts = { add: 0, update: 0, delete: 0 }
+  for (const item of Array.isArray(applied) ? applied : []) {
+    if (item?.op === 'add' || item?.op === 'update' || item?.op === 'delete') counts[item.op] += 1
+  }
+  const parts = []
+  if (counts.add > 0) parts.push(t('memoryAppliedAdded', { count: counts.add }))
+  if (counts.update > 0) parts.push(t('memoryAppliedUpdated', { count: counts.update }))
+  if (counts.delete > 0) parts.push(t('memoryAppliedDeleted', { count: counts.delete }))
+  return parts.join(' · ')
+}
+
+function memoryErrorText(error) {
+  return error instanceof Error ? error.message : String(error)
+}
+
+function memoryRequest(action) {
+  return hostJson(MEMORY_API, action)
+}
+
+/** A memory dialog is a native <dialog> above the settings dialog. */
+function memoryImportDialogOpen() {
+  return typeof document !== 'undefined' && typeof document.querySelector === 'function'
+    && document.querySelector('.dsc-memory-import, .dsc-memory-extract') !== null
+}
+
+const MEMORY_SNAPSHOT_FIELDS = ['settings', 'memories', 'categories', 'summary', 'stale', 'revision', 'count', 'limits']
+
+function MemorySettingsPane() {
+  const t = useT()
+  const [snapshot, setSnapshot] = React.useState(null)
+  const [status, setStatus] = React.useState('loading')
+  const [loadError, setLoadError] = React.useState('')
+  const [busy, setBusy] = React.useState('')
+  const [summaryError, setSummaryError] = React.useState(false)
+  const [askText, setAskText] = React.useState('')
+  const [askResult, setAskResult] = React.useState(null)
+  const [filter, setFilter] = React.useState('all')
+  const [editingId, setEditingId] = React.useState(null)
+  const [editDraft, setEditDraft] = React.useState('')
+  const [addContent, setAddContent] = React.useState('')
+  const [addCategory, setAddCategory] = React.useState('preferences')
+  const [importOpen, setImportOpen] = React.useState(false)
+  const memoryChangedAt = useChat(state => state.memoryChangedAt)
+  const alive = React.useRef(true)
+
+  const applySnapshot = (data) => {
+    if (!alive.current || data === null || typeof data !== 'object') return
+    const patch = {}
+    for (const field of MEMORY_SNAPSHOT_FIELDS) {
+      if (data[field] !== undefined) patch[field] = data[field]
+    }
+    if (Object.keys(patch).length === 0) return
+    setSnapshot(previous => (previous === null ? patch : { ...previous, ...patch }))
+    setStatus('ready')
+  }
+
+  const applyLoaded = (data, { autoSummary = true } = {}) => {
+    applySnapshot(data)
+    setLoadError('')
+    if (autoSummary && data?.stale === true && data?.settings?.enabled === true && Array.isArray(data.memories) && data.memories.length > 0) {
+      void refreshSummary({ auto: true })
+    }
+  }
+
+  const load = async ({ autoSummary = true } = {}) => {
+    setStatus('loading')
+    try {
+      const data = await memoryRequest({ action: 'get' })
+      if (!alive.current) return
+      applyLoaded(data, { autoSummary })
+    } catch (error) {
+      if (!alive.current) return
+      if (error?.status === 404) setStatus('outdated')
+      else {
+        setStatus('error')
+        setLoadError(memoryErrorText(error))
+      }
+    }
+  }
+
+  const refreshSummary = async ({ auto = false } = {}) => {
+    if (busy !== '') return
+    setBusy('summary')
+    setSummaryError(false)
+    try {
+      const data = await memoryRequest({ action: 'summary.refresh', locale: streamLocale() })
+      if (!alive.current) return
+      applySnapshot(data)
+    } catch (error) {
+      if (!alive.current) return
+      setSummaryError(true)
+      if (!auto) chatStore.toast(memoryErrorText(error), 'error')
+    } finally {
+      if (alive.current) setBusy('')
+    }
+  }
+
+  const changeSettings = async (patch) => {
+    if (busy !== '' || snapshot === null) return
+    const before = snapshot.settings
+    setSnapshot(previous => (previous === null ? previous : { ...previous, settings: { ...previous.settings, ...patch } }))
+    setBusy('settings')
+    try {
+      const data = await memoryRequest({ action: 'settings', ...patch })
+      if (!alive.current) return
+      applySnapshot(data)
+    } catch (error) {
+      if (!alive.current) return
+      setSnapshot(previous => (previous === null ? previous : { ...previous, settings: before }))
+      chatStore.toast(memoryErrorText(error), 'error')
+    } finally {
+      if (alive.current) setBusy('')
+    }
+  }
+
+  const submitAsk = async () => {
+    const text = askText.trim()
+    if (text === '' || busy !== '' || snapshot?.settings?.enabled !== true) return
+    setBusy('ask')
+    setAskResult(null)
+    try {
+      const data = await memoryRequest({ action: 'ask', text, locale: streamLocale() })
+      if (!alive.current) return
+      applySnapshot(data)
+      setAskText('')
+      setAskResult({
+        answer: typeof data.answer === 'string' ? data.answer : '',
+        applied: Array.isArray(data.applied) ? data.applied : [],
+        pending: data.pending ?? null,
+      })
+    } catch (error) {
+      if (alive.current) chatStore.toast(memoryErrorText(error), 'error')
+    } finally {
+      if (alive.current) setBusy('')
+    }
+  }
+
+  const settlePending = async (accept) => {
+    const pending = askResult?.pending
+    if (pending === null || pending === undefined || busy !== '') return
+    setBusy('confirm')
+    try {
+      const data = await memoryRequest({ action: 'confirm', id: pending.id, accept })
+      if (!alive.current) return
+      applySnapshot(data)
+      setAskResult(previous => (previous === null ? previous : {
+        answer: typeof data.answer === 'string' ? data.answer : previous.answer,
+        applied: Array.isArray(data.applied) ? data.applied : previous.applied,
+        pending: null,
+      }))
+    } catch (error) {
+      if (!alive.current) return
+      if (error?.status === 409) setAskResult(previous => (previous === null ? previous : { ...previous, pending: null }))
+      chatStore.toast(memoryErrorText(error), 'error')
+    } finally {
+      if (alive.current) setBusy('')
+    }
+  }
+
+  const addMemory = async () => {
+    const content = addContent.trim()
+    if (content === '' || busy !== '') return
+    setBusy('add')
+    try {
+      const data = await memoryRequest({ action: 'add', content, category: addCategory })
+      if (!alive.current) return
+      applySnapshot(data)
+      setAddContent('')
+      const result = data?.result?.status
+      chatStore.toast(
+        result === 'duplicate' ? t('memoryAddDuplicateToast') : result === 'merged' ? t('memoryAddMergedToast') : t('memoryAddedToast'),
+        result === 'added' ? 'success' : 'info',
+      )
+    } catch (error) {
+      if (alive.current) chatStore.toast(memoryErrorText(error), 'error')
+    } finally {
+      if (alive.current) setBusy('')
+    }
+  }
+
+  const startEditing = (memory) => {
+    setEditingId(memory.id)
+    setEditDraft(memory.content)
+  }
+
+  const stopEditing = () => {
+    setEditingId(null)
+    setEditDraft('')
+  }
+
+  const saveEditing = async () => {
+    const content = editDraft.trim()
+    if (editingId === null || content === '' || busy !== '') return
+    setBusy('edit')
+    try {
+      const data = await memoryRequest({ action: 'update', id: editingId, content })
+      if (!alive.current) return
+      applySnapshot(data)
+      stopEditing()
+      chatStore.toast(t('memorySavedToast'), 'success')
+    } catch (error) {
+      if (alive.current) chatStore.toast(memoryErrorText(error), 'error')
+    } finally {
+      if (alive.current) setBusy('')
+    }
+  }
+
+  /**
+   * A deletion can leave facts in the summary that no longer exist, so the
+   * overview is refreshed right away. Additions and edits only flag the stale
+   * line: those keep model calls under the user's control.
+   */
+  const refreshSummaryAfterDelete = (data) => {
+    if (data?.stale !== true || data?.settings?.enabled !== true) return
+    if (!Array.isArray(data.memories) || data.memories.length === 0) return
+    void refreshSummary({ auto: true })
+  }
+
+  const requestDelete = (memory) => {
+    if (busy !== '') return
+    chatStore.set({
+      confirm: {
+        title: t('memoryDeleteTitle'),
+        message: t('memoryDeleteMessage', { preview: memory.content.slice(0, 80) }),
+        confirmLabel: t('memoryDeleteConfirm'),
+        danger: true,
+        onConfirm: async () => {
+          try {
+            const data = await memoryRequest({ action: 'delete', id: memory.id })
+            applySnapshot(data)
+            refreshSummaryAfterDelete(data)
+            chatStore.toast(t('memoryDeletedToast'), 'success')
+          } catch (error) {
+            chatStore.toast(memoryErrorText(error), 'error')
+          }
+        },
+      },
+    })
+  }
+
+  const requestClear = () => {
+    if (busy !== '') return
+    const count = snapshot?.memories?.length ?? 0
+    chatStore.set({
+      confirm: {
+        title: t('memoryClearTitle'),
+        message: t('memoryClearMessage', { count }),
+        confirmLabel: t('memoryClearConfirm'),
+        danger: true,
+        onConfirm: async () => {
+          try {
+            const data = await memoryRequest({ action: 'clear' })
+            applySnapshot(data)
+            refreshSummaryAfterDelete(data)
+            chatStore.toast(t('memoryClearedToast', { count: data?.result?.cleared ?? count }), 'success')
+          } catch (error) {
+            chatStore.toast(memoryErrorText(error), 'error')
+          }
+        },
+      },
+    })
+  }
+
+  React.useEffect(() => {
+    alive.current = true
+    void load()
+    return () => { alive.current = false }
+  }, [])
+
+  // A save made by the imported-chat extraction dialog must refresh this pane,
+  // which stays mounted underneath it. Skip the value already present at mount:
+  // the effect above has just loaded that snapshot.
+  const seenMemoryChange = React.useRef(memoryChangedAt)
+  React.useEffect(() => {
+    if (memoryChangedAt === seenMemoryChange.current) return
+    seenMemoryChange.current = memoryChangedAt
+    // The extraction consent covered extraction calls, not a summary
+    // regeneration: reload the facts but leave the stale summary for an
+    // explicit refresh.
+    void load({ autoSummary: false })
+  }, [memoryChangedAt])
+
+  const settings = snapshot?.settings ?? { enabled: false, autoExtract: false }
+  const enabled = settings.enabled === true
+  const memories = Array.isArray(snapshot?.memories) ? snapshot.memories : []
+  const count = typeof snapshot?.count === 'number' ? snapshot.count : memories.length
+  const limits = snapshot?.limits ?? { maxMemories: 400, maxContent: MEMORY_IMPORT_MAX_CONTENT }
+  const summary = snapshot?.summary ?? null
+  const categoryRows = memoryCategoryIds.map((id) => {
+    const row = (snapshot?.categories ?? []).find(item => item.id === id)
+    return { id, count: typeof row?.count === 'number' ? row.count : memories.filter(item => item.category === id).length }
+  })
+  const filtered = filter === 'all' ? memories : memories.filter(item => item.category === filter)
+  const appliedText = askResult === null ? '' : memoryAppliedText(askResult.applied, t)
+
+  if (status === 'loading') {
+    return h('div', { className: 'dsc-memory-state' }, h(Spinner, { size: 18 }), h('span', null, t('memoryLoading')))
+  }
+  if (status === 'outdated') {
+    return h('div', { className: 'dsc-memory-notice' },
+      h(Icon, { name: 'warning', size: 18 }),
+      h('div', { className: 'dsc-memory-notice-body' },
+        h('strong', null, t('memoryOutdatedTitle')),
+        h('p', null, t('memoryOutdatedHint')),
+      ),
+    )
+  }
+  if (status === 'error') {
+    return h('div', { className: 'dsc-memory-notice' },
+      h(Icon, { name: 'warning', size: 18 }),
+      h('div', { className: 'dsc-memory-notice-body' },
+        h('strong', null, t('memoryLoadFailed')),
+        h('p', null, loadError),
+      ),
+      h('button', { type: 'button', className: 'dsc-secondary-button', onClick: () => { void load() } }, t('retry')),
+    )
+  }
+
+  const renderRow = (memory) => {
+    if (editingId === memory.id) {
+      return h('div', { key: memory.id, className: 'dsc-memory-row is-editing' },
+        h('textarea', {
+          className: 'dsc-memory-input',
+          rows: 3,
+          maxLength: limits.maxContent ?? MEMORY_IMPORT_MAX_CONTENT,
+          value: editDraft,
+          'aria-label': t('edit'),
+          onChange: event => setEditDraft(event.target.value),
+        }),
+        h('div', { className: 'dsc-memory-row-foot' },
+          h('div', { className: 'dsc-memory-row-actions' },
+            h('button', { type: 'button', className: 'dsc-secondary-button', disabled: busy !== '', onClick: stopEditing }, t('cancel')),
+            h('button', { type: 'button', className: 'dsc-primary-button is-small', disabled: busy !== '' || editDraft.trim() === '', onClick: () => { void saveEditing() } }, t('save')),
+          ),
+        ),
+      )
+    }
+    return h('div', { key: memory.id, className: 'dsc-memory-row' },
+      h('p', { className: 'dsc-memory-content' }, memory.content),
+      h('div', { className: 'dsc-memory-row-foot' },
+        h('div', { className: 'dsc-memory-meta' },
+          h('span', { className: 'dsc-memory-badge' }, memoryCategoryLabel(memory.category, t)),
+          h('span', null, memorySourceLabel(memory.source, t)),
+          h('span', null, relativeTime(memory.updatedAt, t)),
+        ),
+        h('div', { className: 'dsc-memory-row-actions' },
+          h('button', {
+            type: 'button', className: 'dsc-icon-button is-small', title: t('edit'), 'aria-label': t('edit'),
+            onClick: () => startEditing(memory),
+          }, h(Icon, { name: 'pencil', size: 14 })),
+          h('button', {
+            type: 'button', className: 'dsc-icon-button is-small is-danger', title: t('delete'), 'aria-label': t('delete'),
+            onClick: () => requestDelete(memory),
+          }, h(Icon, { name: 'trash', size: 14 })),
+        ),
+      ),
+    )
+  }
+
+  const importDialog = importOpen
+    ? h(MemoryImportDialog, {
+        onClose: () => setImportOpen(false),
+        onImported: data => applySnapshot(data),
+      })
+    : null
+
+  return h('div', { className: 'dsc-memory-pane' },
+    h(SettingsSection, { title: t('memorySectionTitle') },
+      h('div', { className: 'dsc-switch-row' },
+        h('div', { className: 'dsc-switch-copy' },
+          h('strong', null, t('memoryMasterLabel')),
+          h('span', null, t('memoryMasterHint')),
+        ),
+        h(Switch, {
+          checked: enabled,
+          onChange: next => { void changeSettings({ enabled: next }) },
+          label: t('memoryMasterLabel'),
+          disabled: busy !== '',
+        }),
+      ),
+      h('div', { className: 'dsc-switch-row' },
+        h('div', { className: 'dsc-switch-copy' },
+          h('strong', null, t('memoryAutoExtractLabel')),
+          h('span', null, t('memoryAutoExtractHint')),
+        ),
+        h(Switch, {
+          checked: settings.autoExtract === true,
+          onChange: next => { void changeSettings({ autoExtract: next }) },
+          label: t('memoryAutoExtractLabel'),
+          disabled: !enabled || busy !== '',
+        }),
+      ),
+      h('p', { className: 'dsc-field-hint is-warning' }, t('memoryPrivacyHint')),
+      !enabled ? h('p', { className: 'dsc-field-hint' }, t('memoryAutoExtractDisabledHint')) : null,
+    ),
+    h(SettingsSection, { title: t('memorySummarySection') },
+      h('div', { className: 'dsc-memory-summary' },
+        summary !== null
+          ? h(Markdown, { text: summary.text, className: 'dsc-memory-summary-text' })
+          : h('p', { className: 'dsc-memory-summary-empty' }, t('memorySummaryEmpty')),
+        h('div', { className: 'dsc-memory-summary-foot' },
+          h('span', { className: 'dsc-memory-summary-meta' }, summary !== null
+            ? t('memorySummaryUpdated', { time: relativeTime(summary.updatedAt, t) })
+            : t('memorySummaryNever')),
+          h('button', {
+            type: 'button', className: 'dsc-text-button',
+            disabled: busy !== '' || !enabled,
+            onClick: () => { void refreshSummary() },
+          }, summaryError ? t('memorySummaryRetry') : t('memoryRegenerate')),
+        ),
+        busy === 'summary' ? h('p', { className: 'dsc-field-hint' }, t('memorySummaryBusy')) : null,
+        summaryError ? h('p', { className: 'dsc-field-hint is-warning' }, t('memorySummaryFailed')) : null,
+        summary !== null && enabled && snapshot?.stale === true
+          ? h('p', { className: 'dsc-field-hint is-warning' }, t('memorySummaryStaleHint'))
+          : null,
+        h('div', { className: 'dsc-memory-ask' },
+          h('textarea', {
+            className: 'dsc-memory-input dsc-memory-ask-input',
+            rows: 2,
+            maxLength: 2000,
+            value: askText,
+            placeholder: enabled ? t('memoryAskPlaceholder') : t('memoryAskDisabledHint'),
+            disabled: !enabled || busy !== '',
+            onChange: event => setAskText(event.target.value),
+            onKeyDown: (event) => {
+              if (event.key === 'Enter' && !event.shiftKey && event.nativeEvent?.isComposing !== true) {
+                event.preventDefault()
+                void submitAsk()
+              }
+            },
+          }),
+          h('button', {
+            type: 'button', className: 'dsc-primary-button is-small',
+            disabled: !enabled || busy !== '' || askText.trim() === '',
+            onClick: () => { void submitAsk() },
+          }, busy === 'ask' ? t('memoryAsking') : t('memoryAskSubmit')),
+        ),
+        !enabled ? h('p', { className: 'dsc-field-hint' }, t('memoryAskDisabledHint')) : null,
+        askResult !== null ? h('div', { className: 'dsc-memory-ask-result' },
+          askResult.answer !== '' ? h('p', { className: 'dsc-memory-answer' }, askResult.answer) : null,
+          appliedText !== '' ? h('p', { className: 'dsc-memory-applied' }, appliedText) : null,
+          askResult.pending !== null && askResult.pending !== undefined ? h('div', { className: 'dsc-memory-pending' },
+            h('p', { className: 'dsc-memory-pending-title' }, t('memoryPendingHint')),
+            h('ul', { className: 'dsc-memory-pending-list' },
+              askResult.pending.memories.map(memory => h('li', { key: memory.id }, memory.content)),
+            ),
+            h('div', { className: 'dsc-memory-pending-actions' },
+              h('button', {
+                type: 'button', className: 'dsc-secondary-button', disabled: busy === 'confirm',
+                onClick: () => { void settlePending(false) },
+              }, t('cancel')),
+              h('button', {
+                type: 'button', className: 'dsc-primary-button is-danger', disabled: busy === 'confirm',
+                onClick: () => { void settlePending(true) },
+              }, t('memoryConfirmDelete')),
+            ),
+          ) : null,
+        ) : null,
+      ),
+    ),
+    h(SettingsSection, { title: t('memoryListSection') },
+      h('div', { className: 'dsc-memory-list-head' },
+        h('span', { className: 'dsc-memory-limit' }, t('memoryLimitHint', { count, max: limits.maxMemories ?? 400 })),
+        h('button', {
+          type: 'button', className: 'dsc-text-button',
+          disabled: busy !== '' || memories.length === 0,
+          onClick: requestClear,
+        }, t('memoryClearAction')),
+      ),
+      h('div', { className: 'dsc-memory-filters' },
+        h('button', {
+          type: 'button',
+          className: cx('dsc-memory-chip', filter === 'all' && 'is-active'),
+          'aria-pressed': filter === 'all',
+          onClick: () => setFilter('all'),
+        }, t('memoryFilterAll'), h('span', { className: 'dsc-memory-chip-count' }, String(count))),
+        categoryRows.map(row => h('button', {
+          key: row.id,
+          type: 'button',
+          className: cx('dsc-memory-chip', filter === row.id && 'is-active'),
+          'aria-pressed': filter === row.id,
+          onClick: () => setFilter(row.id),
+        }, memoryCategoryLabel(row.id, t), h('span', { className: 'dsc-memory-chip-count' }, String(row.count)))),
+      ),
+      h('div', { className: 'dsc-memory-add' },
+        h('textarea', {
+          className: 'dsc-memory-input',
+          rows: 2,
+          maxLength: limits.maxContent ?? MEMORY_IMPORT_MAX_CONTENT,
+          value: addContent,
+          placeholder: t('memoryAddPlaceholder'),
+          onChange: event => setAddContent(event.target.value),
+        }),
+        h('div', { className: 'dsc-memory-add-row' },
+          h('select', {
+            className: 'dsc-select', value: addCategory, 'aria-label': t('memoryImportCategory'),
+            onChange: event => setAddCategory(event.target.value),
+          }, memoryCategoryIds.map(id => h('option', { key: id, value: id }, memoryCategoryLabel(id, t)))),
+          h('button', {
+            type: 'button', className: 'dsc-secondary-button',
+            disabled: busy !== '' || addContent.trim() === '',
+            onClick: () => { void addMemory() },
+          }, t('memoryAddSubmit')),
+        ),
+      ),
+      filtered.length === 0
+        ? h('p', { className: 'dsc-memory-empty' }, t(memories.length === 0 ? 'memoryEmpty' : 'memoryEmptyFiltered'))
+        : h('div', { className: 'dsc-memory-rows' }, filtered.map(renderRow)),
+    ),
+    h('div', { className: 'dsc-memory-footer' },
+      h('p', { className: 'dsc-field-hint' }, t('memoryImportHint')),
+      h('div', { className: 'dsc-memory-footer-actions' },
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button',
+          onClick: () => chatActions.openImportMemory(),
+        }, h(Icon, { name: 'import', size: 15 }), t('memoryExtractFromChats')),
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button',
+          onClick: () => setImportOpen(true),
+        }, h(Icon, { name: 'brain', size: 15 }), t('memoryImportOpen')),
+      ),
+    ),
+    importDialog,
+  )
+}
+
+function memoryImportRow(row, date) {
+  const match = row?.match ?? null
+  const duplicate = match?.kind === 'duplicate'
+  return {
+    key: uid(),
+    content: typeof row?.content === 'string' ? row.content : '',
+    category: memoryCategoryIds.includes(row?.category) ? row.category : 'preferences',
+    date: typeof date === 'string' ? date : null,
+    sensitive: row?.sensitive === true,
+    match,
+    selected: !duplicate,
+    mode: duplicate ? 'skip' : match?.kind === 'conflict' ? 'update' : 'auto',
+  }
+}
+
+function MemoryImportDialog({ onClose, onImported }) {
+  const t = useT()
+  const [step, setStep] = React.useState('prompt')
+  const [platform, setPlatform] = React.useState('other')
+  const [paste, setPaste] = React.useState('')
+  const [items, setItems] = React.useState([])
+  const [meta, setMeta] = React.useState(null)
+  const [busy, setBusy] = React.useState('')
+  const [error, setError] = React.useState('')
+  const [assistConsent, setAssistConsent] = React.useState(null)
+  const alive = React.useRef(true)
+
+  const close = () => {
+    if (typeof onClose === 'function') onClose()
+  }
+
+  const dismiss = () => {
+    if (busy === '') close()
+  }
+
+  const copyPrompt = () => {
+    copyToClipboard(MEMORY_IMPORT_PROMPT)
+      .then(() => chatStore.toast(t('copied'), 'success'))
+      .catch(() => chatStore.toast(t('copyFailed'), 'error'))
+  }
+
+  const requestPreview = async (entries) => {
+    setError('')
+    setBusy('parse')
+    try {
+      const data = await memoryRequest({
+        action: 'preview',
+        entries: entries.map(entry => ({ content: entry.content, category: entry.category })),
+      })
+      if (!alive.current) return
+      const rows = Array.isArray(data?.entries) ? data.entries : []
+      if (rows.length === 0) {
+        setError(t('memoryImportEmpty'))
+        return
+      }
+      setItems(rows.map((row, index) => memoryImportRow(row, entries[index]?.date ?? null)))
+      setStep('preview')
+    } catch (fetchError) {
+      if (alive.current) setError(t('memoryImportFailed', { message: memoryErrorText(fetchError) }))
+    } finally {
+      if (alive.current) setBusy('')
+    }
+  }
+
+  const parseAndPreview = () => {
+    if (busy !== '' || paste.trim() === '') return
+    const parsed = parseMemoryExport(paste)
+    setMeta({ count: parsed.entries.length, skipped: parsed.skipped })
+    if (parsed.entries.length === 0) {
+      chatStore.toast(t('memoryImportEmpty'), 'error')
+      return
+    }
+    void requestPreview(parsed.entries)
+  }
+
+  const confirmAssist = async () => {
+    if (assistConsent === null || busy !== '') return
+    const text = assistConsent.text
+    setAssistConsent(null)
+    setBusy('assist')
+    try {
+      const data = await memoryRequest({ action: 'assist', text, consent: true, locale: streamLocale() })
+      if (!alive.current) return
+      const entries = Array.isArray(data?.entries) ? data.entries : []
+      if (entries.length === 0) {
+        chatStore.toast(t('memoryImportEmpty'), 'error')
+        return
+      }
+      if (data?.truncated === true) chatStore.toast(t('memoryImportAssistTruncated'), 'info')
+      await requestPreview(entries)
+    } catch (fetchError) {
+      if (alive.current) chatStore.toast(t('memoryImportAssistFailed', { message: memoryErrorText(fetchError) }), 'error')
+    } finally {
+      if (alive.current) setBusy('')
+    }
+  }
+
+  const patchItem = (index, patch) => {
+    setItems(previous => previous.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)))
+  }
+
+  const toggleItem = (index) => {
+    setItems(previous => previous.map((item, itemIndex) => {
+      if (itemIndex !== index) return item
+      const selected = !item.selected
+      const fallback = item.match?.kind === 'duplicate' ? 'merge' : item.match?.kind === 'conflict' ? 'update' : 'auto'
+      return { ...item, selected, mode: selected ? (item.mode === 'skip' ? fallback : item.mode) : 'skip' }
+    }))
+  }
+
+  const selectItemMode = (index, mode) => {
+    patchItem(index, { mode, selected: mode !== 'skip' })
+  }
+
+  const selectedEntries = () => items
+    .filter(item => item.selected && item.mode !== 'skip' && item.content.trim() !== '')
+    .map((item) => {
+      const entry = { content: item.content.trim(), category: item.category, mode: item.mode }
+      const date = memoryImportDate(item.date)
+      if (date !== undefined) entry.date = date
+      return entry
+    })
+
+  const confirmImport = async () => {
+    if (busy !== '') return
+    const entries = selectedEntries()
+    if (entries.length === 0) {
+      chatStore.toast(t('memoryImportNoneSelected'), 'error')
+      return
+    }
+    setBusy('import')
+    try {
+      const data = await memoryRequest({ action: 'import', platform, entries })
+      if (!alive.current) return
+      const result = data?.result ?? {}
+      chatStore.toast(t('memoryImportDone', {
+        added: result.added ?? 0,
+        merged: result.merged ?? 0,
+        updated: result.updated ?? 0,
+        skipped: result.skipped ?? 0,
+      }), 'success')
+      if (typeof onImported === 'function') onImported(data)
+      close()
+    } catch (fetchError) {
+      if (alive.current) chatStore.toast(memoryErrorText(fetchError), 'error')
+    } finally {
+      if (alive.current) setBusy('')
+    }
+  }
+
+  React.useEffect(() => {
+    alive.current = true
+    return () => { alive.current = false }
+  }, [])
+
+  const stepNote = t('memoryImportStep', { current: step === 'prompt' ? 1 : 2, total: 2 })
+
+  const promptStep = h(Fragment, null,
+    h('p', { className: 'dsc-memory-import-intro' }, t('memoryImportIntro')),
+    h('div', { className: 'dsc-memory-import-field' },
+      h('div', { className: 'dsc-memory-prompt-head' },
+        h('span', { className: 'dsc-field-label' }, t('memoryImportPromptLabel')),
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button is-small-compact',
+          onClick: copyPrompt,
+        }, h(Icon, { name: 'copy', size: 14 }), t('memoryImportCopyPrompt')),
+      ),
+      h('pre', { className: 'dsc-memory-prompt' }, MEMORY_IMPORT_PROMPT),
+    ),
+  )
+
+  const pasteStep = h(Fragment, null,
+    h('div', { className: 'dsc-memory-import-field' },
+      h('span', { className: 'dsc-field-label' }, t('memoryImportPlatform')),
+      h('div', { className: 'dsc-segment', role: 'group', 'aria-label': t('memoryImportPlatform') },
+        MEMORY_IMPORT_PLATFORMS.map(value => h('button', {
+          key: value,
+          type: 'button',
+          className: cx('dsc-segment-button', platform === value && 'is-active'),
+          'aria-pressed': platform === value,
+          onClick: () => setPlatform(value),
+        }, memoryPlatformLabel(value, t))),
+      ),
+    ),
+    h('div', { className: 'dsc-memory-import-field' },
+      h('span', { className: 'dsc-field-label' }, t('memoryImportPasteLabel')),
+      h('textarea', {
+        className: 'dsc-memory-input dsc-memory-paste',
+        rows: 9,
+        value: paste,
+        placeholder: t('memoryImportPastePlaceholder'),
+        spellCheck: false,
+        onChange: event => setPaste(event.target.value),
+      }),
+    ),
+    meta !== null ? h('p', { className: 'dsc-field-hint' }, t('memoryImportRecognized', { count: meta.count })
+      + (meta.skipped > 0 ? ` · ${t('memoryImportSkipped', { count: meta.skipped })}` : '')) : null,
+    assistConsent !== null ? h('div', { className: 'dsc-memory-consent' },
+      h('p', { className: 'dsc-memory-consent-text' }, t('memoryImportConsentText')),
+      h('div', { className: 'dsc-memory-consent-actions' },
+        h('button', { type: 'button', className: 'dsc-secondary-button', onClick: () => setAssistConsent(null) }, t('cancel')),
+        h('button', {
+          type: 'button', className: 'dsc-primary-button',
+          onClick: () => { void confirmAssist() },
+        }, t('memoryImportConsentConfirm')),
+      ),
+    ) : null,
+  )
+
+  const previewStep = h(Fragment, null,
+    h('p', { className: 'dsc-field-hint' }, t('memoryImportPreviewSubtitle')),
+    meta !== null ? h('p', { className: 'dsc-field-hint' }, t('memoryImportRecognized', { count: meta.count })) : null,
+    h('p', { className: 'dsc-memory-preview-count' }, t('memoryImportSelectCount', { count: selectedEntries().length })),
+    h('div', { className: 'dsc-memory-preview' },
+      items.map((item, index) => h('div', {
+        key: item.key,
+        className: cx('dsc-memory-preview-row', item.selected && 'is-selected'),
+      },
+        h('label', { className: 'dsc-memory-preview-check' },
+          h('input', { type: 'checkbox', checked: item.selected, onChange: () => toggleItem(index) }),
+          h('span', null, t('memoryImportItemLabel', { index: index + 1 })),
+        ),
+        h('textarea', {
+          className: 'dsc-memory-input',
+          rows: 2,
+          maxLength: MEMORY_IMPORT_MAX_CONTENT,
+          value: item.content,
+          'aria-label': t('memoryImportItemLabel', { index: index + 1 }),
+          onChange: event => patchItem(index, { content: event.target.value }),
+        }),
+        h('div', { className: 'dsc-memory-preview-controls' },
+          h('select', {
+            className: 'dsc-select', value: item.category, 'aria-label': t('memoryImportCategory'),
+            onChange: event => patchItem(index, { category: event.target.value }),
+          }, memoryCategoryIds.map(id => h('option', { key: id, value: id }, memoryCategoryLabel(id, t)))),
+          item.match !== null ? h('select', {
+            className: 'dsc-select dsc-memory-mode', value: item.mode, 'aria-label': t('memoryImportMode'),
+            onChange: event => selectItemMode(index, event.target.value),
+          }, [
+            ['skip', 'memoryImportModeSkip'],
+            ['merge', 'memoryImportModeMerge'],
+            ['update', 'memoryImportModeUpdate'],
+          ].map(([value, key]) => h('option', { key: value, value }, t(key)))) : null,
+        ),
+        h('div', { className: 'dsc-memory-preview-badges' },
+          item.match?.kind === 'duplicate' ? h('span', { className: 'dsc-memory-badge is-duplicate' }, t('memoryImportBadgeDuplicate')) : null,
+          item.match?.kind === 'conflict' ? h('span', { className: 'dsc-memory-badge is-exists' }, t('memoryImportBadgeConflict')) : null,
+          item.sensitive ? h('span', { className: 'dsc-memory-badge is-sensitive' }, t('memoryImportBadgeSensitive')) : null,
+        ),
+        item.match !== null ? h('p', { className: 'dsc-memory-preview-existing' }, t('memoryImportExisting', { content: item.match.content })) : null,
+      )),
+    ),
+  )
+
+  const footer = step === 'preview'
+    ? h(Fragment, null,
+        h('span', { className: 'dsc-modal-foot-note' }, t('memoryImportMergeNote')),
+        h('button', { type: 'button', className: 'dsc-secondary-button', disabled: busy !== '', onClick: () => setStep('paste') }, t('memoryImportBack')),
+        h('button', {
+          type: 'button', className: 'dsc-primary-button',
+          disabled: busy !== '' || selectedEntries().length === 0,
+          onClick: () => { void confirmImport() },
+        }, busy === 'import' ? t('memoryImportImporting') : t('memoryImportConfirm', { count: selectedEntries().length })),
+      )
+    : step === 'paste'
+      ? h(Fragment, null,
+          h('span', { className: 'dsc-modal-foot-note' }, t('memoryImportMergeNote')),
+          h('button', { type: 'button', className: 'dsc-secondary-button', onClick: () => setStep('prompt') }, t('memoryImportBack')),
+          h('button', {
+            type: 'button', className: 'dsc-secondary-button',
+            disabled: busy !== '' || paste.trim() === '',
+            onClick: () => setAssistConsent({ text: paste }),
+          }, busy === 'assist' ? t('memoryImportAssisting') : t('memoryImportAssist')),
+          h('button', {
+            type: 'button', className: 'dsc-primary-button',
+            disabled: busy !== '' || paste.trim() === '',
+            onClick: parseAndPreview,
+          }, busy === 'parse' ? t('memoryImportParsing') : t('memoryImportParse')),
+        )
+      : h(Fragment, null,
+          h('span', { className: 'dsc-modal-foot-note' }, stepNote),
+          h('button', { type: 'button', className: 'dsc-primary-button', onClick: () => setStep('paste') }, t('memoryImportNext')),
+        )
+
+  return h(ModalBackdrop, { className: 'dsc-memory-import', onDismiss: dismiss },
+    h('div', { className: 'dsc-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('memoryImportTitle') },
+      h('header', { className: 'dsc-modal-head' },
+        h('div', null,
+          h('h2', null, t('memoryImportTitle')),
+          h('p', { className: 'dsc-modal-sub' }, t('memoryImportSubtitle')),
+        ),
+        h('button', {
+          type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
+          autoFocus: true, onClick: dismiss,
+        }, h(Icon, { name: 'close', size: 18 })),
+      ),
+      h('div', { className: 'dsc-modal-body' },
+        error !== '' ? h('p', { className: 'dsc-field-hint is-warning' }, error) : null,
+        step === 'prompt' ? promptStep : step === 'paste' ? pasteStep : previewStep,
+      ),
+      h('div', { className: 'dsc-modal-foot' }, footer),
+    ),
+  )
+}
+
+/**
+ * Optional memory pass over imported chats. Opened from the import result or
+ * from the memory settings tab with an explicit batch of conversation ids.
+ * Nothing is sent until the user confirms the cost notice; the analysis marks
+ * the conversations it covered and returns preview candidates only. Saving
+ * reuses the ordinary memory `import` action, so merge/dedupe/tombstones stay
+ * in one place and a failure here can never touch the imported chat itself.
+ */
+function ImportMemoryDialog({ onClose }) {
+  const t = useT()
+  const batch = useChat(state => state.importMemoryBatch)
+  const conversations = useChat(state => state.conversations)
+  const rows = React.useMemo(() => {
+    const byId = new Map((Array.isArray(conversations) ? conversations : []).map(item => [item.id, item]))
+    return (Array.isArray(batch) ? batch : []).map(id => byId.get(id)).filter(item => item !== undefined)
+  }, [batch, conversations])
+  // Nothing is preselected: the user must pick the chats and then confirm the
+  // cost warning before any conversation leaves the machine.
+  const [selected, setSelected] = React.useState(() => new Set())
+  const [reanalyze, setReanalyze] = React.useState(false)
+  const [consent, setConsent] = React.useState(false)
+  const [step, setStep] = React.useState('pick')
+  const [items, setItems] = React.useState([])
+  const [meta, setMeta] = React.useState(null)
+  const [busy, setBusy] = React.useState('')
+  const [error, setError] = React.useState('')
+  const [progress, setProgress] = React.useState(null)
+  const [cancelling, setCancelling] = React.useState(false)
+  const cancelRequested = React.useRef(false)
+  const alive = React.useRef(true)
+  const consentConfirmRef = React.useRef(null)
+
+  React.useEffect(() => {
+    alive.current = true
+    return () => { alive.current = false }
+  }, [])
+
+  React.useEffect(() => {
+    if (consent) consentConfirmRef.current?.focus?.()
+  }, [consent])
+
+  const close = () => {
+    if (typeof onClose === 'function') onClose()
+  }
+
+  const dismiss = () => {
+    if (busy !== '') return
+    // The consent step is its own layer: Escape/backdrop cancels the
+    // confirmation before it closes the whole extraction dialog.
+    if (consent) {
+      setConsent(false)
+      return
+    }
+    close()
+  }
+
+  const extracted = row => typeof row?.source?.memoryExtractedAt === 'number'
+  const isSelectable = row => reanalyze || !extracted(row)
+  const selectableRows = rows.filter(isSelectable)
+  const selectedRows = rows.filter(row => selected.has(row.id) && isSelectable(row))
+  const selectedCount = selectedRows.length
+  const tooMany = selectedCount > MEMORY_EXTRACT_MAX_SESSIONS
+
+  const toggleRow = (id) => {
+    setSelected((previous) => {
+      const next = new Set(previous)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const selectAll = () => {
+    const capped = selectableRows.slice(0, MEMORY_EXTRACT_MAX_SESSIONS)
+    setSelected(new Set(capped.map(row => row.id)))
+    if (selectableRows.length > capped.length) {
+      chatStore.toast(t('memoryExtractSelectAllCapped', { max: MEMORY_EXTRACT_MAX_SESSIONS }), 'info')
+    }
+  }
+
+  const clearSelection = () => setSelected(new Set())
+
+  const analyze = async () => {
+    if (busy !== '' || selectedCount === 0) return
+    if (tooMany) {
+      setConsent(false)
+      setError(t('memoryExtractTooMany', { max: MEMORY_EXTRACT_MAX_SESSIONS }))
+      return
+    }
+    const ids = selectedRows.map(row => row.id)
+    const analyzedIds = []
+    const failed = []
+    const skipped = []
+    const collected = []
+    cancelRequested.current = false
+    setConsent(false)
+    setError('')
+    setCancelling(false)
+    setProgress({ done: 0, total: ids.length })
+    setBusy('analyze')
+    try {
+      // One request per conversation: this keeps the server batch small,
+      // shows real progress, and lets Stop act between two model calls. Each
+      // response is already preview-shaped, so the rows accumulate directly.
+      for (let index = 0; index < ids.length; index += 1) {
+        if (cancelRequested.current) break
+        setProgress({ done: index, total: ids.length })
+        try {
+          const data = await memoryRequest({
+            action: 'extract.imported',
+            conversationIds: [ids[index]],
+            reanalyze,
+            consent: true,
+            locale: streamLocale(),
+          })
+          if (Array.isArray(data?.analyzedIds)) analyzedIds.push(...data.analyzedIds)
+          if (Array.isArray(data?.entries)) collected.push(...data.entries)
+          if (Array.isArray(data?.failed)) failed.push(...data.failed)
+          if (Array.isArray(data?.skipped)) skipped.push(...data.skipped)
+        } catch (fetchError) {
+          failed.push({ id: ids[index], reason: memoryErrorText(fetchError) })
+        }
+      }
+      if (!alive.current) return
+      setProgress({ done: ids.length, total: ids.length })
+      chatActions.markImportMemoryAnalyzed(analyzedIds)
+      const seen = new Set()
+      const entries = collected.filter((entry) => {
+        const key = typeof entry?.content === 'string' ? entry.content.trim() : ''
+        if (key === '' || seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      setMeta({ analyzed: analyzedIds.length, failed: failed.length, skipped: skipped.length, count: entries.length })
+      const cancelled = cancelRequested.current
+      if (entries.length === 0) {
+        setStep('pick')
+        if (failed.length > 0) setError(t('memoryExtractFailed', { message: memoryErrorText(failed[0].reason) }))
+        else if (analyzedIds.length === 0 && skipped.length > 0) setError(t('memoryExtractAllSkipped', { count: skipped.length }))
+        else setError(t('memoryExtractEmpty'))
+        if (analyzedIds.length > 0) chatStore.toast(t('memoryExtractDoneEmpty', { count: analyzedIds.length }), 'info')
+        if (cancelled) chatStore.toast(t('memoryExtractCancelled', { count: analyzedIds.length }), 'info')
+        return
+      }
+      setItems(entries.map(row => memoryImportRow(row, null)))
+      setStep('preview')
+      if (failed.length > 0) chatStore.toast(t('memoryExtractPartial', { count: failed.length }), 'warning')
+      if (cancelled) chatStore.toast(t('memoryExtractCancelled', { count: analyzedIds.length }), 'info')
+    } finally {
+      if (alive.current) {
+        setBusy('')
+        setProgress(null)
+        setCancelling(false)
+      }
+    }
+  }
+
+  const patchItem = (index, patch) => {
+    setItems(previous => previous.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)))
+  }
+
+  const toggleItem = (index) => {
+    setItems(previous => previous.map((item, itemIndex) => {
+      if (itemIndex !== index) return item
+      const isOn = !item.selected
+      const fallback = item.match?.kind === 'duplicate' ? 'merge' : item.match?.kind === 'conflict' ? 'update' : 'auto'
+      return { ...item, selected: isOn, mode: isOn ? (item.mode === 'skip' ? fallback : item.mode) : 'skip' }
+    }))
+  }
+
+  const selectItemMode = (index, mode) => {
+    patchItem(index, { mode, selected: mode !== 'skip' })
+  }
+
+  const confirmedEntries = () => items
+    .filter(item => item.selected && item.mode !== 'skip' && item.content.trim() !== '')
+    .map((item) => {
+      const entry = { content: item.content.trim(), category: item.category, mode: item.mode }
+      const date = memoryImportDate(item.date)
+      if (date !== undefined) entry.date = date
+      return entry
+    })
+
+  const confirmImport = async () => {
+    if (busy !== '') return
+    const entries = confirmedEntries()
+    if (entries.length === 0) {
+      chatStore.toast(t('memoryImportNoneSelected'), 'error')
+      return
+    }
+    setBusy('import')
+    try {
+      const data = await memoryRequest({
+        action: 'import',
+        platform: 'other',
+        // Keep the provenance: these facts come from a conversation, not from
+        // a foreign-AI export. The Host merges through the same absorb path.
+        source: { type: 'conversation', label: t('memoryExtractSourceLabel') },
+        entries,
+      })
+      if (!alive.current) return
+      const result = data?.result ?? {}
+      chatStore.toast(t('memoryImportDone', {
+        added: result.added ?? 0,
+        merged: result.merged ?? 0,
+        updated: result.updated ?? 0,
+        skipped: result.skipped ?? 0,
+      }), 'success')
+      // The memory settings pane can stay mounted under this dialog, so tell it
+      // to reload its snapshot instead of leaving a stale list behind.
+      chatStore.set({ memoryChangedAt: Date.now() })
+      close()
+    } catch (fetchError) {
+      if (alive.current) chatStore.toast(memoryErrorText(fetchError), 'error')
+    } finally {
+      if (alive.current) setBusy('')
+    }
+  }
+
+  const pickBody = h(Fragment, null,
+    h('p', { className: 'dsc-field-hint' }, t('memoryExtractIntro')),
+    h('div', { className: 'dsc-memory-notice' },
+      h(Icon, { name: 'warning', size: 16 }),
+      h('div', { className: 'dsc-memory-notice-body' },
+        h('strong', null, t('memoryExtractCostTitle')),
+        h('p', null, t('memoryExtractCostBody', { count: selectedCount })),
+      ),
+    ),
+    h('div', { className: 'dsc-import-toolbar' },
+      h('button', {
+        type: 'button',
+        className: cx('dsc-import-check-all', selectedCount > 0 && 'is-on'),
+        'aria-pressed': selectedCount > 0 && selectedCount === selectableRows.length,
+        onClick: selectedCount > 0 && selectedCount === selectableRows.length ? clearSelection : selectAll,
+      }, h('span', { className: 'dsc-choice-check' },
+        selectedCount > 0 ? h(Icon, { name: 'check', size: 12 }) : null,
+      ), t('memoryExtractSelectAll')),
+      h('span', { className: 'dsc-import-count' }, t('memoryExtractSelected', { count: selectedCount })),
+    ),
+    tooMany
+      ? h('p', { className: 'dsc-field-hint is-warning', role: 'status' },
+          t('memoryExtractTooMany', { max: MEMORY_EXTRACT_MAX_SESSIONS }))
+      : null,
+    rows.length === 0
+      ? h('p', { className: 'dsc-memory-empty' }, t('memoryExtractNoImports'))
+      : h('div', { className: 'dsc-import-list' }, rows.map((row) => {
+          const done = extracted(row)
+          const disabled = done && !reanalyze
+          const isOn = selected.has(row.id) && !disabled
+          return h('button', {
+            key: row.id,
+            type: 'button',
+            role: 'checkbox',
+            'aria-checked': isOn,
+            disabled,
+            className: cx('dsc-import-item', isOn && 'is-selected', disabled && 'is-imported'),
+            onClick: () => toggleRow(row.id),
+          },
+            h('span', { className: 'dsc-choice-check' }, isOn ? h(Icon, { name: 'check', size: 13 }) : null),
+            h('span', { className: 'dsc-import-item-main' },
+              h('span', { className: 'dsc-import-item-title' }, row.title || t('newChatTitle')),
+              h('span', { className: 'dsc-import-item-meta' },
+                t('messageCount', { count: row.messageCount ?? 0 }),
+              ),
+            ),
+            done ? h('span', { className: 'dsc-import-badge' }, t('memoryExtractAlready')) : null,
+          )
+        })),
+    rows.some(extracted)
+      ? h('label', { className: 'dsc-memory-preview-check' },
+          h('input', {
+            type: 'checkbox',
+            checked: reanalyze,
+            onChange: event => setReanalyze(event.target.checked),
+          }),
+          h('span', null, t('memoryExtractReanalyze')),
+        )
+      : null,
+    busy === 'analyze'
+      ? h('div', { className: 'dsc-memory-state', role: 'status' },
+          h(Icon, { name: 'refresh', size: 16 }),
+          t('memoryExtractProgress', { done: progress?.done ?? 0, total: progress?.total ?? selectedCount }),
+        )
+      : null,
+  )
+
+  const previewBody = h(Fragment, null,
+    h('p', { className: 'dsc-field-hint' }, t('memoryImportPreviewSubtitle')),
+    meta !== null
+      ? h('p', { className: 'dsc-field-hint' }, t('memoryExtractAnalyzedNote', { analyzed: meta.analyzed, count: items.length }))
+      : null,
+    meta !== null && meta.failed > 0
+      ? h('p', { className: 'dsc-field-hint is-warning', role: 'status' }, t('memoryExtractPartial', { count: meta.failed }))
+      : null,
+    meta !== null && meta.skipped > 0
+      ? h('p', { className: 'dsc-field-hint', role: 'status' }, t('memoryExtractSkipped', { count: meta.skipped }))
+      : null,
+    h('p', { className: 'dsc-field-hint' }, t('memoryExtractPreviewWarning')),
+    h('p', { className: 'dsc-memory-preview-count' }, t('memoryImportSelectCount', { count: confirmedEntries().length })),
+    h('div', { className: 'dsc-memory-preview' },
+      items.map((item, index) => h('div', {
+        key: item.key,
+        className: cx('dsc-memory-preview-row', item.selected && 'is-selected'),
+      },
+        h('label', { className: 'dsc-memory-preview-check' },
+          h('input', { type: 'checkbox', checked: item.selected, onChange: () => toggleItem(index) }),
+          h('span', null, t('memoryImportItemLabel', { index: index + 1 })),
+        ),
+        h('textarea', {
+          className: 'dsc-memory-input',
+          rows: 2,
+          maxLength: MEMORY_IMPORT_MAX_CONTENT,
+          value: item.content,
+          'aria-label': t('memoryImportItemLabel', { index: index + 1 }),
+          onChange: event => patchItem(index, { content: event.target.value }),
+        }),
+        h('div', { className: 'dsc-memory-preview-controls' },
+          h('select', {
+            className: 'dsc-select', value: item.category, 'aria-label': t('memoryImportCategory'),
+            onChange: event => patchItem(index, { category: event.target.value }),
+          }, memoryCategoryIds.map(id => h('option', { key: id, value: id }, memoryCategoryLabel(id, t)))),
+          item.match !== null ? h('select', {
+            className: 'dsc-select dsc-memory-mode', value: item.mode, 'aria-label': t('memoryImportMode'),
+            onChange: event => selectItemMode(index, event.target.value),
+          }, [
+            ['skip', 'memoryImportModeSkip'],
+            ['merge', 'memoryImportModeMerge'],
+            ['update', 'memoryImportModeUpdate'],
+          ].map(([value, key]) => h('option', { key: value, value }, t(key)))) : null,
+        ),
+        h('div', { className: 'dsc-memory-preview-badges' },
+          item.match?.kind === 'duplicate' ? h('span', { className: 'dsc-memory-badge is-duplicate' }, t('memoryImportBadgeDuplicate')) : null,
+          item.match?.kind === 'conflict' ? h('span', { className: 'dsc-memory-badge is-exists' }, t('memoryImportBadgeConflict')) : null,
+          item.sensitive ? h('span', { className: 'dsc-memory-badge is-sensitive' }, t('memoryImportBadgeSensitive')) : null,
+        ),
+        item.match !== null ? h('p', { className: 'dsc-memory-preview-existing' }, t('memoryImportExisting', { content: item.match.content })) : null,
+      )),
+    ),
+  )
+
+  const footer = step === 'preview'
+    ? h(Fragment, null,
+        h('span', { className: 'dsc-modal-foot-note' }, t('memoryImportMergeNote')),
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button', disabled: busy !== '',
+          onClick: () => setStep('pick'),
+        }, t('memoryImportBack')),
+        h('button', {
+          type: 'button', className: 'dsc-primary-button',
+          disabled: busy !== '' || confirmedEntries().length === 0,
+          onClick: () => { void confirmImport() },
+        }, busy === 'import' ? t('memoryImportImporting') : t('memoryImportConfirm', { count: confirmedEntries().length })),
+      )
+    : busy === 'analyze'
+      ? h(Fragment, null,
+          h('span', { className: 'dsc-modal-foot-note', role: 'status' },
+            t('memoryExtractProgress', { done: progress?.done ?? 0, total: progress?.total ?? selectedCount })),
+          h('button', {
+            type: 'button', className: 'dsc-secondary-button', disabled: cancelling,
+            onClick: () => {
+              cancelRequested.current = true
+              setCancelling(true)
+            },
+          }, cancelling ? t('memoryExtractStopping') : t('memoryExtractStop')),
+        )
+      : consent
+      ? h(Fragment, null,
+          h('span', { className: 'dsc-modal-foot-note', role: 'status' }, t('memoryExtractConsent', { count: selectedCount })),
+          h('button', {
+            type: 'button', className: 'dsc-secondary-button',
+            onClick: () => setConsent(false),
+          }, t('cancel')),
+          h('button', {
+            type: 'button', className: 'dsc-primary-button', ref: consentConfirmRef,
+            onClick: () => { void analyze() },
+          }, t('memoryExtractConsentConfirm')),
+        )
+      : h(Fragment, null,
+          h('span', { className: 'dsc-modal-foot-note' }, t('memoryExtractFooterNote')),
+          h('button', {
+            type: 'button', className: 'dsc-secondary-button', disabled: busy !== '',
+            onClick: dismiss,
+          }, t('close')),
+          h('button', {
+            type: 'button', className: 'dsc-primary-button',
+            disabled: busy !== '' || selectedCount === 0 || tooMany,
+            onClick: () => setConsent(true),
+          }, busy === 'analyze' ? t('memoryExtractAnalyzingShort') : t('memoryExtractAnalyze')),
+        )
+
+  return h(ModalBackdrop, { className: 'dsc-memory-extract', onDismiss: dismiss },
+    h('div', {
+      className: 'dsc-modal dsc-memory-extract-modal',
+      role: 'dialog',
+      'aria-modal': 'true',
+      'aria-label': t('memoryExtractTitle'),
+    },
+      h('header', { className: 'dsc-modal-head' },
+        h('div', null,
+          h('h2', null, t('memoryExtractTitle')),
+          h('p', { className: 'dsc-modal-sub' }, t('memoryExtractSubtitle')),
+        ),
+        h('button', {
+          type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
+          autoFocus: true, disabled: busy !== '', onClick: dismiss,
+        }, h(Icon, { name: 'close', size: 18 })),
+      ),
+      h('div', { className: 'dsc-modal-body' },
+        error !== '' ? h('p', { className: 'dsc-field-hint is-warning' }, error) : null,
+        step === 'preview' ? previewBody : pickBody,
+      ),
+      h('div', { className: 'dsc-modal-foot' }, footer),
+    ),
   )
 }
 
@@ -10711,9 +13491,28 @@ const CHAT_CSS = `
   --dsc-success: var(--dsw-alias-state-success-primary, #15803d);
   --dsc-shadow: 0 20px 48px rgba(9, 12, 20, 0.18);
   --dsc-shadow-soft: 0 4px 16px rgba(9, 12, 20, 0.07);
-  --dsc-shadow-composer: 0 2px 10px rgba(9, 12, 20, 0.05);
-  --dsc-shadow-popover: 0 12px 34px rgba(9, 12, 20, 0.17), 0 2px 7px rgba(9, 12, 20, 0.07);
-  --dsc-control-h: 32px;
+  --dsc-shadow-composer: var(--dsw-elevation-soft, 0 4px 18px rgba(9, 12, 20, 0.06));
+  --dsc-shadow-popover: var(--dsw-elevation-prominent, 0 16px 40px rgba(9, 12, 20, 0.18));
+  --dsc-control-h: 28px;
+  /* Native composer / menu aliases. They resolve the exact Harness surface,
+     selector and interactive tokens, with the Chat palette as a fallback for
+     older Hosts that do not publish them. */
+  --dsc-input-major: var(--dsw-specific-input-major, var(--dsc-layer));
+  --dsc-menu-surface: var(--dsw-specific-menu, var(--dsc-layer));
+  --dsc-menu-backdrop: var(--dsw-menu-backdrop-filter, blur(22px) saturate(1.35));
+  --dsc-selector: var(--dsw-specific-selector, color-mix(in srgb, var(--dsc-text) 7%, transparent));
+  --dsc-interactive: var(--dsw-alias-interactive-bg-hover, var(--dsc-hover));
+  --dsc-tertiary: var(--dsw-alias-label-tertiary, var(--dsc-muted));
+  --dsc-caption: var(--dsw-alias-label-caption, var(--dsc-muted));
+  --dsc-menu-icon: var(--dsw-alias-menu-icon, var(--dsc-muted));
+  --dsc-business: var(--dsw-alias-state-business-primary, var(--dsc-link));
+  --dsc-primary-action: var(--dsw-alias-button-info-fill, var(--dsc-link));
+  --dsc-primary-action-hover: var(--dsw-alias-button-info-hover, var(--dsc-link));
+  --dsc-on-color: var(--dsw-alias-label-on-color, #ffffff);
+  --dsc-radius-panel: var(--dsw-radius-panel, 28px);
+  --dsc-radius-menu: var(--dsw-radius-lg, 16px);
+  --dsc-radius-control: var(--dsw-radius-sm, 8px);
+  --dsc-radius-row: var(--dsw-radius-md, 12px);
   --dsc-radius: var(--dsw-radius-md, 12px);
   --dsc-font: var(--dsw-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif);
   --dsc-mono: var(--ds-font-family-code, 'SF Mono', Consolas, 'Liberation Mono', monospace);
@@ -11617,7 +14416,7 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   flex: none;
 }
 .dsc-attach-action:hover { background: var(--dsc-hover); color: var(--dsc-text); }
-.dsc-attach-rail { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 2px 8px; }
+.dsc-attach-rail { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 14px 2px; }
 
 /* ---------- reasoning / process ----------
    Reasoning is a quiet, secondary layer: muted text, a thin rail, and a
@@ -12148,39 +14947,35 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   font-size: 12.2px;
 }
 .dsc-auth-banner span { flex: 1; }
-/* One rounded surface owns the border. The textarea inside is a bare,
-   transparent field: a text input must never draw a second rectangle (or a
-   browser focus outline) inside this container. Focus feedback is a quiet
-   border tone change, with one very light keyboard-only ring; there is no
-   white double frame and no glow. */
+/* One native surface owns the border, the fill and the elevation. The editor
+   inside is a bare transparent field: no second rectangle, no focus glow. The
+   focus state is intentionally quiet — Harness does not paint a ring around
+   the composer, so neither does Chat. */
 .dsc-composer {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   max-width: 788px;
   margin: 0 auto;
-  padding: 8px 10px 8px 14px;
+  padding: 8px 0 0;
   border: 1px solid var(--dsc-border-strong);
-  border-radius: 24px;
-  background: var(--dsc-layer);
+  border-radius: var(--dsc-radius-panel);
+  background: var(--dsc-input-major);
   box-shadow: var(--dsc-shadow-composer);
-  transition: border-color var(--dsc-fast) ease, box-shadow var(--dsc-fast) ease;
+  transition: border-color var(--dsc-fast) ease;
 }
-.dsc-composer:has(.dsc-editor-field:focus) {
-  border-color: color-mix(in srgb, var(--dsc-brand) 34%, var(--dsc-border-strong));
-}
-.dsc-composer:has(.dsc-editor-field:focus-visible) {
-  box-shadow: 0 0 0 1px var(--dsc-brand-soft-strong), var(--dsc-shadow-composer);
-}
-.dsc-composer.is-drag { border-color: var(--dsc-brand); }
+.dsc-composer.is-drag { border-color: var(--dsc-business); }
 .dsc-composer.has-warning { border-color: color-mix(in srgb, var(--dsc-warn) 42%, var(--dsc-border-strong)); }
 .dsc-composer-main { display: flex; flex-direction: column; min-width: 0; }
 .dsc-editor { position: relative; display: flex; min-width: 0; }
 .dsc-editor-field {
   display: block;
   width: 100%;
-  min-height: 30px;
+  min-height: 36px;
   max-height: 220px;
   margin: 0;
-  padding: 6px 2px 4px;
+  padding: 4px 8px 0 14px;
   border: 0 !important;
   border-radius: 0;
   outline: 0 !important;
@@ -12191,12 +14986,12 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   overflow-y: hidden;
   background: transparent;
   color: var(--dsc-text);
-  caret-color: var(--dsc-brand);
+  caret-color: var(--dsc-business);
   font-family: inherit;
-  font-size: 15.2px;
-  line-height: 1.6;
+  font-size: var(--dsh-content-font-size, 15px);
+  line-height: calc(24px + var(--dsh-content-font-delta, 0px));
 }
-.dsc-editor-field::placeholder { color: var(--dsc-muted); }
+.dsc-editor-field::placeholder { color: var(--dsc-caption); }
 .dsc-editor-field:focus,
 .dsc-editor-field:focus-visible {
   border: 0 !important;
@@ -12208,7 +15003,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  padding: 2px 2px 2px 0;
+  padding: 2px 14px 4px;
   color: var(--dsc-warn);
   font-size: 11.8px;
   line-height: 1.45;
@@ -12216,67 +15011,70 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-composer-warning .dsc-inline-button { color: var(--dsc-warn); }
 .dsc-composer-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  min-height: 34px;
-  margin-top: 2px;
+  gap: 6px 8px;
+  min-height: 42px;
+  padding: 2px 8px 6px;
 }
-.dsc-composer-left { display: flex; align-items: center; gap: 4px; min-width: 0; flex-wrap: nowrap; }
-.dsc-composer-right { display: flex; align-items: center; gap: 4px; flex: none; }
-/* Direct on/off controls for web search and deep thinking. They are always in
-   the same place: only the tint changes, so toggling never resizes the editor
-   or moves the model chip. */
+.dsc-composer-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1 1 auto; flex-wrap: wrap; }
+.dsc-composer-right { display: flex; align-items: center; gap: 8px; flex: none; margin-left: auto; }
+/* Direct on/off controls for web search and deep thinking. They sit in the
+   native 28px chip row: only the tint changes when on, so toggling never
+   resizes the editor or moves the model seat. */
 .dsc-tool-toggle {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   height: var(--dsc-control-h);
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: 999px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--dsc-radius-control);
   background: transparent;
   color: var(--dsc-muted);
-  font-size: 12.1px;
-  font-weight: 550;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
   white-space: nowrap;
   flex: none;
-  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
+  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease;
 }
-.dsc-tool-toggle:hover:not(:disabled) { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-tool-toggle:hover:not(:disabled) { background: var(--dsc-interactive); color: var(--dsc-text); }
 .dsc-tool-toggle.is-on {
-  border-color: color-mix(in srgb, var(--dsc-link) 16%, transparent);
-  background: var(--dsc-brand-soft);
-  color: var(--dsc-link);
+  background: color-mix(in srgb, var(--dsc-business) 12%, transparent);
+  color: var(--dsc-business);
 }
-.dsc-tool-toggle.is-on:hover:not(:disabled) { background: var(--dsc-brand-soft-strong); }
+.dsc-tool-toggle.is-on:hover:not(:disabled) { background: color-mix(in srgb, var(--dsc-business) 18%, transparent); }
 .dsc-tool-toggle:disabled { opacity: 0.42; cursor: default; }
 .dsc-tool-toggle-label { overflow: hidden; text-overflow: ellipsis; }
-.dsc-model-control,
-.dsc-effort-control { position: relative; display: flex; }
-.dsc-model-trigger,
-.dsc-effort-trigger {
+/* The model seat is one trigger: API name plus the current effort in the
+   caption tone, exactly like the native conversation model seat. */
+.dsc-model-control { position: relative; display: flex; min-width: 0; }
+.dsc-model-trigger {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  min-width: 0;
+  max-width: 280px;
   height: var(--dsc-control-h);
-  padding: 0 8px;
-  border: 1px solid transparent;
-  border-radius: 999px;
+  padding: 0 4px 0 8px;
+  border: 0;
+  border-radius: var(--dsc-radius-control);
   background: transparent;
   color: var(--dsc-muted);
-  font-size: 12.1px;
-  font-weight: 550;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
   white-space: nowrap;
   flex: none;
 }
-.dsc-model-trigger { max-width: 170px; }
-.dsc-effort-trigger { max-width: 116px; }
 .dsc-model-trigger:hover,
-.dsc-model-trigger.is-open,
-.dsc-effort-trigger:hover,
-.dsc-effort-trigger.is-open { background: var(--dsc-hover); color: var(--dsc-text); }
-.dsc-model-name { overflow: hidden; text-overflow: ellipsis; }
+.dsc-model-trigger.is-open { background: var(--dsc-interactive); color: var(--dsc-text); }
+.dsc-model-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dsc-model-effort { flex: none; color: var(--dsc-caption); }
+.dsc-model-effort.is-off { color: var(--dsc-caption); }
+.dsc-model-trigger > .dsc-icon { flex: none; color: var(--dsc-caption); }
 .dsc-textarea {
   display: block;
   width: 100%;
@@ -12304,168 +15102,228 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-tools { position: relative; display: flex; flex: none; }
 .dsc-tools-trigger {
   position: relative;
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--dsc-border);
+  width: 28px;
+  height: 28px;
+  border: 0;
   border-radius: 999px;
-  background: transparent;
-  color: var(--dsc-muted);
+  background: var(--dsc-selector);
+  color: var(--dsc-text);
   display: flex;
   align-items: center;
   justify-content: center;
   flex: none;
-  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
+  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease;
 }
-.dsc-tools-trigger:hover { background: var(--dsc-hover); color: var(--dsc-text); }
-.dsc-tools-trigger.is-open { background: var(--dsc-active); color: var(--dsc-text); }
+.dsc-tools-trigger:hover { background: var(--dsc-interactive); }
+.dsc-tools-trigger.is-open { background: var(--dsc-active); }
 
-/* ---------- popovers (tools + model + effort) ----------
-   One small floating card anchored to its trigger, opening upward by default.
-   The placement hook flips it when the composer sits too low and clamps its
-   height to the viewport, so the card never clips against a window edge. */
+/* ---------- composer popovers (tools + model) ----------
+   Native Harness menu material: 4px inset rail, 16px panel radius, the
+   translucent menu surface with the same backdrop blur, prominent elevation and
+   a hairline stroke. Tool rows read like the command menu (left name, right
+   description); model rows read like the model seat (label/value cells, then
+   lists with a trailing check). */
 .dsc-popover {
   position: absolute;
   z-index: 24;
-  bottom: calc(100% + 8px + var(--dsc-popover-gap, 0px));
+  bottom: calc(100% + var(--dsc-popover-offset, 8px));
   left: 0;
-  padding: 6px;
-  border: 1px solid var(--dsc-border);
-  border-radius: 14px;
-  background: var(--dsc-layer);
-  box-shadow: var(--dsc-shadow-popover);
+  padding: 4px;
+  border: 0;
+  border-radius: var(--dsc-radius-menu);
+  background: var(--dsc-menu-surface);
+  -webkit-backdrop-filter: var(--dsc-menu-backdrop);
+  backdrop-filter: var(--dsc-menu-backdrop);
+  box-shadow: inset 0 0 0 1px var(--dsc-border), var(--dsc-shadow-popover);
   overflow-y: auto;
   overscroll-behavior: contain;
-  animation: dsc-pop 0.12s ease;
+  animation: dsc-pop 0.12s ease-out;
 }
-.dsc-popover[data-placement='bottom'] { bottom: auto; top: calc(100% + 8px); }
+.dsc-popover[data-placement='bottom'] {
+  bottom: auto;
+  top: calc(100% + var(--dsc-popover-offset, 8px));
+}
 .dsc-tools-menu {
-  width: 282px;
-  max-width: calc(100vw - 32px);
+  left: 0;
+  right: auto;
+  width: auto;
+  max-width: none;
 }
 .dsc-model-menu {
   left: auto;
   right: 0;
-  width: max-content;
-  min-width: 216px;
-  max-width: min(300px, calc(100vw - 32px));
-}
-.dsc-effort-menu {
-  left: auto;
-  right: 0;
-  width: max-content;
-  min-width: 158px;
-  max-width: min(220px, calc(100vw - 32px));
+  width: min(280px, calc(100vw - 24px));
+  max-width: 360px;
 }
 @keyframes dsc-pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-.dsc-popover-sep { height: 1px; margin: 4px 2px; background: var(--dsc-border); }
-.dsc-popover-item {
+.dsc-menu-section {
+  min-height: 23px;
+  padding: 5px 8px 2px;
+  color: var(--dsc-tertiary);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  user-select: none;
+}
+.dsc-tool-item {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   width: 100%;
-  padding: 8px 9px;
+  min-height: 34px;
+  padding: 6px 8px;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--dsc-radius-row);
   background: transparent;
   color: var(--dsc-text);
-  text-align: left;
   font-size: 13px;
+  line-height: 20px;
+  text-align: left;
+  outline: none;
 }
-.dsc-popover-item:hover:not(.is-disabled) { background: var(--dsc-hover); }
-.dsc-popover-item.is-active { background: color-mix(in srgb, var(--dsc-link) 7%, transparent); }
-.dsc-popover-item.is-disabled { cursor: default; color: var(--dsc-muted); }
-.dsc-popover-item-icon {
-  display: flex;
+.dsc-tool-item:hover:not(:disabled),
+.dsc-tool-item:focus-visible { background: var(--dsc-interactive); }
+.dsc-root .dsc-tool-item:focus-visible,
+.dsc-root .dsc-model-cell:focus-visible,
+.dsc-root .dsc-model-option:focus-visible,
+.dsc-root .dsc-effort-option:focus-visible { outline: none; }
+.dsc-tool-item:disabled { opacity: 0.48; cursor: default; }
+.dsc-tool-icon {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: var(--dsc-layer2);
-  color: var(--dsc-muted);
+  width: 16px;
+  height: 16px;
   flex: none;
+  color: var(--dsc-menu-icon);
 }
-.dsc-popover-item.is-active .dsc-popover-item-icon { background: var(--dsc-brand-soft); color: var(--dsc-link); }
-.dsc-popover-item-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
-.dsc-popover-item-title { font-size: 12.9px; font-weight: 560; }
-.dsc-popover-item-desc { font-size: 11px; line-height: 1.45; color: var(--dsc-muted); }
-.dsc-popover-item-desc.is-warn { color: var(--dsc-warn); }
-.dsc-popover-item-state { font-size: 10.8px; color: var(--dsc-muted); flex: none; }
-.dsc-popover-item .dsc-switch { flex: none; }
-.dsc-popover-item .dsc-switch-thumb { width: 16px; height: 16px; }
-.dsc-popover-item .dsc-switch.is-on .dsc-switch-thumb { transform: translateX(14px); }
-/* The + card: a normal list of actions, never a settings panel. */
-.dsc-tool-item { padding: 9px; }
-.dsc-tool-item .dsc-popover-item-icon { background: var(--dsc-field); }
-/* Model list: names only, with one check and an optional one-line limitation. */
-.dsc-model-list { display: flex; flex-direction: column; gap: 2px; padding: 2px; }
-.dsc-model-option { align-items: center; }
-.dsc-model-option.is-selected { background: var(--dsc-brand-soft); }
-.dsc-model-option.is-selected .dsc-popover-item-title { color: var(--dsc-text); }
-.dsc-model-option > .dsc-icon { color: var(--dsc-link); flex: none; }
-.dsc-model-note { font-size: 10.7px; line-height: 1.4; color: var(--dsc-muted); }
-.dsc-model-scope {
-  margin: 6px 2px 1px;
-  padding: 7px 8px 2px;
-  border-top: 1px solid var(--dsc-border);
-  font-size: 10.9px;
-  line-height: 1.45;
-  color: var(--dsc-muted);
+.dsc-tool-name {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-/* Thinking effort: four discrete rows, Off first, then the API tiers. */
-.dsc-effort-list { display: flex; flex-direction: column; gap: 1px; padding: 2px; }
+.dsc-tool-desc {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--dsc-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+  text-align: right;
+}
+.dsc-tool-desc.is-warn { color: var(--dsc-warn); }
+.dsc-tool-state {
+  flex: none;
+  color: var(--dsc-caption);
+  font-size: 11px;
+  line-height: 16px;
+}
+.dsc-tool-check { display: inline-flex; flex: none; color: var(--dsc-text); }
+/* Root model seat: Model / Reasoning effort cells with the current value and
+   a drill chevron, matching the native two-level menu. */
+.dsc-model-root { display: flex; flex-direction: column; gap: 0; }
+.dsc-model-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 34px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--dsc-radius-row);
+  background: transparent;
+  color: var(--dsc-text);
+  font-size: 13px;
+  line-height: 20px;
+  text-align: left;
+  outline: none;
+}
+.dsc-model-cell:hover,
+.dsc-model-cell:focus-visible { background: var(--dsc-interactive); }
+.dsc-model-cell-label { flex: none; white-space: nowrap; }
+.dsc-model-cell-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  color: var(--dsc-tertiary);
+}
+.dsc-model-cell > .dsc-icon { flex: none; width: 12px; height: 12px; color: var(--dsc-menu-icon); }
+/* Lists: names or tiers only, a trailing check for the active value. */
+.dsc-model-list,
+.dsc-effort-list { display: flex; flex-direction: column; gap: 0; }
+.dsc-model-option,
 .dsc-effort-option {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  gap: 8px;
   width: 100%;
-  height: 33px;
-  padding: 0 9px;
+  min-height: 34px;
+  padding: 5px 7px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--dsc-radius-row);
   background: transparent;
   color: var(--dsc-text);
-  font-size: 12.7px;
-  font-weight: 540;
+  font-size: 13px;
+  line-height: 20px;
   text-align: left;
+  outline: none;
 }
-.dsc-effort-option:hover { background: var(--dsc-hover); }
-.dsc-effort-option.is-selected { background: var(--dsc-hover); }
-.dsc-effort-option .dsc-icon { color: var(--dsc-link); flex: none; }
-.dsc-effort-option-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dsc-send-button {
-  width: var(--dsc-control-h);
-  height: var(--dsc-control-h);
+.dsc-model-option:hover,
+.dsc-model-option:focus-visible,
+.dsc-effort-option:hover,
+.dsc-effort-option:focus-visible { background: var(--dsc-interactive); }
+.dsc-model-option-name,
+.dsc-effort-option-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dsc-model-note {
+  flex: none;
+  overflow: hidden;
+  max-width: 42%;
+  color: var(--dsc-tertiary);
+  font-size: 11px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dsc-model-check {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--dsc-text);
+}
+.dsc-model-check .dsc-icon { width: 14px; height: 14px; }
+.dsc-send-button,
+.dsc-stop-button {
+  width: 34px;
+  height: 34px;
   border: 0;
   border-radius: 999px;
-  background: var(--dsc-brand);
-  color: var(--dsc-on-brand);
+  background: var(--dsc-primary-action);
+  color: var(--dsc-on-color);
   display: flex;
   align-items: center;
   justify-content: center;
   flex: none;
-  transition: filter var(--dsc-fast) ease, background var(--dsc-fast) ease, color var(--dsc-fast) ease;
+  transform: translateY(-2px);
+  transition: background var(--dsc-fast) ease, opacity var(--dsc-fast) ease;
 }
-.dsc-send-button:hover { filter: brightness(1.07); }
-.dsc-send-button.is-idle {
-  background: var(--dsc-layer2);
-  color: var(--dsc-muted);
-  opacity: 0.9;
-}
-.dsc-stop-button {
-  width: var(--dsc-control-h);
-  height: var(--dsc-control-h);
-  border: 1px solid var(--dsc-border-strong);
-  border-radius: 999px;
-  background: var(--dsc-layer2);
-  color: var(--dsc-text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-}
-.dsc-stop-button:hover { background: var(--dsc-hover); }
+.dsc-send-button:not(.is-idle):hover { background: var(--dsc-primary-action-hover); }
+.dsc-send-button.is-idle { opacity: 0.4; cursor: default; }
+.dsc-stop-button:hover { background: var(--dsc-primary-action-hover); }
 .dsc-drop-mask {
   position: absolute;
   inset: 0;
@@ -12473,10 +15331,10 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 2px dashed var(--dsc-brand);
-  border-radius: 22px;
-  background: color-mix(in srgb, var(--dsc-brand) 8%, var(--dsc-layer));
-  color: var(--dsc-link);
+  border: 2px dashed var(--dsc-business);
+  border-radius: var(--dsc-radius-panel);
+  background: color-mix(in srgb, var(--dsc-business) 8%, var(--dsc-input-major));
+  color: var(--dsc-business);
   font-size: 13px;
   font-weight: 600;
   pointer-events: none;
@@ -12766,6 +15624,275 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-archive-item-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.2px; color: var(--dsc-muted); }
 .dsc-archive-actions { display: flex; align-items: center; gap: 4px; flex: none; }
 
+/* ---------- chat history import ---------- */
+.dsc-modal.dsc-import-modal { width: min(680px, 100%); }
+.dsc-import-pick { gap: 12px; }
+.dsc-import-drop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 188px;
+  padding: 22px;
+  border: 1.5px dashed var(--dsc-border-strong);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--dsc-layer2) 34%, transparent);
+  color: var(--dsc-text);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--dsc-fast) var(--dsc-ease), background var(--dsc-fast) var(--dsc-ease);
+}
+.dsc-import-drop:hover { border-color: color-mix(in srgb, var(--dsc-brand) 45%, var(--dsc-border-strong)); }
+.dsc-import-drop.is-drag { border-color: var(--dsc-brand); background: var(--dsc-brand-soft); }
+.dsc-import-drop.is-busy { cursor: progress; }
+.dsc-import-drop-icon { display: inline-flex; color: var(--dsc-link); }
+.dsc-import-drop-title { font-size: 13.6px; font-weight: 570; }
+.dsc-import-drop-hint { font-size: 11.8px; color: var(--dsc-muted); line-height: 1.6; max-width: 380px; }
+.dsc-import-input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
+.dsc-import-error { margin: 0; }
+.dsc-import-summary { display: flex; align-items: center; gap: 10px; }
+.dsc-import-preview { gap: 12px; }
+.dsc-import-summary-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.dsc-import-file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 550; }
+.dsc-import-file-meta { font-size: 11.4px; color: var(--dsc-muted); }
+.dsc-import-summary-side { flex: none; }
+.dsc-import-toolbar { display: flex; align-items: center; gap: 10px; }
+.dsc-import-check-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--dsc-border);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--dsc-text);
+  font-size: 12px;
+  font-weight: 550;
+}
+.dsc-import-check-all:hover { background: var(--dsc-hover); }
+.dsc-import-check-all.is-on .dsc-choice-check { border-color: var(--dsc-brand); background: var(--dsc-brand-soft); color: var(--dsc-link); }
+.dsc-import-count { margin-left: auto; font-size: 11.5px; color: var(--dsc-muted); }
+.dsc-import-filter {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--dsc-border);
+  border-radius: 9px;
+  background: var(--dsc-field);
+  color: var(--dsc-muted);
+}
+.dsc-import-filter-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--dsc-text);
+  font: inherit;
+  font-size: 12.6px;
+}
+.dsc-import-list { display: flex; flex-direction: column; gap: 2px; max-height: min(46vh, 420px); overflow-y: auto; }
+.dsc-import-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 42px;
+  padding: 6px 9px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--dsc-text);
+  text-align: left;
+}
+.dsc-import-item:hover { background: var(--dsc-hover); }
+.dsc-import-item.is-selected { border-color: color-mix(in srgb, var(--dsc-brand) 20%, transparent); background: var(--dsc-brand-soft); }
+.dsc-import-item.is-selected .dsc-choice-check { border-color: var(--dsc-brand); background: var(--dsc-layer); }
+.dsc-import-item.is-imported { cursor: default; opacity: 0.62; }
+.dsc-import-item.is-imported:hover { background: transparent; }
+.dsc-import-item.is-imported .dsc-choice-check { border-style: dashed; }
+.dsc-import-item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dsc-import-item-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.8px; }
+.dsc-import-item-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.1px; color: var(--dsc-muted); }
+.dsc-import-badge {
+  flex: none;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dsc-success) 12%, transparent);
+  color: var(--dsc-success);
+  font-size: 10.6px;
+  font-weight: 560;
+}
+.dsc-import-progress { gap: 12px; }
+.dsc-import-progress-head { display: flex; align-items: baseline; gap: 10px; }
+.dsc-import-progress-label { font-size: 13px; font-weight: 570; }
+.dsc-import-progress-count { margin-left: auto; font-size: 12px; color: var(--dsc-muted); font-variant-numeric: tabular-nums; }
+.dsc-import-bar { height: 8px; border-radius: 999px; background: var(--dsc-field); overflow: hidden; }
+.dsc-import-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--dsc-link), color-mix(in srgb, var(--dsc-link) 62%, var(--dsc-brand)));
+  transition: width 0.25s var(--dsc-ease);
+}
+.dsc-import-hint { margin: 0; font-size: 11.6px; color: var(--dsc-muted); line-height: 1.65; }
+.dsc-import-result { gap: 12px; }
+.dsc-import-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.dsc-import-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 11px 12px;
+  border: 1px solid var(--dsc-border);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--dsc-layer2) 30%, transparent);
+}
+.dsc-import-stat-value { font-size: 20px; font-weight: 620; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.dsc-import-stat-label { font-size: 11.2px; color: var(--dsc-muted); }
+.dsc-import-stat.is-ok .dsc-import-stat-value { color: var(--dsc-success); }
+.dsc-import-stat.is-skip .dsc-import-stat-value { color: var(--dsc-muted); }
+.dsc-import-stat.is-fail .dsc-import-stat-value { color: var(--dsc-error); }
+.dsc-import-failures { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border: 1px solid var(--dsc-border); border-radius: 11px; background: color-mix(in srgb, var(--dsc-error) 5%, transparent); }
+.dsc-import-failures-title { font-size: 11.4px; font-weight: 600; color: var(--dsc-muted); }
+.dsc-import-failure { display: flex; align-items: baseline; gap: 8px; font-size: 11.6px; }
+.dsc-import-failure-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dsc-import-failure-reason { flex: none; color: var(--dsc-muted); font-family: var(--dsc-mono); font-size: 10.4px; }
+.dsc-import-memory {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--dsc-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--dsc-layer2) 46%, transparent);
+}
+.dsc-import-memory-icon { display: inline-flex; flex: none; color: var(--dsc-link); }
+.dsc-import-memory-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.dsc-import-memory-title { font-size: 12.8px; font-weight: 570; }
+.dsc-import-memory-hint { margin: 0; font-size: 11.4px; line-height: 1.55; color: var(--dsc-muted); }
+.dsc-import-memory .dsc-secondary-button { flex: none; }
+.dsc-answer-notice { margin: 10px 0 0; }
+.dsc-notice.is-warn {
+  border-color: color-mix(in srgb, var(--dsc-warn) 24%, transparent);
+  background: color-mix(in srgb, var(--dsc-warn) 7%, transparent);
+  color: var(--dsc-warn);
+}
+
+/* ---------- long-term memory ---------- */
+.dsc-settings-tabs { display: flex; gap: 2px; padding: 12px 20px 0; }
+.dsc-settings-tab { height: 30px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: var(--dsc-muted); font-size: 12.2px; font-weight: 560; transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease; }
+.dsc-settings-tab:hover:not(.is-active) { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-settings-tab.is-active { background: var(--dsc-brand-soft); color: var(--dsc-link); }
+.dsc-memory-pane { display: flex; flex-direction: column; gap: 16px; }
+.dsc-memory-state { display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 140px; color: var(--dsc-muted); font-size: 12.6px; }
+.dsc-memory-notice { display: flex; align-items: flex-start; gap: 10px; padding: 14px; border: 1px solid var(--dsc-border-strong); border-radius: 12px; background: color-mix(in srgb, var(--dsc-warn) 7%, transparent); }
+.dsc-memory-notice .dsc-icon { color: var(--dsc-warn); flex: none; margin-top: 1px; }
+.dsc-memory-notice-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.dsc-memory-notice-body strong { font-size: 12.8px; }
+.dsc-memory-notice-body p { margin: 0; font-size: 11.7px; line-height: 1.6; color: var(--dsc-muted); word-break: break-word; }
+.dsc-memory-notice .dsc-secondary-button { flex: none; height: 31px; padding: 0 11px; font-size: 12px; }
+.dsc-memory-summary { display: flex; flex-direction: column; gap: 9px; }
+.dsc-memory-summary-text { font-size: 12.5px; line-height: 1.68; color: var(--dsc-text); }
+.dsc-memory-summary-text .dsc-paragraph { margin: 0 0 7px; }
+.dsc-memory-summary-text .dsc-list { margin: 4px 0 8px; padding-left: 19px; }
+.dsc-memory-summary-text .dsc-heading,
+.dsc-memory-summary-text h1.dsc-heading,
+.dsc-memory-summary-text h2.dsc-heading,
+.dsc-memory-summary-text h3.dsc-heading { margin: 9px 0 4px; font-size: 13px; }
+.dsc-memory-summary-text .dsc-quote { margin: 6px 0; }
+.dsc-memory-summary-empty { margin: 0; font-size: 12.2px; line-height: 1.6; color: var(--dsc-muted); }
+.dsc-memory-summary-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.dsc-memory-summary-meta { font-size: 11.3px; color: var(--dsc-muted); }
+.dsc-memory-ask { display: flex; align-items: flex-end; gap: 8px; padding-top: 2px; }
+.dsc-memory-ask-input { flex: 1; width: auto; min-width: 0; }
+.dsc-memory-ask .dsc-primary-button { flex: none; }
+.dsc-memory-ask-result { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid var(--dsc-border); border-radius: 10px; background: var(--dsc-layer); }
+.dsc-memory-answer { margin: 0; font-size: 12.5px; line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
+.dsc-memory-applied { margin: 0; font-size: 11.5px; color: var(--dsc-success); }
+.dsc-memory-pending { display: flex; flex-direction: column; gap: 6px; padding-top: 7px; border-top: 1px solid var(--dsc-border); }
+.dsc-memory-pending-title { margin: 0; font-size: 12.2px; font-weight: 580; }
+.dsc-memory-pending-list { margin: 0; padding-left: 18px; font-size: 12.1px; line-height: 1.6; color: var(--dsc-muted); word-break: break-word; }
+.dsc-memory-pending-actions { display: flex; justify-content: flex-end; gap: 7px; }
+.dsc-memory-pending-actions .dsc-primary-button,
+.dsc-memory-pending-actions .dsc-secondary-button { height: 31px; padding: 0 12px; font-size: 12.2px; }
+.dsc-memory-list-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.dsc-memory-limit { font-size: 11.4px; color: var(--dsc-muted); }
+.dsc-memory-filters { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.dsc-memory-chip { display: inline-flex; align-items: center; gap: 5px; flex: none; height: 27px; padding: 0 9px; border: 1px solid var(--dsc-border); border-radius: 999px; background: transparent; color: var(--dsc-muted); font-size: 11.6px; font-weight: 550; white-space: nowrap; }
+.dsc-memory-chip:hover { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-memory-chip.is-active { border-color: color-mix(in srgb, var(--dsc-brand) 24%, transparent); background: var(--dsc-brand-soft); color: var(--dsc-link); }
+.dsc-memory-chip-count { font-size: 10.8px; opacity: 0.72; }
+.dsc-memory-add { display: flex; flex-direction: column; gap: 7px; }
+.dsc-memory-add-row { display: flex; align-items: center; gap: 8px; }
+.dsc-memory-add-row .dsc-select { flex: 1; min-width: 0; height: 33px; }
+.dsc-memory-add-row .dsc-secondary-button { flex: none; height: 33px; padding: 0 13px; font-size: 12.3px; }
+.dsc-memory-rows { display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow-y: auto; }
+.dsc-memory-row { display: flex; flex-direction: column; gap: 6px; padding: 9px 10px; border: 1px solid var(--dsc-border); border-radius: 10px; background: var(--dsc-layer); }
+.dsc-memory-content { margin: 0; font-size: 12.4px; line-height: 1.6; word-break: break-word; }
+.dsc-memory-row-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dsc-memory-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; min-width: 0; font-size: 11px; color: var(--dsc-muted); }
+.dsc-memory-badge { display: inline-flex; align-items: center; max-width: 100%; padding: 1px 7px; border-radius: 999px; background: var(--dsc-brand-soft); color: var(--dsc-link); font-size: 10.8px; font-weight: 560; }
+.dsc-memory-badge.is-duplicate { background: color-mix(in srgb, var(--dsc-warn) 12%, transparent); color: var(--dsc-warn); }
+.dsc-memory-badge.is-exists { background: var(--dsc-brand-soft); color: var(--dsc-link); }
+.dsc-memory-badge.is-sensitive { background: color-mix(in srgb, var(--dsc-error) 10%, transparent); color: var(--dsc-error); }
+.dsc-memory-row-actions { display: flex; align-items: center; gap: 2px; flex: none; }
+.dsc-memory-empty { margin: 0; padding: 16px 10px; border: 1px dashed var(--dsc-border-strong); border-radius: 10px; text-align: center; font-size: 12.2px; line-height: 1.6; color: var(--dsc-muted); }
+.dsc-memory-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.dsc-memory-footer .dsc-secondary-button { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.dsc-memory-input { width: 100%; min-height: 54px; max-height: 170px; padding: 8px 10px; border: 1px solid var(--dsc-border-strong); border-radius: 9px; background: var(--dsc-bg); color: var(--dsc-text); font-family: var(--dsc-font); font-size: 12.6px; line-height: 1.6; resize: vertical; outline: 0; }
+.dsc-memory-input::placeholder { color: var(--dsc-muted); }
+.dsc-memory-input:focus,
+.dsc-memory-input:focus-visible { border-color: color-mix(in srgb, var(--dsc-brand) 42%, var(--dsc-border-strong)); outline: 0; }
+.dsc-memory-input:disabled { opacity: 0.55; }
+.dsc-switch:disabled { opacity: 0.45; cursor: default; }
+.dsc-memory-import .dsc-modal { width: min(760px, 100%); }
+.dsc-memory-import .dsc-modal-foot { flex-wrap: wrap; }
+.dsc-memory-extract .dsc-modal { width: min(640px, 100%); }
+.dsc-modal.dsc-memory-extract-modal { width: min(640px, 100%); }
+.dsc-memory-extract .dsc-modal-foot { flex-wrap: wrap; }
+.dsc-memory-footer-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.dsc-memory-import-intro { margin: 0; font-size: 12.4px; line-height: 1.65; color: var(--dsc-muted); }
+.dsc-memory-import-field { display: flex; flex-direction: column; gap: 7px; }
+.dsc-memory-prompt-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.dsc-memory-prompt-head .dsc-secondary-button { display: inline-flex; align-items: center; gap: 5px; height: 29px; padding: 0 10px; font-size: 12px; }
+.dsc-memory-prompt { margin: 0; max-height: 232px; overflow: auto; padding: 10px 12px; border: 1px solid var(--dsc-border); border-radius: 10px; background: var(--dsc-code-bg); font-family: var(--dsc-mono); font-size: 11.3px; line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
+.dsc-memory-paste { min-height: 168px; max-height: 300px; font-family: var(--dsc-mono); font-size: 11.8px; }
+.dsc-memory-consent { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid color-mix(in srgb, var(--dsc-warn) 30%, transparent); border-radius: 10px; background: color-mix(in srgb, var(--dsc-warn) 7%, transparent); }
+.dsc-memory-consent-text { margin: 0; font-size: 12px; line-height: 1.6; }
+.dsc-memory-consent-actions { display: flex; justify-content: flex-end; gap: 7px; }
+.dsc-memory-consent-actions .dsc-primary-button,
+.dsc-memory-consent-actions .dsc-secondary-button { height: 31px; padding: 0 12px; font-size: 12.2px; }
+.dsc-memory-preview-count { margin: 0; font-size: 11.8px; color: var(--dsc-muted); }
+.dsc-memory-preview { display: flex; flex-direction: column; gap: 8px; max-height: 44vh; overflow-y: auto; padding-right: 2px; }
+.dsc-memory-preview-row { display: flex; flex-direction: column; gap: 7px; padding: 10px; border: 1px solid var(--dsc-border); border-radius: 10px; background: var(--dsc-layer); }
+.dsc-memory-preview-row.is-selected { border-color: color-mix(in srgb, var(--dsc-brand) 22%, var(--dsc-border)); }
+.dsc-memory-preview-check { display: flex; align-items: center; gap: 7px; font-size: 11.6px; color: var(--dsc-muted); }
+.dsc-memory-preview-check input { width: 14px; height: 14px; accent-color: var(--dsc-brand); }
+.dsc-memory-preview-controls { display: flex; gap: 7px; }
+.dsc-memory-preview-controls .dsc-select { flex: 1; min-width: 0; height: 32px; }
+.dsc-memory-mode { max-width: 42%; }
+.dsc-memory-preview-badges { display: flex; flex-wrap: wrap; gap: 5px; }
+.dsc-memory-preview-badges:empty { display: none; }
+.dsc-memory-preview-existing { margin: 0; font-size: 11.3px; line-height: 1.55; color: var(--dsc-muted); word-break: break-word; }
+@media (max-width: 620px) {
+  .dsc-settings-tabs { padding: 10px 14px 0; }
+  .dsc-memory-ask { flex-direction: column; align-items: stretch; }
+  .dsc-memory-ask .dsc-primary-button { align-self: flex-end; }
+  .dsc-memory-footer { flex-direction: column; align-items: stretch; }
+  .dsc-memory-footer .dsc-secondary-button { justify-content: center; }
+  .dsc-memory-footer-actions { justify-content: center; }
+  .dsc-import-memory { align-items: flex-start; flex-wrap: wrap; }
+  .dsc-import-memory .dsc-secondary-button { width: 100%; justify-content: center; }
+  .dsc-memory-row-foot { flex-wrap: wrap; }
+  .dsc-memory-preview-controls { flex-wrap: wrap; }
+  .dsc-memory-mode { max-width: none; }
+}
+
 /* ---------- toasts ---------- */
 .dsc-toasts { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 40; display: flex; flex-direction: column; gap: 7px; align-items: center; pointer-events: none; width: min(560px, calc(100% - 32px)); }
 .dsc-toast { display: flex; align-items: center; gap: 7px; max-width: 100%; padding: 9px 13px; border: 1px solid var(--dsc-border); border-radius: 10px; background: var(--dsc-layer); box-shadow: var(--dsc-shadow-soft); font-size: 12.5px; color: var(--dsc-text); animation: dsc-toast-in 0.16s ease; }
@@ -12841,10 +15968,12 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   .dsc-empty { padding-bottom: 3vh; }
 }
 @media (max-width: 620px) {
-  .dsc-model-trigger { max-width: 132px; }
-  .dsc-effort-trigger { max-width: 84px; }
-  .dsc-tool-toggle { width: 30px; padding: 0; justify-content: center; }
+  .dsc-model-trigger { max-width: 188px; }
+  .dsc-tool-toggle { width: var(--dsc-control-h); padding: 0; justify-content: center; }
   .dsc-tool-toggle-label { display: none; }
+  .dsc-composer-bar { padding: 2px 6px 6px; gap: 6px; }
+  .dsc-composer-left { gap: 6px; }
+  .dsc-composer-right { gap: 6px; }
   .dsc-header-title { display: none; }
   .dsc-thread { padding: 16px 12px 8px; }
   .dsc-composer-wrap { padding: 4px 10px 8px; }
@@ -12911,6 +16040,13 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     ChatRoot,
     ModeSwitch,
     SettingsDialog,
+    MemorySettingsPane,
+    MemoryImportDialog,
+    parseMemoryExport,
+    MEMORY_IMPORT_PROMPT,
+    memoryCategoryIds,
+    memoryCategoryLabel,
+    parseMemoryDate,
     HandoffDialog,
     HandoffWorkspaceCreator,
     NEW_WORKSPACE_OPTION,
@@ -12933,6 +16069,10 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     MoveChatDialog,
     FolderAddDialog,
     ArchiveDialog,
+    ImportDialog,
+    ImportMemoryDialog,
+    filterImportRows,
+    importDateLabel,
     Composer,
     EmptyState,
     Sidebar,
@@ -12969,7 +16109,6 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     SourceRow,
     ToolsMenu,
     ModelMenu,
-    EffortMenu,
     chatToolDefinitions,
     chatMenuTools,
     composerToolDefinitions,
@@ -12979,7 +16118,9 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     modelById,
     modelCapability,
     modelEfforts,
+    modelDisplayName,
     modelTriggerLabel,
+    modelEffortLabel,
     modelNotes,
     modelChipLabel,
     currentModelChoice,

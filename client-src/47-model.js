@@ -10,10 +10,11 @@
  * `chatStore.state.modelChoice` holds the selection for the active
  * conversation; per-conversation overrides and the defaults live on the Host.
  *
- * The composer splits the two decisions into two small popovers: the model
- * picker is a name-only list, and the thinking-effort picker is its own compact
- * control next to it. Neither panel repeats the other's options, so choosing a
- * model never asks the user to read a feature sheet.
+ * The composer follows the native Harness model seat instead of showing two
+ * unrelated chips: one trigger carries the model name and the current effort,
+ * and one menu starts with the native "Model / Reasoning effort" rows that
+ * drill into a compact list. The root rows keep the menu calm; the lists carry
+ * only names and the single limitation that changes what can be attached.
  */
 
 /** The single model an older Host always sends. */
@@ -21,6 +22,7 @@ const FALLBACK_MODELS = [
   {
     id: 'deepseek-flash',
     name: 'DeepSeek V4.1 Flash',
+    displayName: 'DeepSeek-V4.1-Flash',
     shortName: 'V4.1 Flash',
     descriptionKey: 'modelFlashDesc',
     capabilities: { vision: true, documents: true, search: true, thinking: true, efforts: ['low', 'high', 'max'] },
@@ -51,17 +53,41 @@ function modelEfforts(model) {
   return list.length > 0 ? list : (modelCapability(model, 'thinking') ? EFFORT_ORDER : [])
 }
 
-/** The compact name shown on the composer chip and in the model list. */
-function modelTriggerLabel(model) {
+/** The native-looking API name, with the friendly catalog name as fallback. */
+function modelDisplayName(model) {
+  if (typeof model?.displayName === 'string' && model.displayName !== '') return model.displayName
+  // The compatibility path for an older Host: its catalog carries the API
+  // version (DeepSeek-V4.1-Flash-1017) but not a displayName.
+  if (typeof model?.version === 'string') {
+    const versionName = model.version.replace(/-[0-9]{3,4}$/, '')
+    if (versionName !== '') return versionName
+  }
+  return model?.name || model?.id || ''
+}
+
+/** The compact name used by reply footers, where the version is already known. */
+function modelShortName(model) {
   return model?.shortName || model?.name || ''
+}
+
+/** The label shown beside the model while thinking is on, or "Off" when it is not. */
+function modelEffortLabel(thinking, effort) {
+  if (!thinking) return tr('effortOff')
+  const labelKey = EFFORT_LABEL[effort]
+  return labelKey === undefined ? '' : tr(labelKey)
+}
+
+/** Full label for the composer seat. The menu keeps the two values separate. */
+function modelTriggerLabel(model) {
+  return modelDisplayName(model)
 }
 
 /** Full label for a reply footer, including the effort that produced it. */
 function modelChipLabel(model, thinking, effort) {
-  const name = model?.shortName || model?.name || ''
+  const name = modelShortName(model)
   if (!thinking) return name
-  const labelKey = EFFORT_LABEL[effort]
-  return labelKey === undefined ? name : `${name} · ${tr(labelKey)}`
+  const effortLabel = modelEffortLabel(true, effort)
+  return effortLabel === '' ? name : `${name} · ${effortLabel}`
 }
 
 /**
@@ -72,10 +98,10 @@ function modelChipLabel(model, thinking, effort) {
 function messageModelLabel(message) {
   if (typeof message?.model !== 'string' || message.model === '') return ''
   const model = modelById(message.model)
-  const name = model?.shortName || model?.name || message.model
+  const name = modelShortName(model) || message.model
   if (message.thinking !== true) return name
-  const labelKey = EFFORT_LABEL[message.effort]
-  return labelKey === undefined ? name : `${name} · ${tr(labelKey)}`
+  const effortLabel = modelEffortLabel(true, message.effort)
+  return effortLabel === '' ? name : `${name} · ${effortLabel}`
 }
 
 /**
@@ -102,30 +128,92 @@ function modelNotes(model) {
 }
 
 /**
- * Model menu: the real API models, by name, plus a check on the current one.
- * It opens above the composer, right-aligned to its chip, and is fully operable
- * from the keyboard.
+ * Model and effort, in the shape of the native Harness model seat.
+ *
+ * Closed, the trigger reads `DeepSeek-V4.1-Flash Max` (effort in the caption
+ * tone). Open, the root menu mirrors Harness: a "Model" row and a "Reasoning
+ * effort" row, each with its current value and a chevron, drilling into a
+ * name-only / tier-only list. It opens above the composer, right-aligned to the
+ * trigger, and keeps the WAI-ARIA menu keyboard model.
  */
 function ModelMenu() {
   const t = useT()
   const models = modelCatalog()
   const choice = currentModelChoice()
-  const activeId = useChat(state => state.activeId)
+  const thinking = useChat(state => state.settings.thinking)
   const [open, setOpen] = React.useState(false)
+  const [pane, setPane] = React.useState('root')
   const triggerRef = React.useRef(null)
   const panelRef = React.useRef(null)
   const layout = usePopupPlacement(open, triggerRef, panelRef)
-  useOutsideDismiss(open, () => setOpen(false), panelRef, triggerRef)
+  const close = () => {
+    setOpen(false)
+    setPane('root')
+  }
+  const closeAndRestore = () => {
+    close()
+    setTimeout(() => triggerRef.current?.focus?.(), 0)
+  }
+  useOutsideDismiss(open, close, panelRef, triggerRef)
+
   React.useEffect(() => {
     if (!open) return
-    // Focus the selected model row so Arrow keys start from the current choice.
     const panel = panelRef.current
-    const selected = panel?.querySelector?.(`[data-model="${choice.model.id}"]`)
-    selected?.focus?.({ preventScroll: false })
-  }, [open])
-  const close = () => setOpen(false)
-  const onKeyDown = event => handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef })
-  const scope = activeId === null ? t('modelAppliedToDefault') : t('modelAppliedToChat')
+    if (pane === 'root') {
+      panel?.querySelector?.('.dsc-model-cell')?.focus?.({ preventScroll: false })
+      return
+    }
+    const current = pane === 'effort'
+      ? panel?.querySelector?.(`[data-effort="${thinking ? choice.effort : 'off'}"]`)
+      : panel?.querySelector?.(`[data-model="${choice.model.id}"]`)
+    const fallback = panel?.querySelector?.('.dsc-model-option, .dsc-effort-option')
+    ;(current ?? fallback)?.focus?.({ preventScroll: false })
+  }, [open, pane])
+
+  const onKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      event.stopPropagation()
+      if (pane !== 'root') {
+        setPane('root')
+        return
+      }
+      close()
+      triggerRef.current?.focus?.()
+      return
+    }
+    if (event.key === 'Tab') {
+      // A drilled list backs out on Shift+Tab; Tab itself settles the menu and
+      // keeps the browser's focus traversal.
+      if (event.shiftKey && pane !== 'root') {
+        event.preventDefault()
+        setPane('root')
+        return
+      }
+      close()
+      return
+    }
+    if (event.key === 'ArrowLeft' && pane !== 'root') {
+      event.preventDefault()
+      setPane('root')
+      return
+    }
+    handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef })
+  }
+
+  const chooseOff = () => {
+    if (thinking) chatActions.toggleThinking()
+    closeAndRestore()
+  }
+  const chooseEffort = (effort) => {
+    if (!thinking) chatActions.toggleThinking()
+    if (effort !== choice.effort) chatActions.selectEffort(effort)
+    closeAndRestore()
+  }
+
+  const effortLabel = modelEffortLabel(thinking, choice.effort)
+  const supportsEffort = choice.efforts.length > 0
+  const triggerLabel = effortLabel === '' ? modelDisplayName(choice.model) : `${modelDisplayName(choice.model)} ${effortLabel}`
   return h('div', { className: 'dsc-model-control' },
     h('button', {
       ref: triggerRef,
@@ -133,21 +221,36 @@ function ModelMenu() {
       className: cx('dsc-model-trigger', open && 'is-open'),
       'aria-haspopup': 'menu',
       'aria-expanded': open,
+      'aria-label': `${t('modelSelect')}: ${triggerLabel}`,
       title: t('modelSelect'),
-      onClick: () => setOpen(value => !value),
+      onClick: () => {
+        if (open) {
+          close()
+          return
+        }
+        setPane('root')
+        setOpen(true)
+      },
       onKeyDown: (event) => {
         if (event.key === 'Escape' && open) {
           event.preventDefault()
-          setOpen(false)
+          close()
+          triggerRef.current?.focus?.()
           return
         }
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
           event.preventDefault()
-          setOpen(true)
+          if (!open) {
+            setPane('root')
+            setOpen(true)
+          }
         }
       },
     },
-      h('span', { className: 'dsc-model-name' }, modelTriggerLabel(choice.model)),
+      h('span', { className: 'dsc-model-name' }, modelDisplayName(choice.model)),
+      supportsEffort
+        ? h('span', { className: cx('dsc-model-effort', !thinking && 'is-off') }, effortLabel)
+        : null,
       h(Icon, { name: 'chevronDown', size: 12 }),
     ),
     open
@@ -155,140 +258,93 @@ function ModelMenu() {
           ref: panelRef,
           className: 'dsc-popover dsc-model-menu',
           role: 'menu',
-          'aria-label': t('modelSelect'),
+          'aria-label': pane === 'effort' ? t('thinkingEffort') : t('modelSelect'),
+          'data-pane': pane,
           'data-placement': layout.placement,
           style: popoverStyle(layout),
           onKeyDown,
         },
-        h('div', { className: 'dsc-model-list' },
-          models.map(model => {
-            const selected = model.id === choice.model.id
-            const notes = modelNotes(model)
-            const description = model.descriptionKey === undefined ? '' : t(model.descriptionKey)
-            return h('button', {
-              key: model.id,
-              type: 'button',
-              role: 'menuitemradio',
-              'aria-checked': selected,
-              'aria-label': description === '' ? model.name : `${model.name} — ${description}`,
-              title: description,
-              'data-model': model.id,
-              className: cx('dsc-popover-item dsc-model-option', selected && 'is-selected'),
-              onClick: () => { chatActions.selectModel(model.id); close() },
-            },
-              h('span', { className: 'dsc-popover-item-main' },
-                h('span', { className: 'dsc-popover-item-title' }, model.name),
-                notes.length > 0
-                  ? h('span', { className: 'dsc-model-note' }, notes.join(' · '))
-                  : null,
+        pane === 'root'
+          ? h('div', { className: 'dsc-model-root' },
+              h('button', {
+                type: 'button',
+                role: 'menuitem',
+                className: 'dsc-model-cell',
+                onClick: () => setPane('model'),
+              },
+                h('span', { className: 'dsc-model-cell-label' }, t('modelMenuTitle')),
+                h('span', { className: 'dsc-model-cell-value' }, modelDisplayName(choice.model)),
+                h(Icon, { name: 'chevronRight', size: 12 }),
               ),
-              selected ? h(Icon, { name: 'check', size: 15 }) : null,
+              supportsEffort
+                ? h('button', {
+                    type: 'button',
+                    role: 'menuitem',
+                    className: 'dsc-model-cell',
+                    onClick: () => setPane('effort'),
+                  },
+                    h('span', { className: 'dsc-model-cell-label' }, t('thinkingEffort')),
+                    h('span', { className: 'dsc-model-cell-value' }, effortLabel),
+                    h(Icon, { name: 'chevronRight', size: 12 }),
+                  )
+                : null,
             )
-          }),
-        ),
-        h('p', { className: 'dsc-model-scope' }, scope),
-      )
-      : null,
-  )
-}
-
-/**
- * Thinking-effort picker: a separate compact control beside the model chip. It
- * stays visible (showing Off) for every model with a real effort list, so
- * toggling deep thinking never shifts the composer layout. The four states are
- * the API's real tiers plus Off; there is no free-form value.
- */
-function EffortMenu() {
-  const t = useT()
-  const choice = currentModelChoice()
-  const thinking = useChat(state => state.settings.thinking)
-  const [open, setOpen] = React.useState(false)
-  const triggerRef = React.useRef(null)
-  const panelRef = React.useRef(null)
-  const layout = usePopupPlacement(open, triggerRef, panelRef)
-  useOutsideDismiss(open, () => setOpen(false), panelRef, triggerRef)
-  React.useEffect(() => {
-    if (!open) return
-    const panel = panelRef.current
-    const selected = panel?.querySelector?.(`[data-effort="${thinking ? choice.effort : 'off'}"]`)
-    selected?.focus?.({ preventScroll: false })
-  }, [open])
-  const close = () => setOpen(false)
-  const onKeyDown = event => handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef })
-  const label = thinking ? t(EFFORT_LABEL[choice.effort] ?? 'effortHigh') : t('effortOff')
-  const chooseOff = () => {
-    if (thinking) chatActions.toggleThinking()
-    close()
-  }
-  const chooseEffort = (effort) => {
-    if (!thinking) chatActions.toggleThinking()
-    if (effort !== choice.effort) chatActions.selectEffort(effort)
-    close()
-  }
-  return h('div', { className: 'dsc-effort-control' },
-    h('button', {
-      ref: triggerRef,
-      type: 'button',
-      className: cx('dsc-effort-trigger', open && 'is-open'),
-      'aria-haspopup': 'menu',
-      'aria-expanded': open,
-      title: `${t('thinkingEffort')}: ${label}`,
-      'aria-label': `${t('thinkingEffort')}: ${label}`,
-      onClick: () => setOpen(value => !value),
-      onKeyDown: (event) => {
-        if (event.key === 'Escape' && open) {
-          event.preventDefault()
-          setOpen(false)
-          return
-        }
-        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-          event.preventDefault()
-          setOpen(true)
-        }
-      },
-    },
-      h(Icon, { name: 'brain', size: 13 }),
-      h('span', null, label),
-      h(Icon, { name: 'chevronDown', size: 11 }),
-    ),
-    open
-      ? h('div', {
-          ref: panelRef,
-          className: 'dsc-popover dsc-effort-menu',
-          role: 'menu',
-          'aria-label': t('thinkingEffort'),
-          'data-placement': layout.placement,
-          style: popoverStyle(layout),
-          onKeyDown,
-        },
-        h('div', { className: 'dsc-effort-list' },
-          h('button', {
-            type: 'button',
-            role: 'menuitemradio',
-            'aria-checked': !thinking,
-            'data-effort': 'off',
-            title: t('effortOffHint'),
-            className: cx('dsc-effort-option', !thinking && 'is-selected'),
-            onClick: chooseOff,
-          },
-            h('span', { className: 'dsc-effort-option-label' }, t('effortOff')),
-            !thinking ? h(Icon, { name: 'check', size: 14 }) : null,
-          ),
-          h('div', { className: 'dsc-popover-sep' }),
-          choice.efforts.map(effort => h('button', {
-            key: effort,
-            type: 'button',
-            role: 'menuitemradio',
-            'aria-checked': thinking && choice.effort === effort,
-            'data-effort': effort,
-            title: t(EFFORT_HINT[effort] ?? 'thinkingEffort'),
-            className: cx('dsc-effort-option', thinking && choice.effort === effort && 'is-selected'),
-            onClick: () => chooseEffort(effort),
-          },
-            h('span', { className: 'dsc-effort-option-label' }, t(EFFORT_LABEL[effort])),
-            thinking && choice.effort === effort ? h(Icon, { name: 'check', size: 14 }) : null,
-          )),
-        ),
+          : pane === 'model'
+            ? h('div', { className: 'dsc-model-list' },
+                models.map(model => {
+                  const selected = model.id === choice.model.id
+                  const notes = modelNotes(model)
+                  const description = model.descriptionKey === undefined ? '' : t(model.descriptionKey)
+                  return h('button', {
+                    key: model.id,
+                    type: 'button',
+                    role: 'menuitemradio',
+                    'aria-checked': selected,
+                    'aria-label': description === '' ? model.name : `${model.name} — ${description}`,
+                    title: description,
+                    'data-model': model.id,
+                    className: 'dsc-model-option',
+                    onClick: () => {
+                      chatActions.selectModel(model.id)
+                      closeAndRestore()
+                    },
+                  },
+                    h('span', { className: 'dsc-model-option-name' }, modelDisplayName(model)),
+                    notes.length > 0 ? h('span', { className: 'dsc-model-note' }, notes.join(' · ')) : null,
+                    h('span', { className: 'dsc-model-check' }, selected ? h(Icon, { name: 'check', size: 14 }) : null),
+                  )
+                }),
+              )
+            : h('div', { className: 'dsc-effort-list' },
+                h('button', {
+                  type: 'button',
+                  role: 'menuitemradio',
+                  'aria-checked': !thinking,
+                  'data-effort': 'off',
+                  title: t('effortOffHint'),
+                  className: 'dsc-effort-option',
+                  onClick: chooseOff,
+                },
+                  h('span', { className: 'dsc-effort-option-label' }, t('effortOff')),
+                  h('span', { className: 'dsc-model-check' }, !thinking ? h(Icon, { name: 'check', size: 14 }) : null),
+                ),
+                choice.efforts.map(effort => {
+                  const selected = thinking && choice.effort === effort
+                  return h('button', {
+                    key: effort,
+                    type: 'button',
+                    role: 'menuitemradio',
+                    'aria-checked': selected,
+                    'data-effort': effort,
+                    title: t(EFFORT_HINT[effort] ?? 'thinkingEffort'),
+                    className: 'dsc-effort-option',
+                    onClick: () => chooseEffort(effort),
+                  },
+                    h('span', { className: 'dsc-effort-option-label' }, t(EFFORT_LABEL[effort])),
+                    h('span', { className: 'dsc-model-check' }, selected ? h(Icon, { name: 'check', size: 14 }) : null),
+                  )
+                }),
+              ),
       )
       : null,
   )

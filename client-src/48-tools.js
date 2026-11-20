@@ -116,6 +116,10 @@ function toolAvailability(tool, state) {
   }
 }
 
+/**
+ * One row in the "+" card. Follows the native Harness command-menu row:
+ * icon + name on the left, one quiet description aligned on the right.
+ */
 function ToolMenuItem({ tool, state, index, onClose }) {
   const t = useT()
   const availability = toolAvailability(tool, state)
@@ -129,7 +133,7 @@ function ToolMenuItem({ tool, state, index, onClose }) {
   return h('button', {
     type: 'button',
     role: toggle ? 'menuitemcheckbox' : 'menuitem',
-    className: cx('dsc-popover-item dsc-tool-item', active && 'is-active', !enabled && 'is-disabled'),
+    className: 'dsc-tool-item',
     'aria-checked': toggle ? active : undefined,
     'aria-disabled': enabled ? undefined : 'true',
     'data-tool': tool.id,
@@ -142,15 +146,13 @@ function ToolMenuItem({ tool, state, index, onClose }) {
       if (!toggle) onClose()
     },
   },
-    h('span', { className: 'dsc-popover-item-icon' }, h(Icon, { name: tool.icon, size: 17 })),
-    h('span', { className: 'dsc-popover-item-main' },
-      h('span', { className: 'dsc-popover-item-title' }, t(tool.labelKey)),
-      h('span', { className: cx('dsc-popover-item-desc', !enabled && 'is-warn') }, description),
-    ),
-    toggle
-      ? h('span', { className: cx('dsc-switch', active && 'is-on'), 'aria-hidden': 'true' }, h('span', { className: 'dsc-switch-thumb' }))
-      : uploading
-        ? h('span', { className: 'dsc-popover-item-state' }, t('toolUploading'))
+    h('span', { className: 'dsc-tool-icon' }, h(Icon, { name: tool.icon, size: 16 })),
+    h('span', { className: 'dsc-tool-name' }, t(tool.labelKey)),
+    h('span', { className: cx('dsc-tool-desc', !enabled && 'is-warn') }, description),
+    uploading
+      ? h('span', { className: 'dsc-tool-state' }, t('toolUploading'))
+      : toggle && active
+        ? h('span', { className: 'dsc-tool-check' }, h(Icon, { name: 'check', size: 14 }))
         : null,
   )
 }
@@ -194,7 +196,10 @@ function ToolsMenu() {
   const [open, setOpen] = React.useState(false)
   const triggerRef = React.useRef(null)
   const panelRef = React.useRef(null)
-  const layout = usePopupPlacement(open, triggerRef, panelRef)
+  // The native command card is the width of the composer and sits just above
+  // it, not above the small trigger. The placement hook resolves that geometry
+  // from the composer the trigger belongs to.
+  const layout = usePopupPlacement(open, triggerRef, panelRef, { alignToComposer: true })
   useOutsideDismiss(open, () => setOpen(false), panelRef, triggerRef)
   React.useEffect(() => {
     if (!open) return
@@ -209,8 +214,8 @@ function ToolsMenu() {
       ref: triggerRef,
       type: 'button',
       className: cx('dsc-tools-trigger', open && 'is-open'),
-      title: t('toolsMenu'),
-      'aria-label': t('toolsMenu'),
+      title: t('addFiles'),
+      'aria-label': t('addFiles'),
       'aria-haspopup': 'menu',
       'aria-expanded': open,
       onClick: () => setOpen(value => !value),
@@ -225,17 +230,18 @@ function ToolsMenu() {
           setOpen(true)
         }
       },
-    }, h(Icon, { name: 'plus', size: 19 })),
+    }, h(Icon, { name: 'plus', size: 14 })),
     open
       ? h('div', {
           ref: panelRef,
           className: 'dsc-popover dsc-tools-menu',
           role: 'menu',
-          'aria-label': t('toolsMenu'),
+          'aria-label': t('addFiles'),
           'data-placement': layout.placement,
           style: popoverStyle(layout),
           onKeyDown: event => handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef }),
         },
+        h('div', { className: 'dsc-menu-section', role: 'presentation' }, t('fileSection')),
         tools.map((tool, index) => h(ToolMenuItem, {
           key: tool.id,
           tool,

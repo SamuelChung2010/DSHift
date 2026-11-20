@@ -362,3 +362,43 @@ test('organizes conversations into folders, pins and archives them, and searches
     await env.restore()
   }
 })
+
+test('a conversation imported from an export continues like any local chat', async () => {
+  const env = await setup()
+  const originalFetch = globalThis.fetch
+  const requests = []
+  try {
+    const { added } = await env.service.store.adoptConversations([{
+      title: '导入的会话',
+      createdAt: 1000,
+      updatedAt: 2000,
+      source: { kind: 'deepseek-export', id: 'export-1', importedAt: 1500 },
+      messages: [
+        { id: 'u1', role: 'user', content: '之前的问题', createdAt: 1000 },
+        { id: 'a1', role: 'assistant', status: 'done', createdAt: 2000, blocks: [{ type: 'text', text: '之前的回答' }] },
+      ],
+    }])
+    const id = added[0]
+    globalThis.fetch = async (_url, init) => {
+      requests.push(JSON.parse(init.body))
+      return sseResponse(replyEvents('新的回答'))
+    }
+    const items = await readStream(env, { conversationId: id, text: '接着聊', locale: 'zh' })
+    const start = items.find(item => item.type === 'start')
+    assert.equal(start.messages.length, 4)
+    assert.equal(start.messages[0].content, '之前的问题')
+    assert.equal(start.messages[1].blocks[0].text, '之前的回答')
+    assert.equal(items.find(item => item.type === 'done').message.status, 'done')
+    assert.equal(requests.length, 1)
+    assert.match(JSON.stringify(requests[0].messages), /之前的问题/)
+    assert.match(JSON.stringify(requests[0].messages), /接着聊/)
+
+    const detail = await conversation(env, { action: 'get', id })
+    assert.equal(detail.conversation.source.id, 'export-1')
+    assert.equal(detail.conversation.messages.length, 4)
+    assert.equal(detail.conversation.messages[2].content, '接着聊')
+  } finally {
+    globalThis.fetch = originalFetch
+    await env.restore()
+  }
+})
