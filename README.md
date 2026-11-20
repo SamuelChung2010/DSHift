@@ -46,6 +46,7 @@ dsh-chat 在 DeepSeek Harness 中加入一个原生的 **DeepSeek Chat 模式**�
   - 归档：归档会话从普通历史列表隐藏，在「归档管理」中查看、恢复或删除
   - 所有重命名 / 置顶 / 移动 / 归档 / 删除操作集中在右键或「···」菜单；删除会话与删除文件夹都有确认
 - **历史搜索**：同时搜索会话标题和消息正文，支持中英文关键词；结果显示会话、正文片段、置顶/归档标记，点击打开会话并定位到匹配消息（老分支也会被重新打开）
+- **长期记忆**：可选开启的跨会话记忆，能自动或手动保存用户的长期指令、背景、项目与偏好，在新对话中按问题相关度注入；支持记忆概述、Ask or Update 自然语言增删改查，以及从 ChatGPT / Claude / Gemini 等平台导入已有记忆（详见下文）
 - **编辑用户消息**：悬停显示「编辑」「复制」；编辑框沿用消息气泡样式（无嵌套边框），Enter 保存并发送、Shift+Enter 换行、Esc 取消。编辑会创建新的对话分支：原来的回答与后续对话保留为版本，模型只接收当前分支的上下文
 - **回答版本管理**：每条回答可复制、重新生成，重新生成产生独立版本（`1 / 3` 切换）；用户消息的编辑版本也可切换回来。每个版本各自保存正文、思考块、引用来源、用量与结束原因
 - **继续生成**：用户主动停止、网络中断、超时或 `max_tokens` 截断的回答，可从已有正文处继续（以 assistant 前缀续写的方式请求，不做无关拼接）；只对当前最后一条有正文的回答开放
@@ -79,6 +80,19 @@ registerChatTool({
 ```
 
 `chatMenuTools()` 是「＋」浮窗的数据源，`composerToolDefinitions()` 是输入框直接按钮的数据源；没有实现的工具不会注册，也不会出现在任一入口。上传、联网搜索和深度思考分别注册一次，因此菜单里不会重复出现搜索/思考开关。
+
+## 长期记忆
+
+Chat 设置 → **长期记忆** 是一套与会话历史分开的本地记忆系统。记忆默认开启、自动提取默认关闭，两者都可以随时切换：
+
+- **自动记忆提取**（需主动开启）：一轮对话结束后，Host 先用本地规则判断这轮是否包含值得长期保存的信息（用户明确要求遵守的指令、语言/格式/工具习惯、长期背景、项目与技术栈、重要决定等），只有通过判断的轮次才会调用一次 DeepSeek 提取；普通闲聊、代码问答和短句不会产生额外请求，并且每个会话有轮次与时间节流。开启前会提示：相关内容会发送到 DeepSeek API，可能产生额外调用费用。密码、证件号、银行卡、精确住址、联系方式等敏感个人信息不会被自动保存。
+- **跨会话检索**：每次请求都在 Host 端按当前问题做本地词法相关度选择，不引入向量数据库或 Embedding 服务；只有相关的少量记忆会以参考信息加入模型上下文，并限制条数与字符预算。当前用户的新指令优先于历史偏好，记忆被明确标注为参考信息，不能覆盖系统规则。关闭长期记忆后，检索、注入和自动提取全部停止。
+- **记忆概述**：把单条记忆整理成自然、分类清晰的概述，显示最后更新时间。概述是派生缓存：只有记忆条目的实质内容变化（修订号增加）才标记过期，打开记忆页或点击「重新整理」时才重新生成，不会每轮聊天都调用模型。
+- **Ask or Update**：概述下方的输入框可以用自然语言查询记忆（“你现在记得我哪些事情”）、新增（“记住我喜欢简短的回答”）、更正（“我的项目已经从 Python 改成 TypeScript”）、删除（“忘记关于某个项目的记忆”）和重新整理概述。新增、更新、删除都会真正写入本地存储；删除目标不明确时先列出候选并要求确认，不会误删其他记忆。
+- **管理与隐私**：按分类筛选，手动新增、编辑、删除，清空全部记忆（需确认）；每条记忆记录来源（手动 / 来自对话 / 导入自 ChatGPT、Claude、Gemini 等）与更新时间。删除会留下墓碑，旧聊天之后的自动提取不能把它加回来。
+- **从其他 AI 导入**：两步式弹窗。第一步复制一段英文、与平台无关的导出提示词发给其他 AI（Instructions / Identity / Career / Projects / Preferences 五类，每条 `[YYYY-MM-DD] - 内容`，未知日期用 `[unknown]`，整个结果放在单个代码块里）；第二步把结果粘贴回来，本地解析、预览、编辑、勾选后合并导入。重复、冲突或可能包含敏感信息的条目会被标记，并允许逐条选择跳过、合并或更新；重复粘贴同一份导出不会产生重复记忆。非结构化文本可以显式同意后交给 DeepSeek 整理，默认不发送。
+
+与未来 DeepSeek 聊天记录导入（ZIP）的整合接口见 [docs/memory-integration.md](docs/memory-integration.md)：聊天记录导入分支只需把已解析的会话消息交给 `extract.session` 分析和 `import` 合并，不读取 ZIP、不共享第二套记忆库，也不会在启动时扫描历史。
 
 ## 来源与引用
 
@@ -148,6 +162,7 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 | `requestTimeoutMs` | `900000` | 单次生成超时（15 分钟） |
 | `heartbeatMs` | `15000` | 流式心跳间隔 |
 | `handoffTimeoutMs` | `90000` | 生成任务说明 / 提交给 Agent 的超时 |
+| `memoryTimeoutMs` | `60000` | 记忆提取、概述生成或 AI 整理单次请求的超时 |
 
 ## 数据
 
@@ -156,6 +171,7 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 - 编辑、重新生成只会新增兄弟节点，旧消息节点不会被覆盖；切换版本只改变 `leafId`
 - 消息版本各自保存 `blocks`（正文、思考、搜索/阅读步骤与引用）、`usage`、`stopReason` 等元数据
 - 模型与思考强度偏好：`$DSH_HOME/deepseek-chat/model-config.json`（按会话 id 记录覆盖项 + 新对话默认值）
+- 长期记忆：`$DSH_HOME/deepseek-chat/memory.json`（原子写入）——开启状态、记忆条目、来源、概述缓存、修订号与删除墓碑。它与 `state.json` 的聊天记录完全分开，不覆盖、不迁移聊天历史；文件损坏时会隔离为 `memory.json.corrupt-<时间戳>` 并从空记忆启动，聊天不受影响
 - 上传文件：由 DeepSeek Files API 托管，插件只保存 `file_id` 和展示元数据；附件会随编辑后的用户消息保留
 - 删除会话只删除本地记录和该会话的模型偏好，不删除 DeepSeek 侧已上传的文件
 - 联网搜索、深度思考搜索与文件解析使用 DeepSeek 服务，可能产生对应用量费用
@@ -166,8 +182,9 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 - 存储：`lib/store.js` 维护会话节点树、文件夹与组织状态；`presentPath()` 只把当前分支交给协议层，`selectVersion()` / `focusMessage()` 通过切换 `leafId` 重开旧分支；历史搜索在本地线性扫描标题与正文，不引入额外数据库。
 - 流式协议：`/api/deepseek-chat/stream` 支持 `send` / `edit` / `regenerate` / `continue` 四种模式。`edit` 把新提问挂到原提问的父节点下，`regenerate` 在同一个提问下新增回答兄弟节点，`continue` 用已保存的可见正文作为 assistant 前缀（prefill）请求剩余内容并原地追加。`start` 帧会下发本次生效的完整分支，浏览器用它替换乐观渲染的消息，避免旧分支回答混入当前上下文。
 - 模型：`lib/model-config.js` 是模型目录、能力与偏好的唯一来源，`bootstrap.models` 把目录送到浏览器；`/api/deepseek-chat/model` 读写偏好；`stream` 用目录校验 `model`，把偏好中的 effort 与请求值折叠后交给协议层。
+- 记忆：`lib/memory-text.js`（规范化、内容指纹、词法相似度、分类推断、敏感信息检测）、`lib/memory-store.js`（`memory.json`、去重/合并、导入、删除墓碑、概述修订号）、`lib/memory.js`（相关度检索与字符预算、系统提示记忆块、自动提取的门控与提示词、概述生成、Ask or Update 规划器、`extractFromMessages` 历史导入接口）。Host 的 `/api/deepseek-chat/memory` 提供记忆读写、预览、导入、概述刷新、Ask/确认和 AI 整理动作；`stream` 在构造请求时注入相关记忆，并在回复结束后异步触发自动提取，提取失败只记一条警告，不影响聊天。
 - Client：`client.js` 由 `client-src/*.js` 拼接，通过 `shell.overlay` 渲染全屏 Chat（起点在 `--dsh-frame-chrome-top` 之下，即原生标题栏下方），并在同一 `shell.overlay` 注册 root 级的 `deepseek-chat-mode:mode-switch`，作为两种模式共享的顶层导航。样式全部使用 `--dsw-*` 主题变量；侧栏品牌沿用 DeepSeek 官方鲸鱼与字标矢量，内联在插件中，不加载 Harness Client 包。
-- Client 模块：`30-markdown.js`（Markdown 与引用标记）、`31-highlight.js`、`32-math.js`、`33-mermaid.js`、`43-popover.js`（弹出层定位与键盘）、`47-model.js`（模型菜单）、`48-tools.js`（工具注册表与「＋」菜单）。
+- Client 模块：`30-markdown.js`（Markdown 与引用标记）、`31-highlight.js`、`32-math.js`、`33-mermaid.js`、`43-popover.js`（弹出层定位与键盘）、`47-model.js`（模型菜单）、`48-tools.js`（工具注册表与「＋」菜单）、`58-memory.js`（长期记忆设置页、记忆概述、Ask or Update、跨平台导入弹窗与本地导出解析器）。
 - 协议：Anthropic 兼容 Messages API（`https://api.deepseek.com/anthropic/v1`），使用 `deepseek-flash`、`deepseek-v4-pro`、`deepseek_web_search`、`deepseek_read_url`、`safety_check`、`title` 与 Files API。
 - 继续生成使用 assistant 前缀续写：请求以现有可见正文作为最后一条 assistant 消息，并关闭 reasoning、只保留 `deepseek_read_url`；返回内容追加到同一条回答，不新建分支。
 
@@ -192,6 +209,12 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 - 生成过程中需先停止回复，才能切换会话、编辑消息或新建对话。
 - `deepseek-v4-pro` 不支持图片理解；含图片的消息会在发送前被拒绝并提示切换模型。
 - 宿主端代码（`index.js` / `lib/`）改动后需要重载插件或重启 Harness 才会生效；浏览器端会先显示“需要刷新插件”的提示。
+- 长期记忆的跨会话检索使用本地词法匹配（中文按二元字符、英文按单词），没有向量数据库或 Embedding；语义相近但用词完全不同的记忆可能检索不到，适合轻量本机使用。
+- 自动提取依赖本地规则判断加每轮最多一次额外模型调用；关闭自动提取后手动记忆、检索与导入仍然可用。
+- 记忆概述一次生成一种界面语言的文本；切换界面语言后点击「重新整理」才会按新语言重新生成。
+- 跨平台导入优先使用本地解析器，支持常见标题、列表与代码块格式；极端格式可能需要「AI 整理」（需显式同意后才会发送到 DeepSeek）。
+- 敏感信息检测与去重都是启发式规则，不能替代用户自己检查；导入前预览会标出可能重复、冲突或敏感的内容。
+- 长期记忆只保存在本机 DSH Host 的 `memory.json`，不参与 Harness 原生 Agent 会话存储，也不会同步到其他设备。
 - 联网搜索、文件解析是否可用取决于账号/API Key 与所选模型的服务端能力，可能产生额外用量费用。
 - 本插件不是 DeepSeek 官方产品。
 
@@ -200,15 +223,16 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 ```sh
 node --test tests/*.test.js        # 或逐个执行（受限沙箱里 --test 子进程不可用）
 node tools/build-client.js         # client-src/*.js -> client.js
-node tools/smoke-client.js         # 无浏览器渲染冒烟（会话分组、搜索、编辑/重生成/续写、输入框、菜单、来源、模型、工作区创建、公式/图表/代码）
+node tools/smoke-client.js         # 无浏览器渲染冒烟（会话分组、搜索、编辑/重生成/续写、输入框、菜单、来源、模型、工作区创建、长期记忆、公式/图表/代码）
 node tools/check-css.js            # 样式括号 / 硬编码颜色检查
 node tools/check-classes.js        # JS 与样式类名一致性
 node tools/check-i18n.js           # 中英文键一致性
 node tools/check-highlight.js      # 代码高亮字符不丢失 / 分类 / 性能
 node tools/check-math.js           # LaTeX 子集渲染回退与深度保护
 node tools/check-mermaid.js        # Mermaid 解析、几何与错误回退
+node tools/check-memory-client.js  # 跨平台记忆导出提示词与本地解析器
 ```
 
-测试覆盖：`tests/store.test.js`（v1→v2 迁移与备份、文件夹/置顶/归档、搜索、分支与版本切换）、`tests/protocol.test.js`（上下文构造与续写前缀）、`tests/conversation.test.js`（Host 路由与 send/edit/regenerate/continue 端到端）、`tests/workspace.test.js`（项目文件夹创建、工作区注册与交接）、`tests/model-config.test.js`、`tests/service-stream.test.js`、`tests/api.test.js`、`tests/profile.test.js`、`tests/host-entry.test.js`。
+测试覆盖：`tests/store.test.js`（v1→v2 迁移与备份、文件夹/置顶/归档、搜索、分支与版本切换）、`tests/protocol.test.js`（上下文构造与续写前缀）、`tests/conversation.test.js`（Host 路由与 send/edit/regenerate/continue 端到端）、`tests/workspace.test.js`（项目文件夹创建、工作区注册与交接）、`tests/model-config.test.js`、`tests/service-stream.test.js`、`tests/api.test.js`、`tests/profile.test.js`、`tests/host-entry.test.js`、`tests/memory-store.test.js`（记忆持久化、去重/合并、导入幂等、墓碑、概述修订、损坏恢复）、`tests/memory-service.test.js`（检索与预算、提取门控、概述并发、Ask or Update 增删改确认、历史会话提取接口）、`tests/memory-conversation.test.js`（记忆注入真实流式请求、关闭/删除后停止注入、后台提取成功与失败、memory 路由端到端）、`tests/memory-import.test.js`（跨平台导出解析器）。
 
 安装：在 DSH 的 Plugins 页面选择本地目录，或由 Agent 使用 `plugin_manager install_bundle` 安装本目录。发布包也可以使用 `.tgz` 直接安装；`.zip` 需先解压，安装目标为解压后的目录（DSH 不接受 `.zip` 文件本身）。本机开发时 profile 里用 `link:` 指向本仓库即可。

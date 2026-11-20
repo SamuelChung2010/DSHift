@@ -1437,4 +1437,31 @@ if (collectByClass(quoteTree, 'dsc-quote').length !== 1) throw new Error('block 
 if (collectByClass(quoteTree, 'dsc-list').length !== 1) throw new Error('lists inside quotes must render')
 console.log('RENDERING_OK')
 
+// ---------------------------------------------------------------------------
+// Long-term memory: parser, prompt contract and the two new UI surfaces.
+// ---------------------------------------------------------------------------
+console.log('MEMORY_START')
+const parsedExport = captured.parseMemoryExport([
+  '## Instructions',
+  '- [2026-01-02] - Always answer in Chinese.',
+  '## Identity',
+  '- [unknown] - I am Alex and I live in Singapore.',
+].join('\n'))
+if (parsedExport.entries.length !== 2) throw new Error(`the memory parser must read both records: ${parsedExport.entries.length}`)
+if (parsedExport.entries[0].category !== 'instruction' || parsedExport.entries[1].category !== 'identity') {
+  throw new Error('the memory parser must keep the category headings')
+}
+if (parsedExport.entries[1].date !== 'unknown') throw new Error('the memory parser must keep an unknown date marker')
+for (const phrase of ['Instructions', 'Identity', 'Career', 'Projects', 'Preferences', '[YYYY-MM-DD]', '[unknown]', 'fenced code block']) {
+  if (!captured.MEMORY_IMPORT_PROMPT.includes(phrase)) throw new Error(`the import prompt is missing ${phrase}`)
+}
+// The pane paints a loading state before its Host fetch resolves, so rendering
+// it here exercises the mount path without a network round trip.
+render('MemorySettingsPane', captured.MemorySettingsPane)
+render('MemoryImportDialog', captured.MemoryImportDialog, { onClose: () => {}, onImported: () => {} })
+const importTree = React.createElement(captured.MemoryImportDialog, { onClose: () => {}, onImported: () => {} })
+if (collectByClass(importTree, 'dsc-memory-import').length === 0) throw new Error('the import dialog must mount its own native <dialog>')
+if (collectByClass(importTree, 'dsc-memory-prompt').length !== 1) throw new Error('the import dialog must show the copyable prompt')
+console.log('MEMORY_OK')
+
 console.log('SMOKE_OK')

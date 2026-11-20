@@ -1836,6 +1836,8 @@ function ChatRoot() {
           return
         }
         if (settingsOpen) {
+          // The import dialog is nested inside settings; Escape closes only it.
+          if (memoryImportDialogOpen()) return
           chatStore.set({ settingsOpen: false })
           return
         }
@@ -1871,6 +1873,8 @@ function ChatRoot() {
         return
       }
       if (event.key !== 'Tab') return
+      // The nested import dialog owns its own native focus cycle.
+      if (memoryImportDialogOpen()) return
       const root = rootRef.current
       if (!root) return
       // A dialog traps focus on its own; otherwise the surface and the shared

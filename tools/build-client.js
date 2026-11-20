@@ -17,6 +17,7 @@ const parts = [
   '48-tools.js',
   '50-components.js',
   '55-dialogs.js',
+  '58-memory.js',
   '60-style.js',
   '70-main.js',
 ]
