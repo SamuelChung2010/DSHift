@@ -1595,4 +1595,21 @@ const analyzedTree = React.createElement(captured.ImportMemoryDialog, { onClose:
 if (collectByClass(analyzedTree, 'dsc-import-badge').length !== 1) throw new Error('an analyzed conversation must be badged')
 console.log('IMPORT_MEMORY_OK')
 
+captured.chatStore.set({
+  importMemoryOpen: true,
+  importMemoryBatch: ['conv-imported'],
+  boot: 'ready',
+  open: true,
+  conversations: [{
+    id: 'conv-imported',
+    title: 'Imported project chat',
+    messageCount: 6,
+    updatedAt: 10,
+    source: { kind: 'deepseek-export', id: 'export-1', importedAt: 5, memoryExtractedAt: null },
+  }],
+})
+const rootTree = React.createElement(captured.ChatRoot)
+if (collectByClass(rootTree, 'dsc-memory-extract-modal').length !== 1) throw new Error('ChatRoot must mount the import-memory dialog while it is open')
+captured.chatStore.set({ importMemoryOpen: false, importMemoryBatch: [] })
+
 console.log('SMOKE_OK')
