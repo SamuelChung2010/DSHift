@@ -1580,6 +1580,7 @@ captured.chatStore.set({
 const extractTree = React.createElement(captured.ImportMemoryDialog, { onClose: () => {} })
 if (collectByClass(extractTree, 'dsc-memory-extract-modal').length !== 1) throw new Error('the extract dialog must mount its own modal')
 if (collectByClass(extractTree, 'dsc-import-item').length !== 1) throw new Error('the extract dialog must list the imported conversation')
+if (collectByClass(extractTree, 'dsc-import-item').some(row => row.props['aria-checked'] === true)) throw new Error('no imported conversation may be preselected for analysis')
 if (!collectionText(extractTree).includes(captured.DICTS.zh.memoryExtractTitle)) throw new Error('the extract dialog must name its purpose')
 if (collectByClass(extractTree, 'dsc-memory-consent').length !== 0) throw new Error('no consent may appear before the user asks to analyze')
 captured.chatStore.set({

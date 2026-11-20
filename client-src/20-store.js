@@ -180,6 +180,9 @@ const chatStore = {
     // long-term memory. Opening the dialog never starts a model call.
     importMemoryOpen: false,
     importMemoryBatch: [],
+    // Bumped after the extraction dialog saves memories, so a settings pane
+    // that stayed mounted underneath it reloads its snapshot.
+    memoryChangedAt: 0,
   },
   listeners: new Set(),
   subscribe(listener) {

@@ -533,3 +533,47 @@ test('a failed imported-memory extraction leaves the imported chat untouched', a
     assert.equal(service.memoryStore.list().length, 0)
   })
 })
+
+test('caps one extraction batch and reports over-limit chats instead of dropping them', async () => {
+  await withService(async ({ service, routes }) => {
+    const env = { service, routes }
+    const { added } = await service.store.adoptConversations([{
+      title: '导入的会话',
+      createdAt: 1,
+      updatedAt: 2,
+      source: { kind: 'deepseek-export', id: 'export-limit', importedAt: 1 },
+      messages: [{ id: 'u1', role: 'user', content: '记住我喜欢简短回答', createdAt: 1 }],
+    }])
+    const id = added[0]
+    const missing = Array.from({ length: 20 }, (_, index) => `missing-${index}`)
+    const result = await call(env, '/api/deepseek-chat/memory', {
+      action: 'extract.imported',
+      conversationIds: [...missing, id],
+      consent: true,
+      locale: 'zh',
+    })
+    assert.equal(result.status, 200)
+    assert.equal(result.value.analyzed, 0)
+    assert.equal(result.value.entries.length, 0)
+    assert.deepEqual(result.value.skipped.find(item => item.reason === 'over-limit'), { id, reason: 'over-limit' })
+    // The over-limit conversation is neither analyzed nor marked.
+    assert.equal(service.store.getConversation(id).source.memoryExtractedAt, null)
+  })
+})
+
+test('memories saved from imported chats keep conversation provenance', async () => {
+  await withService(async ({ service, routes }) => {
+    const env = { service, routes }
+    const saved = await call(env, '/api/deepseek-chat/memory', {
+      action: 'import',
+      entries: [{ content: '用户偏好简洁的回答', category: 'preferences' }],
+      source: { type: 'conversation', label: 'Imported chats' },
+    })
+    assert.equal(saved.status, 200)
+    assert.equal(saved.value.result.added, 1)
+    const memory = service.memoryStore.list()[0]
+    assert.equal(memory.source.type, 'conversation')
+    assert.equal(memory.source.label, 'Imported chats')
+    assert.equal(memory.source.platform, null)
+  })
+})
