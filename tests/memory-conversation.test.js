@@ -577,3 +577,64 @@ test('memories saved from imported chats keep conversation provenance', async ()
     assert.equal(memory.source.platform, null)
   })
 })
+
+test('a conversation with no usable transcript is skipped without a model call or marker', async () => {
+  await withService(async ({ service, routes }) => {
+    const env = { service, routes }
+    const { added } = await service.store.adoptConversations([{
+      title: '空白会话',
+      createdAt: 1,
+      updatedAt: 2,
+      source: { kind: 'deepseek-export', id: 'export-empty', importedAt: 1 },
+      messages: [{ id: 'u1', role: 'user', content: '   ', createdAt: 1 }],
+    }])
+    const id = added[0]
+    let calls = 0
+    globalThis.fetch = async () => {
+      calls += 1
+      return textResponse('{"memories":[]}')
+    }
+    const result = await call(env, '/api/deepseek-chat/memory', {
+      action: 'extract.imported', conversationIds: [id], consent: true, locale: 'zh',
+    })
+    assert.equal(result.status, 200)
+    assert.equal(result.value.analyzed, 0)
+    assert.equal(calls, 0, 'an empty transcript must not reach the model')
+    assert.equal(result.value.skipped[0].reason, 'empty')
+    // No analysis happened, so the conversation stays eligible next time.
+    assert.equal(service.store.getConversation(id).source.memoryExtractedAt, null)
+  })
+})
+
+test('concurrent extraction of one conversation spends one model call and marks one skip', async () => {
+  await withService(async ({ service, routes }) => {
+    const env = { service, routes }
+    const { added } = await service.store.adoptConversations([{
+      title: '并发会话',
+      createdAt: 1,
+      updatedAt: 2,
+      source: { kind: 'deepseek-export', id: 'export-concurrent', importedAt: 1 },
+      messages: [
+        { id: 'u1', role: 'user', content: '我喜欢简洁的回答', createdAt: 1 },
+        { id: 'a1', role: 'assistant', status: 'done', createdAt: 2, blocks: [{ type: 'text', text: '好的' }] },
+      ],
+    }])
+    const id = added[0]
+    let calls = 0
+    globalThis.fetch = async () => {
+      calls += 1
+      await new Promise(resolve => setTimeout(resolve, 30))
+      return textResponse('{"memories":[{"category":"preferences","content":"用户喜欢简洁的回答"}]}')
+    }
+    const body = { action: 'extract.imported', conversationIds: [id], consent: true, locale: 'zh' }
+    const [first, second] = await Promise.all([
+      call(env, '/api/deepseek-chat/memory', body),
+      call(env, '/api/deepseek-chat/memory', body),
+    ])
+    assert.equal(calls, 1, 'the second request must not analyze the same conversation again')
+    assert.equal(first.value.analyzed + second.value.analyzed, 1)
+    const skipped = [...first.value.skipped, ...second.value.skipped]
+    assert.equal(skipped.some(item => item.reason === 'in-flight'), true)
+    assert.equal(typeof service.store.getConversation(id).source.memoryExtractedAt, 'number')
+  })
+})

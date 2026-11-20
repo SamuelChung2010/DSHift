@@ -308,20 +308,20 @@ function MemorySettingsPane() {
     setStatus('ready')
   }
 
-  const applyLoaded = (data) => {
+  const applyLoaded = (data, { autoSummary = true } = {}) => {
     applySnapshot(data)
     setLoadError('')
-    if (data?.stale === true && data?.settings?.enabled === true && Array.isArray(data.memories) && data.memories.length > 0) {
+    if (autoSummary && data?.stale === true && data?.settings?.enabled === true && Array.isArray(data.memories) && data.memories.length > 0) {
       void refreshSummary({ auto: true })
     }
   }
 
-  const load = async () => {
+  const load = async ({ autoSummary = true } = {}) => {
     setStatus('loading')
     try {
       const data = await memoryRequest({ action: 'get' })
       if (!alive.current) return
-      applyLoaded(data)
+      applyLoaded(data, { autoSummary })
     } catch (error) {
       if (!alive.current) return
       if (error?.status === 404) setStatus('outdated')
@@ -528,7 +528,10 @@ function MemorySettingsPane() {
   React.useEffect(() => {
     if (memoryChangedAt === seenMemoryChange.current) return
     seenMemoryChange.current = memoryChangedAt
-    void load()
+    // The extraction consent covered extraction calls, not a summary
+    // regeneration: reload the facts but leave the stale summary for an
+    // explicit refresh.
+    void load({ autoSummary: false })
   }, [memoryChangedAt])
 
   const settings = snapshot?.settings ?? { enabled: false, autoExtract: false }
@@ -1218,6 +1221,7 @@ function ImportMemoryDialog({ onClose }) {
       if (entries.length === 0) {
         setStep('pick')
         if (failed.length > 0) setError(t('memoryExtractFailed', { message: memoryErrorText(failed[0].reason) }))
+        else if (analyzedIds.length === 0 && skipped.length > 0) setError(t('memoryExtractAllSkipped', { count: skipped.length }))
         else setError(t('memoryExtractEmpty'))
         if (analyzedIds.length > 0) chatStore.toast(t('memoryExtractDoneEmpty', { count: analyzedIds.length }), 'info')
         if (cancelled) chatStore.toast(t('memoryExtractCancelled', { count: analyzedIds.length }), 'info')

@@ -528,6 +528,7 @@ const DICT_ZH = {
   memoryExtractStopping: '正在停止…',
   memoryExtractProgress: '已分析 {done} / {total} 个会话',
   memoryExtractCancelled: '已停止，完成 {count} 个会话的分析。',
+  memoryExtractAllSkipped: '{count} 个会话已分析过或没有可分析的内容，没有发出新的分析请求。',
 }
 
 const DICT_EN = {
@@ -1056,4 +1057,5 @@ const DICT_EN = {
   memoryExtractStopping: 'Stopping…',
   memoryExtractProgress: 'Analyzed {done} of {total} conversations',
   memoryExtractCancelled: 'Stopped; {count} conversations were analyzed.',
+  memoryExtractAllSkipped: '{count} conversations were already analyzed or had nothing to analyze; no new request was sent.',
 }

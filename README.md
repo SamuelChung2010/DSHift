@@ -101,7 +101,7 @@ Chat 设置 → **长期记忆** 是一套与会话历史分开的本地记忆�
 - **管理与隐私**：按分类筛选，手动新增、编辑、删除，清空全部记忆（需确认）；每条记忆记录来源（手动 / 来自对话 / 导入自 ChatGPT、Claude、Gemini 等）与更新时间。删除会留下墓碑，旧聊天之后的自动提取不能把它加回来。
 - **从其他 AI 导入**：两步式弹窗。第一步复制一段英文、与平台无关的导出提示词发给其他 AI（Instructions / Identity / Career / Projects / Preferences 五类，每条 `[YYYY-MM-DD] - 内容`，未知日期用 `[unknown]`，整个结果放在单个代码块里）；第二步把结果粘贴回来，本地解析、预览、编辑、勾选后合并导入。重复、冲突或可能包含敏感信息的条目会被标记，并允许逐条选择跳过、合并或更新；重复粘贴同一份导出不会产生重复记忆。非结构化文本可以显式同意后交给 DeepSeek 整理，默认不发送。
 
-与 DeepSeek 聊天记录导入（ZIP）的整合已经打通：导入完成页会出现可选的「提取长期记忆」入口，也可以在「长期记忆」页重新打开。弹窗先列出可分析的导入会话（已分析过的带标记、默认跳过），默认不勾选任何会话；勾选后说明每个会话一次额外 API 调用及可能费用，只有再次确认后才逐个调用 `extract.imported`（一次最多 20 个，超出会明确提示而不是静默截断；分析过程中显示进度并可随时停止）。候选记忆沿用 `preview` 的重复/冲突/敏感标记，确认后走同一个 `import` 合并入口，来源记为「来自对话」。分析只读取当前分支消息，不修改 `state.json` 的消息树；分析成功的时间写在会话 `source.memoryExtractedAt`，所以同一批历史不会重复发送，除非用户显式勾选「重新分析」（关闭预览不会撤销标记，界面会提示）。详见 [docs/memory-integration.md](docs/memory-integration.md)。
+与 DeepSeek 聊天记录导入（ZIP）的整合已经打通：导入完成页会出现可选的「提取长期记忆」入口，也可以在「长期记忆」页重新打开。弹窗先列出可分析的导入会话（已分析过的带标记、默认跳过），默认不勾选任何会话；勾选后说明每个会话一次额外 API 调用及可能费用，只有再次确认后才逐个调用 `extract.imported`（一次最多 20 个，超出会明确提示而不是静默截断；分析过程中显示进度，可在会话之间停止）。候选记忆沿用 `preview` 的重复/冲突标记（提取阶段已过滤敏感信息），确认后走同一个 `import` 合并入口，来源记为「来自对话」。分析只读取当前分支消息，不修改 `state.json` 的消息树；分析成功的时间写在会话 `source.memoryExtractedAt`，所以同一批历史不会重复发送，除非用户显式勾选「重新分析」（关闭预览不会撤销标记，界面会提示）。详见 [docs/memory-integration.md](docs/memory-integration.md)。
 
 ## 来源与引用
 
@@ -267,7 +267,7 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 - 导入大量会话会让 `state.json` 变大（几百个会话约几十 MB），每次保存都要重写整份文档；建议只勾选需要的会话（可导入会话超过 100 个时弹窗会提示）。
 - 导入是单任务的：同一时间只允许一个导入任务，取消后会保留已写入的批次。
 - 导入只恢复导出中确实存在的内容：`TOOL_FIND` / `TOOL_IMAGE_SEARCH` 等没有正文的片段不会进入消息；导出中缺少字节的附件只保留元数据。
-- 导入后的记忆提取是用户主动发起的：默认不分析任何会话，每个被分析的会话会产生一次额外 DeepSeek 调用与相应费用。分析成功后会写入 `source.memoryExtractedAt` 并在下次默认跳过；失败不写标记，也不修改已导入的聊天，可以重新选择后再试。
+- 导入后的记忆提取是用户主动发起的：默认不分析任何会话，每个被分析的会话会产生一次额外 DeepSeek 调用与相应费用。真正发出请求并完成的会话写入 `source.memoryExtractedAt`，下次默认跳过；模型有响应但没有候选时仍算已分析（避免为同一段历史重复付费），没有可分析内容或请求失败的会话不写标记，也不修改已导入的聊天。分析中途停止时，已完成请求的会话保留标记，未开始的保持可分析。
 - 文件夹整理通过菜单完成，未实现拖拽排序（避免引入拖拽依赖）。
 - 生成过程中需先停止回复，才能切换会话、编辑消息或新建对话。
 - `deepseek-v4-pro` 不支持图片理解；含图片的消息会在发送前被拒绝并提示切换模型。
@@ -296,6 +296,6 @@ node tools/check-mermaid.js        # Mermaid 解析、几何与错误回退
 node tools/check-memory-client.js  # 跨平台记忆导出提示词与本地解析器
 ```
 
-测试覆盖：`tests/store.test.js`（v1→v2 迁移与备份、文件夹/置顶/归档、搜索、分支与版本切换、导入会话的记忆分析标记）、`tests/protocol.test.js`（上下文构造与续写前缀）、`tests/conversation.test.js`（Host 路由与 send/edit/regenerate/continue 端到端、导入会话继续聊天）、`tests/workspace.test.js`（项目文件夹创建、工作区注册与交接）、`tests/import.test.js`（导出预览、导入、去重、重启持久化、取消、损坏会话隔离、路径穿越与解压上限）、`tests/import-convert.test.js`（片段映射、分支选择、来源字段、存储合并与请求构造）、`tests/model-config.test.js`、`tests/service-stream.test.js`、`tests/api.test.js`、`tests/profile.test.js`、`tests/host-entry.test.js`、`tests/memory-store.test.js`（记忆持久化、去重/合并、导入幂等、墓碑、概述修订、损坏恢复）、`tests/memory-service.test.js`（检索与预算、提取门控、概述并发、Ask or Update 增删改确认、历史会话提取接口）、`tests/memory-conversation.test.js`（记忆注入真实流式请求、关闭/删除后停止注入、后台提取成功与失败、memory 路由端到端、导入会话的选择性提取/确认/去重/失败隔离）、`tests/memory-import.test.js`（跨平台导出解析器）。导入测试的样本由 `tests/support/export-fixture.js` 现场生成，不包含任何真实聊天记录。
+测试覆盖：`tests/store.test.js`（v1→v2 迁移与备份、文件夹/置顶/归档、搜索、分支与版本切换、导入会话的记忆分析标记）、`tests/protocol.test.js`（上下文构造与续写前缀）、`tests/conversation.test.js`（Host 路由与 send/edit/regenerate/continue 端到端、导入会话继续聊天）、`tests/workspace.test.js`（项目文件夹创建、工作区注册与交接）、`tests/import.test.js`（导出预览、导入、去重、重启持久化、取消、损坏会话隔离、路径穿越与解压上限）、`tests/import-convert.test.js`（片段映射、分支选择、来源字段、存储合并与请求构造）、`tests/model-config.test.js`、`tests/service-stream.test.js`、`tests/api.test.js`、`tests/profile.test.js`、`tests/host-entry.test.js`、`tests/memory-store.test.js`（记忆持久化、去重/合并、导入幂等、墓碑、概述修订、损坏恢复）、`tests/memory-service.test.js`（检索与预算、提取门控、概述并发、Ask or Update 增删改确认、历史会话提取接口）、`tests/memory-conversation.test.js`（记忆注入真实流式请求、关闭/删除后停止注入、后台提取成功与失败、memory 路由端到端、导入会话的选择性提取/确认/去重/失败隔离/空会话不标记/并发去重）、`tests/memory-import.test.js`（跨平台导出解析器）。导入测试的样本由 `tests/support/export-fixture.js` 现场生成，不包含任何真实聊天记录。
 
 安装：在 DSH 的 Plugins 页面选择本地目录，或由 Agent 使用 `plugin_manager install_bundle` 安装本目录。发布包也可以使用 `.tgz` 直接安装；`.zip` 需先解压，安装目标为解压后的目录（DSH 不接受 `.zip` 文件本身）。本机开发时 profile 里用 `link:` 指向本仓库即可。
