@@ -38,12 +38,12 @@ dsh-chat 在 DeepSeek Harness 中加入一个原生的 **DeepSeek Chat 模式**�
 - 空白首页只有一条欢迎语和输入框，不再堆叠功能卡片：12 句不同风格的问候按「新建对话」随机轮换（同一页内保持不变，且不会连续重复）；带用户名的句子会读取当前 DSH / DeepSeek 账号的显示名称，取不到时自然改用不带称呼的版本
 - 左侧栏与原生 Agent 侧栏同构：顶部是 DeepSeek 官方蓝色鲸鱼 + `deepseek` 字标，下方依次是新对话、搜索、历史列表与底部设置；右边缘可拖拽调整宽度并记住设置
 - 普通聊天、多轮上下文、流式输出、停止生成
-- **输入框**：一个统一的圆角容器，编辑器本身没有边框和浏览器焦点方框，整块容器负责焦点反馈；随文本自动增高，超过 220px 后在内部滚动；Enter 发送 / Shift + Enter 换行（可在设置中改为 Ctrl + Enter 发送），中文输入法组合文字时 Enter 只确认候选，不会误发
-- **联网搜索 / 深度思考**：输入框下方两个独立的开关按钮，点击直接启用或关闭，不需要进入「＋」菜单；开启时使用柔和强调色，不显示删除图标，位置不随状态变化；模型不支持时按钮禁用并在提示中说明原因
-- **「＋」工具菜单**：输入框左下的独立圆角浮窗，向上展开并避开整个输入框，不挤压聊天内容；当前只包含上传图片或文件，键盘方向键 / Home / End / Escape 可完整操作，空间不足时自动翻到另一侧并限制高度
-- **深度思考**：展示可折叠的思考过程与固定用时（刷新、切换会话后不再增长）；开启后输入框右侧显示独立的思考强度控件，可选择关闭 / 低 / 高 / 最高
+- **输入框**：一个接近 Harness 原生 Agent 输入框的统一圆角容器（28px 面板圆角、原生菜单/输入面材质与描边）；编辑器本身没有边框和浏览器焦点方框，聚焦时保持安静、不点亮外层光环；随文本自动增高，超过 220px 后在内部滚动；Enter 发送 / Shift + Enter 换行（可在设置中改为 Ctrl + Enter 发送），中文输入法组合文字时 Enter 只确认候选，不会误发
+- **联网搜索 / 深度思考**：输入框下方两个独立的 28px 开关按钮，点击直接启用或关闭，不需要进入「＋」菜单；开启时使用柔和强调色，不显示删除图标，位置不随状态变化；模型不支持时按钮禁用并在提示中说明原因
+- **「＋」工具菜单**：输入框左下的 28px 圆形按钮，点开后向上浮出与输入框**几乎等宽**的大圆角菜单面板，和输入框只隔 4px；行式布局为左侧图标 + 名称、右侧一行简短说明，当前只包含上传图片或文件，键盘方向键 / Home / End / Escape 可完整操作，空间不足时自动翻到另一侧并限制高度
+- **深度思考**：展示可折叠的思考过程与固定用时（刷新、切换会话后不再增长）；推理等级与模型一起显示在输入框右侧，在同一个双层菜单中选择 `Off / Low / High / Max`
 - **联网搜索**：使用 DeepSeek 服务端 `deepseek_web_search`，回答带正文引用编号与折叠的来源列表
-- **模型选择**：可在发送前切换 `deepseek-flash` / `deepseek-v4-pro`，菜单只列模型名称，当前项有勾选标记，完整说明通过悬停查看，选择按会话保存；不支持的能力（如 V4 Pro 的图片理解）会禁用并说明原因
+- **模型选择**：可在发送前切换 `deepseek-flash` / `deepseek-v4-pro`；右侧显示类似原生的 `DeepSeek-V4.1-Flash Max`，展开后先是「模型 / 推理等级」两行，再进入只有名称的模型列表或只有档位的等级列表，当前项用右侧勾选标记，选择按会话保存；不支持的能力（如 V4 Pro 的图片理解）会禁用并在行内以一行小字说明原因
 - **阅读链接**：始终声明 `deepseek_read_url`，自动阅读用户消息中的链接
 - **文件与图片上传**：PDF、Word、PPT 走版面解析；图片直接作为图片输入；文本、代码、表格、电子书走 `user_data`
 - **会话管理**
@@ -64,11 +64,12 @@ dsh-chat 在 DeepSeek Harness 中加入一个原生的 **DeepSeek Chat 模式**�
 
 输入框由 `Composer` 一个组件实现，空白聊天和已有聊天共用：
 
-- `.dsc-composer` 是唯一的圆角边框与阴影；`.dsc-editor-field` 是透明、无边框的文本编辑器。聚焦时容器只做一次轻微的边框颜色变化，键盘导航额外获得 1px 柔和 ring；浏览器默认 outline 在文本控件上被显式关闭，因此不会出现白色双层描边。
+- `.dsc-composer` 是唯一的圆角边框、输入面材质与柔和阴影；`.dsc-editor-field` 是透明、无边框的文本编辑器。聚焦时**不画任何环**（连轻微边框变化都移除），只剩原生光标，复刻 Harness 输入区的安静 focus state。
+- 内部结构对齐 Harness：文本区 `4px 8px 0 14px`，顶部 8px 留白，文本与工具行之间 12px，工具行 `2px 8px 6px`；`+` 为 28px 圆形按钮（原生 selector 填充），发送为 34px 圆形信息蓝按钮（空内容时 40% 透明度），两者都使用 `--dsw-*` 原生 token。
 - 高度由编辑器内容决定，达到上限后 `overflow-y` 打开；粘贴长文本只影响内部滚动。
 - 发送键偏好保存在本机（`sendKey`），设置里有"Enter 发送"和"Ctrl + Enter 发送"两档。
 - 未发送的草稿按会话暂存：切换会话或点「新对话」时恢复各自的文本；附件上传会按原有逻辑中止。
-- 联网搜索、深度思考和思考强度都显示在输入框附近：前两者是固定位置的直接开关，后者是模型旁的独立档位控件（关闭时显示"关闭"）。
+- 联网搜索和深度思考是固定位置的直接开关；推理等级属于模型座位，不再占用一个单独的触发器。窄窗口下按钮收为图标、工具行允许换行，不产生横向溢出。
 
 工具不是写死在菜单里的按钮，而是一张定义表（`client-src/48-tools.js`）。`surface` 决定入口：
 
@@ -92,22 +93,23 @@ registerChatTool({
 - 来源默认折叠为一行 `来源 · N`，展开后是单列紧凑列表（编号、标题、域名、可选摘要），列表有最大高度并内部滚动；15 条来源不再占满整页。
 - 来源为零时不渲染任何来源组件；思考区、正文、来源三层使用不同的字号与颜色权重。
 
-## 模型与思考强度
+## 模型与推理等级
 
 模型与参数以 DeepSeek 应用 API 为准（[Messages API](https://api-docs.deepseek.com/zh-cn/api/create-message)、[思考模式](https://api-docs.deepseek.com/zh-cn/guides/thinking_mode)）：
 
-| 模型 | 图片理解 | 文件解析 | 联网搜索 | 深度思考 | 思考强度 |
+| 模型 | 图片理解 | 文件解析 | 联网搜索 | 深度思考 | 推理等级 |
 | --- | --- | --- | --- | --- | --- |
-| `deepseek-flash`（V4.1 Flash） | 支持 | 支持 | 支持 | 支持 | low / high / max |
-| `deepseek-v4-pro`（V4 Pro） | 不支持 | 支持 | 支持 | 支持 | low / high / max |
+| `deepseek-flash`（DeepSeek-V4.1-Flash） | 支持 | 支持 | 支持 | 支持 | low / high / max |
+| `deepseek-v4-pro`（DeepSeek-V4-Pro） | 不支持 | 支持 | 支持 | 支持 | low / high / max |
 
-> DeepSeek 的联网工具文档建议联网搜索使用 `deepseek-flash`；两个模型都接受服务端搜索工具，界面不因此禁用 V4 Pro 的搜索，但会在模型说明中提示这一差异。
+> DeepSeek 的联网工具文档建议联网搜索使用 `deepseek-flash`；两个模型都接受服务端搜索工具，界面不因此禁用 V4 Pro 的搜索，但会在模型限制中提示图片能力差异。
 
 - 请求通过 `model` 选择模型；`thinking: { type: "enabled" | "disabled" }` 控制开关；开启时用 `output_config.effort` 传 `low | high | max`。接口接受的 `minimal/medium/xhigh/ultra` 只是别名，界面不展示它们，Host 端也会折叠到真实档位。
-- 模型菜单只展示名称和当前勾选，不把每个模型的长说明、能力标签铺在菜单里；完整说明放在行的 `title` 中，唯一的例外是会影响附件操作的限制（V4 Pro"不支持图片"）以一行小字显示。宽度随内容收缩，不再为大段说明预留固定宽度。
-- 思考强度是模型旁的独立控件：关闭、低、高、最高四档，档位来自当前模型的 `capabilities.efforts`，不是自由数值；点击某档会确保深度思考开启并写入该档位，点击"关闭"关闭深度思考。它与左侧的深度思考按钮共享同一个设置，但入口分工清楚。
-- 选中的模型记录在每条回复上，消息底部显示"模型 · 强度"；不支持图片的模型会在输入框上方说明原因，并在发送含图片的消息前拒绝。
-- 模型目录由 Host 的 `bootstrap.models` 提供，浏览器不猜测模型列表；旧 Host 不返回目录时只提供 `deepseek-flash`（那是旧 Host 唯一会发出的模型）。
+- 模型座位是一个触发器：模型 API 名称（如 `DeepSeek-V4.1-Flash`）后接当前推理等级（如 `Max`），等级用 caption 色，和 Harness 原生模型控件一致。点击后先显示「模型 / 推理等级」两行根菜单；根菜单再进入名称列表或 `Off / Low / High / Max` 档位列表。两层都行式布局，当前项只用尾部勾选，不用整行色块。
+- 模型菜单不再铺长说明或能力标签；完整说明只放在行的 `title` 里，唯一的例外是会影响附件操作的限制（V4 Pro「不支持图片」）以一行小字显示。
+- 推理等级来自当前模型的 `capabilities.efforts`，不是自由数值；点击某档会确保深度思考开启并写入该档位，点击 `Off` 关闭深度思考。它与输入框下方的深度思考按钮共享同一个设置，但入口分工清楚。
+- 选中的模型记录在每条回复上，消息底部显示"模型 · 等级"；不支持图片的模型会在输入框上方说明原因，并在发送含图片的消息前拒绝。
+- 模型目录由 Host 的 `bootstrap.models` 提供，浏览器不猜测模型列表；旧 Host 不返回目录时只提供 `deepseek-flash`（那是旧 Host 唯一会发出的模型）。旧 Host 的目录缺少 `displayName` 时，界面会从它已有的模型 `version` 推导原生风格名称。
 - 选择按会话保存（`model-config.json`，键为会话 id），新对话使用全局默认；该文件与会话消息历史分开存储，不改变 `state.json` 的消息格式与版本迁移。
 
 ## 内容渲染
@@ -161,7 +163,7 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 - 数据格式为 **v2**：每条会话是一棵消息节点树（`nodes` + `leafId`），`messages` 由当前分支推导；文件夹、置顶、归档状态保存在同一个文件中。旧版 v1 的线性 `messages` 会在加载时自动迁移，迁移前把原文件复制为 `state.json.v1-backup-<时间戳>`，可随时用备份还原
 - 编辑、重新生成只会新增兄弟节点，旧消息节点不会被覆盖；切换版本只改变 `leafId`
 - 消息版本各自保存 `blocks`（正文、思考、搜索/阅读步骤与引用）、`usage`、`stopReason` 等元数据
-- 模型与思考强度偏好：`$DSH_HOME/deepseek-chat/model-config.json`（按会话 id 记录覆盖项 + 新对话默认值）
+- 模型与推理等级偏好：`$DSH_HOME/deepseek-chat/model-config.json`（按会话 id 记录覆盖项 + 新对话默认值）
 - 上传文件：由 DeepSeek Files API 托管，插件只保存 `file_id` 和展示元数据；附件会随编辑后的用户消息保留
 - 删除会话只删除本地记录和该会话的模型偏好，不删除 DeepSeek 侧已上传的文件
 - 联网搜索、深度思考搜索与文件解析使用 DeepSeek 服务，可能产生对应用量费用
@@ -173,7 +175,7 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 - 流式协议：`/api/deepseek-chat/stream` 支持 `send` / `edit` / `regenerate` / `continue` 四种模式。`edit` 把新提问挂到原提问的父节点下，`regenerate` 在同一个提问下新增回答兄弟节点，`continue` 用已保存的可见正文作为 assistant 前缀（prefill）请求剩余内容并原地追加。`start` 帧会下发本次生效的完整分支，浏览器用它替换乐观渲染的消息，避免旧分支回答混入当前上下文。
 - 模型：`lib/model-config.js` 是模型目录、能力与偏好的唯一来源，`bootstrap.models` 把目录送到浏览器；`/api/deepseek-chat/model` 读写偏好；`stream` 用目录校验 `model`，把偏好中的 effort 与请求值折叠后交给协议层。
 - Client：`client.js` 由 `client-src/*.js` 拼接，通过 `shell.overlay` 渲染全屏 Chat（起点在 `--dsh-frame-chrome-top` 之下，即原生标题栏下方），并在同一 `shell.overlay` 注册 root 级的 `deepseek-chat-mode:mode-switch`，作为两种模式共享的顶层导航。样式全部使用 `--dsw-*` 主题变量；侧栏品牌沿用 DeepSeek 官方鲸鱼与字标矢量，内联在插件中，不加载 Harness Client 包。
-- Client 模块：`30-markdown.js`（Markdown 与引用标记）、`31-highlight.js`、`32-math.js`、`33-mermaid.js`、`43-popover.js`（弹出层定位与键盘）、`47-model.js`（模型菜单）、`48-tools.js`（工具注册表与「＋」菜单）。
+- Client 模块：`30-markdown.js`（Markdown 与引用标记）、`31-highlight.js`、`32-math.js`、`33-mermaid.js`、`43-popover.js`（原生菜单几何、视口夹取与键盘）、`47-model.js`（模型 + 推理等级双层菜单）、`48-tools.js`（工具注册表与「＋」面板）。
 - 协议：Anthropic 兼容 Messages API（`https://api.deepseek.com/anthropic/v1`），使用 `deepseek-flash`、`deepseek-v4-pro`、`deepseek_web_search`、`deepseek_read_url`、`safety_check`、`title` 与 Files API。
 - 继续生成使用 assistant 前缀续写：请求以现有可见正文作为最后一条 assistant 消息，并关闭 reasoning、只保留 `deepseek_read_url`；返回内容追加到同一条回答，不新建分支。
 

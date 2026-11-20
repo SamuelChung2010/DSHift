@@ -1003,7 +1003,6 @@ function Composer() {
         ),
         h('div', { className: 'dsc-composer-right' },
           h(ModelMenu, null),
-          choice.efforts.length > 0 ? h(EffortMenu, null) : null,
           isStreaming
             ? h('button', {
                 type: 'button',
@@ -1012,7 +1011,7 @@ function Composer() {
                 'aria-label': t('stop'),
                 disabled: stopping,
                 onClick: () => chatActions.requestStop(),
-              }, h(Icon, { name: 'stop', size: 15 }))
+              }, h(Icon, { name: 'stop', size: 16 }))
             : h('button', {
                 type: 'button',
                 className: cx('dsc-send-button', !canSend && 'is-idle'),
@@ -1020,7 +1019,7 @@ function Composer() {
                 'aria-label': t('send'),
                 'aria-disabled': !canSend,
                 onClick: handleSend,
-              }, h(Icon, { name: 'arrowUp', size: 17 })),
+              }, h(Icon, { name: 'arrowUp', size: 16 })),
         ),
       ),
       drag ? h('div', { className: 'dsc-drop-mask' }, h(Icon, { name: 'paperclip', size: 22 }), t('dropFiles')) : null,

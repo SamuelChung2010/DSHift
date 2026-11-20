@@ -23,7 +23,9 @@ const IconClose = props => h(IconBase, props, h('path', { d: 'M6 6l12 12M18 6L6 
 const IconChevronDown = props => h(IconBase, props, h('path', { d: 'M6 9l6 6 6-6' }))
 const IconChevronRight = props => h(IconBase, props, h('path', { d: 'M9 6l6 6-6 6' }))
 const IconChevronLeft = props => h(IconBase, props, h('path', { d: 'M15 6l-6 6 6 6' }))
-const IconArrowUp = props => h(IconBase, props, h('path', { d: 'M12 19V5M6 11l6-6 6 6' }))
+const IconArrowUp = props => h(IconBase, { ...props, filled: true },
+  h('path', { d: 'M12 4.2 19.8 12l-2.1 2.1-3.7-3.7V20h-4v-9.6L6.3 14.1 4.2 12 12 4.2Z' }),
+)
 const IconStop = props => h(IconBase, { ...props, filled: true }, h('rect', { x: 7, y: 7, width: 10, height: 10, rx: 2.2 }))
 const IconPaperclip = props => h(IconBase, props,
   h('path', { d: 'M20 11.5l-8.4 8.4a5 5 0 0 1-7.1-7.1l8.5-8.5a3.4 3.4 0 0 1 4.8 4.8l-8.5 8.5a1.8 1.8 0 0 1-2.5-2.5l7.8-7.8' }),

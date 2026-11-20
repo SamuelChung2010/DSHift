@@ -294,10 +294,12 @@ const DICT_ZH = {
   versionLabel: '版本 {index} / {count}',
   // Composer tools menu
   toolsMenu: '工具',
+  addFiles: '添加图片或文件',
+  fileSection: '文件',
   uploadFiles: '上传图片或文件',
   uploadFilesHint: 'PDF、Word、PPT、图片与文本',
   webSearchHint: '从网络查找最新信息',
-  deepThinkHint: '先推理再回答，可调整思考强度',
+  deepThinkHint: '先推理再回答，可调整推理等级',
   toolOn: '已开启',
   toolOff: '已关闭',
   toolUploading: '正在上传',
@@ -319,22 +321,22 @@ const DICT_ZH = {
   modelCapFiles: '文件解析',
   modelCapSearch: '联网搜索',
   modelCapThinking: '深度思考',
-  modelUnsupportedImage: '当前模型不支持图片理解，请切换到 DeepSeek V4.1 Flash。',
+  modelUnsupportedImage: '当前模型不支持图片理解，请切换到 DeepSeek-V4.1-Flash。',
   modelConfigFailed: '模型设置保存失败：{message}',
-  modelUnavailable: '该模型当前不可用，已切换回 DeepSeek V4.1 Flash，请重试。',
+  modelUnavailable: '该模型当前不可用，已切换回 DeepSeek-V4.1-Flash，请重试。',
   modelAppliedToChat: '仅对当前对话生效',
   modelAppliedToDefault: '新对话默认使用',
-  thinkingEffort: '思考强度',
-  effortOff: '关闭',
+  thinkingEffort: '推理等级',
+  effortOff: 'Off',
   effortOffHint: '不展示思考过程，直接回答',
-  effortLow: '低',
-  effortHigh: '高',
-  effortMax: '最高',
+  effortLow: 'Low',
+  effortHigh: 'High',
+  effortMax: 'Max',
   effortLowHint: '更快，适合简单问题',
   effortHighHint: '平衡速度与准确度',
   effortMaxHint: '最充分，耗时更长',
-  effortNeedsThinking: '开启深度思考后可选择思考强度',
-  effortUnsupported: '当前模型不支持思考强度设置',
+  effortNeedsThinking: '开启深度思考后可选择推理等级',
+  effortUnsupported: '当前模型不支持推理等级设置',
   // Sources
   sourceSummary: '来源 · {count}',
   sourceDomainFallback: '网页',
@@ -635,10 +637,12 @@ const DICT_EN = {
   versionLabel: 'Version {index} / {count}',
   // Composer tools menu
   toolsMenu: 'Tools',
+  addFiles: 'Add images or files',
+  fileSection: 'File',
   uploadFiles: 'Upload images or files',
   uploadFilesHint: 'PDF, Word, PPT, images and text',
   webSearchHint: 'Look up current information on the web',
-  deepThinkHint: 'Reason before answering; pick how hard it thinks',
+  deepThinkHint: 'Reason before answering; pick the reasoning effort',
   toolOn: 'On',
   toolOff: 'Off',
   toolUploading: 'Uploading',
@@ -660,12 +664,12 @@ const DICT_EN = {
   modelCapFiles: 'Files',
   modelCapSearch: 'Web search',
   modelCapThinking: 'Thinking',
-  modelUnsupportedImage: 'This model cannot read images. Switch to DeepSeek V4.1 Flash.',
+  modelUnsupportedImage: 'This model cannot read images. Switch to DeepSeek-V4.1-Flash.',
   modelConfigFailed: 'Could not save the model setting: {message}',
-  modelUnavailable: 'That model is unavailable. Switched back to DeepSeek V4.1 Flash; please retry.',
+  modelUnavailable: 'That model is unavailable. Switched back to DeepSeek-V4.1-Flash; please retry.',
   modelAppliedToChat: 'Applies to this conversation',
   modelAppliedToDefault: 'Default for new conversations',
-  thinkingEffort: 'Thinking effort',
+  thinkingEffort: 'Reasoning effort',
   effortOff: 'Off',
   effortOffHint: 'Answer directly without showing reasoning',
   effortLow: 'Low',
@@ -674,8 +678,8 @@ const DICT_EN = {
   effortLowHint: 'Faster, for simple questions',
   effortHighHint: 'Balanced speed and quality',
   effortMaxHint: 'Most thorough, slower',
-  effortNeedsThinking: 'Turn on deep thinking to choose an effort',
-  effortUnsupported: 'This model has no effort setting',
+  effortNeedsThinking: 'Turn on deep thinking to choose a reasoning effort',
+  effortUnsupported: 'This model has no reasoning effort setting',
   // Sources
   sourceSummary: 'Sources · {count}',
   sourceDomainFallback: 'Web',
@@ -6877,7 +6881,9 @@ const IconClose = props => h(IconBase, props, h('path', { d: 'M6 6l12 12M18 6L6 
 const IconChevronDown = props => h(IconBase, props, h('path', { d: 'M6 9l6 6 6-6' }))
 const IconChevronRight = props => h(IconBase, props, h('path', { d: 'M9 6l6 6-6 6' }))
 const IconChevronLeft = props => h(IconBase, props, h('path', { d: 'M15 6l-6 6 6 6' }))
-const IconArrowUp = props => h(IconBase, props, h('path', { d: 'M12 19V5M6 11l6-6 6 6' }))
+const IconArrowUp = props => h(IconBase, { ...props, filled: true },
+  h('path', { d: 'M12 4.2 19.8 12l-2.1 2.1-3.7-3.7V20h-4v-9.6L6.3 14.1 4.2 12 12 4.2Z' }),
+)
 const IconStop = props => h(IconBase, { ...props, filled: true }, h('rect', { x: 7, y: 7, width: 10, height: 10, rx: 2.2 }))
 const IconPaperclip = props => h(IconBase, props,
   h('path', { d: 'M20 11.5l-8.4 8.4a5 5 0 0 1-7.1-7.1l8.5-8.5a3.4 3.4 0 0 1 4.8 4.8l-8.5 8.5a1.8 1.8 0 0 1-2.5-2.5l7.8-7.8' }),
@@ -7039,12 +7045,12 @@ function Icon({ name, size = 18, className = '' }) {
  * Arrow keys move through the items, Home/End jump, Escape and Tab close.
  */
 
-const POPOVER_GAP = 8
+const POPOVER_GAP = 4
 /** Space a flipped panel must leave for the trigger line. */
 const POPOVER_PREFERRED = 180
 
 function popoverItemSelector() {
-  return '[role="menuitem"],[role="menuitemradio"],[role="menuitemcheckbox"],.dsc-popover-item'
+  return '[role="menuitem"],[role="menuitemradio"],[role="menuitemcheckbox"]'
 }
 
 /**
@@ -7074,15 +7080,15 @@ function useOutsideDismiss(open, onClose, panelRef, triggerRef) {
  * viewport. Re-measures on resize and on any layout scroll (the thread above
  * the composer scrolls independently of the window).
  *
- * Composer popovers are aligned to the whole rounded input, not to the small
- * control that opened them: "above" means above the composer's top edge, so a
- * menu never covers the text the user is writing. The extra distance is
- * published as a CSS custom property on the panel.
+ * The "+" card uses the native Harness command-menu geometry: it is as wide as
+ * the whole composer and opens 4px above its top edge instead of hugging the
+ * 28px trigger. The model menu stays anchored to its trigger, right-aligned.
+ * The extra distance is published as a CSS custom property on the panel.
  *
- * @returns `{ placement, maxHeight, gap }` - "top" opens above the trigger.
+ * @returns `{ placement, maxHeight, offset, left, width, right }` - "top" opens above.
  */
-function usePopupPlacement(open, triggerRef, panelRef) {
-  const [layout, setLayout] = React.useState({ placement: 'top', maxHeight: null, gap: 0 })
+function usePopupPlacement(open, triggerRef, panelRef, { alignToComposer = false } = {}) {
+  const [layout, setLayout] = React.useState({ placement: 'top', maxHeight: null, offset: 8, left: null, width: null, right: null })
   React.useLayoutEffect(() => {
     if (!open) return () => {}
     const update = () => {
@@ -7090,23 +7096,53 @@ function usePopupPlacement(open, triggerRef, panelRef) {
       const panel = panelRef.current
       if (!trigger || !panel) return
       const rect = trigger.getBoundingClientRect()
-      const composer = trigger.closest?.('.dsc-composer')
-      const composerTop = composer?.getBoundingClientRect?.().top ?? rect.top
-      const gap = Math.max(0, Math.round(rect.top - composerTop))
+      const composer = alignToComposer ? trigger.closest?.('.dsc-composer') : null
+      const composerRect = composer?.getBoundingClientRect?.() ?? null
+      const anchorTop = composerRect?.top ?? rect.top
+      const anchorBottom = composerRect?.bottom ?? rect.bottom
       const viewport = window.innerHeight || 0
+      const viewportWidth = window.innerWidth || 0
       const natural = panel.offsetHeight || panel.scrollHeight || 0
-      const spaceAbove = composerTop - POPOVER_GAP - 8
-      const spaceBelow = viewport - rect.bottom - POPOVER_GAP - 8
+      const spaceAbove = anchorTop - POPOVER_GAP - 8
+      const spaceBelow = viewport - anchorBottom - POPOVER_GAP - 8
       const placement = spaceAbove >= Math.min(natural, POPOVER_PREFERRED) || spaceAbove >= spaceBelow
         ? 'top'
         : 'bottom'
       const available = placement === 'top' ? spaceAbove : spaceBelow
       const maxHeight = available > 120 ? Math.min(available, 520) : null
-      const nextGap = placement === 'top' ? gap : 0
+      let offset = 8
+      if (alignToComposer && composerRect !== null) {
+        offset = placement === 'top'
+          ? Math.max(POPOVER_GAP, Math.round(rect.top - composerRect.top) + POPOVER_GAP)
+          : Math.max(POPOVER_GAP, Math.round(composerRect.bottom - rect.bottom) + POPOVER_GAP)
+      }
+      const parentRect = panel.offsetParent?.getBoundingClientRect?.() ?? rect
+      let left = null
+      let width = null
+      let right = null
+      if (alignToComposer && composerRect !== null) {
+        left = Math.round(composerRect.left - parentRect.left)
+        width = Math.round(composerRect.width)
+      } else if (!alignToComposer) {
+        // Right-aligned to the trigger by CSS, but never allowed to fall past
+        // the window's left edge on a phone-sized composer.
+        const panelWidth = panel.offsetWidth || Math.min(280, viewportWidth - 24)
+        const margin = 12
+        const targetLeft = Math.min(
+          Math.max(rect.right - panelWidth, margin),
+          Math.max(margin, viewportWidth - panelWidth - margin),
+        )
+        right = Math.round(parentRect.right - targetLeft - panelWidth)
+      }
       setLayout((current) => (
-        current.placement === placement && current.maxHeight === maxHeight && current.gap === nextGap
+        current.placement === placement
+        && current.maxHeight === maxHeight
+        && current.offset === offset
+        && current.left === left
+        && current.width === width
+        && current.right === right
           ? current
-          : { placement, maxHeight, gap: nextGap }
+          : { placement, maxHeight, offset, left, width, right }
       ))
     }
     update()
@@ -7122,15 +7158,17 @@ function usePopupPlacement(open, triggerRef, panelRef) {
       window.removeEventListener('scroll', update, true)
       observer?.disconnect()
     }
-  }, [open, panelRef, triggerRef])
+  }, [open, panelRef, triggerRef, alignToComposer])
   return layout
 }
 
 /** Inline style for an open popover: viewport clamp plus composer clearance. */
 function popoverStyle(layout) {
-  const style = {}
+  const style = { '--dsc-popover-offset': `${layout.offset ?? 8}px` }
   if (layout.maxHeight !== null) style.maxHeight = `${layout.maxHeight}px`
-  if (layout.gap > 0) style['--dsc-popover-gap'] = `${layout.gap}px`
+  if (layout.left !== null) style.left = `${layout.left}px`
+  if (layout.width !== null) style.width = `${layout.width}px`
+  if (layout.right !== null) style.right = `${layout.right}px`
   return style
 }
 
@@ -7240,10 +7278,11 @@ function DeepSeekLockup({ height = 24, className = '' }) {
  * `chatStore.state.modelChoice` holds the selection for the active
  * conversation; per-conversation overrides and the defaults live on the Host.
  *
- * The composer splits the two decisions into two small popovers: the model
- * picker is a name-only list, and the thinking-effort picker is its own compact
- * control next to it. Neither panel repeats the other's options, so choosing a
- * model never asks the user to read a feature sheet.
+ * The composer follows the native Harness model seat instead of showing two
+ * unrelated chips: one trigger carries the model name and the current effort,
+ * and one menu starts with the native "Model / Reasoning effort" rows that
+ * drill into a compact list. The root rows keep the menu calm; the lists carry
+ * only names and the single limitation that changes what can be attached.
  */
 
 /** The single model an older Host always sends. */
@@ -7251,6 +7290,7 @@ const FALLBACK_MODELS = [
   {
     id: 'deepseek-flash',
     name: 'DeepSeek V4.1 Flash',
+    displayName: 'DeepSeek-V4.1-Flash',
     shortName: 'V4.1 Flash',
     descriptionKey: 'modelFlashDesc',
     capabilities: { vision: true, documents: true, search: true, thinking: true, efforts: ['low', 'high', 'max'] },
@@ -7281,17 +7321,41 @@ function modelEfforts(model) {
   return list.length > 0 ? list : (modelCapability(model, 'thinking') ? EFFORT_ORDER : [])
 }
 
-/** The compact name shown on the composer chip and in the model list. */
-function modelTriggerLabel(model) {
+/** The native-looking API name, with the friendly catalog name as fallback. */
+function modelDisplayName(model) {
+  if (typeof model?.displayName === 'string' && model.displayName !== '') return model.displayName
+  // The compatibility path for an older Host: its catalog carries the API
+  // version (DeepSeek-V4.1-Flash-1017) but not a displayName.
+  if (typeof model?.version === 'string') {
+    const versionName = model.version.replace(/-[0-9]{3,4}$/, '')
+    if (versionName !== '') return versionName
+  }
+  return model?.name || model?.id || ''
+}
+
+/** The compact name used by reply footers, where the version is already known. */
+function modelShortName(model) {
   return model?.shortName || model?.name || ''
+}
+
+/** The label shown beside the model while thinking is on, or "Off" when it is not. */
+function modelEffortLabel(thinking, effort) {
+  if (!thinking) return tr('effortOff')
+  const labelKey = EFFORT_LABEL[effort]
+  return labelKey === undefined ? '' : tr(labelKey)
+}
+
+/** Full label for the composer seat. The menu keeps the two values separate. */
+function modelTriggerLabel(model) {
+  return modelDisplayName(model)
 }
 
 /** Full label for a reply footer, including the effort that produced it. */
 function modelChipLabel(model, thinking, effort) {
-  const name = model?.shortName || model?.name || ''
+  const name = modelShortName(model)
   if (!thinking) return name
-  const labelKey = EFFORT_LABEL[effort]
-  return labelKey === undefined ? name : `${name} · ${tr(labelKey)}`
+  const effortLabel = modelEffortLabel(true, effort)
+  return effortLabel === '' ? name : `${name} · ${effortLabel}`
 }
 
 /**
@@ -7302,10 +7366,10 @@ function modelChipLabel(model, thinking, effort) {
 function messageModelLabel(message) {
   if (typeof message?.model !== 'string' || message.model === '') return ''
   const model = modelById(message.model)
-  const name = model?.shortName || model?.name || message.model
+  const name = modelShortName(model) || message.model
   if (message.thinking !== true) return name
-  const labelKey = EFFORT_LABEL[message.effort]
-  return labelKey === undefined ? name : `${name} · ${tr(labelKey)}`
+  const effortLabel = modelEffortLabel(true, message.effort)
+  return effortLabel === '' ? name : `${name} · ${effortLabel}`
 }
 
 /**
@@ -7332,30 +7396,92 @@ function modelNotes(model) {
 }
 
 /**
- * Model menu: the real API models, by name, plus a check on the current one.
- * It opens above the composer, right-aligned to its chip, and is fully operable
- * from the keyboard.
+ * Model and effort, in the shape of the native Harness model seat.
+ *
+ * Closed, the trigger reads `DeepSeek-V4.1-Flash Max` (effort in the caption
+ * tone). Open, the root menu mirrors Harness: a "Model" row and a "Reasoning
+ * effort" row, each with its current value and a chevron, drilling into a
+ * name-only / tier-only list. It opens above the composer, right-aligned to the
+ * trigger, and keeps the WAI-ARIA menu keyboard model.
  */
 function ModelMenu() {
   const t = useT()
   const models = modelCatalog()
   const choice = currentModelChoice()
-  const activeId = useChat(state => state.activeId)
+  const thinking = useChat(state => state.settings.thinking)
   const [open, setOpen] = React.useState(false)
+  const [pane, setPane] = React.useState('root')
   const triggerRef = React.useRef(null)
   const panelRef = React.useRef(null)
   const layout = usePopupPlacement(open, triggerRef, panelRef)
-  useOutsideDismiss(open, () => setOpen(false), panelRef, triggerRef)
+  const close = () => {
+    setOpen(false)
+    setPane('root')
+  }
+  const closeAndRestore = () => {
+    close()
+    setTimeout(() => triggerRef.current?.focus?.(), 0)
+  }
+  useOutsideDismiss(open, close, panelRef, triggerRef)
+
   React.useEffect(() => {
     if (!open) return
-    // Focus the selected model row so Arrow keys start from the current choice.
     const panel = panelRef.current
-    const selected = panel?.querySelector?.(`[data-model="${choice.model.id}"]`)
-    selected?.focus?.({ preventScroll: false })
-  }, [open])
-  const close = () => setOpen(false)
-  const onKeyDown = event => handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef })
-  const scope = activeId === null ? t('modelAppliedToDefault') : t('modelAppliedToChat')
+    if (pane === 'root') {
+      panel?.querySelector?.('.dsc-model-cell')?.focus?.({ preventScroll: false })
+      return
+    }
+    const current = pane === 'effort'
+      ? panel?.querySelector?.(`[data-effort="${thinking ? choice.effort : 'off'}"]`)
+      : panel?.querySelector?.(`[data-model="${choice.model.id}"]`)
+    const fallback = panel?.querySelector?.('.dsc-model-option, .dsc-effort-option')
+    ;(current ?? fallback)?.focus?.({ preventScroll: false })
+  }, [open, pane])
+
+  const onKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      event.stopPropagation()
+      if (pane !== 'root') {
+        setPane('root')
+        return
+      }
+      close()
+      triggerRef.current?.focus?.()
+      return
+    }
+    if (event.key === 'Tab') {
+      // A drilled list backs out on Shift+Tab; Tab itself settles the menu and
+      // keeps the browser's focus traversal.
+      if (event.shiftKey && pane !== 'root') {
+        event.preventDefault()
+        setPane('root')
+        return
+      }
+      close()
+      return
+    }
+    if (event.key === 'ArrowLeft' && pane !== 'root') {
+      event.preventDefault()
+      setPane('root')
+      return
+    }
+    handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef })
+  }
+
+  const chooseOff = () => {
+    if (thinking) chatActions.toggleThinking()
+    closeAndRestore()
+  }
+  const chooseEffort = (effort) => {
+    if (!thinking) chatActions.toggleThinking()
+    if (effort !== choice.effort) chatActions.selectEffort(effort)
+    closeAndRestore()
+  }
+
+  const effortLabel = modelEffortLabel(thinking, choice.effort)
+  const supportsEffort = choice.efforts.length > 0
+  const triggerLabel = effortLabel === '' ? modelDisplayName(choice.model) : `${modelDisplayName(choice.model)} ${effortLabel}`
   return h('div', { className: 'dsc-model-control' },
     h('button', {
       ref: triggerRef,
@@ -7363,21 +7489,36 @@ function ModelMenu() {
       className: cx('dsc-model-trigger', open && 'is-open'),
       'aria-haspopup': 'menu',
       'aria-expanded': open,
+      'aria-label': `${t('modelSelect')}: ${triggerLabel}`,
       title: t('modelSelect'),
-      onClick: () => setOpen(value => !value),
+      onClick: () => {
+        if (open) {
+          close()
+          return
+        }
+        setPane('root')
+        setOpen(true)
+      },
       onKeyDown: (event) => {
         if (event.key === 'Escape' && open) {
           event.preventDefault()
-          setOpen(false)
+          close()
+          triggerRef.current?.focus?.()
           return
         }
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
           event.preventDefault()
-          setOpen(true)
+          if (!open) {
+            setPane('root')
+            setOpen(true)
+          }
         }
       },
     },
-      h('span', { className: 'dsc-model-name' }, modelTriggerLabel(choice.model)),
+      h('span', { className: 'dsc-model-name' }, modelDisplayName(choice.model)),
+      supportsEffort
+        ? h('span', { className: cx('dsc-model-effort', !thinking && 'is-off') }, effortLabel)
+        : null,
       h(Icon, { name: 'chevronDown', size: 12 }),
     ),
     open
@@ -7385,140 +7526,93 @@ function ModelMenu() {
           ref: panelRef,
           className: 'dsc-popover dsc-model-menu',
           role: 'menu',
-          'aria-label': t('modelSelect'),
+          'aria-label': pane === 'effort' ? t('thinkingEffort') : t('modelSelect'),
+          'data-pane': pane,
           'data-placement': layout.placement,
           style: popoverStyle(layout),
           onKeyDown,
         },
-        h('div', { className: 'dsc-model-list' },
-          models.map(model => {
-            const selected = model.id === choice.model.id
-            const notes = modelNotes(model)
-            const description = model.descriptionKey === undefined ? '' : t(model.descriptionKey)
-            return h('button', {
-              key: model.id,
-              type: 'button',
-              role: 'menuitemradio',
-              'aria-checked': selected,
-              'aria-label': description === '' ? model.name : `${model.name} — ${description}`,
-              title: description,
-              'data-model': model.id,
-              className: cx('dsc-popover-item dsc-model-option', selected && 'is-selected'),
-              onClick: () => { chatActions.selectModel(model.id); close() },
-            },
-              h('span', { className: 'dsc-popover-item-main' },
-                h('span', { className: 'dsc-popover-item-title' }, model.name),
-                notes.length > 0
-                  ? h('span', { className: 'dsc-model-note' }, notes.join(' · '))
-                  : null,
+        pane === 'root'
+          ? h('div', { className: 'dsc-model-root' },
+              h('button', {
+                type: 'button',
+                role: 'menuitem',
+                className: 'dsc-model-cell',
+                onClick: () => setPane('model'),
+              },
+                h('span', { className: 'dsc-model-cell-label' }, t('modelMenuTitle')),
+                h('span', { className: 'dsc-model-cell-value' }, modelDisplayName(choice.model)),
+                h(Icon, { name: 'chevronRight', size: 12 }),
               ),
-              selected ? h(Icon, { name: 'check', size: 15 }) : null,
+              supportsEffort
+                ? h('button', {
+                    type: 'button',
+                    role: 'menuitem',
+                    className: 'dsc-model-cell',
+                    onClick: () => setPane('effort'),
+                  },
+                    h('span', { className: 'dsc-model-cell-label' }, t('thinkingEffort')),
+                    h('span', { className: 'dsc-model-cell-value' }, effortLabel),
+                    h(Icon, { name: 'chevronRight', size: 12 }),
+                  )
+                : null,
             )
-          }),
-        ),
-        h('p', { className: 'dsc-model-scope' }, scope),
-      )
-      : null,
-  )
-}
-
-/**
- * Thinking-effort picker: a separate compact control beside the model chip. It
- * stays visible (showing Off) for every model with a real effort list, so
- * toggling deep thinking never shifts the composer layout. The four states are
- * the API's real tiers plus Off; there is no free-form value.
- */
-function EffortMenu() {
-  const t = useT()
-  const choice = currentModelChoice()
-  const thinking = useChat(state => state.settings.thinking)
-  const [open, setOpen] = React.useState(false)
-  const triggerRef = React.useRef(null)
-  const panelRef = React.useRef(null)
-  const layout = usePopupPlacement(open, triggerRef, panelRef)
-  useOutsideDismiss(open, () => setOpen(false), panelRef, triggerRef)
-  React.useEffect(() => {
-    if (!open) return
-    const panel = panelRef.current
-    const selected = panel?.querySelector?.(`[data-effort="${thinking ? choice.effort : 'off'}"]`)
-    selected?.focus?.({ preventScroll: false })
-  }, [open])
-  const close = () => setOpen(false)
-  const onKeyDown = event => handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef })
-  const label = thinking ? t(EFFORT_LABEL[choice.effort] ?? 'effortHigh') : t('effortOff')
-  const chooseOff = () => {
-    if (thinking) chatActions.toggleThinking()
-    close()
-  }
-  const chooseEffort = (effort) => {
-    if (!thinking) chatActions.toggleThinking()
-    if (effort !== choice.effort) chatActions.selectEffort(effort)
-    close()
-  }
-  return h('div', { className: 'dsc-effort-control' },
-    h('button', {
-      ref: triggerRef,
-      type: 'button',
-      className: cx('dsc-effort-trigger', open && 'is-open'),
-      'aria-haspopup': 'menu',
-      'aria-expanded': open,
-      title: `${t('thinkingEffort')}: ${label}`,
-      'aria-label': `${t('thinkingEffort')}: ${label}`,
-      onClick: () => setOpen(value => !value),
-      onKeyDown: (event) => {
-        if (event.key === 'Escape' && open) {
-          event.preventDefault()
-          setOpen(false)
-          return
-        }
-        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-          event.preventDefault()
-          setOpen(true)
-        }
-      },
-    },
-      h(Icon, { name: 'brain', size: 13 }),
-      h('span', null, label),
-      h(Icon, { name: 'chevronDown', size: 11 }),
-    ),
-    open
-      ? h('div', {
-          ref: panelRef,
-          className: 'dsc-popover dsc-effort-menu',
-          role: 'menu',
-          'aria-label': t('thinkingEffort'),
-          'data-placement': layout.placement,
-          style: popoverStyle(layout),
-          onKeyDown,
-        },
-        h('div', { className: 'dsc-effort-list' },
-          h('button', {
-            type: 'button',
-            role: 'menuitemradio',
-            'aria-checked': !thinking,
-            'data-effort': 'off',
-            title: t('effortOffHint'),
-            className: cx('dsc-effort-option', !thinking && 'is-selected'),
-            onClick: chooseOff,
-          },
-            h('span', { className: 'dsc-effort-option-label' }, t('effortOff')),
-            !thinking ? h(Icon, { name: 'check', size: 14 }) : null,
-          ),
-          h('div', { className: 'dsc-popover-sep' }),
-          choice.efforts.map(effort => h('button', {
-            key: effort,
-            type: 'button',
-            role: 'menuitemradio',
-            'aria-checked': thinking && choice.effort === effort,
-            'data-effort': effort,
-            title: t(EFFORT_HINT[effort] ?? 'thinkingEffort'),
-            className: cx('dsc-effort-option', thinking && choice.effort === effort && 'is-selected'),
-            onClick: () => chooseEffort(effort),
-          },
-            h('span', { className: 'dsc-effort-option-label' }, t(EFFORT_LABEL[effort])),
-            thinking && choice.effort === effort ? h(Icon, { name: 'check', size: 14 }) : null,
-          )),
-        ),
+          : pane === 'model'
+            ? h('div', { className: 'dsc-model-list' },
+                models.map(model => {
+                  const selected = model.id === choice.model.id
+                  const notes = modelNotes(model)
+                  const description = model.descriptionKey === undefined ? '' : t(model.descriptionKey)
+                  return h('button', {
+                    key: model.id,
+                    type: 'button',
+                    role: 'menuitemradio',
+                    'aria-checked': selected,
+                    'aria-label': description === '' ? model.name : `${model.name} — ${description}`,
+                    title: description,
+                    'data-model': model.id,
+                    className: 'dsc-model-option',
+                    onClick: () => {
+                      chatActions.selectModel(model.id)
+                      closeAndRestore()
+                    },
+                  },
+                    h('span', { className: 'dsc-model-option-name' }, modelDisplayName(model)),
+                    notes.length > 0 ? h('span', { className: 'dsc-model-note' }, notes.join(' · ')) : null,
+                    h('span', { className: 'dsc-model-check' }, selected ? h(Icon, { name: 'check', size: 14 }) : null),
+                  )
+                }),
+              )
+            : h('div', { className: 'dsc-effort-list' },
+                h('button', {
+                  type: 'button',
+                  role: 'menuitemradio',
+                  'aria-checked': !thinking,
+                  'data-effort': 'off',
+                  title: t('effortOffHint'),
+                  className: 'dsc-effort-option',
+                  onClick: chooseOff,
+                },
+                  h('span', { className: 'dsc-effort-option-label' }, t('effortOff')),
+                  h('span', { className: 'dsc-model-check' }, !thinking ? h(Icon, { name: 'check', size: 14 }) : null),
+                ),
+                choice.efforts.map(effort => {
+                  const selected = thinking && choice.effort === effort
+                  return h('button', {
+                    key: effort,
+                    type: 'button',
+                    role: 'menuitemradio',
+                    'aria-checked': selected,
+                    'data-effort': effort,
+                    title: t(EFFORT_HINT[effort] ?? 'thinkingEffort'),
+                    className: 'dsc-effort-option',
+                    onClick: () => chooseEffort(effort),
+                  },
+                    h('span', { className: 'dsc-effort-option-label' }, t(EFFORT_LABEL[effort])),
+                    h('span', { className: 'dsc-model-check' }, selected ? h(Icon, { name: 'check', size: 14 }) : null),
+                  )
+                }),
+              ),
       )
       : null,
   )
@@ -7643,6 +7737,10 @@ function toolAvailability(tool, state) {
   }
 }
 
+/**
+ * One row in the "+" card. Follows the native Harness command-menu row:
+ * icon + name on the left, one quiet description aligned on the right.
+ */
 function ToolMenuItem({ tool, state, index, onClose }) {
   const t = useT()
   const availability = toolAvailability(tool, state)
@@ -7656,7 +7754,7 @@ function ToolMenuItem({ tool, state, index, onClose }) {
   return h('button', {
     type: 'button',
     role: toggle ? 'menuitemcheckbox' : 'menuitem',
-    className: cx('dsc-popover-item dsc-tool-item', active && 'is-active', !enabled && 'is-disabled'),
+    className: 'dsc-tool-item',
     'aria-checked': toggle ? active : undefined,
     'aria-disabled': enabled ? undefined : 'true',
     'data-tool': tool.id,
@@ -7669,15 +7767,13 @@ function ToolMenuItem({ tool, state, index, onClose }) {
       if (!toggle) onClose()
     },
   },
-    h('span', { className: 'dsc-popover-item-icon' }, h(Icon, { name: tool.icon, size: 17 })),
-    h('span', { className: 'dsc-popover-item-main' },
-      h('span', { className: 'dsc-popover-item-title' }, t(tool.labelKey)),
-      h('span', { className: cx('dsc-popover-item-desc', !enabled && 'is-warn') }, description),
-    ),
-    toggle
-      ? h('span', { className: cx('dsc-switch', active && 'is-on'), 'aria-hidden': 'true' }, h('span', { className: 'dsc-switch-thumb' }))
-      : uploading
-        ? h('span', { className: 'dsc-popover-item-state' }, t('toolUploading'))
+    h('span', { className: 'dsc-tool-icon' }, h(Icon, { name: tool.icon, size: 16 })),
+    h('span', { className: 'dsc-tool-name' }, t(tool.labelKey)),
+    h('span', { className: cx('dsc-tool-desc', !enabled && 'is-warn') }, description),
+    uploading
+      ? h('span', { className: 'dsc-tool-state' }, t('toolUploading'))
+      : toggle && active
+        ? h('span', { className: 'dsc-tool-check' }, h(Icon, { name: 'check', size: 14 }))
         : null,
   )
 }
@@ -7721,7 +7817,10 @@ function ToolsMenu() {
   const [open, setOpen] = React.useState(false)
   const triggerRef = React.useRef(null)
   const panelRef = React.useRef(null)
-  const layout = usePopupPlacement(open, triggerRef, panelRef)
+  // The native command card is the width of the composer and sits just above
+  // it, not above the small trigger. The placement hook resolves that geometry
+  // from the composer the trigger belongs to.
+  const layout = usePopupPlacement(open, triggerRef, panelRef, { alignToComposer: true })
   useOutsideDismiss(open, () => setOpen(false), panelRef, triggerRef)
   React.useEffect(() => {
     if (!open) return
@@ -7736,8 +7835,8 @@ function ToolsMenu() {
       ref: triggerRef,
       type: 'button',
       className: cx('dsc-tools-trigger', open && 'is-open'),
-      title: t('toolsMenu'),
-      'aria-label': t('toolsMenu'),
+      title: t('addFiles'),
+      'aria-label': t('addFiles'),
       'aria-haspopup': 'menu',
       'aria-expanded': open,
       onClick: () => setOpen(value => !value),
@@ -7752,17 +7851,18 @@ function ToolsMenu() {
           setOpen(true)
         }
       },
-    }, h(Icon, { name: 'plus', size: 19 })),
+    }, h(Icon, { name: 'plus', size: 14 })),
     open
       ? h('div', {
           ref: panelRef,
           className: 'dsc-popover dsc-tools-menu',
           role: 'menu',
-          'aria-label': t('toolsMenu'),
+          'aria-label': t('addFiles'),
           'data-placement': layout.placement,
           style: popoverStyle(layout),
           onKeyDown: event => handleMenuKeyDown(event, { container: panelRef.current, onClose: close, trigger: triggerRef }),
         },
+        h('div', { className: 'dsc-menu-section', role: 'presentation' }, t('fileSection')),
         tools.map((tool, index) => h(ToolMenuItem, {
           key: tool.id,
           tool,
@@ -8781,7 +8881,6 @@ function Composer() {
         ),
         h('div', { className: 'dsc-composer-right' },
           h(ModelMenu, null),
-          choice.efforts.length > 0 ? h(EffortMenu, null) : null,
           isStreaming
             ? h('button', {
                 type: 'button',
@@ -8790,7 +8889,7 @@ function Composer() {
                 'aria-label': t('stop'),
                 disabled: stopping,
                 onClick: () => chatActions.requestStop(),
-              }, h(Icon, { name: 'stop', size: 15 }))
+              }, h(Icon, { name: 'stop', size: 16 }))
             : h('button', {
                 type: 'button',
                 className: cx('dsc-send-button', !canSend && 'is-idle'),
@@ -8798,7 +8897,7 @@ function Composer() {
                 'aria-label': t('send'),
                 'aria-disabled': !canSend,
                 onClick: handleSend,
-              }, h(Icon, { name: 'arrowUp', size: 17 })),
+              }, h(Icon, { name: 'arrowUp', size: 16 })),
         ),
       ),
       drag ? h('div', { className: 'dsc-drop-mask' }, h(Icon, { name: 'paperclip', size: 22 }), t('dropFiles')) : null,
@@ -10711,9 +10810,28 @@ const CHAT_CSS = `
   --dsc-success: var(--dsw-alias-state-success-primary, #15803d);
   --dsc-shadow: 0 20px 48px rgba(9, 12, 20, 0.18);
   --dsc-shadow-soft: 0 4px 16px rgba(9, 12, 20, 0.07);
-  --dsc-shadow-composer: 0 2px 10px rgba(9, 12, 20, 0.05);
-  --dsc-shadow-popover: 0 12px 34px rgba(9, 12, 20, 0.17), 0 2px 7px rgba(9, 12, 20, 0.07);
-  --dsc-control-h: 32px;
+  --dsc-shadow-composer: var(--dsw-elevation-soft, 0 4px 18px rgba(9, 12, 20, 0.06));
+  --dsc-shadow-popover: var(--dsw-elevation-prominent, 0 16px 40px rgba(9, 12, 20, 0.18));
+  --dsc-control-h: 28px;
+  /* Native composer / menu aliases. They resolve the exact Harness surface,
+     selector and interactive tokens, with the Chat palette as a fallback for
+     older Hosts that do not publish them. */
+  --dsc-input-major: var(--dsw-specific-input-major, var(--dsc-layer));
+  --dsc-menu-surface: var(--dsw-specific-menu, var(--dsc-layer));
+  --dsc-menu-backdrop: var(--dsw-menu-backdrop-filter, blur(22px) saturate(1.35));
+  --dsc-selector: var(--dsw-specific-selector, color-mix(in srgb, var(--dsc-text) 7%, transparent));
+  --dsc-interactive: var(--dsw-alias-interactive-bg-hover, var(--dsc-hover));
+  --dsc-tertiary: var(--dsw-alias-label-tertiary, var(--dsc-muted));
+  --dsc-caption: var(--dsw-alias-label-caption, var(--dsc-muted));
+  --dsc-menu-icon: var(--dsw-alias-menu-icon, var(--dsc-muted));
+  --dsc-business: var(--dsw-alias-state-business-primary, var(--dsc-link));
+  --dsc-primary-action: var(--dsw-alias-button-info-fill, var(--dsc-link));
+  --dsc-primary-action-hover: var(--dsw-alias-button-info-hover, var(--dsc-link));
+  --dsc-on-color: var(--dsw-alias-label-on-color, #ffffff);
+  --dsc-radius-panel: var(--dsw-radius-panel, 28px);
+  --dsc-radius-menu: var(--dsw-radius-lg, 16px);
+  --dsc-radius-control: var(--dsw-radius-sm, 8px);
+  --dsc-radius-row: var(--dsw-radius-md, 12px);
   --dsc-radius: var(--dsw-radius-md, 12px);
   --dsc-font: var(--dsw-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif);
   --dsc-mono: var(--ds-font-family-code, 'SF Mono', Consolas, 'Liberation Mono', monospace);
@@ -11617,7 +11735,7 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   flex: none;
 }
 .dsc-attach-action:hover { background: var(--dsc-hover); color: var(--dsc-text); }
-.dsc-attach-rail { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 2px 8px; }
+.dsc-attach-rail { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 14px 2px; }
 
 /* ---------- reasoning / process ----------
    Reasoning is a quiet, secondary layer: muted text, a thin rail, and a
@@ -12148,39 +12266,35 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   font-size: 12.2px;
 }
 .dsc-auth-banner span { flex: 1; }
-/* One rounded surface owns the border. The textarea inside is a bare,
-   transparent field: a text input must never draw a second rectangle (or a
-   browser focus outline) inside this container. Focus feedback is a quiet
-   border tone change, with one very light keyboard-only ring; there is no
-   white double frame and no glow. */
+/* One native surface owns the border, the fill and the elevation. The editor
+   inside is a bare transparent field: no second rectangle, no focus glow. The
+   focus state is intentionally quiet — Harness does not paint a ring around
+   the composer, so neither does Chat. */
 .dsc-composer {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   max-width: 788px;
   margin: 0 auto;
-  padding: 8px 10px 8px 14px;
+  padding: 8px 0 0;
   border: 1px solid var(--dsc-border-strong);
-  border-radius: 24px;
-  background: var(--dsc-layer);
+  border-radius: var(--dsc-radius-panel);
+  background: var(--dsc-input-major);
   box-shadow: var(--dsc-shadow-composer);
-  transition: border-color var(--dsc-fast) ease, box-shadow var(--dsc-fast) ease;
+  transition: border-color var(--dsc-fast) ease;
 }
-.dsc-composer:has(.dsc-editor-field:focus) {
-  border-color: color-mix(in srgb, var(--dsc-brand) 34%, var(--dsc-border-strong));
-}
-.dsc-composer:has(.dsc-editor-field:focus-visible) {
-  box-shadow: 0 0 0 1px var(--dsc-brand-soft-strong), var(--dsc-shadow-composer);
-}
-.dsc-composer.is-drag { border-color: var(--dsc-brand); }
+.dsc-composer.is-drag { border-color: var(--dsc-business); }
 .dsc-composer.has-warning { border-color: color-mix(in srgb, var(--dsc-warn) 42%, var(--dsc-border-strong)); }
 .dsc-composer-main { display: flex; flex-direction: column; min-width: 0; }
 .dsc-editor { position: relative; display: flex; min-width: 0; }
 .dsc-editor-field {
   display: block;
   width: 100%;
-  min-height: 30px;
+  min-height: 36px;
   max-height: 220px;
   margin: 0;
-  padding: 6px 2px 4px;
+  padding: 4px 8px 0 14px;
   border: 0 !important;
   border-radius: 0;
   outline: 0 !important;
@@ -12191,12 +12305,12 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   overflow-y: hidden;
   background: transparent;
   color: var(--dsc-text);
-  caret-color: var(--dsc-brand);
+  caret-color: var(--dsc-business);
   font-family: inherit;
-  font-size: 15.2px;
-  line-height: 1.6;
+  font-size: var(--dsh-content-font-size, 15px);
+  line-height: calc(24px + var(--dsh-content-font-delta, 0px));
 }
-.dsc-editor-field::placeholder { color: var(--dsc-muted); }
+.dsc-editor-field::placeholder { color: var(--dsc-caption); }
 .dsc-editor-field:focus,
 .dsc-editor-field:focus-visible {
   border: 0 !important;
@@ -12208,7 +12322,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  padding: 2px 2px 2px 0;
+  padding: 2px 14px 4px;
   color: var(--dsc-warn);
   font-size: 11.8px;
   line-height: 1.45;
@@ -12216,67 +12330,70 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-composer-warning .dsc-inline-button { color: var(--dsc-warn); }
 .dsc-composer-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  min-height: 34px;
-  margin-top: 2px;
+  gap: 6px 8px;
+  min-height: 42px;
+  padding: 2px 8px 6px;
 }
-.dsc-composer-left { display: flex; align-items: center; gap: 4px; min-width: 0; flex-wrap: nowrap; }
-.dsc-composer-right { display: flex; align-items: center; gap: 4px; flex: none; }
-/* Direct on/off controls for web search and deep thinking. They are always in
-   the same place: only the tint changes, so toggling never resizes the editor
-   or moves the model chip. */
+.dsc-composer-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1 1 auto; flex-wrap: wrap; }
+.dsc-composer-right { display: flex; align-items: center; gap: 8px; flex: none; margin-left: auto; }
+/* Direct on/off controls for web search and deep thinking. They sit in the
+   native 28px chip row: only the tint changes when on, so toggling never
+   resizes the editor or moves the model seat. */
 .dsc-tool-toggle {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   height: var(--dsc-control-h);
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: 999px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--dsc-radius-control);
   background: transparent;
   color: var(--dsc-muted);
-  font-size: 12.1px;
-  font-weight: 550;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
   white-space: nowrap;
   flex: none;
-  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
+  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease;
 }
-.dsc-tool-toggle:hover:not(:disabled) { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-tool-toggle:hover:not(:disabled) { background: var(--dsc-interactive); color: var(--dsc-text); }
 .dsc-tool-toggle.is-on {
-  border-color: color-mix(in srgb, var(--dsc-link) 16%, transparent);
-  background: var(--dsc-brand-soft);
-  color: var(--dsc-link);
+  background: color-mix(in srgb, var(--dsc-business) 12%, transparent);
+  color: var(--dsc-business);
 }
-.dsc-tool-toggle.is-on:hover:not(:disabled) { background: var(--dsc-brand-soft-strong); }
+.dsc-tool-toggle.is-on:hover:not(:disabled) { background: color-mix(in srgb, var(--dsc-business) 18%, transparent); }
 .dsc-tool-toggle:disabled { opacity: 0.42; cursor: default; }
 .dsc-tool-toggle-label { overflow: hidden; text-overflow: ellipsis; }
-.dsc-model-control,
-.dsc-effort-control { position: relative; display: flex; }
-.dsc-model-trigger,
-.dsc-effort-trigger {
+/* The model seat is one trigger: API name plus the current effort in the
+   caption tone, exactly like the native conversation model seat. */
+.dsc-model-control { position: relative; display: flex; min-width: 0; }
+.dsc-model-trigger {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  min-width: 0;
+  max-width: 280px;
   height: var(--dsc-control-h);
-  padding: 0 8px;
-  border: 1px solid transparent;
-  border-radius: 999px;
+  padding: 0 4px 0 8px;
+  border: 0;
+  border-radius: var(--dsc-radius-control);
   background: transparent;
   color: var(--dsc-muted);
-  font-size: 12.1px;
-  font-weight: 550;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
   white-space: nowrap;
   flex: none;
 }
-.dsc-model-trigger { max-width: 170px; }
-.dsc-effort-trigger { max-width: 116px; }
 .dsc-model-trigger:hover,
-.dsc-model-trigger.is-open,
-.dsc-effort-trigger:hover,
-.dsc-effort-trigger.is-open { background: var(--dsc-hover); color: var(--dsc-text); }
-.dsc-model-name { overflow: hidden; text-overflow: ellipsis; }
+.dsc-model-trigger.is-open { background: var(--dsc-interactive); color: var(--dsc-text); }
+.dsc-model-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dsc-model-effort { flex: none; color: var(--dsc-caption); }
+.dsc-model-effort.is-off { color: var(--dsc-caption); }
+.dsc-model-trigger > .dsc-icon { flex: none; color: var(--dsc-caption); }
 .dsc-textarea {
   display: block;
   width: 100%;
@@ -12304,168 +12421,228 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-tools { position: relative; display: flex; flex: none; }
 .dsc-tools-trigger {
   position: relative;
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--dsc-border);
+  width: 28px;
+  height: 28px;
+  border: 0;
   border-radius: 999px;
-  background: transparent;
-  color: var(--dsc-muted);
+  background: var(--dsc-selector);
+  color: var(--dsc-text);
   display: flex;
   align-items: center;
   justify-content: center;
   flex: none;
-  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
+  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease;
 }
-.dsc-tools-trigger:hover { background: var(--dsc-hover); color: var(--dsc-text); }
-.dsc-tools-trigger.is-open { background: var(--dsc-active); color: var(--dsc-text); }
+.dsc-tools-trigger:hover { background: var(--dsc-interactive); }
+.dsc-tools-trigger.is-open { background: var(--dsc-active); }
 
-/* ---------- popovers (tools + model + effort) ----------
-   One small floating card anchored to its trigger, opening upward by default.
-   The placement hook flips it when the composer sits too low and clamps its
-   height to the viewport, so the card never clips against a window edge. */
+/* ---------- composer popovers (tools + model) ----------
+   Native Harness menu material: 4px inset rail, 16px panel radius, the
+   translucent menu surface with the same backdrop blur, prominent elevation and
+   a hairline stroke. Tool rows read like the command menu (left name, right
+   description); model rows read like the model seat (label/value cells, then
+   lists with a trailing check). */
 .dsc-popover {
   position: absolute;
   z-index: 24;
-  bottom: calc(100% + 8px + var(--dsc-popover-gap, 0px));
+  bottom: calc(100% + var(--dsc-popover-offset, 8px));
   left: 0;
-  padding: 6px;
-  border: 1px solid var(--dsc-border);
-  border-radius: 14px;
-  background: var(--dsc-layer);
-  box-shadow: var(--dsc-shadow-popover);
+  padding: 4px;
+  border: 0;
+  border-radius: var(--dsc-radius-menu);
+  background: var(--dsc-menu-surface);
+  -webkit-backdrop-filter: var(--dsc-menu-backdrop);
+  backdrop-filter: var(--dsc-menu-backdrop);
+  box-shadow: inset 0 0 0 1px var(--dsc-border), var(--dsc-shadow-popover);
   overflow-y: auto;
   overscroll-behavior: contain;
-  animation: dsc-pop 0.12s ease;
+  animation: dsc-pop 0.12s ease-out;
 }
-.dsc-popover[data-placement='bottom'] { bottom: auto; top: calc(100% + 8px); }
+.dsc-popover[data-placement='bottom'] {
+  bottom: auto;
+  top: calc(100% + var(--dsc-popover-offset, 8px));
+}
 .dsc-tools-menu {
-  width: 282px;
-  max-width: calc(100vw - 32px);
+  left: 0;
+  right: auto;
+  width: auto;
+  max-width: none;
 }
 .dsc-model-menu {
   left: auto;
   right: 0;
-  width: max-content;
-  min-width: 216px;
-  max-width: min(300px, calc(100vw - 32px));
-}
-.dsc-effort-menu {
-  left: auto;
-  right: 0;
-  width: max-content;
-  min-width: 158px;
-  max-width: min(220px, calc(100vw - 32px));
+  width: min(280px, calc(100vw - 24px));
+  max-width: 360px;
 }
 @keyframes dsc-pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-.dsc-popover-sep { height: 1px; margin: 4px 2px; background: var(--dsc-border); }
-.dsc-popover-item {
+.dsc-menu-section {
+  min-height: 23px;
+  padding: 5px 8px 2px;
+  color: var(--dsc-tertiary);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  user-select: none;
+}
+.dsc-tool-item {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   width: 100%;
-  padding: 8px 9px;
+  min-height: 34px;
+  padding: 6px 8px;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--dsc-radius-row);
   background: transparent;
   color: var(--dsc-text);
-  text-align: left;
   font-size: 13px;
+  line-height: 20px;
+  text-align: left;
+  outline: none;
 }
-.dsc-popover-item:hover:not(.is-disabled) { background: var(--dsc-hover); }
-.dsc-popover-item.is-active { background: color-mix(in srgb, var(--dsc-link) 7%, transparent); }
-.dsc-popover-item.is-disabled { cursor: default; color: var(--dsc-muted); }
-.dsc-popover-item-icon {
-  display: flex;
+.dsc-tool-item:hover:not(:disabled),
+.dsc-tool-item:focus-visible { background: var(--dsc-interactive); }
+.dsc-root .dsc-tool-item:focus-visible,
+.dsc-root .dsc-model-cell:focus-visible,
+.dsc-root .dsc-model-option:focus-visible,
+.dsc-root .dsc-effort-option:focus-visible { outline: none; }
+.dsc-tool-item:disabled { opacity: 0.48; cursor: default; }
+.dsc-tool-icon {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: var(--dsc-layer2);
-  color: var(--dsc-muted);
+  width: 16px;
+  height: 16px;
   flex: none;
+  color: var(--dsc-menu-icon);
 }
-.dsc-popover-item.is-active .dsc-popover-item-icon { background: var(--dsc-brand-soft); color: var(--dsc-link); }
-.dsc-popover-item-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
-.dsc-popover-item-title { font-size: 12.9px; font-weight: 560; }
-.dsc-popover-item-desc { font-size: 11px; line-height: 1.45; color: var(--dsc-muted); }
-.dsc-popover-item-desc.is-warn { color: var(--dsc-warn); }
-.dsc-popover-item-state { font-size: 10.8px; color: var(--dsc-muted); flex: none; }
-.dsc-popover-item .dsc-switch { flex: none; }
-.dsc-popover-item .dsc-switch-thumb { width: 16px; height: 16px; }
-.dsc-popover-item .dsc-switch.is-on .dsc-switch-thumb { transform: translateX(14px); }
-/* The + card: a normal list of actions, never a settings panel. */
-.dsc-tool-item { padding: 9px; }
-.dsc-tool-item .dsc-popover-item-icon { background: var(--dsc-field); }
-/* Model list: names only, with one check and an optional one-line limitation. */
-.dsc-model-list { display: flex; flex-direction: column; gap: 2px; padding: 2px; }
-.dsc-model-option { align-items: center; }
-.dsc-model-option.is-selected { background: var(--dsc-brand-soft); }
-.dsc-model-option.is-selected .dsc-popover-item-title { color: var(--dsc-text); }
-.dsc-model-option > .dsc-icon { color: var(--dsc-link); flex: none; }
-.dsc-model-note { font-size: 10.7px; line-height: 1.4; color: var(--dsc-muted); }
-.dsc-model-scope {
-  margin: 6px 2px 1px;
-  padding: 7px 8px 2px;
-  border-top: 1px solid var(--dsc-border);
-  font-size: 10.9px;
-  line-height: 1.45;
-  color: var(--dsc-muted);
+.dsc-tool-name {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-/* Thinking effort: four discrete rows, Off first, then the API tiers. */
-.dsc-effort-list { display: flex; flex-direction: column; gap: 1px; padding: 2px; }
+.dsc-tool-desc {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--dsc-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+  text-align: right;
+}
+.dsc-tool-desc.is-warn { color: var(--dsc-warn); }
+.dsc-tool-state {
+  flex: none;
+  color: var(--dsc-caption);
+  font-size: 11px;
+  line-height: 16px;
+}
+.dsc-tool-check { display: inline-flex; flex: none; color: var(--dsc-text); }
+/* Root model seat: Model / Reasoning effort cells with the current value and
+   a drill chevron, matching the native two-level menu. */
+.dsc-model-root { display: flex; flex-direction: column; gap: 0; }
+.dsc-model-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 34px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--dsc-radius-row);
+  background: transparent;
+  color: var(--dsc-text);
+  font-size: 13px;
+  line-height: 20px;
+  text-align: left;
+  outline: none;
+}
+.dsc-model-cell:hover,
+.dsc-model-cell:focus-visible { background: var(--dsc-interactive); }
+.dsc-model-cell-label { flex: none; white-space: nowrap; }
+.dsc-model-cell-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  color: var(--dsc-tertiary);
+}
+.dsc-model-cell > .dsc-icon { flex: none; width: 12px; height: 12px; color: var(--dsc-menu-icon); }
+/* Lists: names or tiers only, a trailing check for the active value. */
+.dsc-model-list,
+.dsc-effort-list { display: flex; flex-direction: column; gap: 0; }
+.dsc-model-option,
 .dsc-effort-option {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  gap: 8px;
   width: 100%;
-  height: 33px;
-  padding: 0 9px;
+  min-height: 34px;
+  padding: 5px 7px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--dsc-radius-row);
   background: transparent;
   color: var(--dsc-text);
-  font-size: 12.7px;
-  font-weight: 540;
+  font-size: 13px;
+  line-height: 20px;
   text-align: left;
+  outline: none;
 }
-.dsc-effort-option:hover { background: var(--dsc-hover); }
-.dsc-effort-option.is-selected { background: var(--dsc-hover); }
-.dsc-effort-option .dsc-icon { color: var(--dsc-link); flex: none; }
-.dsc-effort-option-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dsc-send-button {
-  width: var(--dsc-control-h);
-  height: var(--dsc-control-h);
+.dsc-model-option:hover,
+.dsc-model-option:focus-visible,
+.dsc-effort-option:hover,
+.dsc-effort-option:focus-visible { background: var(--dsc-interactive); }
+.dsc-model-option-name,
+.dsc-effort-option-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dsc-model-note {
+  flex: none;
+  overflow: hidden;
+  max-width: 42%;
+  color: var(--dsc-tertiary);
+  font-size: 11px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dsc-model-check {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--dsc-text);
+}
+.dsc-model-check .dsc-icon { width: 14px; height: 14px; }
+.dsc-send-button,
+.dsc-stop-button {
+  width: 34px;
+  height: 34px;
   border: 0;
   border-radius: 999px;
-  background: var(--dsc-brand);
-  color: var(--dsc-on-brand);
+  background: var(--dsc-primary-action);
+  color: var(--dsc-on-color);
   display: flex;
   align-items: center;
   justify-content: center;
   flex: none;
-  transition: filter var(--dsc-fast) ease, background var(--dsc-fast) ease, color var(--dsc-fast) ease;
+  transform: translateY(-2px);
+  transition: background var(--dsc-fast) ease, opacity var(--dsc-fast) ease;
 }
-.dsc-send-button:hover { filter: brightness(1.07); }
-.dsc-send-button.is-idle {
-  background: var(--dsc-layer2);
-  color: var(--dsc-muted);
-  opacity: 0.9;
-}
-.dsc-stop-button {
-  width: var(--dsc-control-h);
-  height: var(--dsc-control-h);
-  border: 1px solid var(--dsc-border-strong);
-  border-radius: 999px;
-  background: var(--dsc-layer2);
-  color: var(--dsc-text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-}
-.dsc-stop-button:hover { background: var(--dsc-hover); }
+.dsc-send-button:not(.is-idle):hover { background: var(--dsc-primary-action-hover); }
+.dsc-send-button.is-idle { opacity: 0.4; cursor: default; }
+.dsc-stop-button:hover { background: var(--dsc-primary-action-hover); }
 .dsc-drop-mask {
   position: absolute;
   inset: 0;
@@ -12473,10 +12650,10 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 2px dashed var(--dsc-brand);
-  border-radius: 22px;
-  background: color-mix(in srgb, var(--dsc-brand) 8%, var(--dsc-layer));
-  color: var(--dsc-link);
+  border: 2px dashed var(--dsc-business);
+  border-radius: var(--dsc-radius-panel);
+  background: color-mix(in srgb, var(--dsc-business) 8%, var(--dsc-input-major));
+  color: var(--dsc-business);
   font-size: 13px;
   font-weight: 600;
   pointer-events: none;
@@ -12841,10 +13018,12 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   .dsc-empty { padding-bottom: 3vh; }
 }
 @media (max-width: 620px) {
-  .dsc-model-trigger { max-width: 132px; }
-  .dsc-effort-trigger { max-width: 84px; }
-  .dsc-tool-toggle { width: 30px; padding: 0; justify-content: center; }
+  .dsc-model-trigger { max-width: 188px; }
+  .dsc-tool-toggle { width: var(--dsc-control-h); padding: 0; justify-content: center; }
   .dsc-tool-toggle-label { display: none; }
+  .dsc-composer-bar { padding: 2px 6px 6px; gap: 6px; }
+  .dsc-composer-left { gap: 6px; }
+  .dsc-composer-right { gap: 6px; }
   .dsc-header-title { display: none; }
   .dsc-thread { padding: 16px 12px 8px; }
   .dsc-composer-wrap { padding: 4px 10px 8px; }
@@ -12969,7 +13148,6 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     SourceRow,
     ToolsMenu,
     ModelMenu,
-    EffortMenu,
     chatToolDefinitions,
     chatMenuTools,
     composerToolDefinitions,
@@ -12979,7 +13157,9 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     modelById,
     modelCapability,
     modelEfforts,
+    modelDisplayName,
     modelTriggerLabel,
+    modelEffortLabel,
     modelNotes,
     modelChipLabel,
     currentModelChoice,
