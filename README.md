@@ -57,6 +57,7 @@ dsh-chat 在 DeepSeek Harness 中加入一个原生的 **DeepSeek Chat 模式**�
 - **继续生成**：用户主动停止、网络中断、超时或 `max_tokens` 截断的回答，可从已有正文处继续（以 assistant 前缀续写的方式请求，不做无关拼接）；只对当前最后一条有正文的回答开放
 - **内容渲染**：代码高亮（语言标识、一键复制、长代码内部滚动、明暗两套配色）、LaTeX 公式（行内与独立公式块）、Mermaid 图表（失败时保留源代码）、表格、引用块、超链接与图片
 - **历史记录**：会话列表、重命名、删除、本地持久化、会话内搜索
+- **聊天记录导入**：把 DeepSeek App / 网页版导出的 ZIP 合并进 Chat 历史，保留标题、时间、思考、搜索来源、分支版本与可恢复的图片；全程在本机解析，不上传导出数据
 - **交给 Agent**：把当前对话整理成可编辑的任务说明，可直接选择或新建 Harness 工作区，然后创建真实的 Agent 会话并把说明作为首条提示，切换到 Agent 继续开发
 - 中英文界面、明暗主题、窗口缩放与移动端布局
 
@@ -133,6 +134,50 @@ registerChatTool({
 
 它走的是 Harness 原生机制：`ctx.sessionController.create()` + `prompt()` 建立会话，浏览器侧用 `ctx.uiWorkspace.openSession()` 切到该会话；新建工作区时用 `ctx.uiWorkspace.pickDirectory()` 打开原生目录选择器，由 Host 的 `/api/deepseek-chat/workspace` 建目录并调用 `ctx.workspaceRegistry.create()` 注册，不复制一套独立的工作区存储。
 
+## 导入 DeepSeek 聊天记录
+
+侧边栏底部的 **导入聊天记录** 会把 DeepSeek App / 网页版导出的聊天记录 ZIP 合并进 Chat 历史：
+
+1. 选择或拖入 ZIP（如 `deepseek_data-<导出日期>.zip`）。文件只交给本地 Host 解析；不上传、不调用 DeepSeek API。
+2. 预览列出导出中的全部会话：标题、创建时间、消息数。已经导入过的会话标为「已导入」并默认不勾选；可以按标题筛选、全选或逐个勾选。
+3. 导入在 Host 后台进行，弹窗显示进度并可随时取消；单个会话出错只进入失败列表，不影响其他会话。
+4. 结束后显示成功 / 跳过 / 失败的数量，并自动刷新侧边栏。导入的会话就是普通 Chat 历史：可以阅读、搜索、重命名、置顶、归档、移入文件夹、切换消息版本，也可以在原有上下文上继续对话或「交给 Agent」。
+
+这是合并导入，不是覆盖：每条导入的会话都带稳定来源标识 `source = { kind: 'deepseek-export', id: <导出中的会话 id>, importedAt }`，同一份导出（或另一份包含同一会话的导出）再次导入时，已存在的会话会被跳过而不是新建。写入前会把当前 `state.json` 复制为 `state.json.import-backup-<时间戳>`；历史按批写入，中断或取消时只有已完成的批次留在文件中。
+
+### 支持范围
+
+| 导出内容 | 导入结果 |
+| --- | --- |
+| 标题、创建 / 更新时间、置顶 | 原样保留（标题为空时用第一条提问补全） |
+| 用户提问、AI 回答、Markdown / 代码 / 公式 | 原样保留，沿用现有渲染 |
+| 深度思考 `THINK` | 思考块，按导出的 `elapsed_secs` 还原用时 |
+| 联网搜索 `TOOL_SEARCH` / 打开网页 `TOOL_OPEN` | 「搜索 / 阅读」步骤 + 搜索结果与来源列表 |
+| 内容风险提示 `CONTENT_RISK` | 回答下方的提示条，不进入正文、复制内容或模型上下文 |
+| 文件 / 图片 `FILE` | 附件元数据；图片字节从 ZIP 中恢复并保存在本地，可直接显示 |
+| 消息分支（编辑提问 / 重新生成） | 完整节点树；`current_message_id` 作为当前分支，其他版本仍可切换 |
+| 未完成 / 超时 / 被内容过滤的回答 | 保留原状态与服务器模板文案，不伪造内容 |
+| `TOOL_FIND`、`TOOL_IMAGE_SEARCH` 等片段 | 不导入（导出中没有可还原的正文） |
+
+导出的全部真实会话只存在于本机测试环境；仓库内的测试样本全部是合成的导出结构，不含任何真实对话。
+
+### 与长期记忆模块的接口
+
+导入后的会话在存储里与普通会话完全相同，只多一个来源字段，供后续「用户授权后批量提取」使用：
+
+- `conversation.source = { kind, id, importedAt }`：`kind` 固定为 `deepseek-export`，`id` 是导出中的会话 UUID，`importedAt` 是导入时间（毫秒）。普通会话的 `source` 为 `null`。
+- `store.listSummaries()` 的每一项都带 `source`，长期记忆模块可以直接筛出 `source.kind === 'deepseek-export'` 的会话。
+- `store.findBySource(kind, id)` 与 `store.importedSourceIds(kind)` 用于按来源查找与去重；需要按时间范围或全量导出时，在这两个方法上扩展即可，不必改动导入流程。
+- 图片保存在 `$DSH_HOME/deepseek-chat/imports/media/<sha256>.<ext>`（按内容寻址，重复图片只存一份），由 `/api/deepseek-chat/import/media` 只读提供，浏览器经 Host 传输层取回后以 blob URL 显示。导入的附件带 `local: true`，`protocol.js` 在构造请求时会跳过它们，因此继续对话不会把无效的 file id 发给 DeepSeek。
+
+### 安全与限制
+
+- ZIP 由 `lib/import/zip.js` 用 Node 内置 `zlib` 读取：只按名字取需要的条目，从不把条目名当作路径写文件（路径穿越无效）；限制归档大小、条目数量与单条目解压上限，并校验 CRC 与声明大小；ZIP64、加密条目、多卷压缩包会被明确拒绝。
+- 解析与转换都在 Host 进程内，按会话逐个进行并让出事件循环；导入任务同时只允许一个，浏览器轮询进度，可随时取消。
+- 导入只接受 `export_format_version: 3`（当前 DeepSeek 导出格式）。出现新版本时会明确提示「不支持的导出格式」，不会猜测解析。
+- 图片只恢复 PNG / JPEG / WebP / GIF / BMP / AVIF / SVG；导出中缺少字节的附件只保留名称、大小与类型。
+- 导入的本地图片不会重新上传到 DeepSeek，因此继续对话时模型看不到这些图片（历史里的文字与回答照常参与上下文）。
+
 ## 认证
 
 Chat 模式不会把 API Key 写进代码或配置文件，按以下顺序自动选择：
@@ -154,6 +199,7 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 | `requestTimeoutMs` | `900000` | 单次生成超时（15 分钟） |
 | `heartbeatMs` | `15000` | 流式心跳间隔 |
 | `handoffTimeoutMs` | `90000` | 生成任务说明 / 提交给 Agent 的超时 |
+| `maxImportBytes` | `536870912` | 聊天记录导入 ZIP 上限（512 MB） |
 
 ## 数据
 
@@ -163,6 +209,9 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 - 消息版本各自保存 `blocks`（正文、思考、搜索/阅读步骤与引用）、`usage`、`stopReason` 等元数据
 - 模型与思考强度偏好：`$DSH_HOME/deepseek-chat/model-config.json`（按会话 id 记录覆盖项 + 新对话默认值）
 - 上传文件：由 DeepSeek Files API 托管，插件只保存 `file_id` 和展示元数据；附件会随编辑后的用户消息保留
+- 导入的会话写在同一个 `state.json` 里，只多一个 `source` 来源字段；导入前备份为 `state.json.import-backup-<时间戳>`
+- 导入暂存：`$DSH_HOME/deepseek-chat/imports/staging/<token>/export.zip`，导入结束或 30 分钟未开始即删除
+- 导入图片：`$DSH_HOME/deepseek-chat/imports/media/<sha256>.<ext>`（内容寻址，只增不删）
 - 删除会话只删除本地记录和该会话的模型偏好，不删除 DeepSeek 侧已上传的文件
 - 联网搜索、深度思考搜索与文件解析使用 DeepSeek 服务，可能产生对应用量费用
 
@@ -172,6 +221,7 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 - 存储：`lib/store.js` 维护会话节点树、文件夹与组织状态；`presentPath()` 只把当前分支交给协议层，`selectVersion()` / `focusMessage()` 通过切换 `leafId` 重开旧分支；历史搜索在本地线性扫描标题与正文，不引入额外数据库。
 - 流式协议：`/api/deepseek-chat/stream` 支持 `send` / `edit` / `regenerate` / `continue` 四种模式。`edit` 把新提问挂到原提问的父节点下，`regenerate` 在同一个提问下新增回答兄弟节点，`continue` 用已保存的可见正文作为 assistant 前缀（prefill）请求剩余内容并原地追加。`start` 帧会下发本次生效的完整分支，浏览器用它替换乐观渲染的消息，避免旧分支回答混入当前上下文。
 - 模型：`lib/model-config.js` 是模型目录、能力与偏好的唯一来源，`bootstrap.models` 把目录送到浏览器；`/api/deepseek-chat/model` 读写偏好；`stream` 用目录校验 `model`，把偏好中的 effort 与请求值折叠后交给协议层。
+- 导入：`lib/import/` 与聊天界面解耦——`zip.js` 只读 ZIP（文件句柄 + `zlib.inflateRaw`，条目名只做键、不落盘）、`format.js` 校验导出结构与时间戳、`convert.js` 把导出消息树转换成 Chat 的节点树（思考、搜索步骤、来源、图片、分支）、`media.js` 是内容寻址的图片库、`index.js` 负责暂存上传、后台任务、分批合并与去重。路由是 `/api/deepseek-chat/import/{upload,start,status,cancel,discard,media}`：`upload` 把请求流写到暂存文件并返回预览，`start` 返回 job id，浏览器轮询 `status`；每 40 个会话写一次历史，写入失败时把这些会话从内存中回滚，保证内存与文件一致。
 - Client：`client.js` 由 `client-src/*.js` 拼接，通过 `shell.overlay` 渲染全屏 Chat（起点在 `--dsh-frame-chrome-top` 之下，即原生标题栏下方），并在同一 `shell.overlay` 注册 root 级的 `deepseek-chat-mode:mode-switch`，作为两种模式共享的顶层导航。样式全部使用 `--dsw-*` 主题变量；侧栏品牌沿用 DeepSeek 官方鲸鱼与字标矢量，内联在插件中，不加载 Harness Client 包。
 - Client 模块：`30-markdown.js`（Markdown 与引用标记）、`31-highlight.js`、`32-math.js`、`33-mermaid.js`、`43-popover.js`（弹出层定位与键盘）、`47-model.js`（模型菜单）、`48-tools.js`（工具注册表与「＋」菜单）。
 - 协议：Anthropic 兼容 Messages API（`https://api.deepseek.com/anthropic/v1`），使用 `deepseek-flash`、`deepseek-v4-pro`、`deepseek_web_search`、`deepseek_read_url`、`safety_check`、`title` 与 Files API。
@@ -194,6 +244,9 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 - 编辑/重新生成采用线性版本导航（`‹ 1 / 3 ›`）而不是完整的可视化分支树面板；被替换的分支仍保存并可切换回来。
 - 「继续生成」依赖 DeepSeek Messages API 的 assistant 前缀续写（prefill）语义；如果账号或服务端拒绝该模式，请改用重新生成。续写不会恢复深度思考，只延续可见正文。
 - 历史搜索在本地扫描当前 `state.json` 的全部消息节点，适合本机历史量；没有独立搜索索引服务。
+- 导入大量会话会让 `state.json` 变大（几百个会话约几十 MB），每次保存都要重写整份文档；建议只勾选需要的会话（可导入会话超过 100 个时弹窗会提示）。
+- 导入是单任务的：同一时间只允许一个导入任务，取消后会保留已写入的批次。
+- 导入只恢复导出中确实存在的内容：`TOOL_FIND` / `TOOL_IMAGE_SEARCH` 等没有正文的片段不会进入消息；导出中缺少字节的附件只保留元数据。
 - 文件夹整理通过菜单完成，未实现拖拽排序（避免引入拖拽依赖）。
 - 生成过程中需先停止回复，才能切换会话、编辑消息或新建对话。
 - `deepseek-v4-pro` 不支持图片理解；含图片的消息会在发送前被拒绝并提示切换模型。
@@ -215,6 +268,6 @@ node tools/check-math.js           # LaTeX 子集渲染回退与深度保护
 node tools/check-mermaid.js        # Mermaid 解析、几何与错误回退
 ```
 
-测试覆盖：`tests/store.test.js`（v1→v2 迁移与备份、文件夹/置顶/归档、搜索、分支与版本切换）、`tests/protocol.test.js`（上下文构造与续写前缀）、`tests/conversation.test.js`（Host 路由与 send/edit/regenerate/continue 端到端）、`tests/workspace.test.js`（项目文件夹创建、工作区注册与交接）、`tests/model-config.test.js`、`tests/service-stream.test.js`、`tests/api.test.js`、`tests/profile.test.js`、`tests/host-entry.test.js`。
+测试覆盖：`tests/store.test.js`（v1→v2 迁移与备份、文件夹/置顶/归档、搜索、分支与版本切换）、`tests/protocol.test.js`（上下文构造与续写前缀）、`tests/conversation.test.js`（Host 路由与 send/edit/regenerate/continue 端到端）、`tests/workspace.test.js`（项目文件夹创建、工作区注册与交接）、`tests/import.test.js`（导出预览、导入、去重、重启持久化、取消、损坏会话隔离、路径穿越与解压上限）、`tests/import-convert.test.js`（片段映射、分支选择、来源字段、存储合并与请求构造）、`tests/model-config.test.js`、`tests/service-stream.test.js`、`tests/api.test.js`、`tests/profile.test.js`、`tests/host-entry.test.js`。导入测试的样本由 `tests/support/export-fixture.js` 现场生成，不包含任何真实聊天记录。
 
 安装：在 DSH 的 Plugins 页面选择本地目录，或由 Agent 使用 `plugin_manager install_bundle` 安装本目录。发布包也可以使用 `.tgz` 直接安装；`.zip` 需先解压，安装目标为解压后的目录（DSH 不接受 `.zip` 文件本身）。本机开发时 profile 里用 `link:` 指向本仓库即可。

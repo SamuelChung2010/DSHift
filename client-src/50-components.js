@@ -518,6 +518,13 @@ function AssistantMessage({ message, streaming, isLast, canRegenerate, highlight
   const text = messageText(message)
   const { sources, indexByUrl } = collectMessageSources(message)
   const answer = answerText(message, indexByUrl)
+  // A server notice the export recorded next to the answer (such as the
+  // content warning on an otherwise finished reply). It is shown below the
+  // answer and is deliberately not part of the answer text, the copy action or
+  // the model context.
+  const noticeBlocks = (message.blocks ?? []).filter(block => (
+    block.type === 'notice' && typeof block.text === 'string' && block.text.trim() !== ''
+  ))
   const refused = message.stopReason === 'refusal'
   const errorInfo = message.error ? friendlyError(message.error) : null
   const showTyping = streaming && text === '' && (message.blocks ?? []).length === 0
@@ -565,6 +572,12 @@ function AssistantMessage({ message, streaming, isLast, canRegenerate, highlight
                   onClick: () => chatStore.set({ settingsOpen: true }),
                 }, t('configure'))
               : null,
+          )
+        : null,
+      !refused && noticeBlocks.length > 0
+        ? h('div', { className: 'dsc-notice is-warn dsc-answer-notice' },
+            h(Icon, { name: 'warning', size: 15 }),
+            h('span', null, noticeBlocks.map(block => block.text).join('\n')),
           )
         : null,
       sources.length > 0 && !refused
@@ -1502,6 +1515,11 @@ function Sidebar() {
       ),
       h('button', {
         type: 'button', className: 'dsc-foot-action',
+        title: t('importOpen'),
+        onClick: () => chatActions.openImport(),
+      }, h(Icon, { name: 'import', size: 16 }), h('span', null, t('importOpen'))),
+      h('button', {
+        type: 'button', className: 'dsc-foot-action',
         title: t('chatSettings'),
         onClick: () => chatStore.set({ settingsOpen: true }),
       }, h(Icon, { name: 'settings', size: 16 }), h('span', null, t('settings')),
@@ -1795,6 +1813,7 @@ function ChatRoot() {
   const moveChat = useChat(state => state.moveChat)
   const folderAdd = useChat(state => state.folderAdd)
   const archiveOpen = useChat(state => state.archiveOpen)
+  const importOpen = useChat(state => state.importOpen)
   const [resizing, setResizing] = React.useState(false)
   const rootRef = React.useRef(null)
   const sidebarRef = React.useRef(null)
@@ -1857,6 +1876,10 @@ function ChatRoot() {
         }
         if (chatStore.state.archiveOpen === true) {
           chatActions.closeArchive()
+          return
+        }
+        if (chatStore.state.importOpen === true) {
+          chatActions.closeImport()
           return
         }
         if (chatStore.state.editingId !== null) {
@@ -1941,6 +1964,7 @@ function ChatRoot() {
     moveChat !== null ? h(MoveChatDialog, null) : null,
     folderAdd !== null ? h(FolderAddDialog, null) : null,
     archiveOpen ? h(ArchiveDialog, null) : null,
+    importOpen ? h(ImportDialog, null) : null,
     // The confirmation sits on top of whichever surface raised it (the archive
     // manager, a folder picker or the sidebar menu).
     confirm !== null ? h(ConfirmDialog, null) : null,

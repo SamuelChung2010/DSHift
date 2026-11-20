@@ -129,6 +129,11 @@ const IconArrowDownToLine = props => h(IconBase, props,
   h('path', { d: 'M12 4v11M7 10.5l5 5 5-5' }),
   h('path', { d: 'M5 20h14' }),
 )
+/** Restore into the history: an arrow going down into an open tray. */
+const IconImport = props => h(IconBase, props,
+  h('path', { d: 'M12 3.5v9.5M8.2 9.4l3.8 3.8 3.8-3.8' }),
+  h('path', { d: 'M4.5 14.5v2.8A2.7 2.7 0 0 0 7.2 20h9.6a2.7 2.7 0 0 0 2.7-2.7v-2.8' }),
+)
 
 const ICONS = {
   plus: IconPlus,
@@ -167,6 +172,7 @@ const ICONS = {
   folderMinus: IconFolderMinus,
   archive: IconArchive,
   continue: IconArrowDownToLine,
+  import: IconImport,
 }
 
 function Icon({ name, size = 18, className = '' }) {
