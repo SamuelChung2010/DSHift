@@ -3,7 +3,7 @@
 dsh-chat 在 DeepSeek Harness 中加入一个原生的 **DeepSeek Chat 模式**，与原生的 **Agent 模式**并列，通过顶部的 `Chat | Agent` 分段控件随时切换。Chat 使用 DeepSeek 官方面向应用开放的 API 能力，界面参考 DeepSeek App / ChatGPT 桌面版
 
 ##展示图
-<img width="2864" height="1610" alt="image" src="https://github.com/user-attachments/assets/58725eb1-342e-4ec1-8bc6-3380081a2d17" />
+<img width="2880" height="1622" alt="image" src="https://github.com/user-attachments/assets/4a36fd5d-8507-4121-8858-18027ec70f60" />
 <img width="2876" height="1622" alt="image" src="https://github.com/user-attachments/assets/b1065e64-d33c-4642-8dd8-5774671ce0dc" />
 <img width="2880" height="1632" alt="image" src="https://github.com/user-attachments/assets/f1b6389c-a692-4d01-92e2-92115a3cac6b" />
 
