@@ -19,6 +19,8 @@ async function tempStore() {
 test('the catalog offers exactly the models the Messages API accepts', () => {
   assert.deepEqual(MODEL_CATALOG.map(model => model.id), ['deepseek-flash', 'deepseek-v4-pro'])
   assert.equal(findModel('deepseek-flash').capabilities.vision, true)
+  assert.equal(findModel('deepseek-flash').displayName, 'DeepSeek-V4.1-Flash')
+  assert.equal(findModel('deepseek-v4-pro').displayName, 'DeepSeek-V4-Pro')
   assert.equal(findModel('deepseek-v4-pro').capabilities.vision, false)
   assert.deepEqual(findModel('deepseek-flash').capabilities.efforts, EFFORTS)
   assert.deepEqual(EFFORTS, ['low', 'high', 'max'])

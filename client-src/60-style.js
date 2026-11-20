@@ -40,9 +40,28 @@ const CHAT_CSS = `
   --dsc-success: var(--dsw-alias-state-success-primary, #15803d);
   --dsc-shadow: 0 20px 48px rgba(9, 12, 20, 0.18);
   --dsc-shadow-soft: 0 4px 16px rgba(9, 12, 20, 0.07);
-  --dsc-shadow-composer: 0 2px 10px rgba(9, 12, 20, 0.05);
-  --dsc-shadow-popover: 0 12px 34px rgba(9, 12, 20, 0.17), 0 2px 7px rgba(9, 12, 20, 0.07);
-  --dsc-control-h: 32px;
+  --dsc-shadow-composer: var(--dsw-elevation-soft, 0 4px 18px rgba(9, 12, 20, 0.06));
+  --dsc-shadow-popover: var(--dsw-elevation-prominent, 0 16px 40px rgba(9, 12, 20, 0.18));
+  --dsc-control-h: 28px;
+  /* Native composer / menu aliases. They resolve the exact Harness surface,
+     selector and interactive tokens, with the Chat palette as a fallback for
+     older Hosts that do not publish them. */
+  --dsc-input-major: var(--dsw-specific-input-major, var(--dsc-layer));
+  --dsc-menu-surface: var(--dsw-specific-menu, var(--dsc-layer));
+  --dsc-menu-backdrop: var(--dsw-menu-backdrop-filter, blur(22px) saturate(1.35));
+  --dsc-selector: var(--dsw-specific-selector, color-mix(in srgb, var(--dsc-text) 7%, transparent));
+  --dsc-interactive: var(--dsw-alias-interactive-bg-hover, var(--dsc-hover));
+  --dsc-tertiary: var(--dsw-alias-label-tertiary, var(--dsc-muted));
+  --dsc-caption: var(--dsw-alias-label-caption, var(--dsc-muted));
+  --dsc-menu-icon: var(--dsw-alias-menu-icon, var(--dsc-muted));
+  --dsc-business: var(--dsw-alias-state-business-primary, var(--dsc-link));
+  --dsc-primary-action: var(--dsw-alias-button-info-fill, var(--dsc-link));
+  --dsc-primary-action-hover: var(--dsw-alias-button-info-hover, var(--dsc-link));
+  --dsc-on-color: var(--dsw-alias-label-on-color, #ffffff);
+  --dsc-radius-panel: var(--dsw-radius-panel, 28px);
+  --dsc-radius-menu: var(--dsw-radius-lg, 16px);
+  --dsc-radius-control: var(--dsw-radius-sm, 8px);
+  --dsc-radius-row: var(--dsw-radius-md, 12px);
   --dsc-radius: var(--dsw-radius-md, 12px);
   --dsc-font: var(--dsw-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif);
   --dsc-mono: var(--ds-font-family-code, 'SF Mono', Consolas, 'Liberation Mono', monospace);
@@ -946,7 +965,7 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   flex: none;
 }
 .dsc-attach-action:hover { background: var(--dsc-hover); color: var(--dsc-text); }
-.dsc-attach-rail { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 2px 8px; }
+.dsc-attach-rail { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 14px 2px; }
 
 /* ---------- reasoning / process ----------
    Reasoning is a quiet, secondary layer: muted text, a thin rail, and a
@@ -1477,39 +1496,35 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   font-size: 12.2px;
 }
 .dsc-auth-banner span { flex: 1; }
-/* One rounded surface owns the border. The textarea inside is a bare,
-   transparent field: a text input must never draw a second rectangle (or a
-   browser focus outline) inside this container. Focus feedback is a quiet
-   border tone change, with one very light keyboard-only ring; there is no
-   white double frame and no glow. */
+/* One native surface owns the border, the fill and the elevation. The editor
+   inside is a bare transparent field: no second rectangle, no focus glow. The
+   focus state is intentionally quiet — Harness does not paint a ring around
+   the composer, so neither does Chat. */
 .dsc-composer {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   max-width: 788px;
   margin: 0 auto;
-  padding: 8px 10px 8px 14px;
+  padding: 8px 0 0;
   border: 1px solid var(--dsc-border-strong);
-  border-radius: 24px;
-  background: var(--dsc-layer);
+  border-radius: var(--dsc-radius-panel);
+  background: var(--dsc-input-major);
   box-shadow: var(--dsc-shadow-composer);
-  transition: border-color var(--dsc-fast) ease, box-shadow var(--dsc-fast) ease;
+  transition: border-color var(--dsc-fast) ease;
 }
-.dsc-composer:has(.dsc-editor-field:focus) {
-  border-color: color-mix(in srgb, var(--dsc-brand) 34%, var(--dsc-border-strong));
-}
-.dsc-composer:has(.dsc-editor-field:focus-visible) {
-  box-shadow: 0 0 0 1px var(--dsc-brand-soft-strong), var(--dsc-shadow-composer);
-}
-.dsc-composer.is-drag { border-color: var(--dsc-brand); }
+.dsc-composer.is-drag { border-color: var(--dsc-business); }
 .dsc-composer.has-warning { border-color: color-mix(in srgb, var(--dsc-warn) 42%, var(--dsc-border-strong)); }
 .dsc-composer-main { display: flex; flex-direction: column; min-width: 0; }
 .dsc-editor { position: relative; display: flex; min-width: 0; }
 .dsc-editor-field {
   display: block;
   width: 100%;
-  min-height: 30px;
+  min-height: 36px;
   max-height: 220px;
   margin: 0;
-  padding: 6px 2px 4px;
+  padding: 4px 8px 0 14px;
   border: 0 !important;
   border-radius: 0;
   outline: 0 !important;
@@ -1520,12 +1535,12 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   overflow-y: hidden;
   background: transparent;
   color: var(--dsc-text);
-  caret-color: var(--dsc-brand);
+  caret-color: var(--dsc-business);
   font-family: inherit;
-  font-size: 15.2px;
-  line-height: 1.6;
+  font-size: var(--dsh-content-font-size, 15px);
+  line-height: calc(24px + var(--dsh-content-font-delta, 0px));
 }
-.dsc-editor-field::placeholder { color: var(--dsc-muted); }
+.dsc-editor-field::placeholder { color: var(--dsc-caption); }
 .dsc-editor-field:focus,
 .dsc-editor-field:focus-visible {
   border: 0 !important;
@@ -1537,7 +1552,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  padding: 2px 2px 2px 0;
+  padding: 2px 14px 4px;
   color: var(--dsc-warn);
   font-size: 11.8px;
   line-height: 1.45;
@@ -1545,67 +1560,70 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-composer-warning .dsc-inline-button { color: var(--dsc-warn); }
 .dsc-composer-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  min-height: 34px;
-  margin-top: 2px;
+  gap: 6px 8px;
+  min-height: 42px;
+  padding: 2px 8px 6px;
 }
-.dsc-composer-left { display: flex; align-items: center; gap: 4px; min-width: 0; flex-wrap: nowrap; }
-.dsc-composer-right { display: flex; align-items: center; gap: 4px; flex: none; }
-/* Direct on/off controls for web search and deep thinking. They are always in
-   the same place: only the tint changes, so toggling never resizes the editor
-   or moves the model chip. */
+.dsc-composer-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1 1 auto; flex-wrap: wrap; }
+.dsc-composer-right { display: flex; align-items: center; gap: 8px; flex: none; margin-left: auto; }
+/* Direct on/off controls for web search and deep thinking. They sit in the
+   native 28px chip row: only the tint changes when on, so toggling never
+   resizes the editor or moves the model seat. */
 .dsc-tool-toggle {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   height: var(--dsc-control-h);
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: 999px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--dsc-radius-control);
   background: transparent;
   color: var(--dsc-muted);
-  font-size: 12.1px;
-  font-weight: 550;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
   white-space: nowrap;
   flex: none;
-  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
+  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease;
 }
-.dsc-tool-toggle:hover:not(:disabled) { background: var(--dsc-hover); color: var(--dsc-text); }
+.dsc-tool-toggle:hover:not(:disabled) { background: var(--dsc-interactive); color: var(--dsc-text); }
 .dsc-tool-toggle.is-on {
-  border-color: color-mix(in srgb, var(--dsc-link) 16%, transparent);
-  background: var(--dsc-brand-soft);
-  color: var(--dsc-link);
+  background: color-mix(in srgb, var(--dsc-business) 12%, transparent);
+  color: var(--dsc-business);
 }
-.dsc-tool-toggle.is-on:hover:not(:disabled) { background: var(--dsc-brand-soft-strong); }
+.dsc-tool-toggle.is-on:hover:not(:disabled) { background: color-mix(in srgb, var(--dsc-business) 18%, transparent); }
 .dsc-tool-toggle:disabled { opacity: 0.42; cursor: default; }
 .dsc-tool-toggle-label { overflow: hidden; text-overflow: ellipsis; }
-.dsc-model-control,
-.dsc-effort-control { position: relative; display: flex; }
-.dsc-model-trigger,
-.dsc-effort-trigger {
+/* The model seat is one trigger: API name plus the current effort in the
+   caption tone, exactly like the native conversation model seat. */
+.dsc-model-control { position: relative; display: flex; min-width: 0; }
+.dsc-model-trigger {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  min-width: 0;
+  max-width: 280px;
   height: var(--dsc-control-h);
-  padding: 0 8px;
-  border: 1px solid transparent;
-  border-radius: 999px;
+  padding: 0 4px 0 8px;
+  border: 0;
+  border-radius: var(--dsc-radius-control);
   background: transparent;
   color: var(--dsc-muted);
-  font-size: 12.1px;
-  font-weight: 550;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
   white-space: nowrap;
   flex: none;
 }
-.dsc-model-trigger { max-width: 170px; }
-.dsc-effort-trigger { max-width: 116px; }
 .dsc-model-trigger:hover,
-.dsc-model-trigger.is-open,
-.dsc-effort-trigger:hover,
-.dsc-effort-trigger.is-open { background: var(--dsc-hover); color: var(--dsc-text); }
-.dsc-model-name { overflow: hidden; text-overflow: ellipsis; }
+.dsc-model-trigger.is-open { background: var(--dsc-interactive); color: var(--dsc-text); }
+.dsc-model-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dsc-model-effort { flex: none; color: var(--dsc-caption); }
+.dsc-model-effort.is-off { color: var(--dsc-caption); }
+.dsc-model-trigger > .dsc-icon { flex: none; color: var(--dsc-caption); }
 .dsc-textarea {
   display: block;
   width: 100%;
@@ -1633,168 +1651,228 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-tools { position: relative; display: flex; flex: none; }
 .dsc-tools-trigger {
   position: relative;
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--dsc-border);
+  width: 28px;
+  height: 28px;
+  border: 0;
   border-radius: 999px;
-  background: transparent;
-  color: var(--dsc-muted);
+  background: var(--dsc-selector);
+  color: var(--dsc-text);
   display: flex;
   align-items: center;
   justify-content: center;
   flex: none;
-  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
+  transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease;
 }
-.dsc-tools-trigger:hover { background: var(--dsc-hover); color: var(--dsc-text); }
-.dsc-tools-trigger.is-open { background: var(--dsc-active); color: var(--dsc-text); }
+.dsc-tools-trigger:hover { background: var(--dsc-interactive); }
+.dsc-tools-trigger.is-open { background: var(--dsc-active); }
 
-/* ---------- popovers (tools + model + effort) ----------
-   One small floating card anchored to its trigger, opening upward by default.
-   The placement hook flips it when the composer sits too low and clamps its
-   height to the viewport, so the card never clips against a window edge. */
+/* ---------- composer popovers (tools + model) ----------
+   Native Harness menu material: 4px inset rail, 16px panel radius, the
+   translucent menu surface with the same backdrop blur, prominent elevation and
+   a hairline stroke. Tool rows read like the command menu (left name, right
+   description); model rows read like the model seat (label/value cells, then
+   lists with a trailing check). */
 .dsc-popover {
   position: absolute;
   z-index: 24;
-  bottom: calc(100% + 8px + var(--dsc-popover-gap, 0px));
+  bottom: calc(100% + var(--dsc-popover-offset, 8px));
   left: 0;
-  padding: 6px;
-  border: 1px solid var(--dsc-border);
-  border-radius: 14px;
-  background: var(--dsc-layer);
-  box-shadow: var(--dsc-shadow-popover);
+  padding: 4px;
+  border: 0;
+  border-radius: var(--dsc-radius-menu);
+  background: var(--dsc-menu-surface);
+  -webkit-backdrop-filter: var(--dsc-menu-backdrop);
+  backdrop-filter: var(--dsc-menu-backdrop);
+  box-shadow: inset 0 0 0 1px var(--dsc-border), var(--dsc-shadow-popover);
   overflow-y: auto;
   overscroll-behavior: contain;
-  animation: dsc-pop 0.12s ease;
+  animation: dsc-pop 0.12s ease-out;
 }
-.dsc-popover[data-placement='bottom'] { bottom: auto; top: calc(100% + 8px); }
+.dsc-popover[data-placement='bottom'] {
+  bottom: auto;
+  top: calc(100% + var(--dsc-popover-offset, 8px));
+}
 .dsc-tools-menu {
-  width: 282px;
-  max-width: calc(100vw - 32px);
+  left: 0;
+  right: auto;
+  width: auto;
+  max-width: none;
 }
 .dsc-model-menu {
   left: auto;
   right: 0;
-  width: max-content;
-  min-width: 216px;
-  max-width: min(300px, calc(100vw - 32px));
-}
-.dsc-effort-menu {
-  left: auto;
-  right: 0;
-  width: max-content;
-  min-width: 158px;
-  max-width: min(220px, calc(100vw - 32px));
+  width: min(280px, calc(100vw - 24px));
+  max-width: 360px;
 }
 @keyframes dsc-pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-.dsc-popover-sep { height: 1px; margin: 4px 2px; background: var(--dsc-border); }
-.dsc-popover-item {
+.dsc-menu-section {
+  min-height: 23px;
+  padding: 5px 8px 2px;
+  color: var(--dsc-tertiary);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  user-select: none;
+}
+.dsc-tool-item {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   width: 100%;
-  padding: 8px 9px;
+  min-height: 34px;
+  padding: 6px 8px;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--dsc-radius-row);
   background: transparent;
   color: var(--dsc-text);
-  text-align: left;
   font-size: 13px;
+  line-height: 20px;
+  text-align: left;
+  outline: none;
 }
-.dsc-popover-item:hover:not(.is-disabled) { background: var(--dsc-hover); }
-.dsc-popover-item.is-active { background: color-mix(in srgb, var(--dsc-link) 7%, transparent); }
-.dsc-popover-item.is-disabled { cursor: default; color: var(--dsc-muted); }
-.dsc-popover-item-icon {
-  display: flex;
+.dsc-tool-item:hover:not(:disabled),
+.dsc-tool-item:focus-visible { background: var(--dsc-interactive); }
+.dsc-root .dsc-tool-item:focus-visible,
+.dsc-root .dsc-model-cell:focus-visible,
+.dsc-root .dsc-model-option:focus-visible,
+.dsc-root .dsc-effort-option:focus-visible { outline: none; }
+.dsc-tool-item:disabled { opacity: 0.48; cursor: default; }
+.dsc-tool-icon {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: var(--dsc-layer2);
-  color: var(--dsc-muted);
+  width: 16px;
+  height: 16px;
   flex: none;
+  color: var(--dsc-menu-icon);
 }
-.dsc-popover-item.is-active .dsc-popover-item-icon { background: var(--dsc-brand-soft); color: var(--dsc-link); }
-.dsc-popover-item-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
-.dsc-popover-item-title { font-size: 12.9px; font-weight: 560; }
-.dsc-popover-item-desc { font-size: 11px; line-height: 1.45; color: var(--dsc-muted); }
-.dsc-popover-item-desc.is-warn { color: var(--dsc-warn); }
-.dsc-popover-item-state { font-size: 10.8px; color: var(--dsc-muted); flex: none; }
-.dsc-popover-item .dsc-switch { flex: none; }
-.dsc-popover-item .dsc-switch-thumb { width: 16px; height: 16px; }
-.dsc-popover-item .dsc-switch.is-on .dsc-switch-thumb { transform: translateX(14px); }
-/* The + card: a normal list of actions, never a settings panel. */
-.dsc-tool-item { padding: 9px; }
-.dsc-tool-item .dsc-popover-item-icon { background: var(--dsc-field); }
-/* Model list: names only, with one check and an optional one-line limitation. */
-.dsc-model-list { display: flex; flex-direction: column; gap: 2px; padding: 2px; }
-.dsc-model-option { align-items: center; }
-.dsc-model-option.is-selected { background: var(--dsc-brand-soft); }
-.dsc-model-option.is-selected .dsc-popover-item-title { color: var(--dsc-text); }
-.dsc-model-option > .dsc-icon { color: var(--dsc-link); flex: none; }
-.dsc-model-note { font-size: 10.7px; line-height: 1.4; color: var(--dsc-muted); }
-.dsc-model-scope {
-  margin: 6px 2px 1px;
-  padding: 7px 8px 2px;
-  border-top: 1px solid var(--dsc-border);
-  font-size: 10.9px;
-  line-height: 1.45;
-  color: var(--dsc-muted);
+.dsc-tool-name {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-/* Thinking effort: four discrete rows, Off first, then the API tiers. */
-.dsc-effort-list { display: flex; flex-direction: column; gap: 1px; padding: 2px; }
+.dsc-tool-desc {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--dsc-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+  text-align: right;
+}
+.dsc-tool-desc.is-warn { color: var(--dsc-warn); }
+.dsc-tool-state {
+  flex: none;
+  color: var(--dsc-caption);
+  font-size: 11px;
+  line-height: 16px;
+}
+.dsc-tool-check { display: inline-flex; flex: none; color: var(--dsc-text); }
+/* Root model seat: Model / Reasoning effort cells with the current value and
+   a drill chevron, matching the native two-level menu. */
+.dsc-model-root { display: flex; flex-direction: column; gap: 0; }
+.dsc-model-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 34px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--dsc-radius-row);
+  background: transparent;
+  color: var(--dsc-text);
+  font-size: 13px;
+  line-height: 20px;
+  text-align: left;
+  outline: none;
+}
+.dsc-model-cell:hover,
+.dsc-model-cell:focus-visible { background: var(--dsc-interactive); }
+.dsc-model-cell-label { flex: none; white-space: nowrap; }
+.dsc-model-cell-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  color: var(--dsc-tertiary);
+}
+.dsc-model-cell > .dsc-icon { flex: none; width: 12px; height: 12px; color: var(--dsc-menu-icon); }
+/* Lists: names or tiers only, a trailing check for the active value. */
+.dsc-model-list,
+.dsc-effort-list { display: flex; flex-direction: column; gap: 0; }
+.dsc-model-option,
 .dsc-effort-option {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  gap: 8px;
   width: 100%;
-  height: 33px;
-  padding: 0 9px;
+  min-height: 34px;
+  padding: 5px 7px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--dsc-radius-row);
   background: transparent;
   color: var(--dsc-text);
-  font-size: 12.7px;
-  font-weight: 540;
+  font-size: 13px;
+  line-height: 20px;
   text-align: left;
+  outline: none;
 }
-.dsc-effort-option:hover { background: var(--dsc-hover); }
-.dsc-effort-option.is-selected { background: var(--dsc-hover); }
-.dsc-effort-option .dsc-icon { color: var(--dsc-link); flex: none; }
-.dsc-effort-option-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dsc-send-button {
-  width: var(--dsc-control-h);
-  height: var(--dsc-control-h);
+.dsc-model-option:hover,
+.dsc-model-option:focus-visible,
+.dsc-effort-option:hover,
+.dsc-effort-option:focus-visible { background: var(--dsc-interactive); }
+.dsc-model-option-name,
+.dsc-effort-option-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dsc-model-note {
+  flex: none;
+  overflow: hidden;
+  max-width: 42%;
+  color: var(--dsc-tertiary);
+  font-size: 11px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dsc-model-check {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--dsc-text);
+}
+.dsc-model-check .dsc-icon { width: 14px; height: 14px; }
+.dsc-send-button,
+.dsc-stop-button {
+  width: 34px;
+  height: 34px;
   border: 0;
   border-radius: 999px;
-  background: var(--dsc-brand);
-  color: var(--dsc-on-brand);
+  background: var(--dsc-primary-action);
+  color: var(--dsc-on-color);
   display: flex;
   align-items: center;
   justify-content: center;
   flex: none;
-  transition: filter var(--dsc-fast) ease, background var(--dsc-fast) ease, color var(--dsc-fast) ease;
+  transform: translateY(-2px);
+  transition: background var(--dsc-fast) ease, opacity var(--dsc-fast) ease;
 }
-.dsc-send-button:hover { filter: brightness(1.07); }
-.dsc-send-button.is-idle {
-  background: var(--dsc-layer2);
-  color: var(--dsc-muted);
-  opacity: 0.9;
-}
-.dsc-stop-button {
-  width: var(--dsc-control-h);
-  height: var(--dsc-control-h);
-  border: 1px solid var(--dsc-border-strong);
-  border-radius: 999px;
-  background: var(--dsc-layer2);
-  color: var(--dsc-text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-}
-.dsc-stop-button:hover { background: var(--dsc-hover); }
+.dsc-send-button:not(.is-idle):hover { background: var(--dsc-primary-action-hover); }
+.dsc-send-button.is-idle { opacity: 0.4; cursor: default; }
+.dsc-stop-button:hover { background: var(--dsc-primary-action-hover); }
 .dsc-drop-mask {
   position: absolute;
   inset: 0;
@@ -1802,10 +1880,10 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 2px dashed var(--dsc-brand);
-  border-radius: 22px;
-  background: color-mix(in srgb, var(--dsc-brand) 8%, var(--dsc-layer));
-  color: var(--dsc-link);
+  border: 2px dashed var(--dsc-business);
+  border-radius: var(--dsc-radius-panel);
+  background: color-mix(in srgb, var(--dsc-business) 8%, var(--dsc-input-major));
+  color: var(--dsc-business);
   font-size: 13px;
   font-weight: 600;
   pointer-events: none;
@@ -2417,10 +2495,12 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   .dsc-empty { padding-bottom: 3vh; }
 }
 @media (max-width: 620px) {
-  .dsc-model-trigger { max-width: 132px; }
-  .dsc-effort-trigger { max-width: 84px; }
-  .dsc-tool-toggle { width: 30px; padding: 0; justify-content: center; }
+  .dsc-model-trigger { max-width: 188px; }
+  .dsc-tool-toggle { width: var(--dsc-control-h); padding: 0; justify-content: center; }
   .dsc-tool-toggle-label { display: none; }
+  .dsc-composer-bar { padding: 2px 6px 6px; gap: 6px; }
+  .dsc-composer-left { gap: 6px; }
+  .dsc-composer-right { gap: 6px; }
   .dsc-header-title { display: none; }
   .dsc-thread { padding: 16px 12px 8px; }
   .dsc-composer-wrap { padding: 4px 10px 8px; }
