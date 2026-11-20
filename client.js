@@ -349,6 +349,48 @@ const DICT_ZH = {
   mermaidFailed: '图表渲染失败',
   mathFailed: '公式渲染失败',
   streamingDiagram: '生成完成后绘制图表',
+  // Chat history import
+  importOpen: '导入聊天记录',
+  importTitle: '导入聊天记录',
+  importSubtitle: '从 DeepSeek 官方导出的 ZIP 文件中恢复会话。文件只在本机解析，不会上传。',
+  importDropTitle: '拖入 ZIP 文件，或点击选择',
+  importDropHint: '支持 DeepSeek App / 网页版导出的聊天记录压缩包',
+  importChooseFile: '选择文件',
+  importParsing: '正在解析导出文件…',
+  importParsingHint: '大文件需要几秒钟；解析完成后可以挑选要导入的会话。',
+  importReadFailed: '无法读取该文件：{message}',
+  importFileMeta: '{size} · {count} 个会话',
+  importAlreadyImported: '已导入',
+  importSelectAll: '全选',
+  importFilter: '筛选标题',
+  importSelected: '已选 {count} 个，可导入 {total} 个',
+  importAllImported: '这份导出里的会话都已经导入过了，无需重复导入。',
+  importStart: '开始导入',
+  importImporting: '正在导入…',
+  importProgress: '{done} / {total}',
+  importCancel: '取消导入',
+  importCancelling: '正在停止…',
+  importStatImported: '导入成功',
+  importStatSkipped: '跳过',
+  importStatFailed: '失败',
+  importDoneImported: '成功导入 {count} 个会话',
+  importDoneFailed: '有 {count} 个会话未能导入',
+  importDoneHint: '导入的聊天已经出现在历史列表中，可以像原有聊天一样阅读、搜索、管理和继续对话。',
+  importSkippedHint: '已导入过的会话不会重复创建。',
+  importFailedList: '未导入的会话',
+  importClose: '完成',
+  importExit: '关闭',
+  importEmpty: '没有找到可导入的会话',
+  importCanceled: '导入已取消，已经导入的会话会保留。',
+  importNothing: '没有选择任何会话。',
+  importUnsupported: '这个文件不是 DeepSeek 官网导出的聊天记录 ZIP。',
+  importUnavailable: '当前版本不支持导入聊天记录，请升级后重试。',
+  importLargeHint: '一次导入很多会话会让历史文件明显变大；只挑选需要的会话可以让 Chat 保持流畅。',
+  importDateUnknown: '日期未知',
+  importImages: '图片 {count} 张',
+  importBusy: '另一个导入任务正在进行，请稍后再试。',
+  importMediaNote: '图片以本地文件保存，不占用 DeepSeek 额度。',
+  importTooLarge: '文件超过 {size} 上限。',
 }
 
 const DICT_EN = {
@@ -690,6 +732,48 @@ const DICT_EN = {
   mermaidFailed: 'Diagram failed to render',
   mathFailed: 'Formula failed to render',
   streamingDiagram: 'Diagram appears when the answer finishes',
+  // Chat history import
+  importOpen: 'Import chats',
+  importTitle: 'Import chats',
+  importSubtitle: 'Restore conversations from a DeepSeek export ZIP. The file is parsed on this machine and never uploaded.',
+  importDropTitle: 'Drop a ZIP file here, or click to choose',
+  importDropHint: 'Accepts the chat export from the DeepSeek app or website',
+  importChooseFile: 'Choose file',
+  importParsing: 'Reading the export…',
+  importParsingHint: 'Large files take a few seconds; you can pick conversations once it is read.',
+  importReadFailed: 'That file could not be read: {message}',
+  importFileMeta: '{size} · {count} conversations',
+  importAlreadyImported: 'Imported',
+  importSelectAll: 'Select all',
+  importFilter: 'Filter titles',
+  importSelected: '{count} selected, {total} importable',
+  importAllImported: 'Every conversation in this export is already imported.',
+  importStart: 'Import',
+  importImporting: 'Importing…',
+  importProgress: '{done} / {total}',
+  importCancel: 'Cancel import',
+  importCancelling: 'Stopping…',
+  importStatImported: 'Imported',
+  importStatSkipped: 'Skipped',
+  importStatFailed: 'Failed',
+  importDoneImported: 'Imported {count} conversations',
+  importDoneFailed: '{count} conversations could not be imported',
+  importDoneHint: 'The imported chats are in your history and work like any other: reading, search, management and continuing the conversation.',
+  importSkippedHint: 'A conversation that was already imported is never created twice.',
+  importFailedList: 'Conversations not imported',
+  importClose: 'Done',
+  importExit: 'Close',
+  importEmpty: 'No importable conversation was found',
+  importCanceled: 'Import cancelled; the chats imported so far are kept.',
+  importNothing: 'No conversation was selected.',
+  importUnsupported: 'This file is not a DeepSeek chat export ZIP.',
+  importUnavailable: 'This version cannot import chats. Update DeepSeek Harness and try again.',
+  importLargeHint: 'Importing many conversations makes the history file much larger; picking only what you need keeps Chat fast.',
+  importDateUnknown: 'Date unknown',
+  importImages: '{count} images',
+  importBusy: 'Another import is already running. Try again in a moment.',
+  importMediaNote: 'Images are stored locally and cost no DeepSeek usage.',
+  importTooLarge: 'The file exceeds the {size} limit.',
 }
 
 /* ---- 20-store.js ---- */
@@ -866,6 +950,11 @@ const chatStore = {
     editDraft: '',
     // Message to bring into view after loading or switching a version.
     focusMessage: null,
+    // ---- DeepSeek export import (sidebar) ----
+    // Every step of the import dialog. `null` keeps the dialog unmounted, so an
+    // upload never allocates state for a closed surface.
+    importOpen: false,
+    importView: null,
   },
   listeners: new Set(),
   subscribe(listener) {
@@ -1115,8 +1204,7 @@ function canContinueReply(message) {
 }
 
 /** Files as the Host stores them: preview URLs never leave this browser. */
-function hostFiles(files) {
-  return (Array.isArray(files) ? files : []).flatMap((file) => {
+function hostFiles(files) {  return (Array.isArray(files) ? files : []).flatMap((file) => {
     if (!file || typeof file.fileId !== 'string' || file.fileId === '') return []
     return [{
       id: file.id,
@@ -1146,6 +1234,66 @@ function withFilePreviews(messages, previousMessages) {
       if (!previewUrl || file.previewUrl === previewUrl) return file
       changed = true
       return { ...file, previewUrl }
+    })
+    return changed ? { ...message, files } : message
+  })
+}
+
+/**
+ * Preview URLs for images recovered by a history import.
+ *
+ * The bytes live only on this Host, so they are read through the same Host
+ * transport as every other API call and handed to the page as a blob URL. That
+ * keeps the preview working no matter how the Chat surface is served (origin,
+ * base path or a desktop transport) and never persists a URL in the history
+ * document. Requests are made once per content address.
+ */
+const importedMediaUrls = new Map()
+
+/**
+ * Resolve one imported media handle, starting the read on first use.
+ * @returns the blob URL when it is already loaded, otherwise ''.
+ */
+function importedMediaUrl(media) {
+  if (typeof media !== 'string' || media === '') return ''
+  const known = importedMediaUrls.get(media)
+  if (known !== undefined) return known
+  importedMediaUrls.set(media, '')
+  hostFetch(`/api/deepseek-chat/import/media?f=${encodeURIComponent(media)}`)
+    .then(response => (response.ok ? response.blob() : null))
+    .then((blob) => {
+      if (blob === null) {
+        importedMediaUrls.delete(media)
+        return
+      }
+      importedMediaUrls.set(media, URL.createObjectURL(blob))
+      // One repaint is enough to attach the preview to every message that
+      // references this image, without touching the stored history.
+      chatStore.emit()
+    })
+    .catch(() => {
+      importedMediaUrls.delete(media)
+    })
+  return ''
+}
+
+/**
+ * Attach preview URLs to the attachments of an imported conversation.
+ *
+ * A file the browser uploaded carries its own object URL; a file restored from
+ * an import does not, because the plugin only stores the content address of the
+ * bytes next to its history.
+ */
+function withImportedMedia(messages) {
+  return (Array.isArray(messages) ? messages : []).map((message) => {
+    if (!Array.isArray(message?.files) || message.files.length === 0) return message
+    let changed = false
+    const files = message.files.map((file) => {
+      if (file?.local !== true) return file
+      const url = importedMediaUrl(file.media)
+      if (url === '' || file.previewUrl === url) return file
+      changed = true
+      return { ...file, previewUrl: url }
     })
     return changed ? { ...message, files } : message
   })
@@ -1384,7 +1532,7 @@ async function loadConversation(id, { quiet = false, focusMessageId = '' } = {})
     const data = await hostJson('/api/deepseek-chat/conversation', body)
     if (sequence !== conversationLoadSequence) return
     const patch = {
-      messages: Array.isArray(data.conversation?.messages) ? data.conversation.messages : [],
+      messages: withImportedMedia(Array.isArray(data.conversation?.messages) ? data.conversation.messages : []),
       conversationLoading: false,
       conversationError: '',
       focusMessage: body.focusMessageId ? { id: body.focusMessageId, at: Date.now() } : null,
@@ -1784,7 +1932,7 @@ async function openSearchResult(result) {
       })
       if (Array.isArray(data.conversation?.messages)) {
         chatStore.set({
-          messages: data.conversation.messages,
+          messages: withImportedMedia(data.conversation.messages),
           conversationLoading: false,
           conversationError: '',
           editingId: null,
@@ -2364,7 +2512,7 @@ async function runTurnStream({
           current = { ...current, id: hostAssistantId }
           let messages
           if (Array.isArray(item.messages) && item.messages.length > 0) {
-            messages = withFilePreviews(item.messages, chatStore.state.messages)
+            messages = withImportedMedia(withFilePreviews(item.messages, chatStore.state.messages))
           } else {
             // Older Host halves only send the ids; patch the optimistic branch.
             const hostUserId = typeof item.userMessage?.id === 'string' ? item.userMessage.id : null
@@ -3309,6 +3457,298 @@ async function submitHandoff() {
   chatStore.toast(tr('handoffSent'), 'success')
 }
 
+// ---- DeepSeek chat-export import -------------------------------------------------
+
+/** Largest export this Host accepts, published by the bootstrap. */
+const IMPORT_DEFAULT_MAX_BYTES = 512 * 1024 * 1024
+
+/** Error codes the dialog can explain in the user's language. */
+const IMPORT_ERROR_KEYS = {
+  NOT_ZIP: 'importUnsupported',
+  ARCHIVE_DAMAGED: 'importUnsupported',
+  ARCHIVE_UNSUPPORTED: 'importUnsupported',
+  ARCHIVE_CLOSED: 'importUnsupported',
+  MISSING_MANIFEST: 'importUnsupported',
+  MISSING_INDEX: 'importUnsupported',
+  BAD_EXPORT: 'importUnsupported',
+  BAD_SESSION: 'importUnsupported',
+  UNSUPPORTED_VERSION: 'importUnsupported',
+  EMPTY_UPLOAD: 'importUnsupported',
+  NO_CONVERSATIONS: 'importEmpty',
+  ARCHIVE_TOO_LARGE: 'importTooLarge',
+}
+
+let importPollTimer = 0
+let importPollSequence = 0
+
+function importMaxBytes() {
+  const value = chatStore.state.bootData?.import?.maxUploadBytes
+  return typeof value === 'number' && value > 0 ? value : IMPORT_DEFAULT_MAX_BYTES
+}
+
+/** Whether this Host half offers the import, so an older Host never shows a dead surface. */
+function importAvailable() {
+  return chatStore.state.bootData?.import?.enabled === true
+}
+
+function emptyImportView() {
+  return {
+    step: 'pick',
+    fileName: '',
+    fileSize: 0,
+    token: '',
+    conversations: [],
+    selected: [],
+    filter: '',
+    stats: { total: 0, imported: 0, importable: 0 },
+    progress: { done: 0, total: 0 },
+    jobId: '',
+    cancelling: false,
+    result: null,
+    error: '',
+  }
+}
+
+/** Patch the open dialog; a closed dialog ignores every late update. */
+function importPatch(patch) {
+  const current = chatStore.state.importView
+  if (current === null) return
+  chatStore.set({ importView: { ...current, ...patch } })
+}
+
+/** One translated explanation for an import failure. */
+function importErrorMessage(error) {
+  const code = error?.payload?.code
+  if (code === 'ARCHIVE_TOO_LARGE') return tr('importTooLarge', { size: formatSize(importMaxBytes()) })
+  if (code === 'BUSY') return tr('importBusy')
+  const key = code === undefined ? undefined : IMPORT_ERROR_KEYS[code]
+  if (key !== undefined) return tr(key)
+  return error instanceof Error ? error.message : String(error)
+}
+
+/** Drop the staged archive of a dialog that is closing without importing. */
+function discardImportToken(token) {
+  if (typeof token !== 'string' || token === '') return Promise.resolve()
+  return hostJson('/api/deepseek-chat/import/discard', { token }).catch(() => undefined)
+}
+
+async function openImport() {
+  if (chatStore.state.importOpen) return
+  // The availability flag comes from the bootstrap, so a Host half that predates
+  // the import answers with a clear message instead of a dead dialog.
+  await ensureBoot()
+  if (!importAvailable()) {
+    chatStore.toast(tr('importUnavailable'), 'warning')
+    return
+  }
+  chatStore.set({ importOpen: true, importView: emptyImportView() })
+}
+
+function closeImport() {
+  const view = chatStore.state.importView
+  if (view === null) return
+  // Closing during an import would hide the only place progress is shown; the
+  // dialog stays until the job settles or the user cancels it.
+  if (view.step === 'importing') return
+  importPollSequence += 1
+  if (importPollTimer !== 0) {
+    clearTimeout(importPollTimer)
+    importPollTimer = 0
+  }
+  if (view.token !== '' && view.step !== 'done') void discardImportToken(view.token)
+  chatStore.set({ importOpen: false, importView: null })
+}
+
+/** Read one chosen file: upload it to the Host, then show the preview. */
+async function selectImportFile(file) {
+  const view = chatStore.state.importView
+  if (view === null || view.step === 'parsing' || view.step === 'importing') return
+  const name = typeof file?.name === 'string' ? file.name : ''
+  if (!/\.zip$/i.test(name)) {
+    importPatch({ error: tr('importUnsupported') })
+    return
+  }
+  if (typeof file.size === 'number' && file.size > importMaxBytes()) {
+    importPatch({ error: tr('importTooLarge', { size: formatSize(importMaxBytes()) }) })
+    return
+  }
+  if (view.token !== '') void discardImportToken(view.token)
+  importPatch({
+    step: 'parsing',
+    fileName: name,
+    fileSize: typeof file.size === 'number' ? file.size : 0,
+    token: '',
+    error: '',
+    conversations: [],
+    selected: [],
+    result: null,
+    progress: { done: 0, total: 0 },
+    jobId: '',
+  })
+  try {
+    const response = await hostFetch('/api/deepseek-chat/import/upload', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/zip',
+        'x-file-name': encodeURIComponent(name),
+      },
+      body: file,
+    })
+    const text = await response.text()
+    let data
+    try {
+      data = JSON.parse(text)
+    } catch {
+      throw new Error(text || `HTTP ${response.status}`)
+    }
+    if (!response.ok) {
+      const error = new Error(data?.error?.message || `HTTP ${response.status}`)
+      error.payload = data?.error
+      throw error
+    }
+    // The dialog was closed while the file was being read.
+    if (chatStore.state.importView === null) {
+      void discardImportToken(data?.token)
+      return
+    }
+    const conversations = Array.isArray(data?.conversations) ? data.conversations : []
+    importPatch({
+      step: 'preview',
+      token: typeof data?.token === 'string' ? data.token : '',
+      conversations,
+      selected: conversations.filter(item => item?.imported !== true).map(item => item.sourceId),
+      stats: data?.stats ?? { total: conversations.length, imported: 0, importable: conversations.length },
+      error: conversations.length === 0 ? tr('importEmpty') : '',
+    })
+  } catch (error) {
+    if (chatStore.state.importView === null) return
+    importPatch({ step: 'pick', token: '', error: tr('importReadFailed', { message: importErrorMessage(error) }) })
+  }
+}
+
+function setImportFilter(filter) {
+  importPatch({ filter: typeof filter === 'string' ? filter : '' })
+}
+
+function toggleImportConversation(sourceId) {
+  const view = chatStore.state.importView
+  if (view === null || view.step !== 'preview' || typeof sourceId !== 'string') return
+  const selected = view.selected.includes(sourceId)
+    ? view.selected.filter(id => id !== sourceId)
+    : [...view.selected, sourceId]
+  importPatch({ selected })
+}
+
+/** Select or clear every conversation this export can actually import. */
+function selectAllImport(select) {
+  const view = chatStore.state.importView
+  if (view === null || view.step !== 'preview') return
+  const importable = view.conversations.filter(item => item.imported !== true).map(item => item.sourceId)
+  importPatch({ selected: select === false ? [] : importable })
+}
+
+/** Start the Host-side job and follow its progress. */
+async function startImport() {
+  const view = chatStore.state.importView
+  if (view === null || view.step !== 'preview' || view.token === '') return
+  if (view.selected.length === 0) {
+    chatStore.toast(tr('importNothing'), 'warning')
+    return
+  }
+  importPatch({ step: 'importing', error: '', progress: { done: 0, total: view.selected.length }, cancelling: false })
+  try {
+    const data = await hostJson('/api/deepseek-chat/import/start', { token: view.token, ids: view.selected })
+    const job = data?.job
+    if (job === null || typeof job?.id !== 'string') throw new Error('the Host returned no import job')
+    importPatch({ jobId: job.id, progress: { done: job.done ?? 0, total: job.total ?? view.selected.length } })
+    followImport(job)
+  } catch (error) {
+    const message = importErrorMessage(error)
+    importPatch({ step: 'preview', error: message })
+    chatStore.toast(message, 'error')
+  }
+}
+
+/** Poll one running job until it settles, then refresh the sidebar. */
+function followImport(job) {
+  const sequence = ++importPollSequence
+  const schedule = (delay) => {
+    if (importPollTimer !== 0) clearTimeout(importPollTimer)
+    importPollTimer = setTimeout(() => {
+      importPollTimer = 0
+      void tick()
+    }, delay)
+  }
+  const tick = async () => {
+    if (sequence !== importPollSequence) return
+    let data
+    try {
+      data = await hostJson(`/api/deepseek-chat/import/status?job=${encodeURIComponent(job.id)}`)
+    } catch (error) {
+      // A failed poll is not a failed import: the Host keeps the job and keeps
+      // writing, so the dialog reports the read problem and tries again.
+      if (sequence !== importPollSequence) return
+      importPatch({ error: importErrorMessage(error) })
+      schedule(900)
+      return
+    }
+    if (sequence !== importPollSequence) return
+    const latest = data?.job
+    if (latest === null || latest === undefined) {
+      importPatch({ error: tr('importReadFailed', { message: 'job expired' }) })
+      return
+    }
+    if (latest.state === 'running') {
+      importPatch({ progress: { done: latest.done ?? 0, total: latest.total ?? 0 } })
+      schedule(350)
+      return
+    }
+    finishImport(latest, data)
+  }
+  schedule(120)
+}
+
+/** Publish the result, apply the refreshed history, and toast the outcome. */
+function finishImport(job, data) {
+  const current = chatStore.state.importView ?? emptyImportView()
+  chatStore.set({
+    importView: {
+      ...current,
+      step: 'done',
+      result: job,
+      jobId: '',
+      cancelling: false,
+      progress: { done: job.total ?? 0, total: job.total ?? 0 },
+      error: job.state === 'failed' ? String(job.error ?? '') : '',
+    },
+  })
+  const patch = {}
+  if (Array.isArray(data?.conversations)) patch.conversations = data.conversations
+  if (Array.isArray(data?.folders)) patch.folders = data.folders
+  if (Object.keys(patch).length > 0) chatStore.set(patch)
+  if (job.state === 'failed') {
+    chatStore.toast(job.error ? String(job.error) : tr('importDoneFailed', { count: job.failed ?? 0 }), 'error')
+    return
+  }
+  if (job.state === 'cancelled') {
+    chatStore.toast(tr('importCanceled'), 'warning')
+    return
+  }
+  chatStore.toast(tr('importDoneImported', { count: job.imported ?? 0 }), 'success')
+}
+
+/** Ask the Host to stop after the conversation it is handling. */
+async function cancelImport() {
+  const view = chatStore.state.importView
+  if (view === null || view.step !== 'importing' || view.jobId === '') return
+  importPatch({ cancelling: true })
+  try {
+    await hostJson('/api/deepseek-chat/import/cancel', { job: view.jobId })
+  } catch (error) {
+    importPatch({ cancelling: false, error: importErrorMessage(error) })
+  }
+}
+
 const chatActions = {
   openChat,
   closeChat,
@@ -3382,6 +3822,15 @@ const chatActions = {
   pickHandoffWorkspaceDirectory,
   createHandoffWorkspace,
   submitHandoff,
+  // DeepSeek chat-export import
+  openImport,
+  closeImport,
+  selectImportFile,
+  setImportFilter,
+  toggleImportConversation,
+  selectAllImport,
+  startImport,
+  cancelImport,
 }
 
 /* ---- 30-markdown.js ---- */
@@ -6983,6 +7432,11 @@ const IconArrowDownToLine = props => h(IconBase, props,
   h('path', { d: 'M12 4v11M7 10.5l5 5 5-5' }),
   h('path', { d: 'M5 20h14' }),
 )
+/** Restore into the history: an arrow going down into an open tray. */
+const IconImport = props => h(IconBase, props,
+  h('path', { d: 'M12 3.5v9.5M8.2 9.4l3.8 3.8 3.8-3.8' }),
+  h('path', { d: 'M4.5 14.5v2.8A2.7 2.7 0 0 0 7.2 20h9.6a2.7 2.7 0 0 0 2.7-2.7v-2.8' }),
+)
 
 const ICONS = {
   plus: IconPlus,
@@ -7021,6 +7475,7 @@ const ICONS = {
   folderMinus: IconFolderMinus,
   archive: IconArchive,
   continue: IconArrowDownToLine,
+  import: IconImport,
 }
 
 function Icon({ name, size = 18, className = '' }) {
@@ -8296,6 +8751,13 @@ function AssistantMessage({ message, streaming, isLast, canRegenerate, highlight
   const text = messageText(message)
   const { sources, indexByUrl } = collectMessageSources(message)
   const answer = answerText(message, indexByUrl)
+  // A server notice the export recorded next to the answer (such as the
+  // content warning on an otherwise finished reply). It is shown below the
+  // answer and is deliberately not part of the answer text, the copy action or
+  // the model context.
+  const noticeBlocks = (message.blocks ?? []).filter(block => (
+    block.type === 'notice' && typeof block.text === 'string' && block.text.trim() !== ''
+  ))
   const refused = message.stopReason === 'refusal'
   const errorInfo = message.error ? friendlyError(message.error) : null
   const showTyping = streaming && text === '' && (message.blocks ?? []).length === 0
@@ -8343,6 +8805,12 @@ function AssistantMessage({ message, streaming, isLast, canRegenerate, highlight
                   onClick: () => chatStore.set({ settingsOpen: true }),
                 }, t('configure'))
               : null,
+          )
+        : null,
+      !refused && noticeBlocks.length > 0
+        ? h('div', { className: 'dsc-notice is-warn dsc-answer-notice' },
+            h(Icon, { name: 'warning', size: 15 }),
+            h('span', null, noticeBlocks.map(block => block.text).join('\n')),
           )
         : null,
       sources.length > 0 && !refused
@@ -9280,6 +9748,11 @@ function Sidebar() {
       ),
       h('button', {
         type: 'button', className: 'dsc-foot-action',
+        title: t('importOpen'),
+        onClick: () => chatActions.openImport(),
+      }, h(Icon, { name: 'import', size: 16 }), h('span', null, t('importOpen'))),
+      h('button', {
+        type: 'button', className: 'dsc-foot-action',
         title: t('chatSettings'),
         onClick: () => chatStore.set({ settingsOpen: true }),
       }, h(Icon, { name: 'settings', size: 16 }), h('span', null, t('settings')),
@@ -9573,6 +10046,7 @@ function ChatRoot() {
   const moveChat = useChat(state => state.moveChat)
   const folderAdd = useChat(state => state.folderAdd)
   const archiveOpen = useChat(state => state.archiveOpen)
+  const importOpen = useChat(state => state.importOpen)
   const [resizing, setResizing] = React.useState(false)
   const rootRef = React.useRef(null)
   const sidebarRef = React.useRef(null)
@@ -9635,6 +10109,10 @@ function ChatRoot() {
         }
         if (chatStore.state.archiveOpen === true) {
           chatActions.closeArchive()
+          return
+        }
+        if (chatStore.state.importOpen === true) {
+          chatActions.closeImport()
           return
         }
         if (chatStore.state.editingId !== null) {
@@ -9719,6 +10197,7 @@ function ChatRoot() {
     moveChat !== null ? h(MoveChatDialog, null) : null,
     folderAdd !== null ? h(FolderAddDialog, null) : null,
     archiveOpen ? h(ArchiveDialog, null) : null,
+    importOpen ? h(ImportDialog, null) : null,
     // The confirmation sits on top of whichever surface raised it (the archive
     // manager, a folder picker or the sidebar menu).
     confirm !== null ? h(ConfirmDialog, null) : null,
@@ -10626,8 +11105,328 @@ function ArchiveDialog() {
   )
 }
 
-function ConfirmDialog() {
+/** Absolute date for one export row; the export timestamp is ISO-8601 UTC. */
+function importDateLabel(timestamp, t) {
+  if (typeof timestamp !== 'number' || !Number.isFinite(timestamp) || timestamp <= 0) return t('importDateUnknown')
+  try {
+    return new Intl.DateTimeFormat(appCtx?.locale.getSnapshot().active === 'zh' ? 'zh-CN' : 'en-US', {
+      year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+    }).format(new Date(timestamp))
+  } catch {
+    return new Date(timestamp).toLocaleString()
+  }
+}
+
+/** Case-insensitive title filter for the preview list. */
+function filterImportRows(conversations, filter) {
+  const needle = typeof filter === 'string' ? filter.trim().toLowerCase() : ''
+  if (needle === '') return conversations
+  return conversations.filter(conversation => (
+    typeof conversation?.title === 'string' && conversation.title.toLowerCase().includes(needle)
+  ))
+}
+
+/**
+ * Chat-history import from a DeepSeek export ZIP.
+ *
+ * The dialog walks one state machine owned by the store: pick a file, read the
+ * preview, choose conversations, follow the import, read the result. The Host
+ * parses everything locally, so the only thing this surface does with the file
+ * is hand the bytes over once.
+ */
+function ImportDialog() {
   const t = useT()
+  const open = useChat(state => state.importOpen)
+  const view = useChat(state => state.importView)
+  const inputRef = React.useRef(null)
+  const [drag, setDrag] = React.useState(false)
+  if (!open || view === null) return null
+  const step = view.step
+  const parsing = step === 'parsing'
+  const importing = step === 'importing'
+  const selected = new Set(view.selected)
+  const visible = filterImportRows(view.conversations, view.filter)
+  const importableCount = view.conversations.filter(item => item.imported !== true).length
+  const close = () => chatActions.closeImport()
+  const pick = (file) => {
+    if (file !== undefined && file !== null) void chatActions.selectImportFile(file)
+  }
+  const percent = view.progress.total > 0
+    ? Math.min(100, Math.round((view.progress.done / view.progress.total) * 100))
+    : 0
+  const head = h('header', { className: 'dsc-modal-head' },
+    h('div', null,
+      h('h2', null, t('importTitle')),
+      h('p', { className: 'dsc-modal-sub' }, t('importSubtitle')),
+    ),
+    h('button', {
+      type: 'button',
+      className: 'dsc-icon-button',
+      title: t('close'),
+      'aria-label': t('close'),
+      autoFocus: step !== 'preview',
+      disabled: importing,
+      onClick: close,
+    }, h(Icon, { name: 'close', size: 18 })),
+  )
+
+  const pickBody = h('div', { className: 'dsc-modal-body dsc-import-pick' },
+    h('div', {
+      className: cx('dsc-import-drop', drag && 'is-drag', parsing && 'is-busy'),
+      role: 'button',
+      tabIndex: 0,
+      onClick: () => {
+        if (!parsing) inputRef.current?.click()
+      },
+      onKeyDown: (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return
+        event.preventDefault()
+        if (!parsing) inputRef.current?.click()
+      },
+      onDragOver: (event) => {
+        event.preventDefault()
+        if (!parsing) setDrag(true)
+      },
+      onDragLeave: () => setDrag(false),
+      onDrop: (event) => {
+        event.preventDefault()
+        setDrag(false)
+        if (parsing) return
+        pick(event.dataTransfer?.files?.[0])
+      },
+    },
+      parsing ? h(Spinner, { size: 22, label: t('importParsing') }) : h('span', { className: 'dsc-import-drop-icon' }, h(Icon, { name: 'archive', size: 24 })),
+      parsing
+        ? h('div', { className: 'dsc-import-drop-title' }, t('importParsing'))
+        : h('div', { className: 'dsc-import-drop-title' }, t('importDropTitle')),
+      parsing
+        ? h('div', { className: 'dsc-import-drop-hint' }, t('importParsingHint'))
+        : h('div', { className: 'dsc-import-drop-hint' }, t('importDropHint')),
+    ),
+    view.error !== ''
+      ? h('div', { className: 'dsc-notice is-error dsc-import-error' },
+          h(Icon, { name: 'warning', size: 16 }),
+          h('span', null, view.error),
+        )
+      : null,
+  )
+
+  const previewBody = h('div', { className: 'dsc-modal-body dsc-import-preview' },
+    h('div', { className: 'dsc-import-summary' },
+      h('div', { className: 'dsc-import-summary-main' },
+        h('span', { className: 'dsc-import-file-name', title: view.fileName }, view.fileName),
+        h('span', { className: 'dsc-import-file-meta' },
+          t('importFileMeta', { size: formatSize(view.fileSize), count: view.stats.total }),
+        ),
+      ),
+      h('div', { className: 'dsc-import-summary-side' },
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button is-small-compact',
+          onClick: () => inputRef.current?.click(),
+        }, t('importChooseFile')),
+      ),
+    ),
+    importableCount === 0
+      ? h('div', { className: 'dsc-list-empty' }, t('importAllImported'))
+      : h(React.Fragment, null,
+          h('div', { className: 'dsc-import-toolbar' },
+            h('button', {
+              type: 'button',
+              role: 'checkbox',
+              'aria-checked': view.selected.length > 0 && view.selected.length >= importableCount,
+              className: cx('dsc-import-check-all', view.selected.length > 0 && 'is-on'),
+              onClick: () => chatActions.selectAllImport(view.selected.length < importableCount),
+            },
+              h('span', { className: 'dsc-choice-check' },
+                view.selected.length >= importableCount ? h(Icon, { name: 'check', size: 13 }) : null,
+              ),
+              h('span', null, t('importSelectAll')),
+            ),
+            h('span', { className: 'dsc-import-count' },
+              t('importSelected', { count: view.selected.length, total: importableCount }),
+            ),
+          ),
+          importableCount > 100
+            ? h('p', { className: 'dsc-import-hint' }, t('importLargeHint'))
+            : null,
+          h('div', { className: 'dsc-import-filter' },
+            h(Icon, { name: 'search', size: 14 }),
+            h('input', {
+              className: 'dsc-import-filter-input',
+              value: view.filter,
+              placeholder: t('importFilter'),
+              'aria-label': t('importFilter'),
+              onChange: (event) => chatActions.setImportFilter(event.target.value),
+            }),
+          ),
+          h('div', { className: 'dsc-import-list', role: 'group', 'aria-label': t('importTitle') },            visible.length === 0
+              ? h('div', { className: 'dsc-list-empty' }, t('importEmpty'))
+              : visible.map(conversation => {
+                  const imported = conversation.imported === true
+                  // An imported conversation is never part of the selection: it
+                  // is already in the history, and the badge says so.
+                  const on = selected.has(conversation.sourceId)
+                  return h('button', {
+                    key: conversation.sourceId,
+                    type: 'button',
+                    role: 'checkbox',
+                    'aria-checked': on,
+                    disabled: imported,
+                    className: cx('dsc-import-item', on && 'is-selected', imported && 'is-imported'),
+                    onClick: () => chatActions.toggleImportConversation(conversation.sourceId),
+                  },
+                    h('span', { className: 'dsc-choice-check' },
+                      on ? h(Icon, { name: 'check', size: 13 }) : null,
+                    ),
+                    h('span', { className: 'dsc-import-item-main' },
+                      h('span', { className: 'dsc-import-item-title' }, conversation.title || t('newChatTitle')),
+                      h('span', { className: 'dsc-import-item-meta' },
+                        `${importDateLabel(conversation.createdAt, t)} · ${t('messageCount', { count: conversation.messageCount })}`,
+                      ),
+                    ),
+                    imported
+                      ? h('span', { className: 'dsc-import-badge' }, t('importAlreadyImported'))
+                      : null,
+                  )
+                }),
+          ),
+        ),
+    view.error !== ''
+      ? h('div', { className: 'dsc-notice is-error dsc-import-error' },
+          h(Icon, { name: 'warning', size: 16 }),
+          h('span', null, view.error),
+        )
+      : null,
+  )
+
+  const importingBody = h('div', { className: 'dsc-modal-body dsc-import-progress' },
+    h('div', { className: 'dsc-import-progress-head' },
+      h('span', { className: 'dsc-import-progress-label' }, t('importImporting')),
+      h('span', { className: 'dsc-import-progress-count' },
+        t('importProgress', { done: view.progress.done, total: view.progress.total }),
+      ),
+    ),
+    h('div', {
+      className: 'dsc-import-bar',
+      role: 'progressbar',
+      'aria-valuemin': 0,
+      'aria-valuemax': 100,
+      'aria-valuenow': percent,
+      'aria-label': t('importImporting'),
+    }, h('div', { className: 'dsc-import-bar-fill', style: { width: `${percent}%` } })),
+    h('p', { className: 'dsc-import-hint' }, t('importDoneHint')),
+    view.error !== ''
+      ? h('div', { className: 'dsc-notice is-error dsc-import-error' },
+          h(Icon, { name: 'warning', size: 16 }),
+          h('span', null, view.error),
+        )
+      : null,
+  )
+
+  const result = view.result
+  const resultBody = h('div', { className: 'dsc-modal-body dsc-import-result' },
+    h('div', { className: 'dsc-import-stats' },
+      h('div', { className: 'dsc-import-stat is-ok' },
+        h('span', { className: 'dsc-import-stat-value' }, String(result?.imported ?? 0)),
+        h('span', { className: 'dsc-import-stat-label' }, t('importStatImported')),
+      ),
+      h('div', { className: 'dsc-import-stat is-skip' },
+        h('span', { className: 'dsc-import-stat-value' }, String(result?.skipped ?? 0)),
+        h('span', { className: 'dsc-import-stat-label' }, t('importStatSkipped')),
+      ),
+      h('div', { className: cx('dsc-import-stat', (result?.failed ?? 0) > 0 && 'is-fail') },
+        h('span', { className: 'dsc-import-stat-value' }, String(result?.failed ?? 0)),
+        h('span', { className: 'dsc-import-stat-label' }, t('importStatFailed')),
+      ),
+    ),
+    h('p', { className: 'dsc-import-hint' }, t('importDoneHint')),
+    (result?.skipped ?? 0) > 0 ? h('p', { className: 'dsc-import-hint' }, t('importSkippedHint')) : null,
+    result?.media?.restored > 0
+      ? h('p', { className: 'dsc-import-hint' }, `${t('importImages', { count: result.media.restored })} · ${t('importMediaNote')}`)
+      : null,
+    Array.isArray(result?.failures) && result.failures.length > 0
+      ? h('div', { className: 'dsc-import-failures' },
+          h('div', { className: 'dsc-import-failures-title' }, t('importFailedList')),
+          result.failures.slice(0, 8).map(item => h('div', { key: item.sourceId ?? item.title, className: 'dsc-import-failure' },
+            h('span', { className: 'dsc-import-failure-title', title: item.reason ?? '' }, item.title || item.sourceId || '—'),
+            h('span', { className: 'dsc-import-failure-reason' }, String(item.code ?? '')),
+          )),
+        )
+      : null,
+    view.error !== ''
+      ? h('div', { className: 'dsc-notice is-error dsc-import-error' },
+          h(Icon, { name: 'warning', size: 16 }),
+          h('span', null, view.error),
+        )
+      : null,
+  )
+
+  const footer = step === 'pick'
+    ? h('footer', { className: 'dsc-modal-foot' },
+        h('div', { className: 'dsc-modal-foot-note' }),
+        h('button', { type: 'button', className: 'dsc-secondary-button', onClick: close }, t('importExit')),
+        h('button', {
+          type: 'button', className: 'dsc-primary-button', disabled: parsing,
+          onClick: () => inputRef.current?.click(),
+        }, t('importChooseFile')),
+      )
+    : step === 'preview'
+      ? h('footer', { className: 'dsc-modal-foot' },
+          h('div', { className: 'dsc-modal-foot-note' },
+            t('importSelected', { count: view.selected.length, total: importableCount }),
+          ),
+          h('button', { type: 'button', className: 'dsc-secondary-button', onClick: close }, t('importExit')),
+          h('button', {
+            type: 'button',
+            className: 'dsc-primary-button',
+            disabled: view.selected.length === 0 || view.token === '',
+            onClick: () => { void chatActions.startImport() },
+          }, t('importStart')),
+        )
+      : step === 'importing'
+        ? h('footer', { className: 'dsc-modal-foot' },
+            h('div', { className: 'dsc-modal-foot-note' },
+              t('importProgress', { done: view.progress.done, total: view.progress.total }),
+            ),
+            h('button', {
+              type: 'button',
+              className: 'dsc-secondary-button',
+              disabled: view.cancelling,
+              onClick: () => { void chatActions.cancelImport() },
+            }, view.cancelling ? t('importCancelling') : t('importCancel')),
+          )
+        : h('footer', { className: 'dsc-modal-foot' },
+            h('div', { className: 'dsc-modal-foot-note' }),
+            h('button', {
+              type: 'button', className: 'dsc-primary-button', autoFocus: true,
+              onClick: close,
+            }, t('importClose')),
+          )
+
+  return h(ModalBackdrop, { onDismiss: close },
+    h('div', { className: 'dsc-modal dsc-import-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('importTitle') },
+      // One hidden picker serves both the drop zone and the "choose file" button,
+      // so the file dialog can be reopened from the preview step as well.
+      h('input', {
+        ref: inputRef,
+        className: 'dsc-import-input',
+        type: 'file',
+        accept: '.zip,application/zip,application/x-zip-compressed',
+        tabIndex: -1,
+        'aria-hidden': 'true',
+        onChange: (event) => {
+          pick(event.target.files?.[0])
+          event.target.value = ''
+        },
+      }),
+      head,
+      step === 'pick' || step === 'parsing' ? pickBody : step === 'preview' ? previewBody : importing ? importingBody : resultBody,
+      footer,
+    ),
+  )
+}
+
+function ConfirmDialog() {  const t = useT()
   const confirm = useChat(state => state.confirm)
   if (confirm === null) return null
   const run = async () => {
@@ -12766,6 +13565,150 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-archive-item-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.2px; color: var(--dsc-muted); }
 .dsc-archive-actions { display: flex; align-items: center; gap: 4px; flex: none; }
 
+/* ---------- chat history import ---------- */
+.dsc-modal.dsc-import-modal { width: min(680px, 100%); }
+.dsc-import-pick { gap: 12px; }
+.dsc-import-drop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 188px;
+  padding: 22px;
+  border: 1.5px dashed var(--dsc-border-strong);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--dsc-layer2) 34%, transparent);
+  color: var(--dsc-text);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--dsc-fast) var(--dsc-ease), background var(--dsc-fast) var(--dsc-ease);
+}
+.dsc-import-drop:hover { border-color: color-mix(in srgb, var(--dsc-brand) 45%, var(--dsc-border-strong)); }
+.dsc-import-drop.is-drag { border-color: var(--dsc-brand); background: var(--dsc-brand-soft); }
+.dsc-import-drop.is-busy { cursor: progress; }
+.dsc-import-drop-icon { display: inline-flex; color: var(--dsc-link); }
+.dsc-import-drop-title { font-size: 13.6px; font-weight: 570; }
+.dsc-import-drop-hint { font-size: 11.8px; color: var(--dsc-muted); line-height: 1.6; max-width: 380px; }
+.dsc-import-input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
+.dsc-import-error { margin: 0; }
+.dsc-import-summary { display: flex; align-items: center; gap: 10px; }
+.dsc-import-preview { gap: 12px; }
+.dsc-import-summary-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.dsc-import-file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 550; }
+.dsc-import-file-meta { font-size: 11.4px; color: var(--dsc-muted); }
+.dsc-import-summary-side { flex: none; }
+.dsc-import-toolbar { display: flex; align-items: center; gap: 10px; }
+.dsc-import-check-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--dsc-border);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--dsc-text);
+  font-size: 12px;
+  font-weight: 550;
+}
+.dsc-import-check-all:hover { background: var(--dsc-hover); }
+.dsc-import-check-all.is-on .dsc-choice-check { border-color: var(--dsc-brand); background: var(--dsc-brand-soft); color: var(--dsc-link); }
+.dsc-import-count { margin-left: auto; font-size: 11.5px; color: var(--dsc-muted); }
+.dsc-import-filter {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--dsc-border);
+  border-radius: 9px;
+  background: var(--dsc-field);
+  color: var(--dsc-muted);
+}
+.dsc-import-filter-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--dsc-text);
+  font: inherit;
+  font-size: 12.6px;
+}
+.dsc-import-list { display: flex; flex-direction: column; gap: 2px; max-height: min(46vh, 420px); overflow-y: auto; }
+.dsc-import-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 42px;
+  padding: 6px 9px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--dsc-text);
+  text-align: left;
+}
+.dsc-import-item:hover { background: var(--dsc-hover); }
+.dsc-import-item.is-selected { border-color: color-mix(in srgb, var(--dsc-brand) 20%, transparent); background: var(--dsc-brand-soft); }
+.dsc-import-item.is-selected .dsc-choice-check { border-color: var(--dsc-brand); background: var(--dsc-layer); }
+.dsc-import-item.is-imported { cursor: default; opacity: 0.62; }
+.dsc-import-item.is-imported:hover { background: transparent; }
+.dsc-import-item.is-imported .dsc-choice-check { border-style: dashed; }
+.dsc-import-item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dsc-import-item-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.8px; }
+.dsc-import-item-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.1px; color: var(--dsc-muted); }
+.dsc-import-badge {
+  flex: none;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dsc-success) 12%, transparent);
+  color: var(--dsc-success);
+  font-size: 10.6px;
+  font-weight: 560;
+}
+.dsc-import-progress { gap: 12px; }
+.dsc-import-progress-head { display: flex; align-items: baseline; gap: 10px; }
+.dsc-import-progress-label { font-size: 13px; font-weight: 570; }
+.dsc-import-progress-count { margin-left: auto; font-size: 12px; color: var(--dsc-muted); font-variant-numeric: tabular-nums; }
+.dsc-import-bar { height: 8px; border-radius: 999px; background: var(--dsc-field); overflow: hidden; }
+.dsc-import-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--dsc-link), color-mix(in srgb, var(--dsc-link) 62%, var(--dsc-brand)));
+  transition: width 0.25s var(--dsc-ease);
+}
+.dsc-import-hint { margin: 0; font-size: 11.6px; color: var(--dsc-muted); line-height: 1.65; }
+.dsc-import-result { gap: 12px; }
+.dsc-import-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.dsc-import-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 11px 12px;
+  border: 1px solid var(--dsc-border);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--dsc-layer2) 30%, transparent);
+}
+.dsc-import-stat-value { font-size: 20px; font-weight: 620; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.dsc-import-stat-label { font-size: 11.2px; color: var(--dsc-muted); }
+.dsc-import-stat.is-ok .dsc-import-stat-value { color: var(--dsc-success); }
+.dsc-import-stat.is-skip .dsc-import-stat-value { color: var(--dsc-muted); }
+.dsc-import-stat.is-fail .dsc-import-stat-value { color: var(--dsc-error); }
+.dsc-import-failures { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border: 1px solid var(--dsc-border); border-radius: 11px; background: color-mix(in srgb, var(--dsc-error) 5%, transparent); }
+.dsc-import-failures-title { font-size: 11.4px; font-weight: 600; color: var(--dsc-muted); }
+.dsc-import-failure { display: flex; align-items: baseline; gap: 8px; font-size: 11.6px; }
+.dsc-import-failure-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dsc-import-failure-reason { flex: none; color: var(--dsc-muted); font-family: var(--dsc-mono); font-size: 10.4px; }
+.dsc-answer-notice { margin: 10px 0 0; }
+.dsc-notice.is-warn {
+  border-color: color-mix(in srgb, var(--dsc-warn) 24%, transparent);
+  background: color-mix(in srgb, var(--dsc-warn) 7%, transparent);
+  color: var(--dsc-warn);
+}
+
 /* ---------- toasts ---------- */
 .dsc-toasts { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 40; display: flex; flex-direction: column; gap: 7px; align-items: center; pointer-events: none; width: min(560px, calc(100% - 32px)); }
 .dsc-toast { display: flex; align-items: center; gap: 7px; max-width: 100%; padding: 9px 13px; border: 1px solid var(--dsc-border); border-radius: 10px; background: var(--dsc-layer); box-shadow: var(--dsc-shadow-soft); font-size: 12.5px; color: var(--dsc-text); animation: dsc-toast-in 0.16s ease; }
@@ -12933,6 +13876,9 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
     MoveChatDialog,
     FolderAddDialog,
     ArchiveDialog,
+    ImportDialog,
+    filterImportRows,
+    importDateLabel,
     Composer,
     EmptyState,
     Sidebar,

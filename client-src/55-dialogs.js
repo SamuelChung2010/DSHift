@@ -897,8 +897,328 @@ function ArchiveDialog() {
   )
 }
 
-function ConfirmDialog() {
+/** Absolute date for one export row; the export timestamp is ISO-8601 UTC. */
+function importDateLabel(timestamp, t) {
+  if (typeof timestamp !== 'number' || !Number.isFinite(timestamp) || timestamp <= 0) return t('importDateUnknown')
+  try {
+    return new Intl.DateTimeFormat(appCtx?.locale.getSnapshot().active === 'zh' ? 'zh-CN' : 'en-US', {
+      year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+    }).format(new Date(timestamp))
+  } catch {
+    return new Date(timestamp).toLocaleString()
+  }
+}
+
+/** Case-insensitive title filter for the preview list. */
+function filterImportRows(conversations, filter) {
+  const needle = typeof filter === 'string' ? filter.trim().toLowerCase() : ''
+  if (needle === '') return conversations
+  return conversations.filter(conversation => (
+    typeof conversation?.title === 'string' && conversation.title.toLowerCase().includes(needle)
+  ))
+}
+
+/**
+ * Chat-history import from a DeepSeek export ZIP.
+ *
+ * The dialog walks one state machine owned by the store: pick a file, read the
+ * preview, choose conversations, follow the import, read the result. The Host
+ * parses everything locally, so the only thing this surface does with the file
+ * is hand the bytes over once.
+ */
+function ImportDialog() {
   const t = useT()
+  const open = useChat(state => state.importOpen)
+  const view = useChat(state => state.importView)
+  const inputRef = React.useRef(null)
+  const [drag, setDrag] = React.useState(false)
+  if (!open || view === null) return null
+  const step = view.step
+  const parsing = step === 'parsing'
+  const importing = step === 'importing'
+  const selected = new Set(view.selected)
+  const visible = filterImportRows(view.conversations, view.filter)
+  const importableCount = view.conversations.filter(item => item.imported !== true).length
+  const close = () => chatActions.closeImport()
+  const pick = (file) => {
+    if (file !== undefined && file !== null) void chatActions.selectImportFile(file)
+  }
+  const percent = view.progress.total > 0
+    ? Math.min(100, Math.round((view.progress.done / view.progress.total) * 100))
+    : 0
+  const head = h('header', { className: 'dsc-modal-head' },
+    h('div', null,
+      h('h2', null, t('importTitle')),
+      h('p', { className: 'dsc-modal-sub' }, t('importSubtitle')),
+    ),
+    h('button', {
+      type: 'button',
+      className: 'dsc-icon-button',
+      title: t('close'),
+      'aria-label': t('close'),
+      autoFocus: step !== 'preview',
+      disabled: importing,
+      onClick: close,
+    }, h(Icon, { name: 'close', size: 18 })),
+  )
+
+  const pickBody = h('div', { className: 'dsc-modal-body dsc-import-pick' },
+    h('div', {
+      className: cx('dsc-import-drop', drag && 'is-drag', parsing && 'is-busy'),
+      role: 'button',
+      tabIndex: 0,
+      onClick: () => {
+        if (!parsing) inputRef.current?.click()
+      },
+      onKeyDown: (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return
+        event.preventDefault()
+        if (!parsing) inputRef.current?.click()
+      },
+      onDragOver: (event) => {
+        event.preventDefault()
+        if (!parsing) setDrag(true)
+      },
+      onDragLeave: () => setDrag(false),
+      onDrop: (event) => {
+        event.preventDefault()
+        setDrag(false)
+        if (parsing) return
+        pick(event.dataTransfer?.files?.[0])
+      },
+    },
+      parsing ? h(Spinner, { size: 22, label: t('importParsing') }) : h('span', { className: 'dsc-import-drop-icon' }, h(Icon, { name: 'archive', size: 24 })),
+      parsing
+        ? h('div', { className: 'dsc-import-drop-title' }, t('importParsing'))
+        : h('div', { className: 'dsc-import-drop-title' }, t('importDropTitle')),
+      parsing
+        ? h('div', { className: 'dsc-import-drop-hint' }, t('importParsingHint'))
+        : h('div', { className: 'dsc-import-drop-hint' }, t('importDropHint')),
+    ),
+    view.error !== ''
+      ? h('div', { className: 'dsc-notice is-error dsc-import-error' },
+          h(Icon, { name: 'warning', size: 16 }),
+          h('span', null, view.error),
+        )
+      : null,
+  )
+
+  const previewBody = h('div', { className: 'dsc-modal-body dsc-import-preview' },
+    h('div', { className: 'dsc-import-summary' },
+      h('div', { className: 'dsc-import-summary-main' },
+        h('span', { className: 'dsc-import-file-name', title: view.fileName }, view.fileName),
+        h('span', { className: 'dsc-import-file-meta' },
+          t('importFileMeta', { size: formatSize(view.fileSize), count: view.stats.total }),
+        ),
+      ),
+      h('div', { className: 'dsc-import-summary-side' },
+        h('button', {
+          type: 'button', className: 'dsc-secondary-button is-small-compact',
+          onClick: () => inputRef.current?.click(),
+        }, t('importChooseFile')),
+      ),
+    ),
+    importableCount === 0
+      ? h('div', { className: 'dsc-list-empty' }, t('importAllImported'))
+      : h(React.Fragment, null,
+          h('div', { className: 'dsc-import-toolbar' },
+            h('button', {
+              type: 'button',
+              role: 'checkbox',
+              'aria-checked': view.selected.length > 0 && view.selected.length >= importableCount,
+              className: cx('dsc-import-check-all', view.selected.length > 0 && 'is-on'),
+              onClick: () => chatActions.selectAllImport(view.selected.length < importableCount),
+            },
+              h('span', { className: 'dsc-choice-check' },
+                view.selected.length >= importableCount ? h(Icon, { name: 'check', size: 13 }) : null,
+              ),
+              h('span', null, t('importSelectAll')),
+            ),
+            h('span', { className: 'dsc-import-count' },
+              t('importSelected', { count: view.selected.length, total: importableCount }),
+            ),
+          ),
+          importableCount > 100
+            ? h('p', { className: 'dsc-import-hint' }, t('importLargeHint'))
+            : null,
+          h('div', { className: 'dsc-import-filter' },
+            h(Icon, { name: 'search', size: 14 }),
+            h('input', {
+              className: 'dsc-import-filter-input',
+              value: view.filter,
+              placeholder: t('importFilter'),
+              'aria-label': t('importFilter'),
+              onChange: (event) => chatActions.setImportFilter(event.target.value),
+            }),
+          ),
+          h('div', { className: 'dsc-import-list', role: 'group', 'aria-label': t('importTitle') },            visible.length === 0
+              ? h('div', { className: 'dsc-list-empty' }, t('importEmpty'))
+              : visible.map(conversation => {
+                  const imported = conversation.imported === true
+                  // An imported conversation is never part of the selection: it
+                  // is already in the history, and the badge says so.
+                  const on = selected.has(conversation.sourceId)
+                  return h('button', {
+                    key: conversation.sourceId,
+                    type: 'button',
+                    role: 'checkbox',
+                    'aria-checked': on,
+                    disabled: imported,
+                    className: cx('dsc-import-item', on && 'is-selected', imported && 'is-imported'),
+                    onClick: () => chatActions.toggleImportConversation(conversation.sourceId),
+                  },
+                    h('span', { className: 'dsc-choice-check' },
+                      on ? h(Icon, { name: 'check', size: 13 }) : null,
+                    ),
+                    h('span', { className: 'dsc-import-item-main' },
+                      h('span', { className: 'dsc-import-item-title' }, conversation.title || t('newChatTitle')),
+                      h('span', { className: 'dsc-import-item-meta' },
+                        `${importDateLabel(conversation.createdAt, t)} · ${t('messageCount', { count: conversation.messageCount })}`,
+                      ),
+                    ),
+                    imported
+                      ? h('span', { className: 'dsc-import-badge' }, t('importAlreadyImported'))
+                      : null,
+                  )
+                }),
+          ),
+        ),
+    view.error !== ''
+      ? h('div', { className: 'dsc-notice is-error dsc-import-error' },
+          h(Icon, { name: 'warning', size: 16 }),
+          h('span', null, view.error),
+        )
+      : null,
+  )
+
+  const importingBody = h('div', { className: 'dsc-modal-body dsc-import-progress' },
+    h('div', { className: 'dsc-import-progress-head' },
+      h('span', { className: 'dsc-import-progress-label' }, t('importImporting')),
+      h('span', { className: 'dsc-import-progress-count' },
+        t('importProgress', { done: view.progress.done, total: view.progress.total }),
+      ),
+    ),
+    h('div', {
+      className: 'dsc-import-bar',
+      role: 'progressbar',
+      'aria-valuemin': 0,
+      'aria-valuemax': 100,
+      'aria-valuenow': percent,
+      'aria-label': t('importImporting'),
+    }, h('div', { className: 'dsc-import-bar-fill', style: { width: `${percent}%` } })),
+    h('p', { className: 'dsc-import-hint' }, t('importDoneHint')),
+    view.error !== ''
+      ? h('div', { className: 'dsc-notice is-error dsc-import-error' },
+          h(Icon, { name: 'warning', size: 16 }),
+          h('span', null, view.error),
+        )
+      : null,
+  )
+
+  const result = view.result
+  const resultBody = h('div', { className: 'dsc-modal-body dsc-import-result' },
+    h('div', { className: 'dsc-import-stats' },
+      h('div', { className: 'dsc-import-stat is-ok' },
+        h('span', { className: 'dsc-import-stat-value' }, String(result?.imported ?? 0)),
+        h('span', { className: 'dsc-import-stat-label' }, t('importStatImported')),
+      ),
+      h('div', { className: 'dsc-import-stat is-skip' },
+        h('span', { className: 'dsc-import-stat-value' }, String(result?.skipped ?? 0)),
+        h('span', { className: 'dsc-import-stat-label' }, t('importStatSkipped')),
+      ),
+      h('div', { className: cx('dsc-import-stat', (result?.failed ?? 0) > 0 && 'is-fail') },
+        h('span', { className: 'dsc-import-stat-value' }, String(result?.failed ?? 0)),
+        h('span', { className: 'dsc-import-stat-label' }, t('importStatFailed')),
+      ),
+    ),
+    h('p', { className: 'dsc-import-hint' }, t('importDoneHint')),
+    (result?.skipped ?? 0) > 0 ? h('p', { className: 'dsc-import-hint' }, t('importSkippedHint')) : null,
+    result?.media?.restored > 0
+      ? h('p', { className: 'dsc-import-hint' }, `${t('importImages', { count: result.media.restored })} · ${t('importMediaNote')}`)
+      : null,
+    Array.isArray(result?.failures) && result.failures.length > 0
+      ? h('div', { className: 'dsc-import-failures' },
+          h('div', { className: 'dsc-import-failures-title' }, t('importFailedList')),
+          result.failures.slice(0, 8).map(item => h('div', { key: item.sourceId ?? item.title, className: 'dsc-import-failure' },
+            h('span', { className: 'dsc-import-failure-title', title: item.reason ?? '' }, item.title || item.sourceId || '—'),
+            h('span', { className: 'dsc-import-failure-reason' }, String(item.code ?? '')),
+          )),
+        )
+      : null,
+    view.error !== ''
+      ? h('div', { className: 'dsc-notice is-error dsc-import-error' },
+          h(Icon, { name: 'warning', size: 16 }),
+          h('span', null, view.error),
+        )
+      : null,
+  )
+
+  const footer = step === 'pick'
+    ? h('footer', { className: 'dsc-modal-foot' },
+        h('div', { className: 'dsc-modal-foot-note' }),
+        h('button', { type: 'button', className: 'dsc-secondary-button', onClick: close }, t('importExit')),
+        h('button', {
+          type: 'button', className: 'dsc-primary-button', disabled: parsing,
+          onClick: () => inputRef.current?.click(),
+        }, t('importChooseFile')),
+      )
+    : step === 'preview'
+      ? h('footer', { className: 'dsc-modal-foot' },
+          h('div', { className: 'dsc-modal-foot-note' },
+            t('importSelected', { count: view.selected.length, total: importableCount }),
+          ),
+          h('button', { type: 'button', className: 'dsc-secondary-button', onClick: close }, t('importExit')),
+          h('button', {
+            type: 'button',
+            className: 'dsc-primary-button',
+            disabled: view.selected.length === 0 || view.token === '',
+            onClick: () => { void chatActions.startImport() },
+          }, t('importStart')),
+        )
+      : step === 'importing'
+        ? h('footer', { className: 'dsc-modal-foot' },
+            h('div', { className: 'dsc-modal-foot-note' },
+              t('importProgress', { done: view.progress.done, total: view.progress.total }),
+            ),
+            h('button', {
+              type: 'button',
+              className: 'dsc-secondary-button',
+              disabled: view.cancelling,
+              onClick: () => { void chatActions.cancelImport() },
+            }, view.cancelling ? t('importCancelling') : t('importCancel')),
+          )
+        : h('footer', { className: 'dsc-modal-foot' },
+            h('div', { className: 'dsc-modal-foot-note' }),
+            h('button', {
+              type: 'button', className: 'dsc-primary-button', autoFocus: true,
+              onClick: close,
+            }, t('importClose')),
+          )
+
+  return h(ModalBackdrop, { onDismiss: close },
+    h('div', { className: 'dsc-modal dsc-import-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('importTitle') },
+      // One hidden picker serves both the drop zone and the "choose file" button,
+      // so the file dialog can be reopened from the preview step as well.
+      h('input', {
+        ref: inputRef,
+        className: 'dsc-import-input',
+        type: 'file',
+        accept: '.zip,application/zip,application/x-zip-compressed',
+        tabIndex: -1,
+        'aria-hidden': 'true',
+        onChange: (event) => {
+          pick(event.target.files?.[0])
+          event.target.value = ''
+        },
+      }),
+      head,
+      step === 'pick' || step === 'parsing' ? pickBody : step === 'preview' ? previewBody : importing ? importingBody : resultBody,
+      footer,
+    ),
+  )
+}
+
+function ConfirmDialog() {  const t = useT()
   const confirm = useChat(state => state.confirm)
   if (confirm === null) return null
   const run = async () => {

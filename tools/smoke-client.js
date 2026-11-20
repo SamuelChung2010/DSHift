@@ -1437,4 +1437,98 @@ if (collectByClass(quoteTree, 'dsc-quote').length !== 1) throw new Error('block 
 if (collectByClass(quoteTree, 'dsc-list').length !== 1) throw new Error('lists inside quotes must render')
 console.log('RENDERING_OK')
 
+// ---------------------------------------------------------------------------
+// Chat history import: every dialog step renders from store state alone.
+// ---------------------------------------------------------------------------
+console.log('IMPORT_START')
+const importRows = [
+  { sourceId: 's1', title: '年度计划', messageCount: 8, createdAt: Date.UTC(2026, 9, 1, 4, 0), updatedAt: Date.UTC(2026, 9, 2, 4, 0), imported: false },
+  { sourceId: 's2', title: 'Rust 生命周期笔记', messageCount: 2, createdAt: Date.UTC(2026, 8, 20, 4, 0), updatedAt: Date.UTC(2026, 8, 20, 5, 0), imported: true },
+  { sourceId: 's3', title: 'Weekly review', messageCount: 14, createdAt: null, updatedAt: null, imported: false },
+]
+const importView = (patch) => ({
+  step: 'pick',
+  fileName: '',
+  fileSize: 0,
+  token: '',
+  conversations: [],
+  selected: [],
+  filter: '',
+  stats: { total: 0, imported: 0, importable: 0 },
+  progress: { done: 0, total: 0 },
+  jobId: '',
+  cancelling: false,
+  result: null,
+  error: '',
+  ...patch,
+})
+if (captured.filterImportRows(importRows, 'rust').length !== 1) throw new Error('the preview filter must match titles case-insensitively')
+if (captured.filterImportRows(importRows, '  ').length !== 3) throw new Error('a blank filter must keep every row')
+if (captured.importDateLabel(null, captured.DICTS ? key => captured.DICTS.zh[key] ?? key : key => key) !== captured.DICTS.zh.importDateUnknown) {
+  throw new Error('a missing export date must be reported as unknown')
+}
+
+captured.chatStore.set({ importOpen: true, importView: importView({}) })
+const pickTree = captured.ImportDialog()
+if (collectByClass(pickTree, 'dsc-import-drop').length !== 1) throw new Error('the pick step must render one drop zone')
+const fileInput = collectByClass(pickTree, 'dsc-import-input')[0]
+if (fileInput?.props?.type !== 'file' || !String(fileInput?.props?.accept).includes('.zip')) {
+  throw new Error('the pick step must offer a ZIP file input')
+}
+if (!collectionText(pickTree).includes(captured.DICTS.zh.importDropTitle)) throw new Error('the drop zone must name its action')
+// The sidebar entry and the mounted dialog are the only ways in.
+const importEntries = collectByClass(React.createElement(captured.Sidebar), 'dsc-foot-action')
+  .filter(node => collectionText(node).includes(captured.DICTS.zh.importOpen))
+if (importEntries.length !== 1) throw new Error('the sidebar must offer one import entry')
+const rootWithImport = React.createElement(captured.ChatRoot)
+if (collectByClass(rootWithImport, 'dsc-import-modal').length !== 1) throw new Error('ChatRoot must mount the import dialog while it is open')
+
+captured.chatStore.set({
+  importView: importView({
+    step: 'preview', token: 'tok', fileName: 'deepseek_data.zip', fileSize: 141_850_492,
+    conversations: importRows, selected: ['s1', 's3'],
+    stats: { total: 3, imported: 1, importable: 2 },
+  }),
+})
+const previewTree = captured.ImportDialog()
+const itemRows = collectByClass(previewTree, 'dsc-import-item')
+if (itemRows.length !== 3) throw new Error(`the preview must list every conversation: ${itemRows.length}`)
+if (itemRows.filter(row => row.props['aria-checked'] === true).length !== 2) throw new Error('selected rows must be checked')
+if (itemRows.filter(row => row.props.disabled === true).length !== 1) throw new Error('an imported row must not be selectable again')
+if (collectByClass(previewTree, 'dsc-import-badge').length !== 1) throw new Error('an imported row must be badged')
+if (!collectionText(previewTree).includes('已选 2 个，可导入 2 个')) throw new Error('the selection count must be shown')
+if (collectByClass(previewTree, 'dsc-import-filter-input').length !== 1) throw new Error('the preview must offer a title filter')
+const startButton = collectByClass(previewTree, 'dsc-primary-button')[0]
+if (startButton?.props?.disabled === true) throw new Error('the import button must be enabled with a selection')
+
+captured.chatStore.set({ importView: importView({ step: 'importing', token: 'tok', jobId: 'job-1', progress: { done: 120, total: 300 } }) })
+const importingTree = captured.ImportDialog()
+const bar = collectByClass(importingTree, 'dsc-import-bar')[0]
+if (bar?.props?.role !== 'progressbar' || bar?.props['aria-valuenow'] !== 40) throw new Error('the progress bar must report its percentage')
+if (collectByClass(importingTree, 'dsc-import-bar-fill')[0]?.props?.style?.width !== '40%') throw new Error('the progress fill must follow the count')
+
+captured.chatStore.set({
+  importView: importView({
+    step: 'done',
+    result: {
+      id: 'job-1', state: 'done', total: 3, done: 3, imported: 2, skipped: 1, failed: 1,
+      media: { restored: 4, bytes: 1024, omitted: 0 },
+      failures: [{ sourceId: 's3', title: 'Weekly review', code: 'BAD_SESSION', reason: 'broken' }],
+    },
+  }),
+})
+const doneTree = captured.ImportDialog()
+const statValues = collectByClass(doneTree, 'dsc-import-stat-value').map(node => collectionText(node))
+if (statValues.join(',') !== '2,1,1') throw new Error(`the result must count imported, skipped and failed: ${statValues.join(',')}`)
+if (collectByClass(doneTree, 'dsc-import-failure').length !== 1) throw new Error('a failed conversation must be listed')
+
+captured.chatStore.set({ importView: importView({ step: 'pick', error: 'NOT_A_ZIP' }) })
+if (collectByClass(captured.ImportDialog(), 'dsc-import-error').length !== 1) throw new Error('a read failure must be shown in the dialog')
+
+captured.chatActions.closeImport()
+if (captured.chatStore.state.importOpen !== false || captured.chatStore.state.importView !== null) {
+  throw new Error('closing the dialog must clear its state')
+}
+console.log('IMPORT_OK')
+
 console.log('SMOKE_OK')
