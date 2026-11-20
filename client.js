@@ -13436,7 +13436,7 @@ function ImportMemoryDialog({ onClose }) {
         ),
         h('button', {
           type: 'button', className: 'dsc-icon-button', title: t('close'), 'aria-label': t('close'),
-          autoFocus: true, onClick: dismiss,
+          autoFocus: true, disabled: busy !== '', onClick: dismiss,
         }, h(Icon, { name: 'close', size: 18 })),
       ),
       h('div', { className: 'dsc-modal-body' },
