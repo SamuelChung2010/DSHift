@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "DeepSeek Chat",
-    "description": "在 Agent 模式旁增加一个原生 DeepSeek Chat 模式，通过共享的 Chat | Agent 分段控件切换。支持带 Off / 低 / 高 / 最高档位的深度思考、联网搜索与引用、链接阅读、文件与图片上传、模型选择、本地持久化历史、文件夹、置顶与归档、历史搜索、消息编辑与回答版本，以及 Chat 到 Agent 的交接。新增长期记忆：可开启跨会话记忆与自动记忆提取，在设置中查看/编辑/删除记忆、生成记忆概述、用自然语言 Ask or Update，并从 ChatGPT、Claude、Gemini 等平台导入已有记忆。Chat 使用已登录的 DeepSeek 账号，或在 DSH 凭证库中保存的 DeepSeek API Key；Key 不会进入浏览器。联网搜索、文件解析与自动记忆整理会使用 DeepSeek 服务，可能产生用量费用。原有 Agent 模式与全部 DSH 功能保持不变。"
+    "description": "在 Agent 模式旁增加一个原生 DeepSeek Chat 模式，通过共享的 Chat | Agent 分段控件切换。支持 DeepSeek 官方聊天记录 ZIP 导入、长期记忆（自动提取、跨会话检索、记忆概述、Ask or Update、从其他 AI 导入）、深度思考与推理等级、联网搜索与引用、链接阅读、文件与图片上传、模型选择、本地持久化历史、文件夹、置顶与归档、历史搜索、消息编辑与回答版本，以及 Chat 到 Agent 的交接。导入后可选择性地从导入会话提取长期记忆；记忆保存在本机。Chat 使用已登录的 DeepSeek 账号，或在 DSH 凭证库中保存的 DeepSeek API Key；Key 不会进入浏览器。联网搜索、文件解析与记忆提取会使用 DeepSeek 服务，可能产生用量费用。原有 Agent 模式与全部 DSH 功能保持不变。"
   }
 }
