@@ -16,12 +16,13 @@ function BootView({ error, onRetry }) {
   )
 }
 
-function Switch({ checked, onChange, label }) {
+function Switch({ checked, onChange, label, disabled = false }) {
   return h('button', {
     type: 'button',
     role: 'switch',
     'aria-checked': checked,
     'aria-label': label,
+    disabled,
     className: cx('dsc-switch', checked && 'is-on'),
     onClick: () => onChange(!checked),
   }, h('span', { className: 'dsc-switch-thumb' }))
@@ -41,7 +42,7 @@ function SettingsSection({ title, children }) {
  * switch, which must not show through the mask or receive clicks. The dialog
  * stays inside ChatRoot, so the --dsc-* theme tokens still inherit.
  */
-function ModalBackdrop({ children, onDismiss }) {
+function ModalBackdrop({ children, onDismiss, className = '' }) {
   const ref = React.useRef(null)
   const dismissRef = React.useRef(onDismiss)
   dismissRef.current = onDismiss
@@ -69,7 +70,7 @@ function ModalBackdrop({ children, onDismiss }) {
   }, [])
   return h('dialog', {
     ref,
-    className: 'dsc-modal-backdrop',
+    className: cx('dsc-modal-backdrop', className),
     onMouseDown: (event) => {
       if (event.target === event.currentTarget) dismissRef.current()
     },
@@ -88,6 +89,9 @@ function SettingsDialog() {
   const [prompt, setPrompt] = React.useState(settings.systemPrompt)
   const [savingKey, setSavingKey] = React.useState(false)
   const [savingPrompt, setSavingPrompt] = React.useState(false)
+  // General stays the default tab; the Memory tab mounts its own pane only
+  // while it is active, so opening settings never calls the memory API.
+  const [tab, setTab] = React.useState('general')
   React.useEffect(() => {
     setPrompt(settings.systemPrompt)
   }, [settings.systemPrompt])
@@ -136,7 +140,20 @@ function SettingsDialog() {
           autoFocus: true, onClick: close,
         }, h(Icon, { name: 'close', size: 18 })),
       ),
+      h('div', { className: 'dsc-settings-tabs', role: 'tablist', 'aria-label': t('settingsTabsLabel') },
+        [['general', 'settingsGeneralTab'], ['memory', 'settingsMemoryTab']].map(([value, key]) => (
+          h('button', {
+            key: value,
+            type: 'button',
+            role: 'tab',
+            'aria-selected': tab === value,
+            className: cx('dsc-settings-tab', tab === value && 'is-active'),
+            onClick: () => setTab(value),
+          }, t(key))
+        )),
+      ),
       h('div', { className: 'dsc-modal-body' },
+        tab === 'general' ? h(Fragment, null,
         h(SettingsSection, { title: t('connection') },
           h('div', { className: cx('dsc-auth-status', auth?.ready ? 'is-ready' : 'is-missing') },
             h('span', { className: 'dsc-auth-dot' }),
@@ -257,6 +274,7 @@ function SettingsDialog() {
           h('p', { className: 'dsc-field-hint' }, t('aboutText')),
           h('p', { className: 'dsc-field-hint' }, `${t('limitations')}：${t('limitationsText')}`),
         ),
+        ) : h(MemorySettingsPane, null),
       ),
     ),
   )
