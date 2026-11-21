@@ -338,6 +338,7 @@ const DICT_ZH = {
   enterToSend: 'Enter 发送，Shift + Enter 换行',
   enterToSendShort: 'Enter 发送',
   newlineToSend: 'Ctrl + Enter 发送，Enter 换行',
+  newlineToSendMac: 'Command + Enter 发送，Enter 换行',
   sendKeyLabel: '发送键',
   // Rendering
   mermaidFailed: '图表渲染失败',
@@ -867,6 +868,7 @@ const DICT_EN = {
   enterToSend: 'Enter to send, Shift + Enter for a new line',
   enterToSendShort: 'Enter to send',
   newlineToSend: 'Ctrl + Enter to send, Enter for a new line',
+  newlineToSendMac: 'Command + Enter to send, Enter for a new line',
   sendKeyLabel: 'Send key',
   // Rendering
   mermaidFailed: 'Diagram failed to render',

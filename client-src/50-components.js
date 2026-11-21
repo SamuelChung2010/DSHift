@@ -969,7 +969,7 @@ function Composer() {
             rows: 1,
             placeholder: t('composerPlaceholder'),
             'aria-label': t('composerPlaceholder'),
-            title: t(sendKey === 'ctrl-enter' ? 'newlineToSend' : 'enterToSend'),
+            title: t(sendKey === 'ctrl-enter' ? (platformIsMac() ? 'newlineToSendMac' : 'newlineToSend') : 'enterToSend'),
             spellCheck: 'false',
             onChange: (event) => chatStore.set({ draft: event.target.value }),
             onPaste: (event) => {
@@ -1647,19 +1647,18 @@ function readAgentPageState() {
  * clicks.
  *
  * PLACEMENT — measured against the live layout, not the window:
- * - Vertical: the native Session header's toolbar line, i.e. the middle of the
- *   title row that carries the header utilities and the far-right corner
- *   control. The stylesheet holds the same value as a constant
- *   (`--dsh-frame-chrome-top + 10px padding + 30px row / 2`); the live anchor
- *   `[data-conversation-header-corner]` (published by the conversation header
- *   for exactly this kind of chrome alignment) refines it when present.
- * - Horizontal: the centre of the main content column. Agent mode uses the
- *   native sidebar width the frame publishes (`--dsh-windows-sidebar-width`);
- *   Chat mode measures its own `.dsc-main`. The window centre is never used.
+ * - Horizontal: the centre of the active main content column. Chat measures its
+ *   own `.dsc-main`; Agent measures the native Conversation `header`, which
+ *   spans the centre grid track on every platform. Both react to the native
+ *   sidebar, the right panel, the responsive drawer and Chat's own column.
+ * - Vertical: the native title row that carries the header utilities and the
+ *   far-right corner control. The live `[data-conversation-header-corner]`
+ *   anchor refines the header's own `top + 25px` geometry (10px title inset +
+ *   30px row / 2), so both modes share one line.
  *
  * Both modes therefore share one line: the native header sits behind the Chat
  * surface and keeps its geometry, so the switch does not move when the mode
- * flips.
+ * flips at the same sidebar width.
  */
 function ModeSwitch() {
   const t = useT()
@@ -1725,13 +1724,23 @@ function ModeSwitch() {
   React.useLayoutEffect(() => {
     if (typeof document === 'undefined') return undefined
     let frame = 0
+    // The native Conversation header spans the centre column, so its box is the
+    // one platform-neutral source of the Agent column's inline bounds. Windows
+    // used to publish only its caption sidebar width; macOS publishes nothing,
+    // which is why the switch fell back to the window centre there.
+    const header = () => document.querySelector('header[data-window-drag]')
+    const mainNode = () => (open
+      ? document.querySelector('.dsc-main')
+      : header())
     const apply = () => {
       frame = 0
       const node = ref.current
       if (node === null) return
-      // Horizontal: only the Chat surface needs a measurement; in Agent mode
-      // the stylesheet tracks the native sidebar width on its own.
-      const main = open ? document.querySelector('.dsc-main') : null
+      // Horizontal: the visible main content column. Chat measures its own
+      // column; Agent measures the native Conversation header, which spans the
+      // centre grid track and therefore follows the native sidebar, the right
+      // panel and the responsive drawer.
+      const main = mainNode()
       if (main === null) {
         node.style.removeProperty('left')
         node.style.removeProperty('right')
@@ -1742,11 +1751,17 @@ function ModeSwitch() {
         node.style.right = 'auto'
         node.style.transform = 'translate(-50%, -50%)'
       }
-      // Vertical: the native toolbar line published by the Session header.
+      // Vertical: the native title row that also carries the header utilities
+      // and the far-right corner control. The corner is a precise live anchor
+      // when the Session header renders one; otherwise the header's own
+      // geometry gives the same line (10px title inset + 30px row / 2).
       const anchor = document.querySelector('[data-conversation-header-corner]')
       const anchorRect = anchor === null ? null : anchor.getBoundingClientRect()
+      const headerRect = header()?.getBoundingClientRect() ?? null
       if (anchorRect !== null && anchorRect.height > 0) {
         node.style.top = `${Math.round(anchorRect.top + anchorRect.height / 2)}px`
+      } else if (headerRect !== null && headerRect.height > 0) {
+        node.style.top = `${Math.round(headerRect.top + 25)}px`
       } else {
         node.style.removeProperty('top')
       }
@@ -1754,7 +1769,7 @@ function ModeSwitch() {
     const schedule = () => { if (frame === 0) frame = requestAnimationFrame(apply) }
     apply()
     const targets = [document.body]
-    const main = open ? document.querySelector('.dsc-main') : null
+    const main = mainNode()
     if (main !== null) targets.push(main)
     const anchor = document.querySelector('[data-conversation-header-corner]')
     if (anchor !== null) targets.push(anchor)

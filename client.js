@@ -346,6 +346,7 @@ const DICT_ZH = {
   enterToSend: 'Enter 发送，Shift + Enter 换行',
   enterToSendShort: 'Enter 发送',
   newlineToSend: 'Ctrl + Enter 发送，Enter 换行',
+  newlineToSendMac: 'Command + Enter 发送，Enter 换行',
   sendKeyLabel: '发送键',
   // Rendering
   mermaidFailed: '图表渲染失败',
@@ -875,6 +876,7 @@ const DICT_EN = {
   enterToSend: 'Enter to send, Shift + Enter for a new line',
   enterToSendShort: 'Enter to send',
   newlineToSend: 'Ctrl + Enter to send, Enter for a new line',
+  newlineToSendMac: 'Command + Enter to send, Enter for a new line',
   sendKeyLabel: 'Send key',
   // Rendering
   mermaidFailed: 'Diagram failed to render',
@@ -1084,6 +1086,23 @@ function useT() {
     return appCtx.locale.subscribe(() => force(value => value + 1))
   }, [])
   return tr
+}
+
+/**
+ * Whether this client runs inside the macOS desktop shell. The desktop preload
+ * publishes `data-platform` before the first paint; the navigator fallback
+ * covers a plain browser and keeps the helper testable without a DOM.
+ */
+function platformIsMac() {
+  if (typeof document !== 'undefined') {
+    const platform = document.documentElement?.dataset?.platform
+    if (typeof platform === 'string' && platform !== '') return platform === 'darwin'
+  }
+  if (typeof navigator !== 'undefined') {
+    const platform = typeof navigator.platform === 'string' ? navigator.platform : ''
+    return platform.startsWith('Mac') || /Macintosh|Mac OS X/.test(navigator.userAgent ?? '')
+  }
+  return false
 }
 
 const STORAGE_KEY = 'dsh-deepseek-chat:v1'
@@ -9639,7 +9658,7 @@ function Composer() {
             rows: 1,
             placeholder: t('composerPlaceholder'),
             'aria-label': t('composerPlaceholder'),
-            title: t(sendKey === 'ctrl-enter' ? 'newlineToSend' : 'enterToSend'),
+            title: t(sendKey === 'ctrl-enter' ? (platformIsMac() ? 'newlineToSendMac' : 'newlineToSend') : 'enterToSend'),
             spellCheck: 'false',
             onChange: (event) => chatStore.set({ draft: event.target.value }),
             onPaste: (event) => {
@@ -10317,19 +10336,18 @@ function readAgentPageState() {
  * clicks.
  *
  * PLACEMENT — measured against the live layout, not the window:
- * - Vertical: the native Session header's toolbar line, i.e. the middle of the
- *   title row that carries the header utilities and the far-right corner
- *   control. The stylesheet holds the same value as a constant
- *   (`--dsh-frame-chrome-top + 10px padding + 30px row / 2`); the live anchor
- *   `[data-conversation-header-corner]` (published by the conversation header
- *   for exactly this kind of chrome alignment) refines it when present.
- * - Horizontal: the centre of the main content column. Agent mode uses the
- *   native sidebar width the frame publishes (`--dsh-windows-sidebar-width`);
- *   Chat mode measures its own `.dsc-main`. The window centre is never used.
+ * - Horizontal: the centre of the active main content column. Chat measures its
+ *   own `.dsc-main`; Agent measures the native Conversation `header`, which
+ *   spans the centre grid track on every platform. Both react to the native
+ *   sidebar, the right panel, the responsive drawer and Chat's own column.
+ * - Vertical: the native title row that carries the header utilities and the
+ *   far-right corner control. The live `[data-conversation-header-corner]`
+ *   anchor refines the header's own `top + 25px` geometry (10px title inset +
+ *   30px row / 2), so both modes share one line.
  *
  * Both modes therefore share one line: the native header sits behind the Chat
  * surface and keeps its geometry, so the switch does not move when the mode
- * flips.
+ * flips at the same sidebar width.
  */
 function ModeSwitch() {
   const t = useT()
@@ -10395,13 +10413,23 @@ function ModeSwitch() {
   React.useLayoutEffect(() => {
     if (typeof document === 'undefined') return undefined
     let frame = 0
+    // The native Conversation header spans the centre column, so its box is the
+    // one platform-neutral source of the Agent column's inline bounds. Windows
+    // used to publish only its caption sidebar width; macOS publishes nothing,
+    // which is why the switch fell back to the window centre there.
+    const header = () => document.querySelector('header[data-window-drag]')
+    const mainNode = () => (open
+      ? document.querySelector('.dsc-main')
+      : header())
     const apply = () => {
       frame = 0
       const node = ref.current
       if (node === null) return
-      // Horizontal: only the Chat surface needs a measurement; in Agent mode
-      // the stylesheet tracks the native sidebar width on its own.
-      const main = open ? document.querySelector('.dsc-main') : null
+      // Horizontal: the visible main content column. Chat measures its own
+      // column; Agent measures the native Conversation header, which spans the
+      // centre grid track and therefore follows the native sidebar, the right
+      // panel and the responsive drawer.
+      const main = mainNode()
       if (main === null) {
         node.style.removeProperty('left')
         node.style.removeProperty('right')
@@ -10412,11 +10440,17 @@ function ModeSwitch() {
         node.style.right = 'auto'
         node.style.transform = 'translate(-50%, -50%)'
       }
-      // Vertical: the native toolbar line published by the Session header.
+      // Vertical: the native title row that also carries the header utilities
+      // and the far-right corner control. The corner is a precise live anchor
+      // when the Session header renders one; otherwise the header's own
+      // geometry gives the same line (10px title inset + 30px row / 2).
       const anchor = document.querySelector('[data-conversation-header-corner]')
       const anchorRect = anchor === null ? null : anchor.getBoundingClientRect()
+      const headerRect = header()?.getBoundingClientRect() ?? null
       if (anchorRect !== null && anchorRect.height > 0) {
         node.style.top = `${Math.round(anchorRect.top + anchorRect.height / 2)}px`
+      } else if (headerRect !== null && headerRect.height > 0) {
+        node.style.top = `${Math.round(headerRect.top + 25)}px`
       } else {
         node.style.removeProperty('top')
       }
@@ -10424,7 +10458,7 @@ function ModeSwitch() {
     const schedule = () => { if (frame === 0) frame = requestAnimationFrame(apply) }
     apply()
     const targets = [document.body]
-    const main = open ? document.querySelector('.dsc-main') : null
+    const main = mainNode()
     if (main !== null) targets.push(main)
     const anchor = document.querySelector('[data-conversation-header-corner]')
     if (anchor !== null) targets.push(anchor)
@@ -10880,7 +10914,7 @@ function SettingsDialog() {
           h('div', { className: 'dsc-field' },
             h('span', { className: 'dsc-field-label' }, t('sendKeyLabel')),
             h('div', { className: 'dsc-segment', role: 'group', 'aria-label': t('sendKeyLabel') },
-              [['enter', 'enterToSendShort'], ['ctrl-enter', 'newlineToSend']].map(([value, key]) => (
+              [['enter', 'enterToSendShort'], ['ctrl-enter', platformIsMac() ? 'newlineToSendMac' : 'newlineToSend']].map(([value, key]) => (
                 h('button', {
                   key: value,
                   type: 'button',
@@ -10890,7 +10924,9 @@ function SettingsDialog() {
                 }, t(key))
               )),
             ),
-            h('p', { className: 'dsc-field-hint' }, t(sendKey === 'ctrl-enter' ? 'newlineToSend' : 'enterToSend')),
+            h('p', { className: 'dsc-field-hint' }, t(sendKey === 'ctrl-enter'
+              ? (platformIsMac() ? 'newlineToSendMac' : 'newlineToSend')
+              : 'enterToSend')),
           ),
         ),
         h(SettingsSection, { title: t('systemPrompt') },
@@ -13638,18 +13674,17 @@ body[data-ds-dark-theme] .dsc-root {
    * when the mode flips, the chip slides and resizes while the track keeps its
      width and centre, and the labels re-centre inside their own segments.
 
-   Placement: the middle of the native Session header's toolbar line
-   (--dsh-frame-chrome-top + the header's 10px top padding + half of its 30px
-   title row), refined at runtime from the header's published corner anchor.
-   Horizontally the main content column: the published native sidebar width in
-   Agent mode, the measured chat column in Chat mode. */
+   Placement: the middle of the native Session header's toolbar line, refined
+   at runtime from the header's published corner anchor and the active main
+   column's measured box. The CSS defaults below only cover the first paint
+   before that measurement; neither platform token is required. */
 .dsc-modeswitch {
   --dsc-nav-height: 40px;
   --dsc-nav-width: 244px;
   --dsc-nav-selected: 55%;
   position: fixed;
   top: calc(var(--dsh-frame-chrome-top, 0px) + 25px);
-  left: var(--dsh-windows-sidebar-width, 0px);
+  left: 0;
   right: 0;
   width: var(--dsc-nav-width);
   height: var(--dsc-nav-height);
@@ -13777,6 +13812,30 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   background: var(--dsc-sidebar);
   border-right: 1px solid var(--dsc-border);
   overflow: hidden;
+}
+/* macOS: the native sidebar is fully covered by the Chat surface, so its
+   top-strip toggle (or the leading-seat opener when it is collapsed) would be a
+   second panel control for a different, invisible sidebar. The Chat brand-row
+   button owns the visible column; the native control returns with Agent. The
+   Windows caption controls are deliberately untouched. */
+html[data-platform='darwin']:has(.dsc-root) [data-sidebar-toggle],
+html[data-platform='darwin']:has(.dsc-root) [data-sidebar-opener] {
+  display: none !important;
+}
+/* macOS vibrancy sidebar: reuse the frame's own tint and washes. The frame
+   composites them over window vibrancy; Chat composites the same layers over
+   its opaque surface, which reads as the same material without disturbing the
+   native chrome or putting the hidden Agent content behind the glass. The
+   separator moves to the opaque column as a hairline, matching AppFrame. */
+html[data-platform='darwin'] .dsc-sidebar {
+  border-right: 0;
+  background-color: var(--dsc-bg);
+  background-image:
+    linear-gradient(to bottom, var(--dsw-specific-sidebar-wash-top, transparent), var(--dsw-specific-sidebar-wash-top-clear, transparent) 35%, var(--dsw-specific-sidebar-wash-bottom-clear, transparent) 68%, var(--dsw-specific-sidebar-wash-bottom, transparent)),
+    linear-gradient(var(--dsw-specific-sidebar-tint, transparent), var(--dsw-specific-sidebar-tint, transparent));
+}
+html[data-platform='darwin'] .dsc-root:has(.dsc-sidebar-column.is-open) .dsc-main {
+  border-left: 0.5px solid var(--dsw-alias-border-l3, var(--dsc-border));
 }
 .dsc-sidebar-inner {
   display: flex;
@@ -14256,8 +14315,8 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   padding: 0 15px;
   border: 0;
   border-radius: 9px;
-  background: var(--dsc-brand);
-  color: var(--dsc-on-brand);
+  background: var(--dsc-primary-action);
+  color: var(--dsc-on-color);
   font-size: 12.9px;
   font-weight: 600;
   white-space: nowrap;
@@ -15483,7 +15542,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   transition: background var(--dsc-fast) ease;
   flex: none;
 }
-.dsc-switch.is-on { background: var(--dsc-brand); }
+.dsc-switch.is-on { background: var(--dsc-primary-action); }
 .dsc-switch-thumb { display: block; width: 20px; height: 20px; border-radius: 999px; background: #fff; box-shadow: 0 1px 3px rgba(9, 12, 20, 0.24); transition: transform var(--dsc-fast) ease; }
 .dsc-switch.is-on .dsc-switch-thumb { transform: translateX(16px); }
 .dsc-prompt { min-height: 92px; border: 1px solid var(--dsc-border-strong); border-radius: 9px; padding: 9px 10px; background: var(--dsc-bg); resize: vertical; }

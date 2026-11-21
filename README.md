@@ -44,8 +44,10 @@ dsh-chat 在 DeepSeek Harness 中加入一个原生的 **DeepSeek Chat 模式**�
 
 定位按**实际布局**计算，而不是窗口坐标：
 
-- 水平：居中于主内容列。Agent 模式使用框架发布的 `--dsh-windows-sidebar-width`（原生侧栏真实宽度，拖拽/收起自动跟随）；Chat 模式测量自己的 `.dsc-main` 列宽（`ResizeObserver`），侧栏宽度变化后切换器自动重新居中。
+- 水平：居中于当前模式的主内容列。Agent 模式测量框架中间列的会话头部（它随原生侧栏、右侧面板和响应式抽屉一起变化，Windows 与 macOS 共用同一套逻辑）；Chat 模式测量自己的 `.dsc-main` 列宽（`ResizeObserver`）。侧栏宽度变化后切换器自动重新居中。
 - 垂直：对齐 Agent 页面右上角原生工具按钮（header utilities / corner）的中心线。默认值来自原生头部的几何（caption 顶部 + 10px 内边距 + 30px 标题行的一半），运行时再用 header 发布的 `[data-conversation-header-corner]` 锚点校正，两种模式共用同一条线，切换不会上下跳动。
+
+macOS 原生外观适配：Chat 侧栏复用 Harness 的 sidebar tint / wash 与 0.5px 分隔线，和原生侧栏同材质；Chat 打开时原生侧栏的收起按钮（以及侧栏完全收起时的展开按钮）会让位给 Chat 自己的收起按钮，避免同屏出现两个面板图标；两档发送键文案在 macOS 上显示 Command + Enter。
 - Chat 侧栏宽度由 Chat 自己管理：拖拽右边缘可在 264–420px 之间调整（与原生侧栏拖拽范围一致），窗口过窄时优先保证聊天列可读；宽度写入本机偏好，重启后保留。自动收起断点与框架一致（1024px）。
 
 ## 功能

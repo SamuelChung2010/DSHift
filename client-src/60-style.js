@@ -187,18 +187,17 @@ body[data-ds-dark-theme] .dsc-root {
    * when the mode flips, the chip slides and resizes while the track keeps its
      width and centre, and the labels re-centre inside their own segments.
 
-   Placement: the middle of the native Session header's toolbar line
-   (--dsh-frame-chrome-top + the header's 10px top padding + half of its 30px
-   title row), refined at runtime from the header's published corner anchor.
-   Horizontally the main content column: the published native sidebar width in
-   Agent mode, the measured chat column in Chat mode. */
+   Placement: the middle of the native Session header's toolbar line, refined
+   at runtime from the header's published corner anchor and the active main
+   column's measured box. The CSS defaults below only cover the first paint
+   before that measurement; neither platform token is required. */
 .dsc-modeswitch {
   --dsc-nav-height: 40px;
   --dsc-nav-width: 244px;
   --dsc-nav-selected: 55%;
   position: fixed;
   top: calc(var(--dsh-frame-chrome-top, 0px) + 25px);
-  left: var(--dsh-windows-sidebar-width, 0px);
+  left: 0;
   right: 0;
   width: var(--dsc-nav-width);
   height: var(--dsc-nav-height);
@@ -326,6 +325,30 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   background: var(--dsc-sidebar);
   border-right: 1px solid var(--dsc-border);
   overflow: hidden;
+}
+/* macOS: the native sidebar is fully covered by the Chat surface, so its
+   top-strip toggle (or the leading-seat opener when it is collapsed) would be a
+   second panel control for a different, invisible sidebar. The Chat brand-row
+   button owns the visible column; the native control returns with Agent. The
+   Windows caption controls are deliberately untouched. */
+html[data-platform='darwin']:has(.dsc-root) [data-sidebar-toggle],
+html[data-platform='darwin']:has(.dsc-root) [data-sidebar-opener] {
+  display: none !important;
+}
+/* macOS vibrancy sidebar: reuse the frame's own tint and washes. The frame
+   composites them over window vibrancy; Chat composites the same layers over
+   its opaque surface, which reads as the same material without disturbing the
+   native chrome or putting the hidden Agent content behind the glass. The
+   separator moves to the opaque column as a hairline, matching AppFrame. */
+html[data-platform='darwin'] .dsc-sidebar {
+  border-right: 0;
+  background-color: var(--dsc-bg);
+  background-image:
+    linear-gradient(to bottom, var(--dsw-specific-sidebar-wash-top, transparent), var(--dsw-specific-sidebar-wash-top-clear, transparent) 35%, var(--dsw-specific-sidebar-wash-bottom-clear, transparent) 68%, var(--dsw-specific-sidebar-wash-bottom, transparent)),
+    linear-gradient(var(--dsw-specific-sidebar-tint, transparent), var(--dsw-specific-sidebar-tint, transparent));
+}
+html[data-platform='darwin'] .dsc-root:has(.dsc-sidebar-column.is-open) .dsc-main {
+  border-left: 0.5px solid var(--dsw-alias-border-l3, var(--dsc-border));
 }
 .dsc-sidebar-inner {
   display: flex;
@@ -805,8 +828,8 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   padding: 0 15px;
   border: 0;
   border-radius: 9px;
-  background: var(--dsc-brand);
-  color: var(--dsc-on-brand);
+  background: var(--dsc-primary-action);
+  color: var(--dsc-on-color);
   font-size: 12.9px;
   font-weight: 600;
   white-space: nowrap;
@@ -2032,7 +2055,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   transition: background var(--dsc-fast) ease;
   flex: none;
 }
-.dsc-switch.is-on { background: var(--dsc-brand); }
+.dsc-switch.is-on { background: var(--dsc-primary-action); }
 .dsc-switch-thumb { display: block; width: 20px; height: 20px; border-radius: 999px; background: #fff; box-shadow: 0 1px 3px rgba(9, 12, 20, 0.24); transition: transform var(--dsc-fast) ease; }
 .dsc-switch.is-on .dsc-switch-thumb { transform: translateX(16px); }
 .dsc-prompt { min-height: 92px; border: 1px solid var(--dsc-border-strong); border-radius: 9px; padding: 9px 10px; background: var(--dsc-bg); resize: vertical; }

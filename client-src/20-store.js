@@ -15,6 +15,23 @@ function useT() {
   return tr
 }
 
+/**
+ * Whether this client runs inside the macOS desktop shell. The desktop preload
+ * publishes `data-platform` before the first paint; the navigator fallback
+ * covers a plain browser and keeps the helper testable without a DOM.
+ */
+function platformIsMac() {
+  if (typeof document !== 'undefined') {
+    const platform = document.documentElement?.dataset?.platform
+    if (typeof platform === 'string' && platform !== '') return platform === 'darwin'
+  }
+  if (typeof navigator !== 'undefined') {
+    const platform = typeof navigator.platform === 'string' ? navigator.platform : ''
+    return platform.startsWith('Mac') || /Macintosh|Mac OS X/.test(navigator.userAgent ?? '')
+  }
+  return false
+}
+
 const STORAGE_KEY = 'dsh-deepseek-chat:v1'
 const MAX_FILES = 10
 const MAX_UPLOAD_MB = 64

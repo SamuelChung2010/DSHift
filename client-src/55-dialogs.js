@@ -228,7 +228,7 @@ function SettingsDialog() {
           h('div', { className: 'dsc-field' },
             h('span', { className: 'dsc-field-label' }, t('sendKeyLabel')),
             h('div', { className: 'dsc-segment', role: 'group', 'aria-label': t('sendKeyLabel') },
-              [['enter', 'enterToSendShort'], ['ctrl-enter', 'newlineToSend']].map(([value, key]) => (
+              [['enter', 'enterToSendShort'], ['ctrl-enter', platformIsMac() ? 'newlineToSendMac' : 'newlineToSend']].map(([value, key]) => (
                 h('button', {
                   key: value,
                   type: 'button',
@@ -238,7 +238,9 @@ function SettingsDialog() {
                 }, t(key))
               )),
             ),
-            h('p', { className: 'dsc-field-hint' }, t(sendKey === 'ctrl-enter' ? 'newlineToSend' : 'enterToSend')),
+            h('p', { className: 'dsc-field-hint' }, t(sendKey === 'ctrl-enter'
+              ? (platformIsMac() ? 'newlineToSendMac' : 'newlineToSend')
+              : 'enterToSend')),
           ),
         ),
         h(SettingsSection, { title: t('systemPrompt') },
