@@ -341,6 +341,12 @@ html[data-fullscreen] .dsc-root { --dsc-top: 44px; }
   border-right: 1px solid var(--dsc-border);
   overflow: hidden;
 }
+/* Windows: the native Windows frame drops the sidebar's right border too
+   (AppFrame.module.css "[data-windows-titlebar] .sidebarCol": border-right:
+   none): the rounded Chat main panel's own edge and the fill difference mark
+   the boundary, while a hairline would run straight past the corner notch that
+   panel leaves open at the top. */
+html[data-windows-titlebar] .dsc-sidebar { border-right: 0; }
 /* macOS: the native sidebar is fully covered by the Chat surface, so its
    top-strip toggle (or the leading-seat opener when it is collapsed) would be a
    second panel control for a different, invisible sidebar. The Chat brand-row
@@ -693,6 +699,19 @@ html[data-platform='darwin'] .dsc-sidebar-brand button { -webkit-app-region: no-
 
 /* ---------- main column ---------- */
 .dsc-main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--dsc-bg); }
+/* Windows: the native AppFrame keeps its caption row outside every panel and
+   rounds the centre column's top-left corner by --dsh-windows-content-radius
+   (AppFrame.module.css "[data-windows-titlebar] .centerCol"), clipping that
+   column's content through its own overflow: hidden; the frame paints the
+   sidebar fill behind the cutout. Chat is a full-window layer below the same
+   caption row, so the Chat main column carries that corner: the native radius
+   on the same box, the same clip, and the sidebar fill on the root behind it. */
+html[data-windows-titlebar] .dsc-root { background: var(--dsc-sidebar); }
+html[data-windows-titlebar] .dsc-main {
+  border-top-left-radius: var(--dsh-windows-content-radius, 16px);
+  corner-shape: round;
+  overflow: hidden;
+}
 .dsc-main-column { flex: 1; display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .dsc-header {
   flex: none;
