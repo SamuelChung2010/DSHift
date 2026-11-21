@@ -282,7 +282,7 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 
 ## 已知限制
 
-- 兼容性：本版本在 **DeepSeek Harness 0.2.2-rc.5**（Windows Desktop）上验证；`engines.dsh` 声明为 `>=0.2.2-rc.5`。Web 与 macOS 尚未验证。
+- 兼容性：本版本在 **DeepSeek Harness 0.2.2-rc.5** 上验证：Windows Desktop 与 macOS 的本次界面修复均已实机核对；`engines.dsh` 声明为 `>=0.2.2-rc.5`。Web 尚未验证。
 - 数学公式是面向聊天的 LaTeX 子集（不是完整 KaTeX）；`\begin{tikzcd}`、自定义宏等高级用法会以原文或灰色命令名显示。
 - Mermaid 支持流程图、时序图、饼图与基础类图；思维导图、甘特图等类型会显示错误说明并保留源代码。
 - 编辑/重新生成采用线性版本导航（`‹ 1 / 3 ›`）而不是完整的可视化分支树面板；被替换的分支仍保存并可切换回来。
