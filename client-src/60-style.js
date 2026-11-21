@@ -152,6 +152,21 @@ body[data-ds-dark-theme] .dsc-root {
   pointer-events: auto;
   -webkit-font-smoothing: antialiased;
 }
+/* macOS: the frame's 48px top strip is native chrome — the traffic lights, the
+   native sidebar's tinted header band, and the Agent conversation header. Chat
+   is a full-window takeover, so it owns that strip too instead of starting
+   below it and leaving a piece of the Agent sidebar visible above its own
+   column. The surface starts at the window top; the same strip comes back as
+   padding on the two columns, so every Chat row keeps its native line while
+   the sidebar material and its wash run from y=0 exactly like the native
+   column. The covered native chrome still owns the window-drag rectangles
+   (Electron unions them regardless of paint order), so dragging by the strip
+   keeps working; only Chat's own controls that share a row with a native drag
+   row have to opt out, which the sidebar brand row does below. Windows keeps
+   its native caption row untouched. */
+html[data-platform='darwin'] .dsc-root { top: 0; }
+html[data-platform='darwin'] .dsc-sidebar-inner { padding-top: calc(var(--dsc-top, 44px) + 6px); }
+html[data-platform='darwin'] .dsc-main { padding-top: var(--dsc-top, 44px); }
 .dsc-root :where(button, input, textarea, select) { font: inherit; color: inherit; }
 .dsc-root button { cursor: pointer; }
 .dsc-root button:disabled { cursor: default; }
@@ -371,6 +386,12 @@ html[data-platform='darwin'] .dsc-root:has(.dsc-sidebar-column.is-open) .dsc-mai
   padding: 0 2px 0 8px;
   overflow: hidden;
 }
+/* macOS: the native sidebar's logo row is a window-drag row and sits exactly
+   under Chat's brand row. App-region rectangles outrank paint order, so the
+   covered Agent row would swallow the collapse control. Opt the Chat row and
+   its button out; the strip's window drag still comes from the native rows. */
+html[data-platform='darwin'] .dsc-sidebar-brand,
+html[data-platform='darwin'] .dsc-sidebar-brand button { -webkit-app-region: no-drag; }
 .dsc-brand-lockup {
   flex: 1;
   min-width: 0;
@@ -2528,6 +2549,12 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
     background: var(--dsw-alias-bg-mask-1, color-mix(in srgb, #0b0f19 38%, transparent));
     backdrop-filter: blur(1px);
   }
+  /* macOS: the Chat surface now starts at the window top, so the drawer and
+     its mask start there too. The inner padding keeps the drawer's own rows on
+     the native line, and the mask covers the same strip the native drawer mask
+     covers. */
+  html[data-platform='darwin'] .dsc-sidebar-column { inset: 0 auto 0 0; }
+  html[data-platform='darwin'] .dsc-sidebar-backdrop { inset: 0; }
 }
 @media (min-width: 769px) {
   .dsc-sidebar-backdrop { display: none; }
