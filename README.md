@@ -1,3 +1,22 @@
+# DSHift
+
+在 DeepSeek Harness 中提供 ChatGPT 式的 Chat 界面，可与原生 Agent 模式随时切换，并支持从 ChatGPT / Claude / Gemini 迁移长期记忆。
+
+```sh
+dsh plugin add github:SamuelChung2010/DSHift
+```
+
+![DSHift 演示：Agent / Chat 模式切换、交给 Agent、长期记忆与聊天记录导入](assets/demo.gif)
+
+| 原生 DSH | DSHift |
+| --- | --- |
+| 仅 Agent 模式 | Chat + Agent 双模式 |
+| 无独立 Chat 界面 | 独立 Chat 历史、输入框与搜索 |
+| 不支持跨平台记忆迁移 | 从 ChatGPT / Claude / Gemini 导入长期记忆 |
+| 上下文需手动搬运 | Chat 对话整理成任务，交给 Agent 工作区 |
+
+---
+
 # dsh-chat（DSH 插件）
 
 dsh-chat 在 DeepSeek Harness 中加入一个原生的 **DeepSeek Chat 模式**，与原生的 **Agent 模式**并列，通过顶部的 `Chat | Agent` 分段控件随时切换。Chat 使用 DeepSeek 官方面向应用开放的 API 能力，界面参考 DeepSeek App / ChatGPT 桌面版
