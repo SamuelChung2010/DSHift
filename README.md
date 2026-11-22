@@ -168,13 +168,13 @@ Chat 设置 → **长期记忆** 是一套与会话历史分开的本地记忆�
 
 ## 内容渲染
 
-`client-src/30-markdown.js` 是 Markdown 入口，另外三个模块各自独立、无外部依赖：
+`client-src/30-markdown.js` 是 Markdown 入口，另外三个模块各自独立、无外部依赖。渲染前会先把代码块/行内代码保护起来，再把完整的行内与块级公式替换成自带内容标记的占位符，最后才进入 Markdown 解析；未闭合的 `$` / `$$`（流式输出中间态）保持纯文本：
 
 - `31-highlight.js`：单遍扫描的词法高亮，支持 JS/TS、JSON、HTML/XML、CSS、Python、Bash、PowerShell、SQL、Java、C#、C/C++、Go、Rust、YAML、Markdown、diff 等；未知语言按纯文本显示，字符永远不会丢失。
-- `32-math.js`：LaTeX 子集渲染（分数、根式、上下标、大型运算符、定界符、矩阵、cases/aligned、重音、希腊字母与常用运算符）；未知命令以灰色原文显示，解析失败时回退为原始公式文本。
+- `32-math.js`：LaTeX 子集渲染（分数、根式、上下标、大型运算符、定界符、矩阵、cases/aligned、重音、希腊字母与常用运算符）；矩阵按最宽行锁定列数布局，`bmatrix` 的方括号用可随矩阵高度拉伸的 CSS 边框绘制；未知命令或未支持/未闭合环境（如自定义宏、`tikzcd`、流式中的半截矩阵）不抛错，整条公式回退为等宽浅底的 `.dsc-math-fallback` 原文；解析失败时回退为原始公式文本。
 - `33-mermaid.js`：flowchart/graph、sequenceDiagram、pie、classDiagram 的 React SVG 渲染；不支持或超出上限时显示错误说明并保留源代码。
 - 所有内容都以 React 元素输出，不使用 `innerHTML` / `dangerouslySetInnerHTML` / `eval`；链接与图片只允许 http(s)。
-- 流式输出时已完成的块靠 `React.memo` 跳过重渲染，Mermaid 图表在最后一个块生成结束后才绘制，避免每帧重排。
+- 流式输出时已完成的块靠 `React.memo` 跳过重渲染，Mermaid 图表在最后一个块生成结束后才绘制，避免每帧重排；未闭合的块级公式先以同尺寸源码块占位，完成后整体替换为公式，公式块保留最小高度，块级公式与代码块各自横向滚动。
 
 ## Chat → Agent 交接
 
@@ -297,7 +297,7 @@ Host 行配置位于插件行的 `config` 中，可在 `$DSH_HOME/profiles/<prof
 ## 已知限制
 
 - 兼容性：本版本在 **DeepSeek Harness 0.2.2-rc.5** 上验证：Windows Desktop 与 macOS 的本次界面修复均已实机核对；`engines.dsh` 声明为 `>=0.2.2-rc.5`。Web 尚未验证。
-- 数学公式是面向聊天的 LaTeX 子集（不是完整 KaTeX）；`\begin{tikzcd}`、自定义宏等高级用法会以原文或灰色命令名显示。
+- 数学公式是面向聊天的 LaTeX 子集（不是完整 KaTeX）；`\begin{tikzcd}`、自定义宏、`\color` 等高级用法会整条回退为带浅底的等宽源码，不丢字、不报错。
 - Mermaid 支持流程图、时序图、饼图与基础类图；思维导图、甘特图等类型会显示错误说明并保留源代码。
 - 编辑/重新生成采用线性版本导航（`‹ 1 / 3 ›`）而不是完整的可视化分支树面板；被替换的分支仍保存并可切换回来。
 - 「继续生成」依赖 DeepSeek Messages API 的 assistant 前缀续写（prefill）语义；如果账号或服务端拒绝该模式，请改用重新生成。续写不会恢复深度思考，只延续可见正文。
@@ -329,7 +329,9 @@ node tools/check-css.js            # 样式括号 / 硬编码颜色检查
 node tools/check-classes.js        # JS 与样式类名一致性
 node tools/check-i18n.js           # 中英文键一致性
 node tools/check-highlight.js      # 代码高亮字符不丢失 / 分类 / 性能
-node tools/check-math.js           # LaTeX 子集渲染回退与深度保护
+node tools/check-math.js           # LaTeX 子集渲染、未知环境降级与深度保护
+node tools/check-markdown-math.js  # Chat 公式解析管线：代码保护、多公式、流式与 10+ 块级公式
+node tools/check-upload.js         # 上传入口模式守卫、切换锁、隐藏 input 与监听器配对
 node tools/check-mermaid.js        # Mermaid 解析、几何与错误回退
 node tools/check-memory-client.js  # 跨平台记忆导出提示词与本地解析器
 ```

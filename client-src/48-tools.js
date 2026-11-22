@@ -36,7 +36,7 @@ const BUILTIN_CHAT_TOOLS = [
     labelKey: 'uploadFiles',
     hintKey: 'uploadFilesHint',
     order: 10,
-    run: () => chatActions.requestFilePicker(),
+    run: () => chatActions.openFilePicker('tools-menu'),
   },
   {
     id: 'web-search',
@@ -230,7 +230,7 @@ function ToolsMenu() {
           setOpen(true)
         }
       },
-    }, h(Icon, { name: 'plus', size: 14 })),
+    }, h(Icon, { name: 'composerPlus', size: 14 })),
     open
       ? h('div', {
           ref: panelRef,

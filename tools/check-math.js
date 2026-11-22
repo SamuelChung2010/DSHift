@@ -67,6 +67,7 @@ const samples = [
   { name: 'sum', tex: '\\sum_{i=1}^{n} i', visible: ['∑', 'i', '1', 'n'] },
   { name: 'integral', tex: '\\int_0^1 f(x)\\,dx', visible: ['∫', '0', '1', 'd', 'x'] },
   { name: 'matrix', tex: '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}', visible: ['a', 'b', 'c', 'd'] },
+  { name: 'bmatrix', tex: '\\begin{bmatrix} 1 & 0 \\\\ 0 & 1 \\end{bmatrix}', visible: ['1', '0', '[', ']'] },
   { name: 'aligned', tex: '\\begin{aligned} x &= 1 \\\\ y &= 2 \\end{aligned}', visible: ['x', '1', 'y', '2'] },
   { name: 'cases', tex: '\\begin{cases} 1 & x > 0 \\\\ 0 & x \\le 0 \\end{cases}', visible: ['1', '0', 'x'] },
   { name: 'array', tex: '\\begin{array}{cc} 1 & 2 \\\\ 3 & 4 \\end{array}', visible: ['1', '2', '3', '4'] },
@@ -122,6 +123,30 @@ for (const sample of samples) {
 // Unknown commands must stay visible as text and never break rendering.
 const unknown = flatten(math.latexToNodes('\\foo{bar}'))
 if (!unknown.includes('foo') || !unknown.includes('bar')) fail(`unknown command lost text: ${JSON.stringify(unknown)}`)
+const unknownNodeClass = String(math.latexToNodes('\\foo{bar}')[0]?.props?.className || '')
+if (!unknownNodeClass.includes('dsc-math-fallback')) fail(`unknown command did not use the fallback: ${unknownNodeClass}`)
+
+// Unsupported environments also fall back to the complete source, rather than
+// being silently rendered as a matrix.
+const unknownEnvSource = '\\begin{unknownenv} a & b \\\\ c & d \\end{unknownenv}'
+const unknownEnvNodes = math.latexToNodes(unknownEnvSource)
+if (flatten(unknownEnvNodes) !== unknownEnvSource) fail('unknown environment lost its source text')
+const unknownEnvClass = String(unknownEnvNodes[0]?.props?.className || '')
+if (!unknownEnvClass.includes('dsc-math-fallback')) fail(`unknown environment did not use the fallback: ${unknownEnvClass}`)
+
+// A half-streamed bmatrix has no \end yet: never paint a partial grid.
+const halfMatrixNodes = math.latexToNodes('\\begin{bmatrix} 1 & 0')
+const halfMatrixClass = String(halfMatrixNodes[0]?.props?.className || '')
+if (!halfMatrixClass.includes('dsc-math-fallback')) fail(`unclosed bmatrix did not use the fallback: ${halfMatrixClass}`)
+if (!flatten(halfMatrixNodes).includes('\\begin{bmatrix}')) fail('unclosed bmatrix lost its source text')
+
+// Common metadata commands are accepted and ignored instead of forcing the
+// whole formula into the fallback.
+for (const tex of ['x \\tag{1}', '\\begin{aligned} x &= 1 \\\\ y &= 2 \\end{aligned}', '\\begin{array}{cc} a & b \\\\ c & d \\end{array}']) {
+  const nodes = math.latexToNodes(tex)
+  const classes = String(nodes[0]?.props?.className || '')
+  if (classes.includes('dsc-math-fallback')) fail(`supported construct used the fallback: ${tex}`)
+}
 
 // Genuinely invalid input renders the error fallback and keeps the source text.
 const invalidSource = '\\left( x'

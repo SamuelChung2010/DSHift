@@ -952,7 +952,12 @@ function ImportDialog() {
   const view = useChat(state => state.importView)
   const inputRef = React.useRef(null)
   const [drag, setDrag] = React.useState(false)
-  if (!open || view === null) return null
+  const mounted = open && view !== null
+  React.useEffect(() => {
+    if (!mounted) return undefined
+    return chatActions.registerFilePicker('import', inputRef.current)
+  }, [mounted])
+  if (!mounted) return null
   const step = view.step
   const parsing = step === 'parsing'
   const importing = step === 'importing'
@@ -960,8 +965,8 @@ function ImportDialog() {
   const visible = filterImportRows(view.conversations, view.filter)
   const importableCount = view.conversations.filter(item => item.imported !== true).length
   const close = () => chatActions.closeImport()
-  const pick = (file) => {
-    if (file !== undefined && file !== null) void chatActions.selectImportFile(file)
+  const pick = (file, source = 'import-input') => {
+    if (file !== undefined && file !== null) void chatActions.selectImportFile(file, source)
   }
   const percent = view.progress.total > 0
     ? Math.min(100, Math.round((view.progress.done / view.progress.total) * 100))
@@ -988,12 +993,12 @@ function ImportDialog() {
       role: 'button',
       tabIndex: 0,
       onClick: () => {
-        if (!parsing) inputRef.current?.click()
+        if (!parsing) chatActions.openFilePicker('import-drop', 'import')
       },
       onKeyDown: (event) => {
         if (event.key !== 'Enter' && event.key !== ' ') return
         event.preventDefault()
-        if (!parsing) inputRef.current?.click()
+        if (!parsing) chatActions.openFilePicker('import-drop-key', 'import')
       },
       onDragOver: (event) => {
         event.preventDefault()
@@ -1004,7 +1009,7 @@ function ImportDialog() {
         event.preventDefault()
         setDrag(false)
         if (parsing) return
-        pick(event.dataTransfer?.files?.[0])
+        pick(event.dataTransfer?.files?.[0], 'import-drop')
       },
     },
       parsing ? h(Spinner, { size: 22, label: t('importParsing') }) : h('span', { className: 'dsc-import-drop-icon' }, h(Icon, { name: 'archive', size: 24 })),
@@ -1034,7 +1039,7 @@ function ImportDialog() {
       h('div', { className: 'dsc-import-summary-side' },
         h('button', {
           type: 'button', className: 'dsc-secondary-button is-small-compact',
-          onClick: () => inputRef.current?.click(),
+          onClick: () => chatActions.openFilePicker('import-preview-choose', 'import'),
         }, t('importChooseFile')),
       ),
     ),
@@ -1196,7 +1201,7 @@ function ImportDialog() {
         h('button', { type: 'button', className: 'dsc-secondary-button', onClick: close }, t('importExit')),
         h('button', {
           type: 'button', className: 'dsc-primary-button', disabled: parsing,
-          onClick: () => inputRef.current?.click(),
+          onClick: () => chatActions.openFilePicker('import-footer-choose', 'import'),
         }, t('importChooseFile')),
       )
     : step === 'preview'
@@ -1243,6 +1248,7 @@ function ImportDialog() {
         accept: '.zip,application/zip,application/x-zip-compressed',
         tabIndex: -1,
         'aria-hidden': 'true',
+        'data-dsc-upload': 'import',
         onChange: (event) => {
           pick(event.target.files?.[0])
           event.target.value = ''

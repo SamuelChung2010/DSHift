@@ -51,6 +51,7 @@ const CHAT_CSS = `
   --dsc-menu-backdrop: var(--dsw-menu-backdrop-filter, blur(22px) saturate(1.35));
   --dsc-selector: var(--dsw-specific-selector, color-mix(in srgb, var(--dsc-text) 7%, transparent));
   --dsc-interactive: var(--dsw-alias-interactive-bg-hover, var(--dsc-hover));
+  --dsc-interactive-solid: var(--dsw-alias-interactive-bg-hover-solid, var(--dsc-interactive));
   --dsc-tertiary: var(--dsw-alias-label-tertiary, var(--dsc-muted));
   --dsc-caption: var(--dsw-alias-label-caption, var(--dsc-muted));
   --dsc-menu-icon: var(--dsw-alias-menu-icon, var(--dsc-muted));
@@ -222,6 +223,8 @@ html[data-platform='darwin'] .dsc-main { padding-top: var(--dsc-top, 44px); }
      stay clickable while the Chat layer covers the native header behind it. */
   z-index: 40;
   border-radius: 999px;
+  /* The track is a true capsule, not the theme's default superellipse. */
+  corner-shape: round;
   background: color-mix(in srgb, var(--dsw-alias-label-primary, #16181d) 6%, transparent);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-label-primary, #16181d) 7%, transparent),
@@ -245,6 +248,7 @@ html[data-platform='darwin'] .dsc-main { padding-top: var(--dsc-top, 44px); }
   left: 2px;
   width: calc(var(--dsc-nav-selected) - 4px);
   border-radius: 999px;
+  corner-shape: round;
   background: var(--dsw-alias-bg-base, #ffffff);
   box-shadow:
     0 1px 2px rgba(9, 12, 20, 0.16),
@@ -740,16 +744,22 @@ html[data-windows-titlebar] .dsc-main {
 .dsc-handoff-button {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 11px;
+  justify-content: center;
+  gap: 7px;
+  /* Same 40px capsule as the shared Chat | Agent switch. */
+  height: 40px;
+  padding: 0 16px;
   border: 1px solid var(--dsc-border-strong);
-  border-radius: 9px;
+  border-radius: 999px;
+  corner-shape: round;
   background: var(--dsc-layer);
   color: var(--dsc-text);
-  font-size: 12.6px;
-  font-weight: 550;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.005em;
   white-space: nowrap;
+  flex: none;
   transition: background var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
 }
 .dsc-handoff-button:hover { background: var(--dsc-hover); border-color: var(--dsc-border-strong); }
@@ -1154,8 +1164,16 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   background: var(--dsc-code-bg);
   font-family: var(--dsc-mono);
   font-size: 0.875em;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 .dsc-code {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
   margin: 13px 0;
   border: 1px solid var(--dsc-border);
   border-radius: 12px;
@@ -1185,7 +1203,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   font-size: 11.4px;
 }
 .dsc-code-copy:hover { background: var(--dsc-hover); color: var(--dsc-text); }
-.dsc-pre { margin: 0; padding: 13px 14px; max-height: 520px; overflow: auto; font-size: 12.7px; line-height: 1.66; }
+.dsc-pre { box-sizing: border-box; max-width: 100%; margin: 0; padding: 13px 14px; max-height: 520px; overflow: auto; font-size: 12.7px; line-height: 1.66; }
 .dsc-pre code { font-family: var(--dsc-mono); white-space: pre; }
 .dsc-code-body { display: block; }
 .dsc-tok-kw { color: var(--dsc-hl-kw); font-weight: 550; }
@@ -1347,9 +1365,12 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   line-height: 1.4;
   color: var(--dsc-text);
 }
-.dsc-math-inline { display: inline; white-space: nowrap; }
+.dsc-math-inline { display: inline; max-width: 100%; white-space: nowrap; }
 .dsc-math-block {
   display: block;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: 2.8em;
   margin: 12px 0;
   padding: 10px 12px;
   overflow-x: auto;
@@ -1357,6 +1378,12 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   border-radius: 8px;
   background: var(--dsc-math-bg);
   text-align: center;
+}
+/* Incomplete streamed display math is shown as source, but reserves the same
+   block box so the completed formula does not make the transcript jump. */
+.dsc-math-streaming {
+  min-height: 3.6em;
+  text-align: left;
 }
 .dsc-math-row { display: inline-flex; align-items: baseline; flex-wrap: wrap; column-gap: 0.12em; row-gap: 0.42em; }
 .dsc-math-block .dsc-math-row { justify-content: center; }
@@ -1408,6 +1435,32 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   vertical-align: middle;
   padding: 0 0.28em;
 }
+/* bmatrix square brackets: a border box stretches to the whole matrix height,
+   which one glyph at a fixed font-size cannot do for multi-row matrices. */
+.dsc-math-matrix-frame { vertical-align: middle; }
+.dsc-math-matrix-bracket {
+  display: block;
+  align-self: stretch;
+  flex: none;
+  width: 0.34em;
+  min-height: 1.5em;
+  border: 1.3px solid currentColor;
+}
+.dsc-math-matrix-bracket-glyph {
+  display: block;
+  font-size: 0;
+  line-height: 0;
+}
+.dsc-math-matrix-bracket-left {
+  border-right: 0;
+  border-radius: 2px 0 0 2px;
+  margin-right: 0.14em;
+}
+.dsc-math-matrix-bracket-right {
+  border-left: 0;
+  border-radius: 0 2px 2px 0;
+  margin-left: 0.14em;
+}
 .dsc-math-matrix-row { display: contents; }
 .dsc-math-matrix-cell { text-align: center; padding: 0 0.08em; }
 .dsc-math-space { flex: none; }
@@ -1417,6 +1470,23 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   color: var(--dsc-warn);
   white-space: pre-wrap;
   word-break: break-word;
+}
+/* Unsupported TeX stays readable as source instead of vanishing or showing a
+   half-rendered equation. The quiet background marks it as unprocessed. */
+.dsc-math-fallback {
+  display: inline-block;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0.08em 0.38em;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--dsc-text) 5%, transparent);
+  font-family: var(--dsc-mono);
+  font-size: 0.86em;
+  font-style: normal;
+  line-height: 1.55;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 /* ---------- Mermaid diagrams ----------
@@ -1716,17 +1786,21 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   position: relative;
   width: 28px;
   height: 28px;
+  aspect-ratio: 1 / 1;
+  padding: 0;
   border: 0;
   border-radius: 999px;
+  /* Harness opts round controls out of the global superellipse corner shape.
+     Without this, the shared theme deforms the 28px square into a squircle. */
+  corner-shape: round;
   background: var(--dsc-selector);
   color: var(--dsc-text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   flex: none;
   transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease;
 }
-.dsc-tools-trigger:hover { background: var(--dsc-interactive); }
+.dsc-tools-trigger:hover { background: var(--dsc-interactive-solid); }
 .dsc-tools-trigger.is-open { background: var(--dsc-active); }
 
 /* ---------- composer popovers (tools + model) ----------
@@ -1922,13 +1996,17 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-stop-button {
   width: 34px;
   height: 34px;
+  aspect-ratio: 1 / 1;
+  padding: 0;
   border: 0;
   border-radius: 999px;
+  /* The native 34px primary circle also opts out of the theme's global
+     superellipse; border-radius alone would still paint a squircle here. */
+  corner-shape: round;
   background: var(--dsc-primary-action);
   color: var(--dsc-on-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   flex: none;
   transform: translateY(-2px);
   transition: background var(--dsc-fast) ease, opacity var(--dsc-fast) ease;
@@ -2531,7 +2609,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   .dsc-msg-user { padding-left: 6%; }
   .dsc-msg-assistant { padding-right: 0; }
   .dsc-handoff-label { display: none; }
-  .dsc-handoff-button { padding: 0 9px; }
+  .dsc-handoff-button { width: 40px; padding: 0; }
 }
 @media (max-width: 768px) {
   /* Touch has no hover: keep the row menu and message actions reachable, and
@@ -2582,6 +2660,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   /* Narrow content column: shrink the whole control, keep both labels. */
   .dsc-modeswitch { --dsc-nav-width: 208px; --dsc-nav-height: 36px; font-size: 12.6px; }
   .dsc-modeswitch-item { font-size: 12.6px; }
+  .dsc-handoff-button { width: 36px; height: 36px; }
   .dsc-greeting { font-size: clamp(23px, 5.6vw, 28px); }
   .dsc-empty { padding-bottom: 3vh; }
 }
