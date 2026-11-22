@@ -37,12 +37,20 @@ dsh-chat 在 DeepSeek Harness 中加入一个原生的 **DeepSeek Chat 模式**�
 - **macOS 顶栏与侧栏**：`Chat | Agent` 切换器改为按当前模式的主内容列居中；Chat 打开时隐藏被遮住的原生侧栏开关；侧栏底色、分隔线与抽屉遮罩对齐原生。
 - **macOS 拖拽区与可读性**：Chat 侧栏品牌行退出 `-webkit-app-region: drag`，盖在原生拖拽行上的控件仍可点击；对话框主按钮与开关改用原生强调色 token，深色模式不再白底白字；发送快捷键提示在 macOS 显示 Command + Enter。
 
+### Beta 3 修复
+
+- **公式与 Markdown 渲染**：先保护代码块、行内代码与公式占位符，修复行内代码显示成 `code:...`、矩阵/`bmatrix` 布局错位、未支持或未闭合 LaTeX 只画出半截公式，以及流式公式完成后内容跳动的问题。未知环境整条回退为浅底等宽源码，不丢字、不报错。
+- **模式切换时的文件选择器**：修复从 Agent 切回 Chat 时误弹系统文件选择器。上传改为“实时注册 input + 模式门禁”，切换期间加锁；隐藏 input 不再进入 Tab 顺序，拖拽、粘贴与导入上传共用同一道守卫。
+- **Harness 原生控件**：`＋`、发送与停止按钮改用原生 16-unit 图形和 28/34px 正圆，补上 `corner-shape: round`，不再被主题的 `superellipse` 压成圆角矩形；`交给 Agent` 按钮调整为 40px 胶囊，与 Chat | Agent 切换器同高、同圆角并保持对齐，窄屏同步缩到 36px。
+- **可观测性**：上传路径增加 `[upload]` 诊断日志与原生文件 input 点击栈，便于复现时定位触发来源。
+
 升级说明：
 
 - 聊天历史格式保持 v2 兼容，无需迁移；长期记忆新增 `$DSH_HOME/deepseek-chat/memory.json`。
 - Host 端改动需要重启 DSH 或重载插件后生效；浏览器端首次可能提示刷新插件。
 - Beta 2 只包含界面修复，无数据格式变化；从 Beta 1 升级无需迁移。
-- 本版本仍为 beta；安装包、校验和与验证记录见 GitHub Release `v0.2.0-beta.2`。
+- Beta 3 聚焦渲染、上传与界面修复，无数据格式变化；从 Beta 2 升级无需迁移。
+- 本版本仍为 beta；发布说明与验证记录见 GitHub Release `v0.2.0-beta.3`。
 
 ## 打开方式
 
