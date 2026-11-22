@@ -5,8 +5,9 @@
 // as children, never as HTML, so model output cannot inject markup.
 //
 // Pipeline: lexMath() -> parseLatex() (plain AST) -> latexToNodes() (React).
-// Unknown commands render as muted text; unbalanced braces and runaway nesting
-// degrade to text instead of failing.
+// Unknown commands/environments are recorded on the AST and latexToNodes()
+// shows the complete source in the .dsc-math-fallback style; unbalanced braces
+// and runaway nesting degrade to text instead of failing.
 
 const MATH_MAX_SOURCE = 20000
 const MATH_MAX_DEPTH = 64
@@ -35,11 +36,23 @@ const MATH_SYMBOLS = {
   le: '≤', leq: '≤', ge: '≥', geq: '≥', ne: '≠', neq: '≠', approx: '≈', equiv: '≡', sim: '∼',
   simeq: '≃', cong: '≅', propto: '∝', to: '→', rightarrow: '→', leftarrow: '←',
   leftrightarrow: '↔', Rightarrow: '⇒', Leftarrow: '⇐', Leftrightarrow: '⇔', mapsto: '↦',
+  longrightarrow: '⟶', longleftarrow: '⟵', longleftrightarrow: '⟷',
+  Longrightarrow: '⟹', Longleftarrow: '⟸', Longleftrightarrow: '⟺',
+  implies: '⟹', iff: '⟺', because: '∵', therefore: '∴',
   infty: '∞', partial: '∂', nabla: '∇', forall: '∀', exists: '∃', in: '∈', notin: '∉',
-  subset: '⊂', subseteq: '⊆', supset: '⊃', supseteq: '⊇', cup: '∪', cap: '∩',
+  ni: '∋', owns: '∋', notni: '∌', subset: '⊂', subseteq: '⊆', supset: '⊃', supseteq: '⊇',
+  subsetneq: '⊊', supsetneq: '⊋', subsetneqq: '⫋', supsetneqq: '⫌',
+  nsubseteq: '⊈', nsupseteq: '⊉', cup: '∪', cap: '∩',
   emptyset: '∅', varnothing: '∅', neg: '¬', lnot: '¬', land: '∧', lor: '∨',
-  angle: '∠', perp: '⊥', parallel: '∥', ldots: '…', cdots: '⋯', dots: '…',
-  prime: '′', hbar: 'ℏ', ell: 'ℓ', Re: 'ℜ', Im: 'ℑ', aleph: 'ℵ',
+  oplus: '⊕', ominus: '⊖', otimes: '⊗', oslash: '⊘', odot: '⊙', bigcirc: '◯',
+  dagger: '†', ddagger: '‡', amalg: '⨿', wr: '≀',
+  prec: '≺', succ: '≻', preceq: '⪯', succeq: '⪰', precsim: '≾', succsim: '≿',
+  mid: '∣', nmid: '∤', vdash: '⊢', dashv: '⊣', models: '⊨', top: '⊤', bot: '⊥',
+  triangle: '△', triangledown: '▽', square: '□', blacksquare: '■',
+  lozenge: '◊', blacklozenge: '◆', angle: '∠', perp: '⊥', parallel: '∥',
+  ldots: '…', cdots: '⋯', dots: '…', vdots: '⋮', ddots: '⋱',
+  dotsb: '⋯', dotsc: '…', dotsi: '⋯', dotsm: '⋯', dotso: '…',
+  prime: '′', hbar: 'ℏ', ell: 'ℓ', Re: 'ℜ', Im: 'ℑ', aleph: 'ℵ', wp: '℘',
 }
 
 const MATH_DELIMITER_SYMBOLS = {
@@ -48,6 +61,9 @@ const MATH_DELIMITER_SYMBOLS = {
   rceil: '⌉', lbrace: '{', rbrace: '}', lbrack: '[', rbrack: ']',
   backslash: '\\', uparrow: '↑', downarrow: '↓', updownarrow: '↕',
   Uparrow: '⇑', Downarrow: '⇓', Updownarrow: '⇕',
+  lgroup: '⟮', rgroup: '⟯', ulcorner: '⌜', urcorner: '⌝',
+  llcorner: '⌞', lrcorner: '⌟', lbag: '⟅', rbag: '⟆',
+  llbracket: '⟦', rrbracket: '⟧', lBrace: '⦃', rBrace: '⦄',
 }
 
 const MATH_ESCAPES = {
@@ -63,16 +79,21 @@ const MATH_SPACES = {
 const MATH_FONTS = {
   mathrm: 'rm', mathbf: 'bf', mathit: 'it', mathsf: 'sf',
   mathtt: 'tt', mathcal: 'cal', mathscr: 'cal', mathbb: 'bb',
+  boldsymbol: 'bf', bm: 'bf',
 }
 
 const MATH_ACCENTS = {
   hat: 'hat', widehat: 'hat', bar: 'bar', vec: 'vec', dot: 'dot',
   ddot: 'ddot', tilde: 'tilde', widetilde: 'tilde',
+  check: 'check', breve: 'breve', acute: 'acute', grave: 'grave',
+  overleftarrow: 'overleftarrow', overrightarrow: 'overrightarrow',
   overline: 'overline', underline: 'underline',
 }
 
 const MATH_ACCENT_MARKS = {
   hat: 'ˆ', bar: '¯', vec: '→', dot: '˙', ddot: '¨', tilde: '˜',
+  check: 'ˇ', breve: '˘', acute: '´', grave: '`',
+  overleftarrow: '←', overrightarrow: '→',
 }
 
 // Glyphs of large operators and function names; the sets below decide layout.
@@ -81,12 +102,22 @@ const MATH_BIG = {
   int: '∫', iint: '∬', oint: '∮',
   lim: 'lim', max: 'max', min: 'min', sup: 'sup', inf: 'inf',
   log: 'log', ln: 'ln', exp: 'exp', sin: 'sin', cos: 'cos', tan: 'tan',
-  arcsin: 'arcsin', det: 'det', gcd: 'gcd',
+  cot: 'cot', sec: 'sec', csc: 'csc',
+  sinh: 'sinh', cosh: 'cosh', tanh: 'tanh', coth: 'coth',
+  arcsin: 'arcsin', arccos: 'arccos', arctan: 'arctan',
+  arg: 'arg', deg: 'deg', dim: 'dim', hom: 'hom', ker: 'ker',
+  det: 'det', gcd: 'gcd', mod: 'mod', bmod: 'mod',
+  Pr: 'Pr',
 }
 // Limits stack above/below the glyph in display mode.
 const MATH_BIG_LIMITS = new Set(['sum', 'prod', 'coprod', 'bigcup', 'bigcap', 'bigoplus', 'lim', 'max', 'min', 'sup', 'inf'])
 // Function names stay upright and text-sized instead of using big-operator size.
-const MATH_BIG_FUNCTIONS = new Set(['lim', 'max', 'min', 'sup', 'inf', 'log', 'ln', 'exp', 'sin', 'cos', 'tan', 'arcsin', 'det', 'gcd'])
+const MATH_BIG_FUNCTIONS = new Set([
+  'lim', 'max', 'min', 'sup', 'inf', 'log', 'ln', 'exp', 'sin', 'cos', 'tan',
+  'cot', 'sec', 'csc', 'sinh', 'cosh', 'tanh', 'coth',
+  'arcsin', 'arccos', 'arctan', 'arg', 'deg', 'dim', 'hom', 'ker',
+  'det', 'gcd', 'mod', 'bmod', 'Pr',
+])
 
 // \big-family prefixes: accepted, rendered as a scaled plain delimiter
 const MATH_BIG_DELIMITERS = {
@@ -98,15 +129,21 @@ const MATH_BIG_DELIMITERS = {
 
 // environment name -> delimiter pair (null / empty string means none)
 const MATH_ENV_DELIMITERS = {
-  matrix: null, aligned: null, align: null, alignat: null,
-  gathered: null, gather: null, split: null, array: null,
+  matrix: null, aligned: null, align: null, 'align*': null, alignat: null, 'alignat*': null,
+  alignedat: null, gathered: null, gather: null, 'gather*': null, split: null, array: null,
+  equation: null, 'equation*': null, smallmatrix: null, subarray: null,
+  multline: null, 'multline*': null, flalign: null, 'flalign*': null,
+  eqnarray: null, 'eqnarray*': null, displaymath: null,
   pmatrix: { left: '(', right: ')' }, bmatrix: { left: '[', right: ']' },
   Bmatrix: { left: '{', right: '}' }, vmatrix: { left: '|', right: '|' },
   Vmatrix: { left: '‖', right: '‖' }, cases: { left: '{', right: '' },
 }
+const MATH_ENVIRONMENTS = new Set(Object.keys(MATH_ENV_DELIMITERS))
+// These environments take a {cc} column specification after \begin{...}.
+const MATH_COLSPEC_ENVIRONMENTS = new Set(['array', 'alignedat', 'alignat', 'alignat*', 'subarray'])
 const MATH_IGNORED = new Set([
   'displaystyle', 'textstyle', 'scriptstyle', 'scriptscriptstyle',
-  'limits', 'nolimits', 'nonumber', 'notag',
+  'limits', 'nolimits', 'nonumber', 'notag', 'allowbreak',
 ])
 // stop sets drive the recursive row parser
 const MATH_STOP_GROUP = { close: true }
@@ -231,6 +268,18 @@ function mathTokenStops(token, stop) {
   return false
 }
 
+/**
+ * Remember the first construct this renderer does not understand. Parsing
+ * continues normally (so the output stays deterministic), but latexToNodes()
+ * shows the whole formula source in the graceful fallback instead of a
+ * half-rendered equation.
+ */
+function mathMarkUnsupported(state, kind, name) {
+  if (state.unsupported === null || state.unsupported === undefined) {
+    state.unsupported = { kind, name }
+  }
+}
+
 function mathSkipSpaces(state) {
   while (state.index < state.tokens.length && state.tokens[state.index].type === 'space') {
     state.index += 1
@@ -331,7 +380,9 @@ function mathReadDelimiter(state) {
     state.index += 1
     if (MATH_DELIMITER_SYMBOLS[token.name] !== undefined) return MATH_DELIMITER_SYMBOLS[token.name]
     if (MATH_ESCAPES[token.name] !== undefined) return MATH_ESCAPES[token.name]
-    // Not a delimiter: keep the command name visible instead of dropping it.
+    // Not a delimiter: remember the unsupported command and keep its source
+    // visible so the fallback can show the complete formula.
+    mathMarkUnsupported(state, 'command', token.name)
     return mathCommandText(token.name)
   }
   return null
@@ -462,6 +513,14 @@ function parseMathAtom(state, depth) {
 
 function parseMathCommand(state, name, depth) {
   if (MATH_IGNORED.has(name)) return null
+  if (name === 'tag' || name === 'label') {
+    // Equation labels are metadata: accept them, render the formula itself.
+    mathSkipSpaces(state)
+    const star = state.tokens[state.index]
+    if (star !== undefined && star.type === 'char' && star.value === '*') state.index += 1
+    parseMathArgument(state, depth)
+    return null
+  }
   if (name === 'frac' || name === 'dfrac' || name === 'tfrac') {
     const num = parseMathArgument(state, depth)
     const den = parseMathArgument(state, depth)
@@ -500,9 +559,13 @@ function parseMathCommand(state, name, depth) {
     return { type: 'char', value: MATH_ESCAPES[name], kind: mathClassifyChar(MATH_ESCAPES[name]) }
   }
   if (name === 'text') return { type: 'text', value: mathReadRawText(state) }
+  if (name === 'mbox') return { type: 'text', value: mathReadRawText(state) }
   if (name === 'operatorname') {
     // Parsed as math so spacing commands inside it still work; the "op"
     // variant below renders the result upright.
+    mathSkipSpaces(state)
+    const star = state.tokens[state.index]
+    if (star !== undefined && star.type === 'char' && star.value === '*') state.index += 1
     return { type: 'font', variant: 'op', body: parseMathArgument(state, depth) }
   }
   if (MATH_FONTS[name] !== undefined) {
@@ -517,6 +580,7 @@ function parseMathCommand(state, name, depth) {
       limits: MATH_BIG_LIMITS.has(name), large: !MATH_BIG_FUNCTIONS.has(name),
     }
   }
+  mathMarkUnsupported(state, 'command', name)
   return { type: 'unknown', name }
 }
 
@@ -538,13 +602,22 @@ function parseMathEnvironment(state, depth) {
   const envName = state.tokens[state.index] !== undefined && state.tokens[state.index].type === 'open'
     ? mathReadRawGroup(state).trim()
     : ''
-  // \begin{array}{cc}: the column spec is accepted and ignored.
-  if (envName === 'array' && state.tokens[state.index] !== undefined && state.tokens[state.index].type === 'open') {
+  if (!MATH_ENVIRONMENTS.has(envName)) {
+    // Unknown environments are still consumed as rows (the parser must reach
+    // the matching \end), but the whole formula will render as source text.
+    mathMarkUnsupported(state, 'environment', envName)
+  }
+  // \begin{array}{cc} and \begin{alignedat}{2}: the column spec is accepted
+  // and ignored; the layout comes from each row's cells. A space may sit
+  // between the environment name and the spec.
+  mathSkipSpaces(state)
+  if (MATH_COLSPEC_ENVIRONMENTS.has(envName) && state.tokens[state.index] !== undefined && state.tokens[state.index].type === 'open') {
     mathReadRawGroup(state)
   }
   const rows = []
   let cells = []
   let guard = 0
+  let closed = false
   while (state.index < state.tokens.length && guard < 4096) {
     guard += 1
     const token = state.tokens[state.index]
@@ -572,7 +645,16 @@ function parseMathEnvironment(state, depth) {
   if (endToken !== undefined && endToken.type === 'command' && endToken.name === 'end') {
     state.index += 1
     mathSkipSpaces(state)
-    if (state.tokens[state.index] !== undefined && state.tokens[state.index].type === 'open') mathReadRawGroup(state)
+    const endName = state.tokens[state.index] !== undefined && state.tokens[state.index].type === 'open'
+      ? mathReadRawGroup(state).trim()
+      : ''
+    if (endName === envName) closed = true
+    else mathMarkUnsupported(state, 'environment', envName)
+  }
+  if (!closed) {
+    // A streamed "\begin{bmatrix} ..." without its \end must not be painted as
+    // a half matrix: remember the mismatch so latexToNodes() shows the source.
+    mathMarkUnsupported(state, 'environment', envName)
   }
   return { type: 'matrix', env: envName, rows }
 }
@@ -580,8 +662,10 @@ function parseMathEnvironment(state, depth) {
 function parseLatex(source) {
   if (typeof source !== 'string') throw new TypeError('LaTeX source must be a string')
   if (source.length > MATH_MAX_SOURCE) return { type: 'plain', source }
-  const state = { tokens: lexMath(source), index: 0 }
-  return { type: 'row', items: parseMathRow(state, 0, null), source }
+  const state = { tokens: lexMath(source), index: 0, unsupported: null }
+  const ast = { type: 'row', items: parseMathRow(state, 0, null), source }
+  if (state.unsupported !== null) ast.unsupported = state.unsupported
+  return ast
 }
 
 // ---------------------------------------------------------------------------
@@ -793,11 +877,21 @@ function mathRenderDelimited(node, context, key) {
 
 function mathRenderMatrix(node, context, key) {
   const rows = node.rows.length === 0 ? [[]] : node.rows
-  const grid = h('span', { className: 'dsc-math-matrix', key: `${key}-m` },
+  // `grid-auto-flow: row` with only implicit tracks would create a single
+  // column and stack every cell vertically. Pin the column count to the
+  // widest row so a 3x3 bmatrix is really laid out as 3 rows by 3 columns.
+  let columns = 1
+  for (const row of rows) columns = Math.max(columns, row.length)
+  const grid = h('span', {
+    className: 'dsc-math-matrix',
+    key: `${key}-m`,
+    role: 'table',
+    style: { gridTemplateColumns: `repeat(${columns}, auto)` },
+  },
     rows.map((row, rowIndex) => (
-      h('span', { className: 'dsc-math-matrix-row', key: `${key}-r${rowIndex}` },
+      h('span', { className: 'dsc-math-matrix-row', key: `${key}-r${rowIndex}`, role: 'row' },
         row.map((cell, cellIndex) => (
-          h('span', { className: 'dsc-math-matrix-cell', key: `${key}-c${rowIndex}-${cellIndex}` },
+          h('span', { className: 'dsc-math-matrix-cell', key: `${key}-c${rowIndex}-${cellIndex}`, role: 'cell' },
             mathRenderContent(cell, context, `${key}-c${rowIndex}-${cellIndex}`))
         )),
       )
@@ -805,6 +899,17 @@ function mathRenderMatrix(node, context, key) {
   )
   const spec = MATH_ENV_DELIMITERS[node.env] || null
   if (spec === null) return grid
+  if (spec.left === '[' && spec.right === ']') {
+    // Square brackets are drawn with borders so they stretch to the matrix
+    // height instead of scaling a single glyph around the middle row.
+    return h('span', { key, className: 'dsc-math-matrix-frame', style: { display: 'inline-flex', alignItems: 'stretch' } },
+      h('span', { className: 'dsc-math-matrix-bracket dsc-math-matrix-bracket-left', key: `${key}-l`, 'aria-hidden': 'true' },
+        h('span', { className: 'dsc-math-matrix-bracket-glyph' }, '[')),
+      grid,
+      h('span', { className: 'dsc-math-matrix-bracket dsc-math-matrix-bracket-right', key: `${key}-r`, 'aria-hidden': 'true' },
+        h('span', { className: 'dsc-math-matrix-bracket-glyph' }, ']')),
+    )
+  }
   const scale = Math.max(1, Math.min(3.2, 0.95 + rows.length * 0.45))
   const [left, right] = mathRenderDelimiters(spec.left || null, spec.right || null, scale, key)
   return h('span', { key, style: { display: 'inline-flex', alignItems: 'center' } }, left, grid, right)
@@ -879,6 +984,16 @@ function latexToNodes(source, { display = false } = {}) {
     if (text.length > MATH_MAX_SOURCE) return [h('span', { className: 'dsc-math-text', key: 'm' }, text)]
     const ast = parseLatex(text)
     if (ast.type === 'plain') return [h('span', { className: 'dsc-math-text', key: 'm' }, ast.source)]
+    if (ast.unsupported !== undefined) {
+      // Unsupported commands/environments keep their complete LaTeX source,
+      // in monospace with a quiet background, instead of disappearing or
+      // printing a half-rendered equation.
+      return [h('span', {
+        className: 'dsc-math-fallback',
+        key: 'm',
+        title: tr('mathUnsupported'),
+      }, text)]
+    }
     const context = { display: display === true, variant: null }
     return [h('span', { className: 'dsc-math-row', key: 'm' }, mathRenderItems(ast.items, context, 'm'))]
   } catch (error) {

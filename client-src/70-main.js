@@ -2,6 +2,8 @@ function apply(ctx) {
   setClientContext(ctx)
   ctx.effect(() => ctx.locale.register(CHAT_NS, { zh: DICT_ZH, en: DICT_EN }), 'deepseek-chat-mode: dictionaries')
   ctx.effect(injectChatStyles, 'deepseek-chat-mode: styles')
+  // TEMPORARY: trace any native click on this plugin's hidden file inputs.
+  ctx.effect(() => installUploadDiagnostics(), 'deepseek-chat-mode: upload-diagnostics')
   // The shared Chat | Agent navigation: a root-scoped entry in the frame-wide
   // overlay, so it lives in the shell chrome and stays reachable from both
   // modes instead of being a floating control inside the Chat view.
@@ -24,6 +26,12 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
   globalThis.__DSC_TEST_HOOK__({
     chatStore,
     chatActions,
+    openFilePicker,
+    acceptFiles,
+    registerFilePicker,
+    currentMode,
+    isModeSwitchLocked,
+    installUploadDiagnostics,
     ChatRoot,
     ModeSwitch,
     SettingsDialog,

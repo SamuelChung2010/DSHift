@@ -172,7 +172,6 @@ const chatStore = {
     greetingIndex: pickGreetingIndex(-1),
     renamingId: null,
     focusRequest: 0,
-    filePickRequest: 0,
     // ---- conversation organization (sidebar) ----
     // One floating menu at a time, anchored at the pointer. `kind` selects the
     // item list; `id` is the conversation or folder it acts on.
@@ -833,8 +832,161 @@ function saveSidebarWidth() {
   writeStored({ sidebarWidth: chatStore.state.sidebarWidth })
 }
 
-function requestFilePicker() {
-  chatStore.set({ filePickRequest: chatStore.state.filePickRequest + 1 })
+/**
+ * Upload entry gate.
+ *
+ * A programmatic `input.click()` driven by a request counter survives a view
+ * switch: the counter stayed non-zero while Chat was closed, so the next mount
+ * replayed the last picker request. Uploads now go straight from the user's
+ * event through this gate to a registered live input, and never queue state
+ * that a later mount could replay.
+ */
+const filePickerInputs = new Map()
+const UPLOAD_SWITCH_LOCK_MS = 320
+let uploadSwitchLockUntil = 0
+
+function currentMode() {
+  return chatStore.state.open ? 'chat' : 'agent'
+}
+
+function isModeSwitchLocked() {
+  return uploadSwitchLockUntil > Date.now()
+}
+
+function uploadSource(source) {
+  return typeof source === 'string' && source.trim() !== '' ? source.trim() : 'unknown'
+}
+
+function uploadBlockReason() {
+  if (!chatStore.state.open) return 'not-chat'
+  if (isModeSwitchLocked()) return 'switching'
+  return ''
+}
+
+/** Register the one hidden input a named upload surface owns right now. */
+function registerFilePicker(target, input) {
+  if (typeof target !== 'string' || target === '') return () => {}
+  if (input === null || input === undefined || typeof input.click !== 'function') return () => {}
+  filePickerInputs.set(target, input)
+  return () => {
+    if (filePickerInputs.get(target) === input) filePickerInputs.delete(target)
+  }
+}
+
+/**
+ * Open the system picker for one upload surface. This is the only place in the
+ * client that calls `input.click()`.
+ *
+ * `source` is a short human-readable trigger name for the `[upload]` log and
+ * `target` names the registered input surface ("composer" or "import").
+ */
+function openFilePicker(source, target = 'composer') {
+  const origin = uploadSource(source)
+  const mode = currentMode()
+  const blocked = uploadBlockReason()
+  const input = filePickerInputs.get(target)
+  console.debug('[upload] open', origin, {
+    mode,
+    target,
+    blocked: blocked === '' ? undefined : blocked,
+    ready: input !== undefined,
+  })
+  if (blocked !== '') {
+    console.debug('[upload] blocked', origin, blocked, { mode, target })
+    return false
+  }
+  if (input === undefined || input.disabled === true || input.isConnected === false) {
+    console.debug('[upload] blocked', origin, 'no-live-input', { mode, target })
+    return false
+  }
+  try {
+    input.click()
+  } catch (error) {
+    console.debug('[upload] failed', origin, error)
+    return false
+  }
+  return true
+}
+
+/**
+ * Files that arrive without the picker (drop, paste, a restored input) use the
+ * same mode and switch gate, so no path can upload while Agent is active.
+ */
+function acceptFiles(source, fileList) {
+  const origin = uploadSource(source)
+  let files = []
+  try {
+    files = fileList === null || fileList === undefined ? [] : [...fileList]
+  } catch {
+    files = []
+  }
+  const mode = currentMode()
+  const blocked = uploadBlockReason()
+  console.debug('[upload] files', origin, files.length, {
+    mode,
+    blocked: blocked === '' ? undefined : blocked,
+  })
+  if (blocked !== '' || files.length === 0) {
+    if (blocked !== '') console.debug('[upload] blocked', origin, blocked, { mode })
+    return false
+  }
+  addFiles(files)
+  return true
+}
+
+/** Drop focus and any drag paint before the next view mounts. */
+function clearUploadInteractionState() {
+  try {
+    const active = typeof document !== 'undefined' ? document.activeElement : null
+    if (active !== null && typeof active?.blur === 'function') active.blur()
+  } catch {
+    // A detached focus target owns nothing anyone can clean.
+  }
+  try {
+    if (typeof document === 'undefined') return
+    for (const node of document.querySelectorAll?.('.dsc-composer.is-drag, .dsc-import-drop.is-drag') ?? []) {
+      node.classList?.remove('is-drag')
+    }
+  } catch {
+    // The drag paint disappears with its view; cleanup is best-effort.
+  }
+}
+
+/** Backwards-compatible action: old integrations still name the composer picker. */
+function requestFilePicker(source = 'legacy-request') {
+  return openFilePicker(source, 'composer')
+}
+
+/**
+ * TEMPORARY diagnostic: every native click on a file input (this plugin's or a
+ * foreign one) is traced with the current mode and the stack that caused it. If
+ * a ghost picker ever reappears, the console says whether it came from the gate
+ * or from a direct `click()` path.
+ */
+function installUploadDiagnostics() {
+  if (typeof document === 'undefined' || typeof document.addEventListener !== 'function') return () => {}
+  const onClickCapture = (event) => {
+    const target = event?.target
+    if (target === null || target === undefined || typeof target.closest !== 'function') return
+    let input = target.closest('input[type="file"]')
+    if (input === null) {
+      const label = target.closest('label')
+      input = typeof label?.querySelector === 'function' ? label.querySelector('input[type="file"]') : null
+    }
+    if (input === null || input === undefined) return
+    const owned = input.dataset?.dscUpload !== undefined
+      || input.classList?.contains('dsc-file-input') === true
+      || input.classList?.contains('dsc-import-input') === true
+    console.trace('[upload] native file-input click', {
+      mode: currentMode(),
+      switching: isModeSwitchLocked(),
+      owned,
+      source: owned ? (input.dataset?.dscUpload ?? 'unmarked') : 'foreign',
+      trusted: event.isTrusted === true,
+    })
+  }
+  document.addEventListener('click', onClickCapture, true)
+  return () => document.removeEventListener('click', onClickCapture, true)
 }
 
 async function newChat() {
@@ -2125,15 +2277,21 @@ function requestStop() {
 
 /** The shared Chat | Agent navigation: one mode slot, two views. */
 function setMode(mode) {
-  if (mode === 'chat') {
-    if (chatStore.state.open) {
-      requestFocus()
-      return
-    }
-    openChat()
+  const next = mode === 'chat' ? 'chat' : 'agent'
+  const current = currentMode()
+  if (next === current) {
+    if (next === 'chat') requestFocus()
     return
   }
-  if (chatStore.state.open) closeChat()
+  if (isModeSwitchLocked()) {
+    console.debug('[upload] switch ignored', { mode: current, target: next, locked: true })
+    return
+  }
+  uploadSwitchLockUntil = Date.now() + UPLOAD_SWITCH_LOCK_MS
+  console.debug('[upload] mode-switch', { from: current, to: next })
+  clearUploadInteractionState()
+  if (next === 'chat') openChat()
+  else closeChat()
 }
 
 function defaultWorkspaceId() {
@@ -2805,7 +2963,18 @@ function closeImport() {
 }
 
 /** Read one chosen file: upload it to the Host, then show the preview. */
-async function selectImportFile(file) {
+async function selectImportFile(file, source = 'import-input') {
+  const origin = uploadSource(source)
+  const mode = currentMode()
+  const blocked = uploadBlockReason()
+  console.debug('[upload] import-file', origin, {
+    mode,
+    blocked: blocked === '' ? undefined : blocked,
+  })
+  if (blocked !== '') {
+    console.debug('[upload] blocked', origin, blocked, { mode })
+    return
+  }
   const view = chatStore.state.importView
   if (view === null || view.step === 'parsing' || view.step === 'importing') return
   const name = typeof file?.name === 'string' ? file.name : ''
@@ -3089,6 +3258,11 @@ const chatActions = {
   stopStreaming,
   requestFocus,
   requestFilePicker,
+  openFilePicker,
+  acceptFiles,
+  registerFilePicker,
+  isModeSwitchLocked,
+  currentMode,
   requestStop,
   setSidebarWidth,
   saveSidebarWidth,

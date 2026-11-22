@@ -884,7 +884,6 @@ function Composer() {
   const unsupportedImages = !modelCapability(choice.model, 'vision')
     && attachments.some(item => item.isImage && item.status !== 'error')
   const focusRequest = useChat(state => state.focusRequest)
-  const filePickRequest = useChat(state => state.filePickRequest)
   const textareaRef = React.useRef(null)
   const fileRef = React.useRef(null)
   const [drag, setDrag] = React.useState(false)
@@ -901,15 +900,9 @@ function Composer() {
     const timer = setTimeout(() => textareaRef.current?.focus(), 30)
     return () => clearTimeout(timer)
   }, [focusRequest])
-  React.useEffect(() => {
-    if (filePickRequest === 0) return
-    fileRef.current?.click()
-  }, [filePickRequest])
+  React.useEffect(() => chatActions.registerFilePicker('composer', fileRef.current), [])
   const isStreaming = streaming !== null
   const canSend = draft.trim() !== '' || attachments.some(item => item.status === 'ready')
-  const onFiles = (files) => {
-    if (files && files.length > 0) chatActions.addFiles(files)
-  }
   const handleSend = () => {
     if (isStreaming) return
     if (!auth?.ready) {
@@ -941,7 +934,7 @@ function Composer() {
       onDrop: (event) => {
         event.preventDefault()
         setDrag(false)
-        onFiles(event.dataTransfer?.files)
+        chatActions.acceptFiles('drop', event.dataTransfer?.files)
       },
     },
       h('div', { className: 'dsc-composer-main' },
@@ -976,7 +969,7 @@ function Composer() {
               const files = [...(event.clipboardData?.files ?? [])]
               if (files.length > 0) {
                 event.preventDefault()
-                onFiles(files)
+                chatActions.acceptFiles('paste', files)
               }
             },
             onKeyDown,
@@ -1002,8 +995,11 @@ function Composer() {
             className: 'dsc-file-input',
             multiple: true,
             accept: ACCEPT,
+            tabIndex: -1,
+            'aria-hidden': 'true',
+            'data-dsc-upload': 'composer',
             onChange: (event) => {
-              onFiles(event.target.files)
+              chatActions.acceptFiles('file-input', event.target.files)
               event.target.value = ''
             },
           }),
@@ -1574,7 +1570,7 @@ function ChatHeader() {
         title: !canDraft ? t('handoffEmpty') : hostHandoff ? t('handoffSubtitle') : t('handoffUnavailable'),
         disabled: !canDraft,
         onClick: () => { void chatActions.openHandoff() },
-      }, h(Icon, { name: 'agent', size: 15 }), h('span', { className: 'dsc-handoff-label' }, t('handoff'))),
+      }, h(Icon, { name: 'agent', size: 16 }), h('span', { className: 'dsc-handoff-label' }, t('handoff'))),
     ),
   )
 }

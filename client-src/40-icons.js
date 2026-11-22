@@ -1,11 +1,11 @@
-function IconBase({ size = 18, children, filled = false, className = '' }) {
+function IconBase({ size = 18, children, filled = false, className = '', viewBox = '0 0 24 24', strokeWidth = 1.8 }) {
   return h('svg', {
     width: size,
     height: size,
-    viewBox: '0 0 24 24',
+    viewBox,
     fill: filled ? 'currentColor' : 'none',
     stroke: filled ? 'none' : 'currentColor',
-    strokeWidth: 1.8,
+    strokeWidth,
     strokeLinecap: 'round',
     strokeLinejoin: 'round',
     className: `dsc-icon ${className}`.trim(),
@@ -15,6 +15,11 @@ function IconBase({ size = 18, children, filled = false, className = '' }) {
 }
 
 const IconPlus = props => h(IconBase, props, h('path', { d: 'M12 5v14M5 12h14' }))
+/** The native composer "+" (plus-outline/medium): 16-unit canvas, 1.3 stroke. */
+const IconComposerPlus = props => h(IconBase, { ...props, viewBox: '0 0 16 16', strokeWidth: 1.3 },
+  h('path', { d: 'M8 2V14', stroke: 'currentColor' }),
+  h('path', { d: 'M2 8H14', stroke: 'currentColor' }),
+)
 const IconSearch = props => h(IconBase, props,
   h('circle', { cx: 11, cy: 11, r: 6.5 }),
   h('path', { d: 'M16 16l4.2 4.2' }),
@@ -23,10 +28,14 @@ const IconClose = props => h(IconBase, props, h('path', { d: 'M6 6l12 12M18 6L6 
 const IconChevronDown = props => h(IconBase, props, h('path', { d: 'M6 9l6 6 6-6' }))
 const IconChevronRight = props => h(IconBase, props, h('path', { d: 'M9 6l6 6-6 6' }))
 const IconChevronLeft = props => h(IconBase, props, h('path', { d: 'M15 6l-6 6 6 6' }))
-const IconArrowUp = props => h(IconBase, { ...props, filled: true },
-  h('path', { d: 'M12 4.2 19.8 12l-2.1 2.1-3.7-3.7V20h-4v-9.6L6.3 14.1 4.2 12 12 4.2Z' }),
+/** The native send arrow, copied from Harness InputBar (16-unit filled path). */
+const IconArrowUp = props => h(IconBase, { ...props, viewBox: '0 0 16 16', filled: true },
+  h('path', { d: 'M8.3125 0.980183C8.66767 1.0531 8.97902 1.20418 9.2627 1.43233C9.48724 1.61297 9.73029 1.85793 9.97949 2.10714L14.707 6.83468L13.293 8.24874L9 3.95577V15.0417H7V3.95577L2.70703 8.24874L1.29297 6.83468L6.02051 2.10714C6.26971 1.85793 6.51277 1.61297 6.7373 1.43233C6.97662 1.23986 7.28445 1.04402 7.6875 0.980183C7.8973 0.947006 8.1031 0.95516 8.3125 0.980183Z' }),
 )
-const IconStop = props => h(IconBase, { ...props, filled: true }, h('rect', { x: 7, y: 7, width: 10, height: 10, rx: 2.2 }))
+/** The native stop glyph that replaces the arrow in the same primary circle. */
+const IconStop = props => h(IconBase, { ...props, viewBox: '0 0 16 16', filled: true },
+  h('rect', { x: 3, y: 3, width: 10, height: 10, rx: 3 }),
+)
 const IconPaperclip = props => h(IconBase, props,
   h('path', { d: 'M20 11.5l-8.4 8.4a5 5 0 0 1-7.1-7.1l8.5-8.5a3.4 3.4 0 0 1 4.8 4.8l-8.5 8.5a1.8 1.8 0 0 1-2.5-2.5l7.8-7.8' }),
 )
@@ -139,6 +148,7 @@ const IconImport = props => h(IconBase, props,
 
 const ICONS = {
   plus: IconPlus,
+  composerPlus: IconComposerPlus,
   search: IconSearch,
   close: IconClose,
   chevronDown: IconChevronDown,

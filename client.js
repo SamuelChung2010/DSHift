@@ -351,6 +351,7 @@ const DICT_ZH = {
   // Rendering
   mermaidFailed: '图表渲染失败',
   mathFailed: '公式渲染失败',
+  mathUnsupported: '公式包含暂不支持的语法，已显示 LaTeX 源码',
   streamingDiagram: '生成完成后绘制图表',
   // Chat history import
   importOpen: '导入聊天记录',
@@ -881,6 +882,7 @@ const DICT_EN = {
   // Rendering
   mermaidFailed: 'Diagram failed to render',
   mathFailed: 'Formula failed to render',
+  mathUnsupported: 'This formula uses unsupported syntax; showing its LaTeX source',
   streamingDiagram: 'Diagram appears when the answer finishes',
   // Chat history import
   importOpen: 'Import chats',
@@ -1245,7 +1247,6 @@ const chatStore = {
     greetingIndex: pickGreetingIndex(-1),
     renamingId: null,
     focusRequest: 0,
-    filePickRequest: 0,
     // ---- conversation organization (sidebar) ----
     // One floating menu at a time, anchored at the pointer. `kind` selects the
     // item list; `id` is the conversation or folder it acts on.
@@ -1906,8 +1907,161 @@ function saveSidebarWidth() {
   writeStored({ sidebarWidth: chatStore.state.sidebarWidth })
 }
 
-function requestFilePicker() {
-  chatStore.set({ filePickRequest: chatStore.state.filePickRequest + 1 })
+/**
+ * Upload entry gate.
+ *
+ * A programmatic `input.click()` driven by a request counter survives a view
+ * switch: the counter stayed non-zero while Chat was closed, so the next mount
+ * replayed the last picker request. Uploads now go straight from the user's
+ * event through this gate to a registered live input, and never queue state
+ * that a later mount could replay.
+ */
+const filePickerInputs = new Map()
+const UPLOAD_SWITCH_LOCK_MS = 320
+let uploadSwitchLockUntil = 0
+
+function currentMode() {
+  return chatStore.state.open ? 'chat' : 'agent'
+}
+
+function isModeSwitchLocked() {
+  return uploadSwitchLockUntil > Date.now()
+}
+
+function uploadSource(source) {
+  return typeof source === 'string' && source.trim() !== '' ? source.trim() : 'unknown'
+}
+
+function uploadBlockReason() {
+  if (!chatStore.state.open) return 'not-chat'
+  if (isModeSwitchLocked()) return 'switching'
+  return ''
+}
+
+/** Register the one hidden input a named upload surface owns right now. */
+function registerFilePicker(target, input) {
+  if (typeof target !== 'string' || target === '') return () => {}
+  if (input === null || input === undefined || typeof input.click !== 'function') return () => {}
+  filePickerInputs.set(target, input)
+  return () => {
+    if (filePickerInputs.get(target) === input) filePickerInputs.delete(target)
+  }
+}
+
+/**
+ * Open the system picker for one upload surface. This is the only place in the
+ * client that calls `input.click()`.
+ *
+ * `source` is a short human-readable trigger name for the `[upload]` log and
+ * `target` names the registered input surface ("composer" or "import").
+ */
+function openFilePicker(source, target = 'composer') {
+  const origin = uploadSource(source)
+  const mode = currentMode()
+  const blocked = uploadBlockReason()
+  const input = filePickerInputs.get(target)
+  console.debug('[upload] open', origin, {
+    mode,
+    target,
+    blocked: blocked === '' ? undefined : blocked,
+    ready: input !== undefined,
+  })
+  if (blocked !== '') {
+    console.debug('[upload] blocked', origin, blocked, { mode, target })
+    return false
+  }
+  if (input === undefined || input.disabled === true || input.isConnected === false) {
+    console.debug('[upload] blocked', origin, 'no-live-input', { mode, target })
+    return false
+  }
+  try {
+    input.click()
+  } catch (error) {
+    console.debug('[upload] failed', origin, error)
+    return false
+  }
+  return true
+}
+
+/**
+ * Files that arrive without the picker (drop, paste, a restored input) use the
+ * same mode and switch gate, so no path can upload while Agent is active.
+ */
+function acceptFiles(source, fileList) {
+  const origin = uploadSource(source)
+  let files = []
+  try {
+    files = fileList === null || fileList === undefined ? [] : [...fileList]
+  } catch {
+    files = []
+  }
+  const mode = currentMode()
+  const blocked = uploadBlockReason()
+  console.debug('[upload] files', origin, files.length, {
+    mode,
+    blocked: blocked === '' ? undefined : blocked,
+  })
+  if (blocked !== '' || files.length === 0) {
+    if (blocked !== '') console.debug('[upload] blocked', origin, blocked, { mode })
+    return false
+  }
+  addFiles(files)
+  return true
+}
+
+/** Drop focus and any drag paint before the next view mounts. */
+function clearUploadInteractionState() {
+  try {
+    const active = typeof document !== 'undefined' ? document.activeElement : null
+    if (active !== null && typeof active?.blur === 'function') active.blur()
+  } catch {
+    // A detached focus target owns nothing anyone can clean.
+  }
+  try {
+    if (typeof document === 'undefined') return
+    for (const node of document.querySelectorAll?.('.dsc-composer.is-drag, .dsc-import-drop.is-drag') ?? []) {
+      node.classList?.remove('is-drag')
+    }
+  } catch {
+    // The drag paint disappears with its view; cleanup is best-effort.
+  }
+}
+
+/** Backwards-compatible action: old integrations still name the composer picker. */
+function requestFilePicker(source = 'legacy-request') {
+  return openFilePicker(source, 'composer')
+}
+
+/**
+ * TEMPORARY diagnostic: every native click on a file input (this plugin's or a
+ * foreign one) is traced with the current mode and the stack that caused it. If
+ * a ghost picker ever reappears, the console says whether it came from the gate
+ * or from a direct `click()` path.
+ */
+function installUploadDiagnostics() {
+  if (typeof document === 'undefined' || typeof document.addEventListener !== 'function') return () => {}
+  const onClickCapture = (event) => {
+    const target = event?.target
+    if (target === null || target === undefined || typeof target.closest !== 'function') return
+    let input = target.closest('input[type="file"]')
+    if (input === null) {
+      const label = target.closest('label')
+      input = typeof label?.querySelector === 'function' ? label.querySelector('input[type="file"]') : null
+    }
+    if (input === null || input === undefined) return
+    const owned = input.dataset?.dscUpload !== undefined
+      || input.classList?.contains('dsc-file-input') === true
+      || input.classList?.contains('dsc-import-input') === true
+    console.trace('[upload] native file-input click', {
+      mode: currentMode(),
+      switching: isModeSwitchLocked(),
+      owned,
+      source: owned ? (input.dataset?.dscUpload ?? 'unmarked') : 'foreign',
+      trusted: event.isTrusted === true,
+    })
+  }
+  document.addEventListener('click', onClickCapture, true)
+  return () => document.removeEventListener('click', onClickCapture, true)
 }
 
 async function newChat() {
@@ -3198,15 +3352,21 @@ function requestStop() {
 
 /** The shared Chat | Agent navigation: one mode slot, two views. */
 function setMode(mode) {
-  if (mode === 'chat') {
-    if (chatStore.state.open) {
-      requestFocus()
-      return
-    }
-    openChat()
+  const next = mode === 'chat' ? 'chat' : 'agent'
+  const current = currentMode()
+  if (next === current) {
+    if (next === 'chat') requestFocus()
     return
   }
-  if (chatStore.state.open) closeChat()
+  if (isModeSwitchLocked()) {
+    console.debug('[upload] switch ignored', { mode: current, target: next, locked: true })
+    return
+  }
+  uploadSwitchLockUntil = Date.now() + UPLOAD_SWITCH_LOCK_MS
+  console.debug('[upload] mode-switch', { from: current, to: next })
+  clearUploadInteractionState()
+  if (next === 'chat') openChat()
+  else closeChat()
 }
 
 function defaultWorkspaceId() {
@@ -3878,7 +4038,18 @@ function closeImport() {
 }
 
 /** Read one chosen file: upload it to the Host, then show the preview. */
-async function selectImportFile(file) {
+async function selectImportFile(file, source = 'import-input') {
+  const origin = uploadSource(source)
+  const mode = currentMode()
+  const blocked = uploadBlockReason()
+  console.debug('[upload] import-file', origin, {
+    mode,
+    blocked: blocked === '' ? undefined : blocked,
+  })
+  if (blocked !== '') {
+    console.debug('[upload] blocked', origin, blocked, { mode })
+    return
+  }
   const view = chatStore.state.importView
   if (view === null || view.step === 'parsing' || view.step === 'importing') return
   const name = typeof file?.name === 'string' ? file.name : ''
@@ -4162,6 +4333,11 @@ const chatActions = {
   stopStreaming,
   requestFocus,
   requestFilePicker,
+  openFilePicker,
+  acceptFiles,
+  registerFilePicker,
+  isModeSwitchLocked,
+  currentMode,
   requestStop,
   setSidebarWidth,
   saveSidebarWidth,
@@ -4216,8 +4392,26 @@ function citationMark(index) {
   return `${CITATION_MARK}${index}\u0000`
 }
 
+/**
+ * Math is extracted before the Markdown pass and carried in these zero-width
+ * tokens. The payload is percent-encoded, so a token can never contain a
+ * backtick, `$`, `*`, `_`, `|` or a newline and therefore cannot be mistaken
+ * for another block or inline construct. Tokens are self-contained: the text
+ * can be re-parsed on its own (block quotes do this) without a side table.
+ */
+const MATH_TOKEN_PREFIX = '\u0000dsc-math:'
+const MATH_TOKEN_SOURCE = '\\u0000dsc-math:[bi]:[^\\u0000]*\\u0000'
+const MATH_TOKEN_RE = /^\u0000dsc-math:([bi]):([^\u0000]*)\u0000$/
+const CODE_TOKEN_PREFIX = '\u0000dsc-'
+const CODE_TOKEN_SOURCE = '\\u0000dsc-(?:code|literal):[^\\u0000]*\\u0000'
+const CODE_TOKEN_RE = /^\u0000dsc-(code|literal):([^\u0000]*)\u0000$/
+const MATH_DISPLAY_MAX_SOURCE = 20000
+const MATH_INLINE_PAREN_MAX = 2000
+
 const INLINE_PATTERN = new RegExp([
-  '`[^`\\n]+`', // inline code
+  MATH_TOKEN_SOURCE, // math extracted by prepareMath()
+  CODE_TOKEN_SOURCE, // code span extracted by prepareMath()
+  '`[^`\\n]+`', // inline code that prepareMath() left alone
   '\\*\\*[^*\\n]+\\*\\*', // bold
   '__[^_\\n]+__',
   '\\*[^*\\n]+\\*', // italic
@@ -4225,14 +4419,349 @@ const INLINE_PATTERN = new RegExp([
   '~~[^~\\n]+~~', // strikethrough
   '!\\[[^\\]\\n]*\\]\\([^)\\s]+\\)', // image
   '\\[[^\\]\\n]+\\]\\([^)\\s]+\\)', // link
-  '\\$\\$[^$\\n]+\\$\\$', // display math kept inline by a sloppy model
-  '\\$[^$\\n]+\\$', // inline math
-  '\\\\\\([\\s\\S]{1,300}?\\\\\\)', // \( \) inline math
+  '\\$\\$[^$\\n\\u0000]+\\$\\$', // display math kept inline by a sloppy model
+  '\\$[^$\\n\\u0000]+\\$', // inline math that prepareMath() left alone
+  '\\\\\\([^\\u0000]{1,300}?\\\\\\)', // \( \) inline math that prepareMath() left alone
   '\\u0000dsc-cite:\\d+\\u0000', // citation marker
   'https?:\\/\\/[^\\s<>()]+', // bare URL
 ].join('|'), 'g')
 
 const CITE_TOKEN = /^\u0000dsc-cite:(\d+)\u0000$/
+
+function encodeTokenText(value) {
+  const text = typeof value === 'string' ? value : String(value ?? '')
+  // toWellFormed() keeps encodeURIComponent from throwing on a lone surrogate
+  // that can still arrive in streamed model output.
+  const safe = typeof text.toWellFormed === 'function'
+    ? text.toWellFormed()
+    : text.replace(/[\uD800-\uDFFF]/g, '\uFFFD')
+  return encodeURIComponent(safe).replace(/[^A-Za-z0-9%]/g, char => (
+    `%${char.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')}`
+  ))
+}
+
+function mathToken(display, tex) {
+  return `${MATH_TOKEN_PREFIX}${display ? 'b' : 'i'}:${encodeTokenText(tex)}\u0000`
+}
+
+function codeToken(kind, text) {
+  return `${CODE_TOKEN_PREFIX}${kind}:${encodeTokenText(text)}\u0000`
+}
+
+function decodeMathToken(token) {
+  const match = typeof token === 'string' ? MATH_TOKEN_RE.exec(token) : null
+  if (match === null) return null
+  try {
+    return { display: match[1] === 'b', tex: decodeURIComponent(match[2]) }
+  } catch {
+    return null
+  }
+}
+
+function decodeCodeToken(token) {
+  const match = typeof token === 'string' ? CODE_TOKEN_RE.exec(token) : null
+  if (match === null) return null
+  try {
+    return { kind: match[1], text: decodeURIComponent(match[2]) }
+  } catch {
+    return null
+  }
+}
+
+/** Recover human-readable source for places that only accept plain text (alt). */
+function restoreInlineSource(value) {
+  if (typeof value !== 'string' || !value.includes('\u0000')) return value
+  return value.replace(
+    /\u0000dsc-math:([bi]):([^\u0000]*)\u0000|\u0000dsc-(code|literal):([^\u0000]*)\u0000/g,
+    (token, mathKind, mathBody, codeKind, codeBody) => {
+      try {
+        if (mathKind !== undefined) {
+          const tex = decodeURIComponent(mathBody)
+          return mathKind === 'b' ? `$$ ${tex} $$` : `$${tex}$`
+        }
+        return decodeURIComponent(codeBody)
+      } catch {
+        return token
+      }
+    },
+  )
+}
+
+/** Mark inline code spans and whole fenced blocks so math never sees them. */
+function findInlineCodeRanges(line, offset, ranges) {
+  let index = 0
+  while (index < line.length) {
+    if (line[index] === '\\') {
+      index += 2
+      continue
+    }
+    if (line[index] !== '`') {
+      index += 1
+      continue
+    }
+    let run = 1
+    while (line[index + run] === '`') run += 1
+    let search = index + run
+    let close = -1
+    while (search < line.length) {
+      if (line[search] === '`') {
+        let count = 1
+        while (line[search + count] === '`') count += 1
+        if (count === run) {
+          close = search
+          break
+        }
+        search += count
+      } else {
+        search += 1
+      }
+    }
+    if (close < 0) {
+      // A code span that is still streaming open cannot become a <code> node,
+      // but its markers must stay literal instead of exposing `$` to math.
+      ranges.push({
+        kind: 'literal',
+        start: offset + index,
+        end: offset + line.length,
+        contentStart: offset + index,
+        contentEnd: offset + line.length,
+      })
+      break
+    }
+    ranges.push({
+      kind: 'code',
+      start: offset + index,
+      end: offset + close + run,
+      contentStart: offset + index + run,
+      contentEnd: offset + close,
+    })
+    index = close + run
+  }
+}
+
+function findProtectedRanges(source) {
+  const ranges = []
+  let lineStart = 0
+  let fence = null
+  while (lineStart <= source.length) {
+    const newline = source.indexOf('\n', lineStart)
+    const lineEnd = newline === -1 ? source.length : newline
+    const line = source.slice(lineStart, lineEnd)
+    if (fence !== null) {
+      const close = line.match(/^\s*(`{3,}|~{3,})\s*$/)
+      if (close !== null && close[1][0] === fence.char && close[1].length >= fence.length) {
+        ranges.push({ kind: 'fence', start: fence.start, end: lineEnd })
+        fence = null
+      }
+    } else {
+      const open = line.match(/^\s*(`{3,}|~{3,})/)
+      if (open !== null) {
+        fence = { char: open[1][0], length: open[1].length, start: lineStart }
+      } else {
+        findInlineCodeRanges(line, lineStart, ranges)
+      }
+    }
+    if (newline === -1) break
+    lineStart = newline + 1
+  }
+  if (fence !== null) ranges.push({ kind: 'fence', start: fence.start, end: source.length })
+  return ranges
+}
+
+function mathLineStart(source, index) {
+  return source.lastIndexOf('\n', index - 1) + 1
+}
+
+function mathLineEnd(source, index) {
+  const newline = source.indexOf('\n', index)
+  return newline === -1 ? source.length : newline
+}
+
+/** Find a complete display run; block rules only apply when it spans lines. */
+function readDisplayMath(source, start, open, close, protectedMask) {
+  const contentStart = start + open.length
+  const limit = Math.min(source.length, contentStart + MATH_DISPLAY_MAX_SOURCE)
+  let index = contentStart
+  let found = -1
+  while (index < limit) {
+    if (protectedMask[index] === 1) return null
+    if (source.startsWith(close, index)) {
+      found = index
+      break
+    }
+    if (source[index] === '\\') {
+      index += 2
+      continue
+    }
+    index += 1
+  }
+  if (found < 0) return null
+  const tex = source.slice(contentStart, found).trim()
+  if (tex === '') return null
+  if (tex.includes('\n')) {
+    // A multi-line display formula must own its lines. Without this rule an
+    // unclosed "$$" in streamed prose would swallow the rest of the answer.
+    const before = source.slice(mathLineStart(source, start), start)
+    const closeEnd = found + close.length
+    const after = source.slice(closeEnd, mathLineEnd(source, closeEnd))
+    if (!/^[ \t]*$/.test(before) || !/^[ \t]*$/.test(after)) return null
+  }
+  return { tex, end: found + close.length }
+}
+
+function readInlineDollar(source, start, protectedMask) {
+  const limit = mathLineEnd(source, start)
+  let index = start + 1
+  while (index < limit) {
+    if (protectedMask[index] === 1) return null
+    if (source[index] === '\\') {
+      index += 2
+      continue
+    }
+    if (source[index] === '$') {
+      if (source[index + 1] === '$') return null
+      const token = source.slice(start, index + 1)
+      if (!looksLikeInlineMath(token, source, start)) return null
+      const tex = source.slice(start + 1, index)
+      return tex === '' ? null : { tex, end: index + 1 }
+    }
+    index += 1
+  }
+  return null
+}
+
+function readInlineParen(source, start, protectedMask) {
+  const contentStart = start + 2
+  const limit = Math.min(source.length, contentStart + MATH_INLINE_PAREN_MAX)
+  let index = contentStart
+  while (index < limit) {
+    if (protectedMask[index] === 1) return null
+    if (source[index] === '\\' && source[index + 1] === ')') {
+      const tex = source.slice(contentStart, index)
+      return tex === '' ? null : { tex, end: index + 2 }
+    }
+    index += 1
+  }
+  return null
+}
+
+/**
+ * Pipeline step zero: replace code spans with inert tokens and pull complete
+ * math runs out of the source. Fenced blocks stay in the text for the block
+ * parser, but their contents are masked from math. Display math is tried
+ * before inline math at the same position, so `$$...$$` can never be read as
+ * two `$...$`. Unclosed runs stay literal, which keeps streaming stable.
+ */
+function prepareMath(source) {
+  if (typeof source !== 'string' || source.length === 0) return source
+  if (!source.includes('$') && !source.includes('\\(') && !source.includes('\\[')) return source
+  const ranges = findProtectedRanges(source)
+  const protectedMask = new Uint8Array(source.length)
+  for (const range of ranges) {
+    protectedMask.fill(1, range.start, Math.min(range.end, source.length))
+  }
+  const chunks = []
+  let copyFrom = 0
+  let index = 0
+  let rangeIndex = 0
+  while (index < source.length) {
+    while (rangeIndex < ranges.length && ranges[rangeIndex].end <= index) rangeIndex += 1
+    const range = ranges[rangeIndex]
+    if (range !== undefined && range.start <= index) {
+      if (range.kind === 'fence') {
+        // Leave the fenced block untouched: parseMarkdown() turns it into a
+        // code block before any inline renderer runs.
+        index = range.end
+        rangeIndex += 1
+        continue
+      }
+      // Matched code becomes <code>; an unclosed code span stays literal but
+      // can no longer expose its `$` to math.
+      chunks.push(
+        source.slice(copyFrom, range.start),
+        codeToken(range.kind, source.slice(range.contentStart, range.contentEnd)),
+      )
+      index = range.end
+      copyFrom = index
+      rangeIndex += 1
+      continue
+    }
+    const char = source[index]
+    if (char === '\\') {
+      const next = source[index + 1]
+      if (next === '(') {
+        const found = readInlineParen(source, index, protectedMask)
+        if (found !== null) {
+          chunks.push(source.slice(copyFrom, index), mathToken(false, found.tex))
+          index = found.end
+          copyFrom = index
+          continue
+        }
+      } else if (next === '[') {
+        const found = readDisplayMath(source, index, '\\[', '\\]', protectedMask)
+        if (found !== null) {
+          chunks.push(source.slice(copyFrom, index), mathToken(true, found.tex))
+          index = found.end
+          copyFrom = index
+          continue
+        }
+      }
+      index += 2
+      continue
+    }
+    if (char === '$') {
+      if (source[index + 1] === '$') {
+        const found = readDisplayMath(source, index, '$$', '$$', protectedMask)
+        if (found !== null) {
+          chunks.push(source.slice(copyFrom, index), mathToken(true, found.tex))
+          index = found.end
+          copyFrom = index
+          continue
+        }
+        // Skip both dollars of an unclosed display delimiter: treating them as
+        // two inline openers would pair an opening with an unrelated closer.
+        index += 2
+        continue
+      }
+      const found = readInlineDollar(source, index, protectedMask)
+      if (found !== null) {
+        chunks.push(source.slice(copyFrom, index), mathToken(false, found.tex))
+        index = found.end
+        copyFrom = index
+        continue
+      }
+      index += 1
+      continue
+    }
+    index += 1
+  }
+  if (chunks.length === 0) return source
+  chunks.push(source.slice(copyFrom))
+  return chunks.join('')
+}
+
+/** A paragraph made only of display-math tokens becomes real math blocks. */
+function displayTokensToBlocks(value) {
+  const trimmed = value.trim()
+  if (trimmed === '' || !trimmed.includes(MATH_TOKEN_PREFIX)) return null
+  const tokens = trimmed.split(/\s+/)
+  if (tokens.length === 0) return null
+  const blocks = []
+  for (const token of tokens) {
+    const parsed = decodeMathToken(token)
+    if (parsed === null || !parsed.display) return null
+    blocks.push({ type: 'math', text: parsed.tex })
+  }
+  return blocks
+}
+
+function lineMathBlocks(line) {
+  return displayTokensToBlocks(line)
+}
+
+function paragraphMathBlocks(text) {
+  return displayTokensToBlocks(text)
+}
 
 function safeHref(value) {
   const url = typeof value === 'string' ? value.trim() : ''
@@ -4289,8 +4818,21 @@ function renderInline(text, keyPrefix = 'i', context = {}) {
     if (match.index > last) nodes.push(unescapeText(source.slice(last, match.index)))
     const token = match[0]
     const key = `${keyPrefix}-${match.index}`
+    const math = decodeMathToken(token)
+    const code = decodeCodeToken(token)
     const citation = token.match(CITE_TOKEN)
-    if (citation !== null) {
+    if (math !== null) {
+      if (math.display) {
+        // A display formula that started and ended inside a paragraph still
+        // gets block styling, while a span keeps the surrounding <p> valid.
+        nodes.push(h('span', { key, className: 'dsc-math dsc-math-block' }, latexToNodes(math.tex, { display: true })))
+      } else {
+        nodes.push(h(LatexInline, { key, tex: math.tex }))
+      }
+    } else if (code !== null) {
+      if (code.kind === 'code') nodes.push(h('code', { className: 'dsc-inline-code', key }, code.text))
+      else nodes.push(code.text)
+    } else if (citation !== null) {
       const index = Number(citation[1])
       const sourceEntry = context.sources?.[index - 1]
       const href = sourceEntry === undefined ? null : safeHref(sourceEntry.url)
@@ -4333,7 +4875,7 @@ function renderInline(text, keyPrefix = 'i', context = {}) {
           key,
           className: 'dsc-image',
           src,
-          alt: image[1],
+          alt: restoreInlineSource(image[1]),
           loading: 'lazy',
           referrerPolicy: 'no-referrer',
         }))
@@ -4400,7 +4942,8 @@ function displayMathDelimiter(line) {
 }
 
 function parseMarkdown(source) {
-  const lines = String(source ?? '').replace(/\r\n?/g, '\n').split('\n')
+  const prepared = prepareMath(String(source ?? '').replace(/\r\n?/g, '\n'))
+  const lines = prepared.split('\n')
   const blocks = []
   let index = 0
   while (index < lines.length) {
@@ -4424,6 +4967,12 @@ function parseMarkdown(source) {
       blocks.push(normalizeCodeLang(lang) === 'mermaid'
         ? { type: 'mermaid', text }
         : { type: 'code', lang, text })
+      continue
+    }
+    const tokenMath = lineMathBlocks(line)
+    if (tokenMath !== null) {
+      blocks.push(...tokenMath)
+      index += 1
       continue
     }
     // Display math: `$$ ... $$` or `\[ ... \]`, on one line or across lines.
@@ -4458,9 +5007,12 @@ function parseMarkdown(source) {
       }
       const text = body.join('\n').trim()
       if (!closed) {
-        // No closer anywhere below: this was not display math after all (a
-        // stray "$$" in prose must not swallow the rest of the answer).
-        blocks.push({ type: 'paragraph', text: [line, ...body].join('\n') })
+        // No closer anywhere below: this is the middle of a streamed display
+        // formula. Keep the source literal in a block of the same shape so the
+        // switch to the finished formula does not collapse the message. The
+        // first body entry is opening.rest and is already part of `line`.
+        const tail = opening.rest === '' ? body : body.slice(1)
+        blocks.push({ type: 'streaming-math', text: [line, ...tail].join('\n') })
         continue
       }
       if (text !== '') blocks.push({ type: 'math', text })
@@ -4512,11 +5064,16 @@ function parseMarkdown(source) {
     }
     const paragraph = [line]
     index += 1
-    while (index < lines.length && lines[index].trim() !== '' && !isBlockStart(lines[index])) {
+    while (index < lines.length && lines[index].trim() !== ''
+      && lineMathBlocks(lines[index]) === null
+      && !isBlockStart(lines[index])) {
       paragraph.push(lines[index])
       index += 1
     }
-    blocks.push({ type: 'paragraph', text: paragraph.join('\n') })
+    const paragraphText = paragraph.join('\n')
+    const mathBlocks = paragraphMathBlocks(paragraphText)
+    if (mathBlocks !== null) blocks.push(...mathBlocks)
+    else blocks.push({ type: 'paragraph', text: paragraphText })
   }
   return blocks
 }
@@ -4583,6 +5140,13 @@ function renderBlock(block, key, context = {}, isLast = false) {
   }
   if (block.type === 'math') {
     return h(LatexBlock, { key, tex: block.text })
+  }
+  if (block.type === 'streaming-math') {
+    // An incomplete display delimiter is literal until its closer arrives.
+    // The same block wrapper and minimum height are used for the finished
+    // formula so the streaming swap does not move the whole message.
+    return h('div', { className: 'dsc-math dsc-math-block dsc-math-streaming', key },
+      h('span', { className: 'dsc-math-fallback' }, block.text))
   }
   if (block.type === 'mermaid') {
     // While the answer is still streaming the diagram is drawn from partial
@@ -5534,8 +6098,9 @@ function highlightLines(code, lang) {
 // as children, never as HTML, so model output cannot inject markup.
 //
 // Pipeline: lexMath() -> parseLatex() (plain AST) -> latexToNodes() (React).
-// Unknown commands render as muted text; unbalanced braces and runaway nesting
-// degrade to text instead of failing.
+// Unknown commands/environments are recorded on the AST and latexToNodes()
+// shows the complete source in the .dsc-math-fallback style; unbalanced braces
+// and runaway nesting degrade to text instead of failing.
 
 const MATH_MAX_SOURCE = 20000
 const MATH_MAX_DEPTH = 64
@@ -5564,11 +6129,23 @@ const MATH_SYMBOLS = {
   le: '≤', leq: '≤', ge: '≥', geq: '≥', ne: '≠', neq: '≠', approx: '≈', equiv: '≡', sim: '∼',
   simeq: '≃', cong: '≅', propto: '∝', to: '→', rightarrow: '→', leftarrow: '←',
   leftrightarrow: '↔', Rightarrow: '⇒', Leftarrow: '⇐', Leftrightarrow: '⇔', mapsto: '↦',
+  longrightarrow: '⟶', longleftarrow: '⟵', longleftrightarrow: '⟷',
+  Longrightarrow: '⟹', Longleftarrow: '⟸', Longleftrightarrow: '⟺',
+  implies: '⟹', iff: '⟺', because: '∵', therefore: '∴',
   infty: '∞', partial: '∂', nabla: '∇', forall: '∀', exists: '∃', in: '∈', notin: '∉',
-  subset: '⊂', subseteq: '⊆', supset: '⊃', supseteq: '⊇', cup: '∪', cap: '∩',
+  ni: '∋', owns: '∋', notni: '∌', subset: '⊂', subseteq: '⊆', supset: '⊃', supseteq: '⊇',
+  subsetneq: '⊊', supsetneq: '⊋', subsetneqq: '⫋', supsetneqq: '⫌',
+  nsubseteq: '⊈', nsupseteq: '⊉', cup: '∪', cap: '∩',
   emptyset: '∅', varnothing: '∅', neg: '¬', lnot: '¬', land: '∧', lor: '∨',
-  angle: '∠', perp: '⊥', parallel: '∥', ldots: '…', cdots: '⋯', dots: '…',
-  prime: '′', hbar: 'ℏ', ell: 'ℓ', Re: 'ℜ', Im: 'ℑ', aleph: 'ℵ',
+  oplus: '⊕', ominus: '⊖', otimes: '⊗', oslash: '⊘', odot: '⊙', bigcirc: '◯',
+  dagger: '†', ddagger: '‡', amalg: '⨿', wr: '≀',
+  prec: '≺', succ: '≻', preceq: '⪯', succeq: '⪰', precsim: '≾', succsim: '≿',
+  mid: '∣', nmid: '∤', vdash: '⊢', dashv: '⊣', models: '⊨', top: '⊤', bot: '⊥',
+  triangle: '△', triangledown: '▽', square: '□', blacksquare: '■',
+  lozenge: '◊', blacklozenge: '◆', angle: '∠', perp: '⊥', parallel: '∥',
+  ldots: '…', cdots: '⋯', dots: '…', vdots: '⋮', ddots: '⋱',
+  dotsb: '⋯', dotsc: '…', dotsi: '⋯', dotsm: '⋯', dotso: '…',
+  prime: '′', hbar: 'ℏ', ell: 'ℓ', Re: 'ℜ', Im: 'ℑ', aleph: 'ℵ', wp: '℘',
 }
 
 const MATH_DELIMITER_SYMBOLS = {
@@ -5577,6 +6154,9 @@ const MATH_DELIMITER_SYMBOLS = {
   rceil: '⌉', lbrace: '{', rbrace: '}', lbrack: '[', rbrack: ']',
   backslash: '\\', uparrow: '↑', downarrow: '↓', updownarrow: '↕',
   Uparrow: '⇑', Downarrow: '⇓', Updownarrow: '⇕',
+  lgroup: '⟮', rgroup: '⟯', ulcorner: '⌜', urcorner: '⌝',
+  llcorner: '⌞', lrcorner: '⌟', lbag: '⟅', rbag: '⟆',
+  llbracket: '⟦', rrbracket: '⟧', lBrace: '⦃', rBrace: '⦄',
 }
 
 const MATH_ESCAPES = {
@@ -5592,16 +6172,21 @@ const MATH_SPACES = {
 const MATH_FONTS = {
   mathrm: 'rm', mathbf: 'bf', mathit: 'it', mathsf: 'sf',
   mathtt: 'tt', mathcal: 'cal', mathscr: 'cal', mathbb: 'bb',
+  boldsymbol: 'bf', bm: 'bf',
 }
 
 const MATH_ACCENTS = {
   hat: 'hat', widehat: 'hat', bar: 'bar', vec: 'vec', dot: 'dot',
   ddot: 'ddot', tilde: 'tilde', widetilde: 'tilde',
+  check: 'check', breve: 'breve', acute: 'acute', grave: 'grave',
+  overleftarrow: 'overleftarrow', overrightarrow: 'overrightarrow',
   overline: 'overline', underline: 'underline',
 }
 
 const MATH_ACCENT_MARKS = {
   hat: 'ˆ', bar: '¯', vec: '→', dot: '˙', ddot: '¨', tilde: '˜',
+  check: 'ˇ', breve: '˘', acute: '´', grave: '`',
+  overleftarrow: '←', overrightarrow: '→',
 }
 
 // Glyphs of large operators and function names; the sets below decide layout.
@@ -5610,12 +6195,22 @@ const MATH_BIG = {
   int: '∫', iint: '∬', oint: '∮',
   lim: 'lim', max: 'max', min: 'min', sup: 'sup', inf: 'inf',
   log: 'log', ln: 'ln', exp: 'exp', sin: 'sin', cos: 'cos', tan: 'tan',
-  arcsin: 'arcsin', det: 'det', gcd: 'gcd',
+  cot: 'cot', sec: 'sec', csc: 'csc',
+  sinh: 'sinh', cosh: 'cosh', tanh: 'tanh', coth: 'coth',
+  arcsin: 'arcsin', arccos: 'arccos', arctan: 'arctan',
+  arg: 'arg', deg: 'deg', dim: 'dim', hom: 'hom', ker: 'ker',
+  det: 'det', gcd: 'gcd', mod: 'mod', bmod: 'mod',
+  Pr: 'Pr',
 }
 // Limits stack above/below the glyph in display mode.
 const MATH_BIG_LIMITS = new Set(['sum', 'prod', 'coprod', 'bigcup', 'bigcap', 'bigoplus', 'lim', 'max', 'min', 'sup', 'inf'])
 // Function names stay upright and text-sized instead of using big-operator size.
-const MATH_BIG_FUNCTIONS = new Set(['lim', 'max', 'min', 'sup', 'inf', 'log', 'ln', 'exp', 'sin', 'cos', 'tan', 'arcsin', 'det', 'gcd'])
+const MATH_BIG_FUNCTIONS = new Set([
+  'lim', 'max', 'min', 'sup', 'inf', 'log', 'ln', 'exp', 'sin', 'cos', 'tan',
+  'cot', 'sec', 'csc', 'sinh', 'cosh', 'tanh', 'coth',
+  'arcsin', 'arccos', 'arctan', 'arg', 'deg', 'dim', 'hom', 'ker',
+  'det', 'gcd', 'mod', 'bmod', 'Pr',
+])
 
 // \big-family prefixes: accepted, rendered as a scaled plain delimiter
 const MATH_BIG_DELIMITERS = {
@@ -5627,15 +6222,21 @@ const MATH_BIG_DELIMITERS = {
 
 // environment name -> delimiter pair (null / empty string means none)
 const MATH_ENV_DELIMITERS = {
-  matrix: null, aligned: null, align: null, alignat: null,
-  gathered: null, gather: null, split: null, array: null,
+  matrix: null, aligned: null, align: null, 'align*': null, alignat: null, 'alignat*': null,
+  alignedat: null, gathered: null, gather: null, 'gather*': null, split: null, array: null,
+  equation: null, 'equation*': null, smallmatrix: null, subarray: null,
+  multline: null, 'multline*': null, flalign: null, 'flalign*': null,
+  eqnarray: null, 'eqnarray*': null, displaymath: null,
   pmatrix: { left: '(', right: ')' }, bmatrix: { left: '[', right: ']' },
   Bmatrix: { left: '{', right: '}' }, vmatrix: { left: '|', right: '|' },
   Vmatrix: { left: '‖', right: '‖' }, cases: { left: '{', right: '' },
 }
+const MATH_ENVIRONMENTS = new Set(Object.keys(MATH_ENV_DELIMITERS))
+// These environments take a {cc} column specification after \begin{...}.
+const MATH_COLSPEC_ENVIRONMENTS = new Set(['array', 'alignedat', 'alignat', 'alignat*', 'subarray'])
 const MATH_IGNORED = new Set([
   'displaystyle', 'textstyle', 'scriptstyle', 'scriptscriptstyle',
-  'limits', 'nolimits', 'nonumber', 'notag',
+  'limits', 'nolimits', 'nonumber', 'notag', 'allowbreak',
 ])
 // stop sets drive the recursive row parser
 const MATH_STOP_GROUP = { close: true }
@@ -5760,6 +6361,18 @@ function mathTokenStops(token, stop) {
   return false
 }
 
+/**
+ * Remember the first construct this renderer does not understand. Parsing
+ * continues normally (so the output stays deterministic), but latexToNodes()
+ * shows the whole formula source in the graceful fallback instead of a
+ * half-rendered equation.
+ */
+function mathMarkUnsupported(state, kind, name) {
+  if (state.unsupported === null || state.unsupported === undefined) {
+    state.unsupported = { kind, name }
+  }
+}
+
 function mathSkipSpaces(state) {
   while (state.index < state.tokens.length && state.tokens[state.index].type === 'space') {
     state.index += 1
@@ -5860,7 +6473,9 @@ function mathReadDelimiter(state) {
     state.index += 1
     if (MATH_DELIMITER_SYMBOLS[token.name] !== undefined) return MATH_DELIMITER_SYMBOLS[token.name]
     if (MATH_ESCAPES[token.name] !== undefined) return MATH_ESCAPES[token.name]
-    // Not a delimiter: keep the command name visible instead of dropping it.
+    // Not a delimiter: remember the unsupported command and keep its source
+    // visible so the fallback can show the complete formula.
+    mathMarkUnsupported(state, 'command', token.name)
     return mathCommandText(token.name)
   }
   return null
@@ -5991,6 +6606,14 @@ function parseMathAtom(state, depth) {
 
 function parseMathCommand(state, name, depth) {
   if (MATH_IGNORED.has(name)) return null
+  if (name === 'tag' || name === 'label') {
+    // Equation labels are metadata: accept them, render the formula itself.
+    mathSkipSpaces(state)
+    const star = state.tokens[state.index]
+    if (star !== undefined && star.type === 'char' && star.value === '*') state.index += 1
+    parseMathArgument(state, depth)
+    return null
+  }
   if (name === 'frac' || name === 'dfrac' || name === 'tfrac') {
     const num = parseMathArgument(state, depth)
     const den = parseMathArgument(state, depth)
@@ -6029,9 +6652,13 @@ function parseMathCommand(state, name, depth) {
     return { type: 'char', value: MATH_ESCAPES[name], kind: mathClassifyChar(MATH_ESCAPES[name]) }
   }
   if (name === 'text') return { type: 'text', value: mathReadRawText(state) }
+  if (name === 'mbox') return { type: 'text', value: mathReadRawText(state) }
   if (name === 'operatorname') {
     // Parsed as math so spacing commands inside it still work; the "op"
     // variant below renders the result upright.
+    mathSkipSpaces(state)
+    const star = state.tokens[state.index]
+    if (star !== undefined && star.type === 'char' && star.value === '*') state.index += 1
     return { type: 'font', variant: 'op', body: parseMathArgument(state, depth) }
   }
   if (MATH_FONTS[name] !== undefined) {
@@ -6046,6 +6673,7 @@ function parseMathCommand(state, name, depth) {
       limits: MATH_BIG_LIMITS.has(name), large: !MATH_BIG_FUNCTIONS.has(name),
     }
   }
+  mathMarkUnsupported(state, 'command', name)
   return { type: 'unknown', name }
 }
 
@@ -6067,13 +6695,22 @@ function parseMathEnvironment(state, depth) {
   const envName = state.tokens[state.index] !== undefined && state.tokens[state.index].type === 'open'
     ? mathReadRawGroup(state).trim()
     : ''
-  // \begin{array}{cc}: the column spec is accepted and ignored.
-  if (envName === 'array' && state.tokens[state.index] !== undefined && state.tokens[state.index].type === 'open') {
+  if (!MATH_ENVIRONMENTS.has(envName)) {
+    // Unknown environments are still consumed as rows (the parser must reach
+    // the matching \end), but the whole formula will render as source text.
+    mathMarkUnsupported(state, 'environment', envName)
+  }
+  // \begin{array}{cc} and \begin{alignedat}{2}: the column spec is accepted
+  // and ignored; the layout comes from each row's cells. A space may sit
+  // between the environment name and the spec.
+  mathSkipSpaces(state)
+  if (MATH_COLSPEC_ENVIRONMENTS.has(envName) && state.tokens[state.index] !== undefined && state.tokens[state.index].type === 'open') {
     mathReadRawGroup(state)
   }
   const rows = []
   let cells = []
   let guard = 0
+  let closed = false
   while (state.index < state.tokens.length && guard < 4096) {
     guard += 1
     const token = state.tokens[state.index]
@@ -6101,7 +6738,16 @@ function parseMathEnvironment(state, depth) {
   if (endToken !== undefined && endToken.type === 'command' && endToken.name === 'end') {
     state.index += 1
     mathSkipSpaces(state)
-    if (state.tokens[state.index] !== undefined && state.tokens[state.index].type === 'open') mathReadRawGroup(state)
+    const endName = state.tokens[state.index] !== undefined && state.tokens[state.index].type === 'open'
+      ? mathReadRawGroup(state).trim()
+      : ''
+    if (endName === envName) closed = true
+    else mathMarkUnsupported(state, 'environment', envName)
+  }
+  if (!closed) {
+    // A streamed "\begin{bmatrix} ..." without its \end must not be painted as
+    // a half matrix: remember the mismatch so latexToNodes() shows the source.
+    mathMarkUnsupported(state, 'environment', envName)
   }
   return { type: 'matrix', env: envName, rows }
 }
@@ -6109,8 +6755,10 @@ function parseMathEnvironment(state, depth) {
 function parseLatex(source) {
   if (typeof source !== 'string') throw new TypeError('LaTeX source must be a string')
   if (source.length > MATH_MAX_SOURCE) return { type: 'plain', source }
-  const state = { tokens: lexMath(source), index: 0 }
-  return { type: 'row', items: parseMathRow(state, 0, null), source }
+  const state = { tokens: lexMath(source), index: 0, unsupported: null }
+  const ast = { type: 'row', items: parseMathRow(state, 0, null), source }
+  if (state.unsupported !== null) ast.unsupported = state.unsupported
+  return ast
 }
 
 // ---------------------------------------------------------------------------
@@ -6322,11 +6970,21 @@ function mathRenderDelimited(node, context, key) {
 
 function mathRenderMatrix(node, context, key) {
   const rows = node.rows.length === 0 ? [[]] : node.rows
-  const grid = h('span', { className: 'dsc-math-matrix', key: `${key}-m` },
+  // `grid-auto-flow: row` with only implicit tracks would create a single
+  // column and stack every cell vertically. Pin the column count to the
+  // widest row so a 3x3 bmatrix is really laid out as 3 rows by 3 columns.
+  let columns = 1
+  for (const row of rows) columns = Math.max(columns, row.length)
+  const grid = h('span', {
+    className: 'dsc-math-matrix',
+    key: `${key}-m`,
+    role: 'table',
+    style: { gridTemplateColumns: `repeat(${columns}, auto)` },
+  },
     rows.map((row, rowIndex) => (
-      h('span', { className: 'dsc-math-matrix-row', key: `${key}-r${rowIndex}` },
+      h('span', { className: 'dsc-math-matrix-row', key: `${key}-r${rowIndex}`, role: 'row' },
         row.map((cell, cellIndex) => (
-          h('span', { className: 'dsc-math-matrix-cell', key: `${key}-c${rowIndex}-${cellIndex}` },
+          h('span', { className: 'dsc-math-matrix-cell', key: `${key}-c${rowIndex}-${cellIndex}`, role: 'cell' },
             mathRenderContent(cell, context, `${key}-c${rowIndex}-${cellIndex}`))
         )),
       )
@@ -6334,6 +6992,17 @@ function mathRenderMatrix(node, context, key) {
   )
   const spec = MATH_ENV_DELIMITERS[node.env] || null
   if (spec === null) return grid
+  if (spec.left === '[' && spec.right === ']') {
+    // Square brackets are drawn with borders so they stretch to the matrix
+    // height instead of scaling a single glyph around the middle row.
+    return h('span', { key, className: 'dsc-math-matrix-frame', style: { display: 'inline-flex', alignItems: 'stretch' } },
+      h('span', { className: 'dsc-math-matrix-bracket dsc-math-matrix-bracket-left', key: `${key}-l`, 'aria-hidden': 'true' },
+        h('span', { className: 'dsc-math-matrix-bracket-glyph' }, '[')),
+      grid,
+      h('span', { className: 'dsc-math-matrix-bracket dsc-math-matrix-bracket-right', key: `${key}-r`, 'aria-hidden': 'true' },
+        h('span', { className: 'dsc-math-matrix-bracket-glyph' }, ']')),
+    )
+  }
   const scale = Math.max(1, Math.min(3.2, 0.95 + rows.length * 0.45))
   const [left, right] = mathRenderDelimiters(spec.left || null, spec.right || null, scale, key)
   return h('span', { key, style: { display: 'inline-flex', alignItems: 'center' } }, left, grid, right)
@@ -6408,6 +7077,16 @@ function latexToNodes(source, { display = false } = {}) {
     if (text.length > MATH_MAX_SOURCE) return [h('span', { className: 'dsc-math-text', key: 'm' }, text)]
     const ast = parseLatex(text)
     if (ast.type === 'plain') return [h('span', { className: 'dsc-math-text', key: 'm' }, ast.source)]
+    if (ast.unsupported !== undefined) {
+      // Unsupported commands/environments keep their complete LaTeX source,
+      // in monospace with a quiet background, instead of disappearing or
+      // printing a half-rendered equation.
+      return [h('span', {
+        className: 'dsc-math-fallback',
+        key: 'm',
+        title: tr('mathUnsupported'),
+      }, text)]
+    }
     const context = { display: display === true, variant: null }
     return [h('span', { className: 'dsc-math-row', key: 'm' }, mathRenderItems(ast.items, context, 'm'))]
   } catch (error) {
@@ -7661,14 +8340,14 @@ function MermaidDiagram({ source, title } = {}) {
 }
 
 /* ---- 40-icons.js ---- */
-function IconBase({ size = 18, children, filled = false, className = '' }) {
+function IconBase({ size = 18, children, filled = false, className = '', viewBox = '0 0 24 24', strokeWidth = 1.8 }) {
   return h('svg', {
     width: size,
     height: size,
-    viewBox: '0 0 24 24',
+    viewBox,
     fill: filled ? 'currentColor' : 'none',
     stroke: filled ? 'none' : 'currentColor',
-    strokeWidth: 1.8,
+    strokeWidth,
     strokeLinecap: 'round',
     strokeLinejoin: 'round',
     className: `dsc-icon ${className}`.trim(),
@@ -7678,6 +8357,11 @@ function IconBase({ size = 18, children, filled = false, className = '' }) {
 }
 
 const IconPlus = props => h(IconBase, props, h('path', { d: 'M12 5v14M5 12h14' }))
+/** The native composer "+" (plus-outline/medium): 16-unit canvas, 1.3 stroke. */
+const IconComposerPlus = props => h(IconBase, { ...props, viewBox: '0 0 16 16', strokeWidth: 1.3 },
+  h('path', { d: 'M8 2V14', stroke: 'currentColor' }),
+  h('path', { d: 'M2 8H14', stroke: 'currentColor' }),
+)
 const IconSearch = props => h(IconBase, props,
   h('circle', { cx: 11, cy: 11, r: 6.5 }),
   h('path', { d: 'M16 16l4.2 4.2' }),
@@ -7686,10 +8370,14 @@ const IconClose = props => h(IconBase, props, h('path', { d: 'M6 6l12 12M18 6L6 
 const IconChevronDown = props => h(IconBase, props, h('path', { d: 'M6 9l6 6 6-6' }))
 const IconChevronRight = props => h(IconBase, props, h('path', { d: 'M9 6l6 6-6 6' }))
 const IconChevronLeft = props => h(IconBase, props, h('path', { d: 'M15 6l-6 6 6 6' }))
-const IconArrowUp = props => h(IconBase, { ...props, filled: true },
-  h('path', { d: 'M12 4.2 19.8 12l-2.1 2.1-3.7-3.7V20h-4v-9.6L6.3 14.1 4.2 12 12 4.2Z' }),
+/** The native send arrow, copied from Harness InputBar (16-unit filled path). */
+const IconArrowUp = props => h(IconBase, { ...props, viewBox: '0 0 16 16', filled: true },
+  h('path', { d: 'M8.3125 0.980183C8.66767 1.0531 8.97902 1.20418 9.2627 1.43233C9.48724 1.61297 9.73029 1.85793 9.97949 2.10714L14.707 6.83468L13.293 8.24874L9 3.95577V15.0417H7V3.95577L2.70703 8.24874L1.29297 6.83468L6.02051 2.10714C6.26971 1.85793 6.51277 1.61297 6.7373 1.43233C6.97662 1.23986 7.28445 1.04402 7.6875 0.980183C7.8973 0.947006 8.1031 0.95516 8.3125 0.980183Z' }),
 )
-const IconStop = props => h(IconBase, { ...props, filled: true }, h('rect', { x: 7, y: 7, width: 10, height: 10, rx: 2.2 }))
+/** The native stop glyph that replaces the arrow in the same primary circle. */
+const IconStop = props => h(IconBase, { ...props, viewBox: '0 0 16 16', filled: true },
+  h('rect', { x: 3, y: 3, width: 10, height: 10, rx: 3 }),
+)
 const IconPaperclip = props => h(IconBase, props,
   h('path', { d: 'M20 11.5l-8.4 8.4a5 5 0 0 1-7.1-7.1l8.5-8.5a3.4 3.4 0 0 1 4.8 4.8l-8.5 8.5a1.8 1.8 0 0 1-2.5-2.5l7.8-7.8' }),
 )
@@ -7802,6 +8490,7 @@ const IconImport = props => h(IconBase, props,
 
 const ICONS = {
   plus: IconPlus,
+  composerPlus: IconComposerPlus,
   search: IconSearch,
   close: IconClose,
   chevronDown: IconChevronDown,
@@ -8468,7 +9157,7 @@ const BUILTIN_CHAT_TOOLS = [
     labelKey: 'uploadFiles',
     hintKey: 'uploadFilesHint',
     order: 10,
-    run: () => chatActions.requestFilePicker(),
+    run: () => chatActions.openFilePicker('tools-menu'),
   },
   {
     id: 'web-search',
@@ -8662,7 +9351,7 @@ function ToolsMenu() {
           setOpen(true)
         }
       },
-    }, h(Icon, { name: 'plus', size: 14 })),
+    }, h(Icon, { name: 'composerPlus', size: 14 })),
     open
       ? h('div', {
           ref: panelRef,
@@ -9573,7 +10262,6 @@ function Composer() {
   const unsupportedImages = !modelCapability(choice.model, 'vision')
     && attachments.some(item => item.isImage && item.status !== 'error')
   const focusRequest = useChat(state => state.focusRequest)
-  const filePickRequest = useChat(state => state.filePickRequest)
   const textareaRef = React.useRef(null)
   const fileRef = React.useRef(null)
   const [drag, setDrag] = React.useState(false)
@@ -9590,15 +10278,9 @@ function Composer() {
     const timer = setTimeout(() => textareaRef.current?.focus(), 30)
     return () => clearTimeout(timer)
   }, [focusRequest])
-  React.useEffect(() => {
-    if (filePickRequest === 0) return
-    fileRef.current?.click()
-  }, [filePickRequest])
+  React.useEffect(() => chatActions.registerFilePicker('composer', fileRef.current), [])
   const isStreaming = streaming !== null
   const canSend = draft.trim() !== '' || attachments.some(item => item.status === 'ready')
-  const onFiles = (files) => {
-    if (files && files.length > 0) chatActions.addFiles(files)
-  }
   const handleSend = () => {
     if (isStreaming) return
     if (!auth?.ready) {
@@ -9630,7 +10312,7 @@ function Composer() {
       onDrop: (event) => {
         event.preventDefault()
         setDrag(false)
-        onFiles(event.dataTransfer?.files)
+        chatActions.acceptFiles('drop', event.dataTransfer?.files)
       },
     },
       h('div', { className: 'dsc-composer-main' },
@@ -9665,7 +10347,7 @@ function Composer() {
               const files = [...(event.clipboardData?.files ?? [])]
               if (files.length > 0) {
                 event.preventDefault()
-                onFiles(files)
+                chatActions.acceptFiles('paste', files)
               }
             },
             onKeyDown,
@@ -9691,8 +10373,11 @@ function Composer() {
             className: 'dsc-file-input',
             multiple: true,
             accept: ACCEPT,
+            tabIndex: -1,
+            'aria-hidden': 'true',
+            'data-dsc-upload': 'composer',
             onChange: (event) => {
-              onFiles(event.target.files)
+              chatActions.acceptFiles('file-input', event.target.files)
               event.target.value = ''
             },
           }),
@@ -10263,7 +10948,7 @@ function ChatHeader() {
         title: !canDraft ? t('handoffEmpty') : hostHandoff ? t('handoffSubtitle') : t('handoffUnavailable'),
         disabled: !canDraft,
         onClick: () => { void chatActions.openHandoff() },
-      }, h(Icon, { name: 'agent', size: 15 }), h('span', { className: 'dsc-handoff-label' }, t('handoff'))),
+      }, h(Icon, { name: 'agent', size: 16 }), h('span', { className: 'dsc-handoff-label' }, t('handoff'))),
     ),
   )
 }
@@ -11638,7 +12323,12 @@ function ImportDialog() {
   const view = useChat(state => state.importView)
   const inputRef = React.useRef(null)
   const [drag, setDrag] = React.useState(false)
-  if (!open || view === null) return null
+  const mounted = open && view !== null
+  React.useEffect(() => {
+    if (!mounted) return undefined
+    return chatActions.registerFilePicker('import', inputRef.current)
+  }, [mounted])
+  if (!mounted) return null
   const step = view.step
   const parsing = step === 'parsing'
   const importing = step === 'importing'
@@ -11646,8 +12336,8 @@ function ImportDialog() {
   const visible = filterImportRows(view.conversations, view.filter)
   const importableCount = view.conversations.filter(item => item.imported !== true).length
   const close = () => chatActions.closeImport()
-  const pick = (file) => {
-    if (file !== undefined && file !== null) void chatActions.selectImportFile(file)
+  const pick = (file, source = 'import-input') => {
+    if (file !== undefined && file !== null) void chatActions.selectImportFile(file, source)
   }
   const percent = view.progress.total > 0
     ? Math.min(100, Math.round((view.progress.done / view.progress.total) * 100))
@@ -11674,12 +12364,12 @@ function ImportDialog() {
       role: 'button',
       tabIndex: 0,
       onClick: () => {
-        if (!parsing) inputRef.current?.click()
+        if (!parsing) chatActions.openFilePicker('import-drop', 'import')
       },
       onKeyDown: (event) => {
         if (event.key !== 'Enter' && event.key !== ' ') return
         event.preventDefault()
-        if (!parsing) inputRef.current?.click()
+        if (!parsing) chatActions.openFilePicker('import-drop-key', 'import')
       },
       onDragOver: (event) => {
         event.preventDefault()
@@ -11690,7 +12380,7 @@ function ImportDialog() {
         event.preventDefault()
         setDrag(false)
         if (parsing) return
-        pick(event.dataTransfer?.files?.[0])
+        pick(event.dataTransfer?.files?.[0], 'import-drop')
       },
     },
       parsing ? h(Spinner, { size: 22, label: t('importParsing') }) : h('span', { className: 'dsc-import-drop-icon' }, h(Icon, { name: 'archive', size: 24 })),
@@ -11720,7 +12410,7 @@ function ImportDialog() {
       h('div', { className: 'dsc-import-summary-side' },
         h('button', {
           type: 'button', className: 'dsc-secondary-button is-small-compact',
-          onClick: () => inputRef.current?.click(),
+          onClick: () => chatActions.openFilePicker('import-preview-choose', 'import'),
         }, t('importChooseFile')),
       ),
     ),
@@ -11882,7 +12572,7 @@ function ImportDialog() {
         h('button', { type: 'button', className: 'dsc-secondary-button', onClick: close }, t('importExit')),
         h('button', {
           type: 'button', className: 'dsc-primary-button', disabled: parsing,
-          onClick: () => inputRef.current?.click(),
+          onClick: () => chatActions.openFilePicker('import-footer-choose', 'import'),
         }, t('importChooseFile')),
       )
     : step === 'preview'
@@ -11929,6 +12619,7 @@ function ImportDialog() {
         accept: '.zip,application/zip,application/x-zip-compressed',
         tabIndex: -1,
         'aria-hidden': 'true',
+        'data-dsc-upload': 'import',
         onChange: (event) => {
           pick(event.target.files?.[0])
           event.target.value = ''
@@ -13538,6 +14229,7 @@ const CHAT_CSS = `
   --dsc-menu-backdrop: var(--dsw-menu-backdrop-filter, blur(22px) saturate(1.35));
   --dsc-selector: var(--dsw-specific-selector, color-mix(in srgb, var(--dsc-text) 7%, transparent));
   --dsc-interactive: var(--dsw-alias-interactive-bg-hover, var(--dsc-hover));
+  --dsc-interactive-solid: var(--dsw-alias-interactive-bg-hover-solid, var(--dsc-interactive));
   --dsc-tertiary: var(--dsw-alias-label-tertiary, var(--dsc-muted));
   --dsc-caption: var(--dsw-alias-label-caption, var(--dsc-muted));
   --dsc-menu-icon: var(--dsw-alias-menu-icon, var(--dsc-muted));
@@ -13709,6 +14401,8 @@ html[data-platform='darwin'] .dsc-main { padding-top: var(--dsc-top, 44px); }
      stay clickable while the Chat layer covers the native header behind it. */
   z-index: 40;
   border-radius: 999px;
+  /* The track is a true capsule, not the theme's default superellipse. */
+  corner-shape: round;
   background: color-mix(in srgb, var(--dsw-alias-label-primary, #16181d) 6%, transparent);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-label-primary, #16181d) 7%, transparent),
@@ -13732,6 +14426,7 @@ html[data-platform='darwin'] .dsc-main { padding-top: var(--dsc-top, 44px); }
   left: 2px;
   width: calc(var(--dsc-nav-selected) - 4px);
   border-radius: 999px;
+  corner-shape: round;
   background: var(--dsw-alias-bg-base, #ffffff);
   box-shadow:
     0 1px 2px rgba(9, 12, 20, 0.16),
@@ -14227,16 +14922,22 @@ html[data-windows-titlebar] .dsc-main {
 .dsc-handoff-button {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 11px;
+  justify-content: center;
+  gap: 7px;
+  /* Same 40px capsule as the shared Chat | Agent switch. */
+  height: 40px;
+  padding: 0 16px;
   border: 1px solid var(--dsc-border-strong);
-  border-radius: 9px;
+  border-radius: 999px;
+  corner-shape: round;
   background: var(--dsc-layer);
   color: var(--dsc-text);
-  font-size: 12.6px;
-  font-weight: 550;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.005em;
   white-space: nowrap;
+  flex: none;
   transition: background var(--dsc-fast) ease, border-color var(--dsc-fast) ease;
 }
 .dsc-handoff-button:hover { background: var(--dsc-hover); border-color: var(--dsc-border-strong); }
@@ -14641,8 +15342,16 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   background: var(--dsc-code-bg);
   font-family: var(--dsc-mono);
   font-size: 0.875em;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 .dsc-code {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
   margin: 13px 0;
   border: 1px solid var(--dsc-border);
   border-radius: 12px;
@@ -14672,7 +15381,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   font-size: 11.4px;
 }
 .dsc-code-copy:hover { background: var(--dsc-hover); color: var(--dsc-text); }
-.dsc-pre { margin: 0; padding: 13px 14px; max-height: 520px; overflow: auto; font-size: 12.7px; line-height: 1.66; }
+.dsc-pre { box-sizing: border-box; max-width: 100%; margin: 0; padding: 13px 14px; max-height: 520px; overflow: auto; font-size: 12.7px; line-height: 1.66; }
 .dsc-pre code { font-family: var(--dsc-mono); white-space: pre; }
 .dsc-code-body { display: block; }
 .dsc-tok-kw { color: var(--dsc-hl-kw); font-weight: 550; }
@@ -14834,9 +15543,12 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   line-height: 1.4;
   color: var(--dsc-text);
 }
-.dsc-math-inline { display: inline; white-space: nowrap; }
+.dsc-math-inline { display: inline; max-width: 100%; white-space: nowrap; }
 .dsc-math-block {
   display: block;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: 2.8em;
   margin: 12px 0;
   padding: 10px 12px;
   overflow-x: auto;
@@ -14844,6 +15556,12 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   border-radius: 8px;
   background: var(--dsc-math-bg);
   text-align: center;
+}
+/* Incomplete streamed display math is shown as source, but reserves the same
+   block box so the completed formula does not make the transcript jump. */
+.dsc-math-streaming {
+  min-height: 3.6em;
+  text-align: left;
 }
 .dsc-math-row { display: inline-flex; align-items: baseline; flex-wrap: wrap; column-gap: 0.12em; row-gap: 0.42em; }
 .dsc-math-block .dsc-math-row { justify-content: center; }
@@ -14895,6 +15613,32 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   vertical-align: middle;
   padding: 0 0.28em;
 }
+/* bmatrix square brackets: a border box stretches to the whole matrix height,
+   which one glyph at a fixed font-size cannot do for multi-row matrices. */
+.dsc-math-matrix-frame { vertical-align: middle; }
+.dsc-math-matrix-bracket {
+  display: block;
+  align-self: stretch;
+  flex: none;
+  width: 0.34em;
+  min-height: 1.5em;
+  border: 1.3px solid currentColor;
+}
+.dsc-math-matrix-bracket-glyph {
+  display: block;
+  font-size: 0;
+  line-height: 0;
+}
+.dsc-math-matrix-bracket-left {
+  border-right: 0;
+  border-radius: 2px 0 0 2px;
+  margin-right: 0.14em;
+}
+.dsc-math-matrix-bracket-right {
+  border-left: 0;
+  border-radius: 0 2px 2px 0;
+  margin-left: 0.14em;
+}
 .dsc-math-matrix-row { display: contents; }
 .dsc-math-matrix-cell { text-align: center; padding: 0 0.08em; }
 .dsc-math-space { flex: none; }
@@ -14904,6 +15648,23 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   color: var(--dsc-warn);
   white-space: pre-wrap;
   word-break: break-word;
+}
+/* Unsupported TeX stays readable as source instead of vanishing or showing a
+   half-rendered equation. The quiet background marks it as unprocessed. */
+.dsc-math-fallback {
+  display: inline-block;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0.08em 0.38em;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--dsc-text) 5%, transparent);
+  font-family: var(--dsc-mono);
+  font-size: 0.86em;
+  font-style: normal;
+  line-height: 1.55;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 /* ---------- Mermaid diagrams ----------
@@ -15203,17 +15964,21 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   position: relative;
   width: 28px;
   height: 28px;
+  aspect-ratio: 1 / 1;
+  padding: 0;
   border: 0;
   border-radius: 999px;
+  /* Harness opts round controls out of the global superellipse corner shape.
+     Without this, the shared theme deforms the 28px square into a squircle. */
+  corner-shape: round;
   background: var(--dsc-selector);
   color: var(--dsc-text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   flex: none;
   transition: background var(--dsc-fast) ease, color var(--dsc-fast) ease;
 }
-.dsc-tools-trigger:hover { background: var(--dsc-interactive); }
+.dsc-tools-trigger:hover { background: var(--dsc-interactive-solid); }
 .dsc-tools-trigger.is-open { background: var(--dsc-active); }
 
 /* ---------- composer popovers (tools + model) ----------
@@ -15409,13 +16174,17 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-stop-button {
   width: 34px;
   height: 34px;
+  aspect-ratio: 1 / 1;
+  padding: 0;
   border: 0;
   border-radius: 999px;
+  /* The native 34px primary circle also opts out of the theme's global
+     superellipse; border-radius alone would still paint a squircle here. */
+  corner-shape: round;
   background: var(--dsc-primary-action);
   color: var(--dsc-on-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   flex: none;
   transform: translateY(-2px);
   transition: background var(--dsc-fast) ease, opacity var(--dsc-fast) ease;
@@ -16018,7 +16787,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   .dsc-msg-user { padding-left: 6%; }
   .dsc-msg-assistant { padding-right: 0; }
   .dsc-handoff-label { display: none; }
-  .dsc-handoff-button { padding: 0 9px; }
+  .dsc-handoff-button { width: 40px; padding: 0; }
 }
 @media (max-width: 768px) {
   /* Touch has no hover: keep the row menu and message actions reachable, and
@@ -16069,6 +16838,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
   /* Narrow content column: shrink the whole control, keep both labels. */
   .dsc-modeswitch { --dsc-nav-width: 208px; --dsc-nav-height: 36px; font-size: 12.6px; }
   .dsc-modeswitch-item { font-size: 12.6px; }
+  .dsc-handoff-button { width: 36px; height: 36px; }
   .dsc-greeting { font-size: clamp(23px, 5.6vw, 28px); }
   .dsc-empty { padding-bottom: 3vh; }
 }
@@ -16120,6 +16890,8 @@ function apply(ctx) {
   setClientContext(ctx)
   ctx.effect(() => ctx.locale.register(CHAT_NS, { zh: DICT_ZH, en: DICT_EN }), 'deepseek-chat-mode: dictionaries')
   ctx.effect(injectChatStyles, 'deepseek-chat-mode: styles')
+  // TEMPORARY: trace any native click on this plugin's hidden file inputs.
+  ctx.effect(() => installUploadDiagnostics(), 'deepseek-chat-mode: upload-diagnostics')
   // The shared Chat | Agent navigation: a root-scoped entry in the frame-wide
   // overlay, so it lives in the shell chrome and stays reachable from both
   // modes instead of being a floating control inside the Chat view.
@@ -16142,6 +16914,12 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
   globalThis.__DSC_TEST_HOOK__({
     chatStore,
     chatActions,
+    openFilePicker,
+    acceptFiles,
+    registerFilePicker,
+    currentMode,
+    isModeSwitchLocked,
+    installUploadDiagnostics,
     ChatRoot,
     ModeSwitch,
     SettingsDialog,

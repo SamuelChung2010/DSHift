@@ -334,6 +334,11 @@ await wait(50)
 console.log('BOOT_STATE', captured.chatStore.state.boot)
 
 render('ChatRoot-ready', captured.ChatRoot)
+const readyRoot = React.createElement(captured.ChatRoot)
+const handoffButtonNode = collectByClass(readyRoot, 'dsc-handoff-button')[0]
+if (handoffButtonNode === undefined) throw new Error('the header handoff button is missing')
+const handoffIconNode = collectByClass(handoffButtonNode, 'dsc-icon')[0]
+if (handoffIconNode?.props?.width !== 16) throw new Error('the handoff icon must match the 40px capsule scale')
 captured.chatStore.set({ settingsOpen: true })
 render('ChatRoot-settings', captured.ChatRoot)
 captured.chatStore.set({ settingsOpen: false, confirm: { title: 'Delete', message: 'Sure?', confirmLabel: 'Delete', danger: true, onConfirm: async () => {} } })
@@ -1118,8 +1123,53 @@ captured.chatStore.set({
 let composerTree = React.createElement(captured.Composer)
 if (collectByClass(composerTree, 'dsc-editor-field').length !== 1) throw new Error('the composer needs exactly one editor field')
 if (collectByClass(composerTree, 'dsc-textarea').length !== 0) throw new Error('the editor must not be the old bordered textarea')
-if (collectByClass(composerTree, 'dsc-tools-trigger').length !== 1) throw new Error('the + menu trigger is missing')
+const toolsTriggerNode = collectByClass(composerTree, 'dsc-tools-trigger')[0]
+if (toolsTriggerNode === undefined) throw new Error('the + menu trigger is missing')
 if (collectByClass(composerTree, 'dsc-model-trigger').length !== 1) throw new Error('the model trigger is missing')
+// Harness native composer controls: the + is a 16-unit 1.3-stroke glyph; send
+// is the exact filled 16-unit arrow. Both live inside unmodified circles.
+const plusIcon = collectByClass(toolsTriggerNode, 'dsc-icon')[0]
+if (plusIcon?.props?.viewBox !== '0 0 16 16' || plusIcon?.props?.strokeWidth !== 1.3) {
+  throw new Error('the + glyph must use the native 16-unit 1.3-stroke icon')
+}
+const plusPaths = Array.isArray(plusIcon?.props?.children) ? plusIcon.props.children : [plusIcon?.props?.children]
+if (plusPaths.map(path => path?.props?.d).join('|') !== 'M8 2V14|M2 8H14') {
+  throw new Error(`the + glyph must use the native paths: ${plusPaths.map(path => path?.props?.d).join('|')}`)
+}
+const sendButtonNode = collectByClass(composerTree, 'dsc-send-button')[0]
+const arrowIcon = collectByClass(sendButtonNode, 'dsc-icon')[0]
+if (arrowIcon?.props?.viewBox !== '0 0 16 16' || arrowIcon?.props?.fill !== 'currentColor' || arrowIcon?.props?.stroke !== 'none') {
+  throw new Error('the send arrow must use the native 16-unit filled icon')
+}
+const arrowPaths = Array.isArray(arrowIcon?.props?.children) ? arrowIcon.props.children : [arrowIcon?.props?.children]
+if (!String(arrowPaths[0]?.props?.d).startsWith('M8.3125 0.980183')) {
+  throw new Error('the send arrow must use the native Harness path')
+}
+const styleSource = fs.readFileSync(new URL('../client-src/60-style.js', import.meta.url), 'utf8')
+const cssRule = (selector) => {
+  const start = styleSource.indexOf(selector)
+  const end = styleSource.indexOf('}', start)
+  return start < 0 || end < 0 ? '' : styleSource.slice(start, end + 1)
+}
+for (const [selector, size] of [['.dsc-tools-trigger {', '28px'], ['.dsc-send-button,', '34px']]) {
+  const rule = cssRule(selector)
+  if (!rule.includes(`width: ${size}`) || !rule.includes(`height: ${size}`)) {
+    throw new Error(`${selector} must be a ${size} square`)
+  }
+  if (!rule.includes('aspect-ratio: 1 / 1') || !rule.includes('corner-shape: round')) {
+    throw new Error(`${selector} must stay a true circle inside the superellipse theme`)
+  }
+  if (!rule.includes('display: grid') || !rule.includes('place-items: center') || !rule.includes('padding: 0')) {
+    throw new Error(`${selector} must center its glyph like the native control`)
+  }
+}
+const handoffRule = cssRule('.dsc-handoff-button {')
+for (const declaration of ['height: 40px', 'padding: 0 16px', 'border-radius: 999px', 'corner-shape: round', 'font-size: 13.5px']) {
+  if (!handoffRule.includes(declaration)) throw new Error(`the handoff button must match the mode switch: ${declaration}`)
+}
+if (!cssRule('.dsc-modeswitch {').includes('corner-shape: round')) {
+  throw new Error('the mode switch and handoff button must share the same capsule shape')
+}
 const quickTools = collectByClass(composerTree, 'dsc-tool-toggle')
 if (quickTools.length !== 2) throw new Error(`search and deep thinking need direct buttons: ${quickTools.length}`)
 if (quickTools.map(node => node.props['data-tool']).join(',') !== 'web-search,deep-thinking') throw new Error('the quick toggles must be search then deep thinking')
@@ -1135,6 +1185,30 @@ const editor = collectByClass(composerTree, 'dsc-editor-field')[0]
 if (typeof editor.props.onKeyDown !== 'function') throw new Error('the editor must own Enter handling')
 if (!String(editor.props.value).includes('你好')) throw new Error('the editor must show the draft')
 console.log('COMPOSER_STRUCTURE_OK')
+
+// Empty draft keeps the same native geometry and artwork in the disabled state.
+captured.chatStore.set({ draft: '', attachments: [] })
+const emptyComposer = React.createElement(captured.Composer)
+const idleSendNode = collectByClass(emptyComposer, 'dsc-send-button')[0]
+if (!classNamesOf(idleSendNode).includes('is-idle')) throw new Error('an empty draft must disable the send button')
+const idleArrowIcon = collectByClass(idleSendNode, 'dsc-icon')[0]
+if (idleArrowIcon?.props?.viewBox !== '0 0 16 16') throw new Error('the idle send button must keep the native arrow')
+captured.chatStore.set({ draft: '你好，世界' })
+
+// The same primary circle swaps to the native 16-unit stop glyph while running.
+captured.chatStore.set({
+  streaming: { conversationId: 'c1', assistantId: 'a1', userId: 'u1', controller: new AbortController(), startedAt: 1 },
+  stopping: false,
+})
+const runningComposer = React.createElement(captured.Composer)
+const stopNode = collectByClass(runningComposer, 'dsc-stop-button')[0]
+const stopIcon = collectByClass(stopNode, 'dsc-icon')[0]
+if (stopIcon?.props?.viewBox !== '0 0 16 16') throw new Error('the stop button must use the native 16-unit canvas')
+const stopRect = Array.isArray(stopIcon?.props?.children) ? stopIcon.props.children[0] : stopIcon?.props?.children
+if (stopRect?.props?.x !== 3 || stopRect?.props?.y !== 3 || stopRect?.props?.width !== 10 || stopRect?.props?.height !== 10 || stopRect?.props?.rx !== 3) {
+  throw new Error('the stop button must use the native rounded square')
+}
+captured.chatStore.set({ streaming: null })
 
 // The effort value is always present beside the model, showing Off while
 // thinking is disabled, so toggling never moves the model seat.

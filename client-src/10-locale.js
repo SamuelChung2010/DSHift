@@ -343,6 +343,7 @@ const DICT_ZH = {
   // Rendering
   mermaidFailed: '图表渲染失败',
   mathFailed: '公式渲染失败',
+  mathUnsupported: '公式包含暂不支持的语法，已显示 LaTeX 源码',
   streamingDiagram: '生成完成后绘制图表',
   // Chat history import
   importOpen: '导入聊天记录',
@@ -873,6 +874,7 @@ const DICT_EN = {
   // Rendering
   mermaidFailed: 'Diagram failed to render',
   mathFailed: 'Formula failed to render',
+  mathUnsupported: 'This formula uses unsupported syntax; showing its LaTeX source',
   streamingDiagram: 'Diagram appears when the answer finishes',
   // Chat history import
   importOpen: 'Import chats',
