@@ -6,7 +6,8 @@
 dsh plugin add github:SamuelChung2010/DSHift
 ```
 
-![DSHift 演示：Agent / Chat 模式切换、交给 Agent、长期记忆与聊天记录导入](assets/demo.gif)
+<img width="1440" height="908" alt="dshift-readme" src="https://github.com/user-attachments/assets/cc55c1f0-3ff4-4d73-8c72-31cb8fddb116" />
+
 
 | 原生 DSH | DSHift |
 | --- | --- |
