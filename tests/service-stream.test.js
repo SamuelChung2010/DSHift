@@ -78,16 +78,20 @@ async function withService(run) {
   }
 }
 
-async function send(service, routes, body) {
-  const conversation = await service.store.createConversation()
+function requestTurn(routes, conversationId, body, signal) {
   const route = routes.get('/api/deepseek-chat/stream')
   assert.ok(route, 'the stream route must be registered')
-  const request = new Request('http://localhost/api/deepseek-chat/stream', {
+  return route.fetch(new Request('http://localhost/api/deepseek-chat/stream', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ conversationId: conversation.id, text: 'take off', files: [], locale: 'en', ...body }),
-  })
-  const response = await route.fetch(request)
+    body: JSON.stringify({ conversationId, text: 'take off', files: [], locale: 'en', ...body }),
+    signal,
+  }))
+}
+
+async function send(service, routes, body) {
+  const conversation = await service.store.createConversation()
+  const response = await requestTurn(routes, conversation.id, body)
   const text = await response.text()
   return { response, text, conversation }
 }
@@ -145,6 +149,137 @@ test('images are refused for a model without image understanding', async () => {
     assert.equal(response.status, 400)
     assert.match(text, /UNSUPPORTED_INPUT/)
     assert.equal(captured.length, 0)
+  })
+})
+
+test('concurrent sends reserve only their own conversation before appending history', async () => {
+  await withService(async ({ service, routes, captured }) => {
+    const first = await service.store.createConversation()
+    const other = await service.store.createConversation()
+    const upstream = globalThis.fetch
+    let finish
+    const waitForFinish = new Promise(resolve => { finish = resolve })
+    globalThis.fetch = async (...args) => {
+      const response = await upstream(...args)
+      await waitForFinish
+      return response
+    }
+    try {
+      const [one, two, independent] = await Promise.all([
+        requestTurn(routes, first.id, { text: 'A' }),
+        requestTurn(routes, first.id, { text: 'B' }),
+        requestTurn(routes, other.id, { text: 'C' }),
+      ])
+      assert.deepEqual([one.status, two.status].sort(), [200, 409])
+      const busy = one.status === 409 ? one : two
+      assert.equal((await busy.json()).error.code, 'BUSY')
+      assert.equal(independent.status, 200)
+      assert.equal(captured.length, 2)
+      assert.equal(first.messages.length, 2)
+      assert.equal(other.messages.length, 2)
+      finish()
+      const accepted = one.status === 200 ? one : two
+      await Promise.all([accepted.text(), independent.text()])
+      const retry = await requestTurn(routes, first.id, { text: 'after completion' })
+      assert.equal(retry.status, 200)
+      await retry.text()
+    } finally {
+      finish()
+    }
+  })
+})
+
+test('canceling or unloading during credential lookup releases the reservation without creating a turn', async () => {
+  await withService(async ({ service, routes, captured }) => {
+    const conversation = await service.store.createConversation()
+    const provider = service.ctx.get('credentials')
+    let entered
+    service.ctx.get = name => name === 'credentials' ? {
+      ...provider,
+      resolve: () => { entered(); return new Promise(() => {}) },
+    } : undefined
+    for (const unload of [false, true]) {
+      const started = new Promise(resolve => { entered = resolve })
+      const controller = new AbortController()
+      const pending = requestTurn(routes, conversation.id, {}, controller.signal)
+      await started
+      const duplicate = await requestTurn(routes, conversation.id, {})
+      assert.equal(duplicate.status, 409)
+      if (unload) await service.dispose()
+      else controller.abort()
+      assert.equal((await pending).status, 499)
+      assert.equal(conversation.messages.length, 0)
+      assert.equal(service.active.has(conversation.id), false)
+      assert.equal(captured.length, 0)
+    }
+  })
+})
+
+test('canceling an open response stops its upstream and permits the next turn', async () => {
+  await withService(async ({ service, routes }) => {
+    const conversation = await service.store.createConversation()
+    const upstream = globalThis.fetch
+    let upstreamSignal
+    globalThis.fetch = async (_url, { signal }) => {
+      upstreamSignal = signal
+      return new Promise((_, reject) => {
+        signal.addEventListener('abort', () => reject(signal.reason), { once: true })
+      })
+    }
+    const response = await requestTurn(routes, conversation.id, { text: 'stop this' })
+    const reader = response.body.getReader()
+    const first = await reader.read()
+    assert.equal(JSON.parse(new TextDecoder().decode(first.value)).type, 'start')
+    const concurrent = await requestTurn(routes, conversation.id, { text: 'wait' })
+    assert.equal(concurrent.status, 409)
+    await reader.cancel()
+    assert.equal(upstreamSignal.aborted, true)
+    await Promise.all([...service.pending])
+    assert.equal(conversation.messages.at(-1).status, 'stopped')
+    globalThis.fetch = upstream
+    const retry = await requestTurn(routes, conversation.id, { text: 'next' })
+    assert.equal(retry.status, 200)
+    await retry.text()
+  })
+})
+
+test('image validation uses each outgoing branch and rejects it before changing history', async () => {
+  await withService(async ({ service, routes, captured }) => {
+    const chat = await service.store.createConversation()
+    const sendFlash = async (body) => {
+      const response = await requestTurn(routes, chat.id, { model: 'deepseek-flash', ...body })
+      assert.equal(response.status, 200)
+      await response.text()
+    }
+    await sendFlash({ text: 'Describe this', files: [{ fileId: 'f1', name: 'cat.png', isImage: true }] })
+    await sendFlash({ text: 'What color?' })
+    const [imageQuestion, imageReply, followUp, lastReply] = chat.messages
+    await service.store.replaceMessage(chat.id, { ...lastReply, stopReason: 'max_tokens' })
+    const before = JSON.stringify(service.store.serializable())
+    for (const turn of [
+      { text: 'Continue the discussion' },
+      { mode: 'edit', targetMessageId: followUp.id, text: 'Which color?' },
+      { mode: 'regenerate', targetMessageId: imageReply.id },
+      { mode: 'continue', targetMessageId: lastReply.id },
+    ]) {
+      const response = await requestTurn(routes, chat.id, { ...turn, model: 'deepseek-v4-pro' })
+      assert.equal(response.status, 400)
+      assert.equal((await response.json()).error.code, 'UNSUPPORTED_INPUT')
+      assert.equal(JSON.stringify(service.store.serializable()), before)
+      assert.equal(captured.length, 2)
+    }
+
+    // Editing the first question produces a new branch without the old image.
+    const edited = await requestTurn(routes, chat.id, {
+      mode: 'edit', targetMessageId: imageQuestion.id, text: 'Text only', model: 'deepseek-v4-pro',
+    })
+    assert.equal(edited.status, 200)
+    await edited.text()
+    assert.equal(captured.length, 3)
+    assert.deepEqual(captured[2].body.messages.filter(message => message.role === 'user'), [
+      { role: 'user', content: 'Text only' },
+    ])
+    assert.equal(chat.nodes[imageQuestion.id].message.files[0].fileId, 'f1')
   })
 })
 

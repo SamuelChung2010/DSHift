@@ -733,7 +733,8 @@ async function ensureBoot(force = false) {
       if (active !== null && exists) {
         await loadConversation(active, { quiet: true })
       } else if (active !== null) {
-        chatStore.set({ activeId: null, messages: [] })
+        conversationLoadSequence += 1
+        chatStore.set({ activeId: null, messages: [], conversationLoading: false })
         writeStored({ activeId: null })
       }
       applyModelConfigFor(chatStore.state.activeId)
@@ -768,6 +769,7 @@ async function loadConversation(id, { quiet = false, focusMessageId = '' } = {})
   clearComposer()
   const sequence = ++conversationLoadSequence
   chatStore.set({ activeId: id, conversationLoading: true, conversationError: '', editingId: null, editDraft: '' })
+  restoreDraft(id)
   applyModelConfigFor(id)
   writeStored({ activeId: id })
   try {
@@ -783,7 +785,6 @@ async function loadConversation(id, { quiet = false, focusMessageId = '' } = {})
     }
     if (Array.isArray(data.folders)) patch.folders = data.folders
     chatStore.set(patch)
-    restoreDraft(id)
   } catch (error) {
     if (sequence !== conversationLoadSequence) return
     const message = error instanceof Error ? error.message : String(error)
@@ -1000,9 +1001,11 @@ async function newChat() {
   }
   stashDraft()
   clearComposer()
+  conversationLoadSequence += 1
   chatStore.set({
     activeId: null,
     messages: [],
+    conversationLoading: false,
     conversationError: '',
     renamingId: null,
     editingId: null,
@@ -1068,9 +1071,11 @@ function requestDeleteConversation(id, title) {
           if (chatStore.state.activeId === id) {
             clearComposer()
             forgetDraft(id)
+            conversationLoadSequence += 1
             chatStore.set({
               activeId: null,
               messages: [],
+              conversationLoading: false,
               conversationError: '',
               editingId: null,
               editDraft: '',
@@ -1321,12 +1326,14 @@ async function openSearchResult(result) {
   if (result === null || typeof result !== 'object' || typeof result.id !== 'string') return
   const target = typeof result.messageId === 'string' ? result.messageId : ''
   if (result.id === chatStore.state.activeId) {
+    const sequence = conversationLoadSequence
     try {
       const data = await hostJson('/api/deepseek-chat/conversation', {
         action: 'get',
         id: result.id,
         ...(target === '' ? {} : { focusMessageId: target }),
       })
+      if (sequence !== conversationLoadSequence) return
       if (Array.isArray(data.conversation?.messages)) {
         chatStore.set({
           messages: withImportedMedia(data.conversation.messages),
@@ -1339,6 +1346,7 @@ async function openSearchResult(result) {
       }
       if (Array.isArray(data.folders)) chatStore.set({ folders: data.folders })
     } catch (error) {
+      if (sequence !== conversationLoadSequence) return
       chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
     }
     return
@@ -1355,6 +1363,7 @@ async function selectVersion(messageId, direction) {
     return
   }
   closeMenu()
+  const sequence = conversationLoadSequence
   try {
     const data = await hostJson('/api/deepseek-chat/conversation', {
       action: 'version',
@@ -1362,6 +1371,7 @@ async function selectVersion(messageId, direction) {
       messageId,
       direction: direction < 0 ? 'prev' : 'next',
     })
+    if (sequence !== conversationLoadSequence) return
     if (Array.isArray(data.summaries)) applyOrganization(data)
     const messages = data.conversation?.messages
     if (Array.isArray(messages)) {
@@ -1374,6 +1384,7 @@ async function selectVersion(messageId, direction) {
       })
     }
   } catch (error) {
+    if (sequence !== conversationLoadSequence) return
     chatStore.toast(error instanceof Error ? error.message : String(error), 'error')
   }
 }
@@ -2073,8 +2084,7 @@ async function sendMessage() {
     focusRequest: chatStore.state.focusRequest + 1,
   })
   writeStored({ activeId: conversationId })
-  forgetDraft(conversationId)
-  forgetDraft(null)
+  forgetDraft(state.activeId)
   await runTurnStream({
     conversationId,
     payload: {

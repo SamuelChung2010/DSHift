@@ -169,6 +169,37 @@ test('auto extraction saves facts once and never breaks on a failing model', asy
   }
 })
 
+test('disabling either memory switch invalidates an outstanding automatic extraction', async () => {
+  let finish
+  const env = await setup({ reply: () => new Promise(resolve => { finish = resolve }) })
+  const messages = [
+    { id: 'u', role: 'user', content: 'Remember that I commute by bicycle every weekday.' },
+    { role: 'assistant', blocks: [{ type: 'text', text: 'Understood.' }] },
+  ]
+  const reply = '{"memories":[{"content":"I commute by bicycle every weekday."}]}'
+  try {
+    await env.store.updateSettings({ autoExtract: true })
+    await env.store.add({ content: 'I play the cello.' })
+    for (const setting of ['enabled', 'autoExtract']) {
+      const pending = env.service.maybeExtractConversation({ conversationId: setting, messages })
+      const { signal, messages: sent } = env.calls.at(-1)
+      assert.match(sent[0].content, /I play the cello/, 'automatic extraction still uses existing facts')
+      await env.store.updateSettings({ [setting]: false })
+      assert.equal(signal.aborted, true)
+      await env.store.updateSettings({ [setting]: true })
+      finish(reply)
+      assert.equal(await pending, null)
+      assert.equal(env.store.list().length, 1)
+    }
+    const next = env.service.maybeExtractConversation({ conversationId: 'new', messages })
+    assert.equal(env.calls.at(-1).signal.aborted, false)
+    finish(reply)
+    assert.equal((await next).added, 1)
+  } finally {
+    await env.cleanup()
+  }
+})
+
 test('builds an extraction request from stored messages and normalizes the transcript', () => {
   const request = buildExtractionRequest({
     messages: [
@@ -203,6 +234,37 @@ test('summarizes the fact set lazily and marks it stale after changes', async ()
 
     await env.store.add({ content: '用户喜欢像素画', category: 'preferences' })
     assert.equal(env.store.summaryIsStale(), true)
+  } finally {
+    await env.cleanup()
+  }
+})
+
+test('a summary finishing after a deletion cannot restore the removed fact', async () => {
+  const replies = []
+  const env = await setup({ reply: () => new Promise(resolve => replies.push(resolve)) })
+  try {
+    const added = await env.store.add({ content: 'I commute by bicycle.' })
+    await env.store.add({ content: 'I study astronomy.' })
+    const cached = env.service.refreshSummary('en')
+    replies.shift()('Bicycle commuting and astronomy.')
+    await cached
+
+    const old = env.service.refreshSummary('en')
+    await env.store.remove(added.memory.id)
+    assert.equal(env.store.getSummary(), null)
+    assert.equal(env.store.summaryIsStale(), true)
+    const fresh = env.service.refreshSummary('en')
+    assert.equal(replies.length, 2, 'a caller after deletion gets a new request')
+    assert.doesNotMatch(env.calls.at(-1).messages[0].content, /bicycle/)
+    replies[1]('I study astronomy.')
+    await fresh
+    replies[0]('Bicycle commuting and astronomy.')
+    await old
+    const disk = JSON.parse(await fs.readFile(env.store.file, 'utf8'))
+    assert.equal(disk.memories.length, 1)
+    assert.equal(disk.summary.text, 'I study astronomy.')
+    assert.equal(disk.summary.revision, disk.revision)
+    assert.equal(env.store.summaryIsStale(), false)
   } finally {
     await env.cleanup()
   }

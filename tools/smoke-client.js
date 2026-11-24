@@ -1351,7 +1351,12 @@ if (captured.chatStore.state.modelConfig.conversations.c9?.model !== 'deepseek-v
 console.log('MODEL_PERSIST_OK')
 
 // Per-conversation drafts survive a switch and a new chat.
-context.fetch = async (url) => {
+let draftSendBody = null
+context.fetch = async (url, init) => {
+  if (String(url).endsWith('/stream')) {
+    draftSendBody = JSON.parse(init.body)
+    return ndjsonResponse(streamLines)
+  }
   if (String(url).includes('/api/deepseek-chat/conversation')) {
     return new Response(JSON.stringify({ conversation: { id: 'c1', title: 't', messages: [] } }), {
       status: 200, headers: { 'content-type': 'application/json' },
@@ -1367,8 +1372,33 @@ await captured.chatActions.loadConversation('c1')
 if (captured.chatStore.state.draft !== 'first draft') throw new Error(`switching back must restore the draft: ${captured.chatStore.state.draft}`)
 await captured.chatActions.newChat()
 if (captured.chatStore.state.draft !== 'second draft') throw new Error('new chat must restore its own draft')
-captured.chatStore.set({ draft: '', activeId: null })
+await captured.chatActions.loadConversation('c1')
+await captured.chatActions.sendMessage()
+if (draftSendBody?.conversationId !== 'c1' || draftSendBody.text !== 'first draft'
+  || captured.chatStore.state.messages.at(-1)?.status !== 'done') throw new Error('the existing chat must complete its send')
+await captured.chatActions.newChat()
+if (captured.chatStore.state.draft !== 'second draft') throw new Error('sending in another chat must preserve the blank-page draft')
 console.log('DRAFTS_OK')
+
+// New chat remains available in the sidebar while history is loading.
+for (const response of [
+  Response.json({ conversation: { id: 'c1', messages: [originalUser] } }),
+  Response.json({ error: { message: 'late history error' } }, { status: 500 }),
+]) {
+  let deliverHistory
+  context.fetch = () => new Promise(resolve => { deliverHistory = resolve })
+  const pendingHistory = captured.chatActions.loadConversation('c1')
+  if (!captured.chatStore.state.conversationLoading) throw new Error('history should be loading')
+  const button = collectByClass(React.createElement(captured.Sidebar), 'dsc-new-chat')[0]
+  button.props.onClick()
+  if (captured.chatStore.state.conversationLoading) throw new Error('new chat must clear the history spinner immediately')
+  deliverHistory(response)
+  await pendingHistory
+  const state = captured.chatStore.state
+  if (state.activeId !== null || state.messages.length !== 0 || state.conversationError !== ''
+    || state.draft !== 'second draft') throw new Error('late history must not replace the new page or its draft')
+}
+console.log('HISTORY_NAVIGATION_OK')
 
 // A model the API no longer serves is recoverable: revert to the default and
 // keep the prompt, so the retry actually works.

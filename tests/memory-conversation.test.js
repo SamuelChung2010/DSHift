@@ -503,6 +503,39 @@ test('analyzes imported conversations for memory only after consent and only onc
   })
 })
 
+test('import analysis sends only selected chat content and checks duplicates locally', async () => {
+  await withService(async (env) => {
+    const selected = 'My daily commute is by bike.'
+    const unselected = 'I own a telescope.'
+    const unrelated = 'I play the cello.'
+    const existing = 'I ride a bicycle.'
+    const { added } = await env.service.store.adoptConversations([selected, unselected].map((content, index) => ({
+      title: 'Imported chat',
+      source: { kind: 'deepseek-export', id: 'export-' + index, importedAt: 1 },
+      messages: [{ id: 'u1', role: 'user', content, createdAt: 1 }],
+    })))
+    await env.service.memoryStore.add({ content: unrelated })
+    await env.service.memoryStore.add({ content: existing })
+    const requests = []
+    globalThis.fetch = async (_url, init) => {
+      requests.push(init.body)
+      return textResponse(JSON.stringify({ memories: [{ content: existing }] }))
+    }
+    const analyzed = await call(env, '/api/deepseek-chat/memory', {
+      action: 'extract.imported', conversationIds: [added[0]], consent: true,
+    })
+    assert.equal(analyzed.status, 200)
+    assert.equal(analyzed.value.analyzed, 1)
+    assert.equal(requests.length, 1)
+    assert.ok(requests[0].includes(selected))
+    for (const privateText of [unselected, unrelated, existing]) assert.ok(!requests[0].includes(privateText))
+    assert.equal(analyzed.value.entries[0].match.kind, 'duplicate')
+    const saved = await call(env, '/api/deepseek-chat/memory', { action: 'import', entries: analyzed.value.entries })
+    assert.equal(saved.value.result.skipped, 1)
+    assert.equal(saved.value.count, 2)
+  })
+})
+
 test('a failed imported-memory extraction leaves the imported chat untouched', async () => {
   await withService(async ({ service, routes }) => {
     const env = { service, routes }

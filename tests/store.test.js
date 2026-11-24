@@ -4,12 +4,34 @@ import { promises as fs } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { ChatStore } from '../lib/store.js'
+import { MemoryStore } from '../lib/memory-store.js'
+import { ModelConfigStore } from '../lib/model-config.js'
 
 async function tempStore() {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'dsh-chat-store-'))
   const store = new ChatStore(dir, { logger: { warn() {} } })
   await store.load()
   return { dir, store }
+}
+
+for (const Store of [ChatStore, MemoryStore, ModelConfigStore]) {
+  test(`${Store.name} resumes saving after a filesystem error`, async (t) => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'dsh-write-retry-'))
+    t.after(() => fs.rm(dir, { recursive: true, force: true }))
+    const store = new Store(dir)
+    await store.load()
+
+    // A directory at the destination prevents the temporary file from replacing it.
+    await fs.mkdir(store.file)
+    await assert.rejects(store.save())
+    await assert.rejects(store.flush())
+    await fs.rmdir(store.file)
+
+    await store.save()
+    await store.flush()
+    const saved = JSON.parse(await fs.readFile(store.file, 'utf8'))
+    assert.equal(saved.version, store.state.version)
+  })
 }
 
 test('persists conversations, messages, automatic titles and manual renames', async () => {
