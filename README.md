@@ -40,7 +40,7 @@ dsh-chat 在 DeepSeek Harness 中加入一个原生的 **DeepSeek Chat 模式**�
 
 ### Beta 3 修复
 
-- **公式与 Markdown 渲染**：先保护代码块、行内代码与公式占位符，修复行内代码显示成 `code:...`、矩阵/`bmatrix` 布局错位、未支持或未闭合 LaTeX 只画出半截公式，以及流式公式完成后内容跳动的问题。未知环境整条回退为浅底等宽源码，不丢字、不报错。
+- **公式与 Markdown 渲染**：先保护代码块、行内代码与公式占位符，修复行内代码显示成 `code:...`、矩阵/`bmatrix` 布局错位、未支持或未闭合 LaTeX 只画出半截公式，以及流式公式完成后内容跳动的问题。未知环境整条回退为浅底等宽源码；`\boxed{}`、`\qquad`、顶层 `\\` 换行与 `latex` / `math` / `tex` 围栏公式均直接渲染，不丢字、不报错。
 - **模式切换时的文件选择器**：修复从 Agent 切回 Chat 时误弹系统文件选择器。上传改为“实时注册 input + 模式门禁”，切换期间加锁；隐藏 input 不再进入 Tab 顺序，拖拽、粘贴与导入上传共用同一道守卫。
 - **Harness 原生控件**：`＋`、发送与停止按钮改用原生 16-unit 图形和 28/34px 正圆，补上 `corner-shape: round`，不再被主题的 `superellipse` 压成圆角矩形；`交给 Agent` 按钮调整为 40px 胶囊，与 Chat | Agent 切换器同高、同圆角并保持对齐，窄屏同步缩到 36px。
 - **可观测性**：上传路径增加 `[upload]` 诊断日志与原生文件 input 点击栈，便于复现时定位触发来源。
@@ -177,13 +177,13 @@ Chat 设置 → **长期记忆** 是一套与会话历史分开的本地记忆�
 
 ## 内容渲染
 
-`client-src/30-markdown.js` 是 Markdown 入口，另外三个模块各自独立、无外部依赖。渲染前会先把代码块/行内代码保护起来，再把完整的行内与块级公式替换成自带内容标记的占位符，最后才进入 Markdown 解析；未闭合的 `$` / `$$`（流式输出中间态）保持纯文本：
+`client-src/30-markdown.js` 是 Markdown 入口，另外三个模块各自独立、无外部依赖。渲染前会先把代码块/行内代码保护起来，再把完整的行内与块级公式替换成自带内容标记的占位符，最后才进入 Markdown 解析；未闭合的 `$` / `$$`（流式输出中间态）保持纯文本，`latex` / `math` / `tex` 围栏则整块交给公式渲染器而不是生成代码块：
 
 - `31-highlight.js`：单遍扫描的词法高亮，支持 JS/TS、JSON、HTML/XML、CSS、Python、Bash、PowerShell、SQL、Java、C#、C/C++、Go、Rust、YAML、Markdown、diff 等；未知语言按纯文本显示，字符永远不会丢失。
-- `32-math.js`：LaTeX 子集渲染（分数、根式、上下标、大型运算符、定界符、矩阵、cases/aligned、重音、希腊字母与常用运算符）；矩阵按最宽行锁定列数布局，`bmatrix` 的方括号用可随矩阵高度拉伸的 CSS 边框绘制；未知命令或未支持/未闭合环境（如自定义宏、`tikzcd`、流式中的半截矩阵）不抛错，整条公式回退为等宽浅底的 `.dsc-math-fallback` 原文；解析失败时回退为原始公式文本。
+- `32-math.js`：LaTeX 子集渲染（分数、根式、上下标、大型运算符、定界符、矩阵、cases/aligned、重音、希腊字母与常用运算符，另有 `\boxed{}` 边框、`\qquad` 2em 间距和顶层 `\\` 换行）；矩阵按最宽行锁定列数布局，`bmatrix` 的方括号用可随矩阵高度拉伸的 CSS 边框绘制；未知命令或未支持/未闭合环境（如自定义宏、`tikzcd`、流式中的半截矩阵）不抛错，整条公式回退为等宽浅底的 `.dsc-math-fallback` 原文；解析失败时回退为原始公式文本。公式容器使用 KaTeX / `Times New Roman` / Cambria Math 的衬线字体栈。
 - `33-mermaid.js`：flowchart/graph、sequenceDiagram、pie、classDiagram 的 React SVG 渲染；不支持或超出上限时显示错误说明并保留源代码。
 - 所有内容都以 React 元素输出，不使用 `innerHTML` / `dangerouslySetInnerHTML` / `eval`；链接与图片只允许 http(s)。
-- 流式输出时已完成的块靠 `React.memo` 跳过重渲染，Mermaid 图表在最后一个块生成结束后才绘制，避免每帧重排；未闭合的块级公式先以同尺寸源码块占位，完成后整体替换为公式，公式块保留最小高度，块级公式与代码块各自横向滚动。
+- 流式输出时已完成的块靠 `React.memo` 跳过重渲染，Mermaid 图表在最后一个块生成结束后才绘制，避免每帧重排；未闭合的块级公式、未闭合的 `\boxed{` 或尚未结束的 TeX 围栏先以同尺寸源码块占位，闭合后整体替换为公式，公式块保留最小高度，块级公式与代码块各自横向滚动。
 
 ## Chat → Agent 交接
 
@@ -340,6 +340,7 @@ node tools/check-i18n.js           # 中英文键一致性
 node tools/check-highlight.js      # 代码高亮字符不丢失 / 分类 / 性能
 node tools/check-math.js           # LaTeX 子集渲染、未知环境降级与深度保护
 node tools/check-markdown-math.js  # Chat 公式解析管线：代码保护、多公式、流式与 10+ 块级公式
+node tools/preview-math.js         # 生成 \boxed / \qquad 公式静态预览页（配合无头浏览器截图）
 node tools/check-upload.js         # 上传入口模式守卫、切换锁、隐藏 input 与监听器配对
 node tools/check-mermaid.js        # Mermaid 解析、几何与错误回退
 node tools/check-memory-client.js  # 跨平台记忆导出提示词与本地解析器

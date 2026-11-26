@@ -4512,6 +4512,9 @@ const CODE_TOKEN_SOURCE = '\\u0000dsc-(?:code|literal):[^\\u0000]*\\u0000'
 const CODE_TOKEN_RE = /^\u0000dsc-(code|literal):([^\u0000]*)\u0000$/
 const MATH_DISPLAY_MAX_SOURCE = 20000
 const MATH_INLINE_PAREN_MAX = 2000
+// A fenced block tagged with one of these languages is TeX, not code. Models
+// that fence whole formulas must not get a grey code block around them.
+const MATH_FENCE_LANGS = new Set(['latex', 'math', 'tex'])
 
 const INLINE_PATTERN = new RegExp([
   MATH_TOKEN_SOURCE, // math extracted by prepareMath()
@@ -4682,6 +4685,53 @@ function mathLineEnd(source, index) {
   return newline === -1 ? source.length : newline
 }
 
+/**
+ * Every `{` in a TeX run needs its `}` before the run may render. This is what
+ * keeps a streaming `\boxed{` (or any other open group) literal instead of
+ * painting a box around the half formula that has arrived so far. Escaped
+ * braces (`\{`, `\}`) are skipped.
+ */
+function mathBracesBalanced(source) {
+  let depth = 0
+  for (let index = 0; index < source.length; index += 1) {
+    const char = source[index]
+    if (char === '\\') {
+      index += 1
+      continue
+    }
+    if (char === '{') depth += 1
+    else if (char === '}') {
+      depth -= 1
+      if (depth < 0) return false
+    }
+  }
+  return depth === 0
+}
+
+/** Strip optional $$ / \[ \] wrappers from a fence body before rendering it. */
+function stripMathFenceText(text) {
+  const value = text.trim()
+  if (value.length >= 4 && value.startsWith('$$') && value.endsWith('$$')) {
+    return value.slice(2, -2).trim()
+  }
+  if (value.length >= 4 && value.startsWith('\\[') && value.endsWith('\\]')) {
+    return value.slice(2, -2).trim()
+  }
+  return value
+}
+
+/**
+ * Whether a fence info string names TeX. This must not go through
+ * normalizeCodeLang(): that function maps languages it does not highlight to
+ * "text", which would turn every ```latex block back into code.
+ */
+function isMathFenceLang(lang) {
+  const id = String(lang ?? '').trim().toLowerCase()
+    .replace(/^language-/, '')
+    .split(/[\s,;]+/)[0] || ''
+  return MATH_FENCE_LANGS.has(id)
+}
+
 /** Find a complete display run; block rules only apply when it spans lines. */
 function readDisplayMath(source, start, open, close, protectedMask) {
   const contentStart = start + open.length
@@ -4701,17 +4751,20 @@ function readDisplayMath(source, start, open, close, protectedMask) {
     index += 1
   }
   if (found < 0) return null
+  const end = found + close.length
   const tex = source.slice(contentStart, found).trim()
   if (tex === '') return null
   if (tex.includes('\n')) {
     // A multi-line display formula must own its lines. Without this rule an
     // unclosed "$$" in streamed prose would swallow the rest of the answer.
     const before = source.slice(mathLineStart(source, start), start)
-    const closeEnd = found + close.length
-    const after = source.slice(closeEnd, mathLineEnd(source, closeEnd))
+    const after = source.slice(end, mathLineEnd(source, end))
     if (!/^[ \t]*$/.test(before) || !/^[ \t]*$/.test(after)) return null
   }
-  return { tex, end: found + close.length }
+  // The closer arrived but a group is still open: keep the run literal and
+  // resume scanning after its closer (see prepareMath()).
+  if (!mathBracesBalanced(tex)) return { end, incomplete: true }
+  return { tex, end }
 }
 
 function readInlineDollar(source, start, protectedMask) {
@@ -4728,7 +4781,8 @@ function readInlineDollar(source, start, protectedMask) {
       const token = source.slice(start, index + 1)
       if (!looksLikeInlineMath(token, source, start)) return null
       const tex = source.slice(start + 1, index)
-      return tex === '' ? null : { tex, end: index + 1 }
+      if (tex === '' || !mathBracesBalanced(tex)) return null
+      return { tex, end: index + 1 }
     }
     index += 1
   }
@@ -4743,7 +4797,7 @@ function readInlineParen(source, start, protectedMask) {
     if (protectedMask[index] === 1) return null
     if (source[index] === '\\' && source[index + 1] === ')') {
       const tex = source.slice(contentStart, index)
-      return tex === '' ? null : { tex, end: index + 2 }
+      return tex === '' || !mathBracesBalanced(tex) ? null : { tex, end: index + 2 }
     }
     index += 1
   }
@@ -4805,6 +4859,12 @@ function prepareMath(source) {
       } else if (next === '[') {
         const found = readDisplayMath(source, index, '\\[', '\\]', protectedMask)
         if (found !== null) {
+          if (found.incomplete === true) {
+            // The \] arrived while \boxed{ (or another group) is still open:
+            // keep the run literal until the closing brace streams in.
+            index = found.end
+            continue
+          }
           chunks.push(source.slice(copyFrom, index), mathToken(true, found.tex))
           index = found.end
           copyFrom = index
@@ -4818,6 +4878,12 @@ function prepareMath(source) {
       if (source[index + 1] === '$') {
         const found = readDisplayMath(source, index, '$$', '$$', protectedMask)
         if (found !== null) {
+          if (found.incomplete === true) {
+            // `$$` is closed but the TeX is not: a streamed `\boxed{` (or any
+            // open group) keeps the entire run as plain text until it closes.
+            index = found.end
+            continue
+          }
           chunks.push(source.slice(copyFrom, index), mathToken(true, found.tex))
           index = found.end
           copyFrom = index
@@ -4897,6 +4963,7 @@ function looksLikeInlineMath(token, source, index) {
   if (token.startsWith('$$')) return true
   const body = token.slice(1, -1)
   if (body === '' || body.length > 300) return false
+  if (!mathBracesBalanced(body)) return false
   if (/^\s|\s$/.test(body)) return false
   if (/^[\d.,]+$/.test(body)) return false
   const before = index > 0 ? source[index - 1] : ''
@@ -4955,12 +5022,20 @@ function renderInline(text, keyPrefix = 'i', context = {}) {
     } else if (token.startsWith('`') && token.endsWith('`')) {
       nodes.push(h('code', { className: 'dsc-inline-code', key }, token.slice(1, -1)))
     } else if (token.startsWith('\\(')) {
-      nodes.push(h(LatexInline, { key, tex: token.slice(2, -2) }))
+      // An inline math run whose \boxed{ (or any group) is still open stays
+      // literal; it paints only after the closing brace arrives.
+      const tex = token.slice(2, -2)
+      nodes.push(mathBracesBalanced(tex) ? h(LatexInline, { key, tex }) : token)
     } else if (token.startsWith('$')) {
       if (token.startsWith('$$') && token.endsWith('$$') && token.length > 4) {
         // A display formula written inside a paragraph: a span keeps the
         // document valid while the block styles still lay it out on its own.
-        nodes.push(h('span', { key, className: 'dsc-math dsc-math-block' }, latexToNodes(token.slice(2, -2), { display: true })))
+        const tex = token.slice(2, -2)
+        if (!mathBracesBalanced(tex)) {
+          nodes.push(token)
+        } else {
+          nodes.push(h('span', { key, className: 'dsc-math dsc-math-block' }, latexToNodes(tex, { display: true })))
+        }
       } else if (looksLikeInlineMath(token, source, match.index)) {
         nodes.push(h(LatexInline, { key, tex: token.slice(1, -1) }))
       } else {
@@ -5063,12 +5138,29 @@ function parseMarkdown(source) {
       const lang = fence[2] ?? ''
       index += 1
       const body = []
-      while (index < lines.length && !new RegExp(`^\\s*${marker[0]}{${marker.length},}\\s*$`).test(lines[index])) {
+      let terminated = false
+      while (index < lines.length) {
+        if (new RegExp(`^\\s*${marker[0]}{${marker.length},}\\s*$`).test(lines[index])) {
+          terminated = true
+          index += 1
+          break
+        }
         body.push(lines[index])
         index += 1
       }
-      if (index < lines.length) index += 1
       const text = body.join('\n')
+      if (isMathFenceLang(lang)) {
+        const tex = stripMathFenceText(text)
+        if (terminated && mathBracesBalanced(tex)) {
+          if (tex !== '') blocks.push({ type: 'math', text: tex })
+        } else {
+          // A TeX fence that is still streaming, or one whose `\boxed{` /
+          // `\begin{...}` has not closed yet, stays literal in the same block
+          // shape so the finished formula does not move the transcript.
+          blocks.push({ type: 'streaming-math', text })
+        }
+        continue
+      }
       blocks.push(normalizeCodeLang(lang) === 'mermaid'
         ? { type: 'mermaid', text }
         : { type: 'code', lang, text })
@@ -5085,15 +5177,25 @@ function parseMarkdown(source) {
     if (opening !== null) {
       const single = opening.rest.trimEnd()
       if (single.endsWith(opening.close)) {
-        blocks.push({ type: 'math', text: single.slice(0, -opening.close.length).trim() })
+        const tex = single.slice(0, -opening.close.length).trim()
+        // The closer is here but a streamed \boxed{ (or any group) is open:
+        // keep the line as plain text instead of painting a half box.
+        if (!mathBracesBalanced(tex)) {
+          blocks.push({ type: 'streaming-math', text: line.trim() })
+          index += 1
+          continue
+        }
+        blocks.push({ type: 'math', text: tex })
         index += 1
         continue
       }
       const body = opening.rest === '' ? [] : [opening.rest]
+      const rawLines = [line]
       index += 1
       let closed = false
       while (index < lines.length) {
         const current = lines[index]
+        rawLines.push(current)
         const trimmed = current.trim()
         if (trimmed === opening.close) {
           closed = true
@@ -5111,13 +5213,10 @@ function parseMarkdown(source) {
         index += 1
       }
       const text = body.join('\n').trim()
-      if (!closed) {
-        // No closer anywhere below: this is the middle of a streamed display
-        // formula. Keep the source literal in a block of the same shape so the
-        // switch to the finished formula does not collapse the message. The
-        // first body entry is opening.rest and is already part of `line`.
-        const tail = opening.rest === '' ? body : body.slice(1)
-        blocks.push({ type: 'streaming-math', text: [line, ...tail].join('\n') })
+      if (!closed || (text !== '' && !mathBracesBalanced(text))) {
+        // No closer yet, or an open group inside the formula: literal source
+        // in the stable streaming block until the text is complete.
+        blocks.push({ type: 'streaming-math', text: rawLines.join('\n') })
         continue
       }
       if (text !== '') blocks.push({ type: 'math', text })
@@ -6752,6 +6851,11 @@ function parseMathCommand(state, name, depth) {
     }
     return { type: 'sqrt', index, body: parseMathArgument(state, depth) }
   }
+  if (name === 'boxed') {
+    // \boxed{...} is an \fbox around math, so its argument is parsed as math
+    // (nested \boxed, \text, \frac and scripts all keep working).
+    return { type: 'boxed', body: parseMathArgument(state, depth) }
+  }
   if (name === 'left') return parseMathLeftRight(state, depth)
   if (name === 'begin') return parseMathEnvironment(state, depth)
   if (MATH_BIG_DELIMITERS[name] !== undefined) {
@@ -6966,6 +7070,12 @@ function mathRenderSqrt(node, context, key) {
   )
 }
 
+function mathRenderBoxed(node, context, key) {
+  // The border is drawn by CSS (.dsc-math-boxed) so it follows currentColor in
+  // both themes and grows with the boxed content.
+  return h('span', { className: 'dsc-math-boxed', key }, mathRenderContent(node.body, context, `${key}-b`))
+}
+
 function mathRenderBig(node, context, key) {
   const glyph = h('span', {
     className: node.large ? 'dsc-math-big' : 'dsc-math-op',
@@ -7045,6 +7155,7 @@ function mathEstimateHeight(value, context) {
   }
   if (value.type === 'frac' || value.type === 'binom') return 2.35
   if (value.type === 'sqrt') return mathEstimateHeight(value.body, context) + 0.2
+  if (value.type === 'boxed') return mathEstimateHeight(value.body, context) + 0.35
   if (value.type === 'matrix') return Math.max(1, value.rows.length * 1.15)
   if (value.type === 'scripts') {
     return Math.max(
@@ -7163,6 +7274,7 @@ function renderMathNode(node, context, key) {
   if (node.type === 'frac') return mathRenderFrac(node, context, key)
   if (node.type === 'binom') return mathRenderBinom(node, context, key)
   if (node.type === 'sqrt') return mathRenderSqrt(node, context, key)
+  if (node.type === 'boxed') return mathRenderBoxed(node, context, key)
   if (node.type === 'bigop') return mathRenderBig(node, context, key)
   if (node.type === 'scripts') return mathRenderScripted(node, context, key)
   if (node.type === 'delimited') return mathRenderDelimited(node, context, key)
@@ -7178,7 +7290,7 @@ function renderMathNode(node, context, key) {
   if (node.type === 'unknown') {
     return h('span', { className: 'dsc-math-text', key, style: { opacity: 0.65 } }, '\\' + node.name)
   }
-  if (node.type === 'rowbreak') return h('span', { className: 'dsc-math-text', key }, '\\\\')
+  if (node.type === 'rowbreak') return h('span', { className: 'dsc-math-rowbreak', key, 'aria-hidden': 'true' })
   return null
 }
 
@@ -15727,7 +15839,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
    already loads the KaTeX font faces, so math text picks them up when present
    and falls back to a serif face otherwise. */
 .dsc-math {
-  font-family: 'KaTeX_Main', 'Cambria Math', 'Times New Roman', serif;
+  font-family: 'KaTeX_Main', 'Times New Roman', 'Cambria Math', serif;
   font-size: 1.03em;
   line-height: 1.4;
   color: var(--dsc-text);
@@ -15754,19 +15866,24 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 }
 .dsc-math-row { display: inline-flex; align-items: baseline; flex-wrap: wrap; column-gap: 0.12em; row-gap: 0.42em; }
 .dsc-math-block .dsc-math-row { justify-content: center; }
+/* A top-level double backslash inside display math forces the next item onto
+   its own line. The zero-height flex item wraps because its basis is the full
+   row width. */
+.dsc-math-rowbreak { flex: 0 0 100%; width: 100%; height: 0; margin: 0; }
 /* Tall constructs centre on the math axis instead of hanging from their
    numerator/radical baseline. */
 .dsc-math-frac,
 .dsc-math-sqrt,
+.dsc-math-boxed,
 .dsc-math-matrix { align-self: center; }
-.dsc-math-var { font-style: italic; font-family: 'KaTeX_Math', 'Cambria Math', 'Times New Roman', serif; }
+.dsc-math-var { font-style: italic; font-family: 'KaTeX_Math', 'Times New Roman', 'Cambria Math', serif; }
 .dsc-math-num,
 .dsc-math-op,
 .dsc-math-text { font-style: normal; }
 .dsc-math-op { padding: 0 0.14em; }
 .dsc-math-text { white-space: pre; }
 .dsc-math-big { font-size: 1.45em; line-height: 1; vertical-align: -0.12em; padding: 0 0.05em; }
-.dsc-math-delim { font-style: normal; font-family: 'KaTeX_Size1', 'KaTeX_Main', 'Cambria Math', serif; }
+.dsc-math-delim { font-style: normal; font-family: 'KaTeX_Size1', 'KaTeX_Main', 'Times New Roman', 'Cambria Math', serif; }
 .dsc-math-frac {
   display: inline-flex;
   flex-direction: column;
@@ -15782,6 +15899,15 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-math-sqrt::before { content: '√'; font-size: 1.18em; line-height: 1; }
 .dsc-math-sqrt-body { padding: 0 0.16em 0 0.06em; border-top: 1px solid currentColor; margin-top: 0.14em; }
 .dsc-math-sqrt-index { font-size: 0.6em; line-height: 1; margin-right: -0.28em; margin-top: -0.1em; align-self: flex-start; }
+/* \boxed{...}: currentColor keeps the frame legible in both themes. */
+.dsc-math-boxed {
+  display: inline-block;
+  border: 1.5px solid currentColor;
+  padding: 2px 6px;
+  border-radius: 4px;
+  vertical-align: middle;
+  line-height: 1.25;
+}
 /* A lone script rises or sinks from the wrapper; stacked scripts are laid out
    by the renderer with inline flex styles. */
 .dsc-math-script { display: inline-flex; flex-direction: column; align-items: flex-start; vertical-align: middle; font-size: 0.72em; line-height: 1.08; }

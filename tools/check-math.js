@@ -41,6 +41,23 @@ function flatten(node) {
   return ''
 }
 
+function collectClass(node, name, out = []) {
+  if (node === null || node === undefined || node === false) return out
+  if (Array.isArray(node)) {
+    for (const child of node) collectClass(child, name, out)
+    return out
+  }
+  if (typeof node !== 'object') return out
+  if (typeof node.type === 'function') {
+    collectClass(node.type(node.props || {}), name, out)
+    return out
+  }
+  const value = node.props?.className
+  if (typeof value === 'string' && value.split(/\s+/).includes(name)) out.push(node)
+  collectClass(node.children ?? node.props?.children, name, out)
+  return out
+}
+
 function assertSafe(node, name) {
   if (node === null || node === undefined) return
   if (Array.isArray(node)) {
@@ -61,6 +78,10 @@ const samples = [
   { name: 'dfrac', tex: '\\dfrac{a+b}{c}', visible: ['a', 'b', 'c'] },
   { name: 'sqrt', tex: '\\sqrt{x}', visible: ['x'] },
   { name: 'indexed root', tex: '\\sqrt[3]{x}', visible: ['3', 'x'] },
+  { name: 'boxed', tex: '\\boxed{\\theta_{X1}<\\theta_{Y1}}', visible: ['θ', '<'] },
+  { name: 'nested boxed', tex: '\\boxed{x + \\boxed{y}}', visible: ['x', 'y'] },
+  { name: 'boxed and qquad', tex: '\\boxed{a} \\qquad \\boxed{b}', visible: ['a', 'b'] },
+  { name: 'rowbreak', tex: 'a \\\\ b', visible: ['a', 'b'] },
   { name: 'superscript', tex: 'x^2', visible: ['x', '2'] },
   { name: 'subscript', tex: 'x_i', visible: ['x', 'i'] },
   { name: 'combined scripts', tex: 'x_i^2', visible: ['x', 'i', '2'] },
@@ -119,6 +140,33 @@ for (const sample of samples) {
     if (!text.includes(visible)) fail(`${sample.name}: missing visible text ${JSON.stringify(visible)} in ${JSON.stringify(text)}`)
   }
 }
+
+// \boxed{...} frames its parsed argument instead of falling back to source.
+const boxedNodes = math.latexToNodes('\\boxed{\\theta_{X1}<\\theta_{Y1}}')
+if (collectClass(boxedNodes, 'dsc-math-boxed').length !== 1) fail('\\boxed did not render one frame')
+if (collectClass(boxedNodes, 'dsc-math-fallback').length !== 0) fail('\\boxed used the source fallback')
+const boxedText = flatten(boxedNodes)
+if (!boxedText.includes('θ') || !boxedText.includes('<')) fail(`\\boxed lost its content: ${JSON.stringify(boxedText)}`)
+if (boxedText.includes('\\boxed')) fail('\\boxed leaked LaTeX source')
+const nestedBoxed = math.latexToNodes('\\boxed{x + \\boxed{y}}')
+if (collectClass(nestedBoxed, 'dsc-math-boxed').length !== 2) fail('nested \\boxed did not render two frames')
+if (flatten(nestedBoxed) !== 'x+y') fail(`nested \\boxed content is wrong: ${JSON.stringify(flatten(nestedBoxed))}`)
+
+// \qquad stays a 2em math space (the visual equivalent of four nbsp).
+const qquadAst = math.parseLatex('a \\qquad b')
+const qquadSpaces = qquadAst.items.filter(item => item.type === 'space')
+if (qquadSpaces.length !== 1 || qquadSpaces[0].size !== 2) fail('\\qquad did not parse as a 2em space')
+const qquadNodes = math.latexToNodes('a \\qquad b')
+const qquadNodeSpaces = collectClass(qquadNodes, 'dsc-math-space')
+if (qquadNodeSpaces.length !== 1 || qquadNodeSpaces[0].props.style?.width !== '2.0000em') {
+  fail(`\\qquad did not render a 2em space: ${JSON.stringify(qquadNodeSpaces[0]?.props?.style)}`)
+}
+
+// A top-level \\ is a line break, not two visible backslashes.
+const rowbreakNodes = math.latexToNodes('a \\\\ b')
+if (collectClass(rowbreakNodes, 'dsc-math-rowbreak').length !== 1) fail('top-level \\\\ did not render a line break')
+if (flatten(rowbreakNodes).includes('\\\\')) fail('top-level \\\\ leaked backslashes')
+if (flatten(rowbreakNodes) !== 'ab') fail(`line break content is wrong: ${JSON.stringify(flatten(rowbreakNodes))}`)
 
 // Unknown commands must stay visible as text and never break rendering.
 const unknown = flatten(math.latexToNodes('\\foo{bar}'))
