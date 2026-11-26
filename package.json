@@ -1,6 +1,6 @@
 {
   "name": "@local/deepseek-chat-mode",
-  "version": "0.2.0-beta.3",
+  "version": "0.2.0-beta.4",
   "private": true,
   "type": "module",
   "description": "dsh-chat: a native DeepSeek Chat mode for DeepSeek Harness, with chat-export import, long-term memory, deep thinking, web search, file upload, and persistent history.",

@@ -1,8 +1,8 @@
 # 长会话输入卡顿专项：根因、修复与性能验收
 
-分支：`fix/long-chat-performance`（worktree `C:\Users\Zhong\Documents\dsh-chat-perf`）
+分支：`fix/long-chat-performance`（worktree `C:\Users\Zhong\Documents\dsh-chat-perf`）；集成分支最终合入 `main`
 基线：`87721ec`（`origin/main`，`develop` 当前稳定维护基线）
-状态：修复与测试已完成，**未推送、未合并、未发布、未修改版本号**
+状态：数学改动与性能修复已完成、合并并准备发布 `v0.2.0-beta.4`（提交与发布细节见第 9–10 节）
 
 ---
 
@@ -176,7 +176,21 @@
 
 短会话均 < 100 ms，处于同一量级；长会话挂载受 containment 和新增 memo 开销影响约 10–15%，但挂载本就是一次性成本，输入路径收益为 5–8 倍。该表单次运行波动约 ±20%，仅作趋势参考。
 
-### 4.6 布局/绘制证据
+### 4.6 合并数学改动后的复核
+
+数学公式改动与性能修复合并成最终发布构建后，用同一脚本复测（Windows 11 / Chrome 158，同一测试口径）：
+
+| 场景 | 合并前修复构建 P95 | 合并后发布构建 P95 |
+| --- | --- | --- |
+| 300 条普通会话 | 8.2 ms | 9.5 ms |
+| 500 条普通会话 | 16.6 ms | 9.1 ms |
+| 300 条密集 Markdown | 11.8 ms | 9.5 ms |
+| 500 条密集 Markdown | 14.5 ms | 9.0 ms |
+| 300 条流式期间输入 | 14.3 ms | 9.0 ms |
+
+单键历史组件计数仍为 0（Thread / AssistantMessage / UserMessage / Markdown / renderBlocks），只有 Composer 重渲染。数学改动没有引入输入性能回退。原始数据：`docs/perf/merged-after.json`。
+
+### 4.7 布局/绘制证据
 
 - 修复前密集 500 条：布局树 **189,566** 个对象；单键触发多次 Layout（每次约 4–5 ms）与 PrePaint（单次约 32 ms）。
 - 加入最小 containment 后，同数据按键 P50 从约 53 ms 降到约 14 ms（实验注入）；正式实现仅在 ≥120 行时启用，修复后 P95 14.5 ms。
@@ -276,24 +290,25 @@
 
 ## 9. Git 与 Worktree 状态
 
-- 分支：`fix/long-chat-performance`，基于 `87721ec`（`origin/main`）。
-- Worktree：`C:\Users\Zhong\Documents\dsh-chat-perf`，与 `develop`、`research/artifacts` 等现有 worktree 完全分离。
-- `develop` 工作区的未提交数学改动未被触碰；`main` 未修改。
-- 本轮只做本地修改/测试；**未 push、未 merge、未打 tag、未改 `package.json` 版本**（候选 `v0.2.0-beta.4` 留待作者决定）。
-- 提交状态见本轮结束时的 `git log -1`。
+- 数学改动：`5701147 feat(chat): render boxed and fenced TeX formulas`（`develop`）。
+- 性能修复：`9334a63 fix(chat): keep long histories out of the input render path`（`fix/long-chat-performance`）。
+- 集成：`ca80c2b merge: integrate math rendering work into long-chat performance branch`。
+- 发布提交：`e1ed4c1 chore(release): prepare dsh-chat v0.2.0 Beta 4`（`main`），tag `v0.2.0-beta.4`。
+- Worktree：`C:\Users\Zhong\Documents\dsh-chat-perf` 与 `C:\Users\Zhong\Documents\dsh-chat-main`；`develop` 工作区只留下与本发布无关的 `promo/` 宣传素材，未提交。
+- 发布包、校验和与验证记录位于 `.release/v0.2.0-beta.4/`，GitHub Release 使用同一版本。
 
 ---
 
 ## 10. 是否达到 v0.2.0-beta.4 发布条件
 
-**性能与回归层面：在 Windows/Chrome 基线下达到本轮目标**（300 条 P95 8.2 ms、500 条 16.6 ms、密集 500 条 14.5 ms、流式期间 14.3 ms；历史组件每键 0 重渲染；功能测试全绿）。
+**性能与回归层面：在 Windows/Chrome 基线下达到本轮目标**（300 条 P95 8.2 ms、500 条 16.6 ms、密集 500 条 14.5 ms、流式期间 14.3 ms；合并数学改动后的最终构建复核为 9.5 / 9.1 / 9.0 / 9.0 ms；历史组件每键 0 重渲染；功能测试全绿）。
 
-**仍建议在发布前完成**：
-1. macOS 实机复跑与中文/日文 IME 人工验证；
-2. Electron 窗口内复核一次绝对延迟（headless 数据只作相对比较）；
-3. 作者审核本报告、`contain` 长会话策略与挂载成本取舍。
+**已知限制（发布说明中保留）**：
+1. macOS 实机复跑与中文/日文 IME 人工验证尚未完成；
+2. Electron 窗口内的绝对延迟未单独测量（headless Chrome 数据用于同设备相对比较）；
+3. 长会话首次挂载（500 条密集内容）仍约 3 秒，属一次性成本。
 
-满足以上条件后，可作为 `v0.2.0-beta.4` 的候选修复；当前**不建议直接发布**。
+经作者确认，以上限制不阻塞 `v0.2.0-beta.4` beta 发布；后续补 macOS/Electron 验证与长会话挂载优化。
 
 ---
 
