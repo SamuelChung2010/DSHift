@@ -1,11 +1,12 @@
 /**
  * End-to-end checks for the Chat Markdown + LaTeX pipeline.
  *
- * The renderer lives in 30-markdown.js (pipeline / protection / blocks) and
- * 32-math.js (TeX subset). This file loads both with a small React shim and
- * exercises the acceptance cases from the Chat formula task: inline math,
- * display math, matrices, aligned equations, code-protected dollars, graceful
- * fallback, streaming and a many-formula message.
+ * The renderer lives in 30-markdown.js (pipeline / protection / blocks),
+ * 31-highlight.js (language normalization and code spans) and 32-math.js (TeX
+ * subset). This file loads them with a small React shim and exercises the
+ * acceptance cases from the Chat formula task: inline math, display math,
+ * matrices, aligned equations, \boxed/\qquad, TeX fences, code-protected
+ * dollars, graceful fallback, streaming and a many-formula message.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -32,12 +33,11 @@ globalThis.React = {
 globalThis.tr = key => key
 globalThis.cx = (...values) => values.filter(Boolean).join(' ')
 globalThis.Icon = () => null
-globalThis.normalizeCodeLang = value => String(value || '').trim().toLowerCase()
 globalThis.highlightCode = text => [{ type: 'plain', text }]
 globalThis.MermaidDiagram = () => null
 globalThis.copyToClipboard = () => Promise.resolve()
 `, context)
-for (const name of ['32-math.js', '30-markdown.js']) {
+for (const name of ['32-math.js', '31-highlight.js', '30-markdown.js']) {
   const source = fs.readFileSync(path.join(root, 'client-src', name), 'utf8')
   vm.runInContext(source, context)
 }
@@ -76,6 +76,22 @@ function collect(node, name, out = []) {
   }
   if (classNames(node).includes(name)) out.push(node)
   collect(node.children ?? node.props?.children, name, out)
+  return out
+}
+
+function collectType(node, type, out = []) {
+  if (node === null || node === undefined || node === false) return out
+  if (Array.isArray(node)) {
+    for (const child of node) collectType(child, type, out)
+    return out
+  }
+  if (typeof node !== 'object') return out
+  if (typeof node.type === 'function') {
+    collectType(node.type(node.props || {}), type, out)
+    return out
+  }
+  if (node.type === type) out.push(node)
+  collectType(node.children ?? node.props?.children, type, out)
   return out
 }
 
@@ -198,6 +214,122 @@ if (collect(quoted, 'dsc-quote').length !== 1) fail('quoted display math lost th
 if (collect(quoted, 'dsc-math-block').length !== 1) fail('quoted display math did not render')
 
 // ---------------------------------------------------------------------------
+// 1b. \boxed, \qquad, top-level line breaks and TeX fences
+// ---------------------------------------------------------------------------
+// The single-boxed acceptance formula must render as a framed equation, never
+// as the grey monospace source fallback.
+const boxed = expectMath('$$\\boxed{\\theta_{X1}<\\theta_{Y1}<\\theta_{X2}}$$', 0, 1)
+if (collect(boxed, 'dsc-math-boxed').length !== 1) fail('single \\boxed line did not render one frame')
+if (collect(boxed, 'dsc-math-fallback').length !== 0 || collect(boxed, 'dsc-math-error').length !== 0) {
+  fail('single \\boxed formula used a source fallback')
+}
+if (textOf(boxed).includes('\\boxed') || textOf(boxed).includes('\\theta')) fail(`single \\boxed kept its source: ${textOf(boxed)}`)
+if (!textOf(boxed).includes('θX1<θY1<θX2')) fail(`single \\boxed lost its content: ${textOf(boxed)}`)
+
+// Two lines of framed formulas separated by \qquad: two rows, real 2em gaps,
+// and definitely not a code block.
+const boxedRows = expectMath(
+  '$$\n\\boxed{\\theta_{X1}<\\theta_{Y1}} \\qquad \\boxed{\\theta_{X2}<\\theta_{Y2}} \\\\\n'
+  + '\\boxed{\\theta_{Y1}<\\theta_{X2}} \\qquad \\boxed{\\theta_{Y2}<\\theta_{X1}}\n$$',
+  0,
+  1,
+)
+if (collect(boxedRows, 'dsc-math-boxed').length !== 4) fail('two-line \\boxed formula did not render four frames')
+if (collect(boxedRows, 'dsc-math-rowbreak').length !== 1) fail('top-level \\\\ in display math did not break the line')
+if (collect(boxedRows, 'dsc-math-space').length !== 2) fail('two \\qquad gaps did not render as spaces')
+for (const space of collect(boxedRows, 'dsc-math-space')) {
+  if (space.props.style?.width !== '2.0000em') fail(`\\qquad did not render a 2em space: ${JSON.stringify(space.props.style)}`)
+}
+if (collect(boxedRows, 'dsc-math-fallback').length !== 0) fail('two-line \\boxed formula used the source fallback')
+if (collect(boxedRows, 'dsc-code').length !== 0) fail('two-line \\boxed formula rendered as a code block')
+if (textOf(boxedRows).includes('\\boxed') || textOf(boxedRows).includes('\\qquad')) fail('two-line \\boxed formula kept its source')
+
+// A fence tagged latex / math / tex is TeX, not code: the body goes straight to
+// the block renderer, including multi-line alignment and wrapped $$ delimiters.
+const fencedLatex = render('```latex\n\\boxed{\\theta_{X1}=1}\n```')
+if (collect(fencedLatex, 'dsc-code').length !== 0) fail('latex fence rendered as a code block')
+if (collect(fencedLatex, 'dsc-math-block').length !== 1) fail('latex fence did not render a math block')
+if (collect(fencedLatex, 'dsc-math-boxed').length !== 1) fail('latex fence lost \\boxed')
+if (!textOf(fencedLatex).includes('θX1=1')) fail('latex fence lost its formula')
+
+const fencedMath = render('~~~math\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n~~~')
+if (collect(fencedMath, 'dsc-code').length !== 0) fail('math fence rendered as a code block')
+if (collect(fencedMath, 'dsc-math-block').length !== 1) fail('math fence did not render a math block')
+if (collect(fencedMath, 'dsc-math-matrix').length !== 1) fail('multiline math fence did not render its rows')
+if (collect(fencedMath, 'dsc-math-matrix-cell').length !== 4) fail('multiline math fence lost a cell')
+
+const fencedTex = render('```tex\nE = mc^2\n```')
+if (collect(fencedTex, 'dsc-code').length !== 0) fail('tex fence rendered as a code block')
+if (collect(fencedTex, 'dsc-math-block').length !== 1) fail('tex fence did not render a math block')
+
+// Language tags are matched without normalizeCodeLang(), which maps unknown
+// languages to "text"; the language- prefix and mixed case still count.
+const fencedAlias = render('```language-latex\n\\boxed{x}\n```')
+if (collect(fencedAlias, 'dsc-code').length !== 0) fail('language-latex fence rendered as a code block')
+if (collect(fencedAlias, 'dsc-math-boxed').length !== 1) fail('language-latex fence did not render a frame')
+const fencedUpper = render('~~~TeX\nE = mc^2\n~~~')
+if (collect(fencedUpper, 'dsc-code').length !== 0) fail('mixed-case TeX fence rendered as a code block')
+if (collect(fencedUpper, 'dsc-math-block').length !== 1) fail('mixed-case TeX fence did not render a math block')
+
+const fencedWrapped = render('```latex\n$$\n\\boxed{x}\n$$\n```')
+if (collect(fencedWrapped, 'dsc-code').length !== 0) fail('wrapped latex fence rendered as a code block')
+if (collect(fencedWrapped, 'dsc-math-boxed').length !== 1) fail('wrapped latex fence kept its $$ delimiters')
+if (textOf(fencedWrapped).includes('$$')) fail('wrapped latex fence leaked $$ delimiters')
+
+// While the TeX fence is still open the body stays literal; the completed fence
+// swaps to the formula without a code block in between.
+const openFence = render('```latex\n\\boxed{x', { streaming: true })
+if (collect(openFence, 'dsc-code').length !== 0) fail('streaming latex fence rendered as code')
+if (collect(openFence, 'dsc-math-boxed').length !== 0) fail('streaming latex fence painted a half \\boxed')
+if (collect(openFence, 'dsc-math-streaming').length !== 1) fail('streaming latex fence lost its stable block')
+const closedFence = render('```latex\n\\boxed{x}\n```', { streaming: true })
+if (collect(closedFence, 'dsc-code').length !== 0) fail('closed latex fence rendered as code')
+if (collect(closedFence, 'dsc-math-boxed').length !== 1) fail('closed latex fence did not render its frame')
+if (collect(closedFence, 'dsc-math-streaming').length !== 0) fail('closed latex fence kept the streaming shell')
+
+// Streaming a $$ ... $$ boxed formula: every incomplete prefix stays plain
+// source, and the closing $$ swaps the whole run in one step.
+const boxedSource = '$$\\boxed{\\theta_{X1}<\\theta_{Y1}<\\theta_{X2}}$$'
+for (let end = 1; end < boxedSource.length; end += 1) {
+  const prefix = boxedSource.slice(0, end)
+  const tree = render(prefix, { streaming: true })
+  if (collect(tree, 'dsc-math-boxed').length !== 0) fail(`boxed prefix painted a frame: ${JSON.stringify(prefix)}`)
+  if (collect(tree, 'dsc-math-error').length !== 0) fail(`boxed prefix hit the hard error: ${JSON.stringify(prefix)}`)
+}
+for (const prefix of ['$$', '$$\\boxed', '$$\\boxed{', '$$\\boxed{\\theta_{X1}', '$$\\boxed{\\theta_{X1}<']) {
+  const tree = render(prefix, { streaming: true })
+  if (!flatten(tree).includes(prefix.slice(2))) fail(`streaming prefix lost its source: ${JSON.stringify(prefix)}`)
+}
+const boxedStreamClosed = render(boxedSource, { streaming: true })
+if (collect(boxedStreamClosed, 'dsc-math-boxed').length !== 1) fail('closed boxed stream did not render its frame')
+if (collect(boxedStreamClosed, 'dsc-math-streaming').length !== 0) fail('closed boxed stream kept the streaming shell')
+if (collect(boxedStreamClosed, 'dsc-math-fallback').length !== 0) fail('closed boxed stream kept source residue')
+
+// A $$ closer that arrives while \boxed{ is still open must not paint a box
+// around the half formula either.
+const halfBoxed = render('$$\\boxed{\\theta_{X1}$$', { streaming: true })
+if (collect(halfBoxed, 'dsc-math-boxed').length !== 0) fail('half \\boxed painted a frame')
+if (collect(halfBoxed, 'dsc-math-streaming').length !== 1) fail('half \\boxed lost its stable block')
+if (!textOf(halfBoxed).includes('\\boxed{\\theta_{X1}')) fail('half \\boxed lost its source text')
+
+// The same open-group rule applies to inline math and to display delimiters
+// embedded in a paragraph: the source stays literal until the brace arrives.
+for (const [label, source] of [
+  ['dollar inline', '未闭合 $\\boxed{x$ 结束'],
+  ['paren inline', '未闭合 \\(\\boxed{x\\) 结束'],
+  ['paragraph display', '前文 $$\\boxed{x$$ 后文'],
+]) {
+  const tree = render(source, { streaming: true })
+  if (collect(tree, 'dsc-math-boxed').length !== 0) fail(`${label}: half \\boxed painted a frame`)
+  if (collect(tree, 'dsc-math-inline').length !== 0) fail(`${label}: half \\boxed rendered inline math`)
+  if (collect(tree, 'dsc-math-block').length !== 0) fail(`${label}: half \\boxed rendered a math block`)
+  if (!textOf(tree).includes('\\boxed{x')) fail(`${label}: half \\boxed lost its source`)
+}
+const inlineBoxed = expectMath('结果 $\\boxed{x}$ 结束', 1, 0)
+if (collect(inlineBoxed, 'dsc-math-boxed').length !== 1) fail('inline \\boxed did not render a frame')
+if (!textOf(inlineBoxed).includes('结果') || !textOf(inlineBoxed).includes('结束')) fail('inline \\boxed lost surrounding text')
+
+// ---------------------------------------------------------------------------
 // 2. Code protection
 // ---------------------------------------------------------------------------
 const code = render('```js\nconst price = "$5";\nconst tex = `$x$`;\n```')
@@ -283,5 +415,30 @@ if (collect(ordinary, 'dsc-math-inline').length !== 0) fail('ordinary Markdown p
 const image = render('![值 $x$](https://example.test/a.png)')
 const images = collect(image, 'dsc-image')
 if (images.length !== 1 || !String(images[0].props.alt).includes('$x$')) fail('image alt lost math-looking text')
+
+// The exact acceptance regressions that already passed before the boxed work.
+const boldMath = render('**\\(E = mc^2\\)**')
+if (collectType(boldMath, 'strong').length !== 1) fail('bold inline math lost its <strong>')
+if (collect(boldMath, 'dsc-math-inline').length !== 1) fail('bold inline math lost the formula')
+if (collect(boldMath, 'dsc-math-fallback').length !== 0) fail('bold inline math used a fallback')
+
+const textFormula = render('$$\\text{如果 } x > 0$$')
+if (collect(textFormula, 'dsc-math-block').length !== 1) fail('\\text formula did not render as a block')
+if (collect(textFormula, 'dsc-math-text').length !== 1) fail('\\text did not render one text run')
+if (!textOf(textFormula).includes('如果') || !textOf(textFormula).includes('x>0')) fail('\\text formula lost its content')
+
+const jsDollars = render('```js\nconst price = "$100";\nconst tex = "$$x$$";\n```')
+if (collect(jsDollars, 'dsc-code').length !== 1) fail('JS code block with $$ stopped rendering as code')
+if (collect(jsDollars, 'dsc-math-inline').length !== 0 || collect(jsDollars, 'dsc-math-block').length !== 0) {
+  fail('math was parsed inside a JS code block')
+}
+if (!textOf(jsDollars).includes('const price = "$100";') || !textOf(jsDollars).includes('const tex = "$$x$$";')) {
+  fail('JS code block lost a dollar amount')
+}
+
+const inlineCodeExact = render('价格 `const a = "$5";` 结束')
+if (collect(inlineCodeExact, 'dsc-inline-code').length !== 1) fail('inline code stopped rendering')
+if (collect(inlineCodeExact, 'dsc-math-inline').length !== 0) fail('inline code leaked math')
+if (!textOf(inlineCodeExact).includes('const a = "$5";')) fail('inline code lost its dollar amount')
 
 console.log('CHAT_MATH_OK')

@@ -543,6 +543,11 @@ function parseMathCommand(state, name, depth) {
     }
     return { type: 'sqrt', index, body: parseMathArgument(state, depth) }
   }
+  if (name === 'boxed') {
+    // \boxed{...} is an \fbox around math, so its argument is parsed as math
+    // (nested \boxed, \text, \frac and scripts all keep working).
+    return { type: 'boxed', body: parseMathArgument(state, depth) }
+  }
   if (name === 'left') return parseMathLeftRight(state, depth)
   if (name === 'begin') return parseMathEnvironment(state, depth)
   if (MATH_BIG_DELIMITERS[name] !== undefined) {
@@ -757,6 +762,12 @@ function mathRenderSqrt(node, context, key) {
   )
 }
 
+function mathRenderBoxed(node, context, key) {
+  // The border is drawn by CSS (.dsc-math-boxed) so it follows currentColor in
+  // both themes and grows with the boxed content.
+  return h('span', { className: 'dsc-math-boxed', key }, mathRenderContent(node.body, context, `${key}-b`))
+}
+
 function mathRenderBig(node, context, key) {
   const glyph = h('span', {
     className: node.large ? 'dsc-math-big' : 'dsc-math-op',
@@ -836,6 +847,7 @@ function mathEstimateHeight(value, context) {
   }
   if (value.type === 'frac' || value.type === 'binom') return 2.35
   if (value.type === 'sqrt') return mathEstimateHeight(value.body, context) + 0.2
+  if (value.type === 'boxed') return mathEstimateHeight(value.body, context) + 0.35
   if (value.type === 'matrix') return Math.max(1, value.rows.length * 1.15)
   if (value.type === 'scripts') {
     return Math.max(
@@ -954,6 +966,7 @@ function renderMathNode(node, context, key) {
   if (node.type === 'frac') return mathRenderFrac(node, context, key)
   if (node.type === 'binom') return mathRenderBinom(node, context, key)
   if (node.type === 'sqrt') return mathRenderSqrt(node, context, key)
+  if (node.type === 'boxed') return mathRenderBoxed(node, context, key)
   if (node.type === 'bigop') return mathRenderBig(node, context, key)
   if (node.type === 'scripts') return mathRenderScripted(node, context, key)
   if (node.type === 'delimited') return mathRenderDelimited(node, context, key)
@@ -969,7 +982,7 @@ function renderMathNode(node, context, key) {
   if (node.type === 'unknown') {
     return h('span', { className: 'dsc-math-text', key, style: { opacity: 0.65 } }, '\\' + node.name)
   }
-  if (node.type === 'rowbreak') return h('span', { className: 'dsc-math-text', key }, '\\\\')
+  if (node.type === 'rowbreak') return h('span', { className: 'dsc-math-rowbreak', key, 'aria-hidden': 'true' })
   return null
 }
 

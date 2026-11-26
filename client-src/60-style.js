@@ -1360,7 +1360,7 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
    already loads the KaTeX font faces, so math text picks them up when present
    and falls back to a serif face otherwise. */
 .dsc-math {
-  font-family: 'KaTeX_Main', 'Cambria Math', 'Times New Roman', serif;
+  font-family: 'KaTeX_Main', 'Times New Roman', 'Cambria Math', serif;
   font-size: 1.03em;
   line-height: 1.4;
   color: var(--dsc-text);
@@ -1387,19 +1387,24 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 }
 .dsc-math-row { display: inline-flex; align-items: baseline; flex-wrap: wrap; column-gap: 0.12em; row-gap: 0.42em; }
 .dsc-math-block .dsc-math-row { justify-content: center; }
+/* A top-level double backslash inside display math forces the next item onto
+   its own line. The zero-height flex item wraps because its basis is the full
+   row width. */
+.dsc-math-rowbreak { flex: 0 0 100%; width: 100%; height: 0; margin: 0; }
 /* Tall constructs centre on the math axis instead of hanging from their
    numerator/radical baseline. */
 .dsc-math-frac,
 .dsc-math-sqrt,
+.dsc-math-boxed,
 .dsc-math-matrix { align-self: center; }
-.dsc-math-var { font-style: italic; font-family: 'KaTeX_Math', 'Cambria Math', 'Times New Roman', serif; }
+.dsc-math-var { font-style: italic; font-family: 'KaTeX_Math', 'Times New Roman', 'Cambria Math', serif; }
 .dsc-math-num,
 .dsc-math-op,
 .dsc-math-text { font-style: normal; }
 .dsc-math-op { padding: 0 0.14em; }
 .dsc-math-text { white-space: pre; }
 .dsc-math-big { font-size: 1.45em; line-height: 1; vertical-align: -0.12em; padding: 0 0.05em; }
-.dsc-math-delim { font-style: normal; font-family: 'KaTeX_Size1', 'KaTeX_Main', 'Cambria Math', serif; }
+.dsc-math-delim { font-style: normal; font-family: 'KaTeX_Size1', 'KaTeX_Main', 'Times New Roman', 'Cambria Math', serif; }
 .dsc-math-frac {
   display: inline-flex;
   flex-direction: column;
@@ -1415,6 +1420,15 @@ h4.dsc-heading, h5.dsc-heading, h6.dsc-heading { font-size: 15px; }
 .dsc-math-sqrt::before { content: '√'; font-size: 1.18em; line-height: 1; }
 .dsc-math-sqrt-body { padding: 0 0.16em 0 0.06em; border-top: 1px solid currentColor; margin-top: 0.14em; }
 .dsc-math-sqrt-index { font-size: 0.6em; line-height: 1; margin-right: -0.28em; margin-top: -0.1em; align-self: flex-start; }
+/* \boxed{...}: currentColor keeps the frame legible in both themes. */
+.dsc-math-boxed {
+  display: inline-block;
+  border: 1.5px solid currentColor;
+  padding: 2px 6px;
+  border-radius: 4px;
+  vertical-align: middle;
+  line-height: 1.25;
+}
 /* A lone script rises or sinks from the wrapper; stacked scripts are laid out
    by the renderer with inline flex styles. */
 .dsc-math-script { display: inline-flex; flex-direction: column; align-items: flex-start; vertical-align: middle; font-size: 0.72em; line-height: 1.08; }
