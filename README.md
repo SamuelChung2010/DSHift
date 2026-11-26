@@ -343,6 +343,7 @@ node tools/check-markdown-math.js  # Chat 公式解析管线：代码保护、�
 node tools/check-upload.js         # 上传入口模式守卫、切换锁、隐藏 input 与监听器配对
 node tools/check-mermaid.js        # Mermaid 解析、几何与错误回退
 node tools/check-memory-client.js  # 跨平台记忆导出提示词与本地解析器
+# 长会话输入性能：基线/修复数据见 docs/perf/long-chat-performance.md；可选基准工具见 tools/perf/README.md
 ```
 
 测试覆盖：`tests/store.test.js`（v1→v2 迁移与备份、文件夹/置顶/归档、搜索、分支与版本切换、导入会话的记忆分析标记）、`tests/protocol.test.js`（上下文构造与续写前缀）、`tests/conversation.test.js`（Host 路由与 send/edit/regenerate/continue 端到端、导入会话继续聊天）、`tests/workspace.test.js`（项目文件夹创建、工作区注册与交接）、`tests/import.test.js`（导出预览、导入、去重、重启持久化、取消、损坏会话隔离、路径穿越与解压上限）、`tests/import-convert.test.js`（片段映射、分支选择、来源字段、存储合并与请求构造）、`tests/model-config.test.js`、`tests/service-stream.test.js`、`tests/api.test.js`、`tests/profile.test.js`、`tests/host-entry.test.js`、`tests/memory-store.test.js`（记忆持久化、去重/合并、导入幂等、墓碑、概述修订、损坏恢复）、`tests/memory-service.test.js`（检索与预算、提取门控、概述并发、Ask or Update 增删改确认、历史会话提取接口）、`tests/memory-conversation.test.js`（记忆注入真实流式请求、关闭/删除后停止注入、后台提取成功与失败、memory 路由端到端、导入会话的选择性提取/确认/去重/失败隔离/空会话不标记/并发去重）、`tests/memory-import.test.js`（跨平台导出解析器）。导入测试的样本由 `tests/support/export-fixture.js` 现场生成，不包含任何真实聊天记录。

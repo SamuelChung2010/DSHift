@@ -1289,9 +1289,29 @@ const chatStore = {
       }
     }
   },
+  /**
+   * Replace the state with one patch.
+   *
+   * A patch that changes nothing must not notify subscribers: input handlers,
+   * stream throttles and layout effects legitimately write the same value back
+   * (the same draft, the same `stopping` flag), and an unconditional emit made
+   * those writes re-render every subscriber. Keeping the old state object is
+   * also what lets selector caches answer "nothing changed" without work.
+   *
+   * @returns whether the state actually changed.
+   */
   set(patch) {
+    let changed = false
+    for (const key of Object.keys(patch)) {
+      if (!Object.is(this.state[key], patch[key])) {
+        changed = true
+        break
+      }
+    }
+    if (!changed) return false
     this.state = { ...this.state, ...patch }
     this.emit()
+    return true
   },
   toast(message, kind = 'info') {
     if (!message) return
@@ -1303,10 +1323,85 @@ const chatStore = {
   },
 }
 
-function useChat(selector) {
-  const [, force] = React.useState(0)
-  React.useEffect(() => chatStore.subscribe(() => force(value => value + 1)), [])
-  return selector(chatStore.state)
+/**
+ * Shallow equality for selectors that derive a small object or array.
+ *
+ * A selector returning a fresh `{...}` on every call would otherwise defeat the
+ * snapshot cache and re-render forever. Fields are compared with `Object.is`,
+ * so nested objects and arrays keep identity semantics: rebuild them only when
+ * their own reference changes.
+ */
+function shallowEqual(left, right) {
+  if (Object.is(left, right)) return true
+  if (typeof left !== 'object' || left === null || typeof right !== 'object' || right === null) return false
+  const leftKeys = Object.keys(left)
+  const rightKeys = Object.keys(right)
+  if (leftKeys.length !== rightKeys.length) return false
+  for (const key of leftKeys) {
+    if (!Object.prototype.hasOwnProperty.call(right, key) || !Object.is(left[key], right[key])) return false
+  }
+  return true
+}
+
+/**
+ * Snapshot cache behind `useChat`.
+ *
+ * `useSyncExternalStore` requires `getSnapshot()` to return the same value for
+ * the same store state. Selectors are usually inline closures, so their identity
+ * changes on every render; the cache therefore compares the selected value with
+ * the caller's equality function and keeps the previous reference when the
+ * selection is equivalent. That is what makes `useChat(state => state.messages)`
+ * stable across a draft update, and what keeps derived objects from looping.
+ */
+function createChatSelectorCache() {
+  let hasValue = false
+  let value
+  let state
+  let selector
+  let equal
+  return function read(nextState, nextSelector, nextEqual) {
+    if (hasValue && state === nextState && selector === nextSelector && equal === nextEqual) return value
+    const next = nextSelector(nextState)
+    if (hasValue && equal === nextEqual && nextEqual(next, value)) {
+      state = nextState
+      selector = nextSelector
+      return value
+    }
+    hasValue = true
+    value = next
+    state = nextState
+    selector = nextSelector
+    equal = nextEqual
+    return value
+  }
+}
+
+/**
+ * Subscribe one component to a slice of the Chat store.
+ *
+ * React 18.3's `useSyncExternalStore` (the version the Harness web client
+ * bundles) provides the tear-free subscription; the selector cache provides the
+ * "only re-render when my slice changed" part that the old `useState` force-update
+ * implementation was missing. Components that select a primitive or a stable
+ * store reference need nothing else; selectors that build an object/array must
+ * pass `shallowEqual` (or memoize) so an equal selection keeps its identity.
+ *
+ * @param selector - maps the store state to the value this component reads.
+ * @param isEqual - equality of two selections; defaults to reference equality.
+ */
+function useChat(selector = state => state, isEqual = Object.is) {
+  const selectorRef = React.useRef(selector)
+  const equalityRef = React.useRef(isEqual)
+  const cacheRef = React.useRef(null)
+  selectorRef.current = selector
+  equalityRef.current = isEqual
+  if (cacheRef.current === null) cacheRef.current = createChatSelectorCache()
+  const getSnapshot = React.useCallback(
+    () => cacheRef.current(chatStore.state, selectorRef.current, equalityRef.current),
+    [],
+  )
+  const subscribe = React.useCallback(listener => chatStore.subscribe(listener), [])
+  return React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 }
 
 function uid() {
@@ -5203,11 +5298,22 @@ function renderBlock(block, key, context = {}, isLast = false) {
 function Markdown({ text, className = '', streaming = false, sources = [] }) {
   const context = React.useMemo(() => ({ streaming, sources }), [streaming, sources])
   const blocks = React.useMemo(() => parseMarkdown(text), [text])
+  // Rendering the block tree allocates the whole element tree. Keep it with the
+  // parsed tree instead of rebuilding it on every parent render (a highlight,
+  // an action state or a streaming sibling used to be enough to redo it).
+  const rendered = React.useMemo(() => renderBlocks(blocks, context), [blocks, context])
   return h('div', { className: `dsc-md ${className}`.trim() },
-    renderBlocks(blocks, context),
+    rendered,
     streaming ? h('span', { className: 'dsc-caret', 'aria-hidden': 'true' }) : null,
   )
 }
+
+/**
+ * Finished answers only change when their own message changes. The memo is
+ * what makes a draft update skip every historical Markdown subtree even though
+ * the Thread still renders its rows.
+ */
+const MemoMarkdown = React.memo(Markdown)
 
 /* ---- 31-highlight.js ---- */
 // Syntax tokenizer for chat code blocks.
@@ -9238,6 +9344,27 @@ function activeChatTools(state) {
   return composerToolDefinitions().filter(tool => tool.kind === 'toggle' && tool.active?.(state) === true)
 }
 
+/**
+ * The slice of store state that can change a menu/tool entry.
+ *
+ * Built-in entries read settings, attachments and the current model; plugin
+ * tools get the full live state when an entry actually renders, but only this
+ * slice decides when that render is needed. High-frequency fields (draft,
+ * messages, toasts) are deliberately absent so typing and streaming do not
+ * re-render the composer's menus.
+ */
+function toolsMenuState(state) {
+  return {
+    settings: state.settings,
+    attachments: state.attachments,
+    modelChoice: state.modelChoice,
+    models: state.models,
+    modelConfig: state.modelConfig,
+    auth: state.auth,
+    limits: state.limits,
+  }
+}
+
 function toolAvailability(tool, state) {
   try {
     const result = tool.available?.(state)
@@ -9323,7 +9450,11 @@ function ComposerToolButton({ tool, state }) {
 
 function ToolsMenu() {
   const t = useT()
-  const state = useChat(snapshot => snapshot)
+  // The menu itself only reads capability state; drafts, history and toasts must
+  // not re-render it. `chatStore.state` stays the live value passed to entries,
+  // while this selection decides when it is worth reading it again.
+  useChat(toolsMenuState, shallowEqual)
+  const state = chatStore.state
   const [open, setOpen] = React.useState(false)
   const triggerRef = React.useRef(null)
   const panelRef = React.useRef(null)
@@ -9853,7 +9984,7 @@ function ProcessPanel({ message, streaming }) {
           if (block.thinking.trim() === '') return null
           const active = streaming && block.endedAt === undefined
           return h('div', { className: cx('dsc-think-block', active && 'is-active'), key: `think-${index}` },
-            h(Markdown, { text: block.thinking, streaming: active }),
+            h(MemoMarkdown, { text: block.thinking, streaming: active }),
           )
         }
         if (block.type === 'server_tool_use') {
@@ -9875,9 +10006,8 @@ function ProcessPanel({ message, streaming }) {
  * Only rendered when the sibling group has more than one version, so a normal
  * single-path chat keeps its message actions clean.
  */
-function VersionNav({ message }) {
+function VersionNav({ message, busy = false }) {
   const t = useT()
-  const busy = useChat(state => state.streaming !== null)
   const version = message?.version
   if (!version || !(version.count > 1)) return null
   const index = Math.max(1, Math.min(version.count, version.index ?? 1))
@@ -9903,16 +10033,20 @@ function AssistantMessage({ message, streaming, isLast, canRegenerate, highlight
   const [copied, setCopied] = React.useState(false)
   const [sourcesOpen, setSourcesOpen] = React.useState(false)
   const [activeSource, setActiveSource] = React.useState(null)
-  const text = messageText(message)
-  const { sources, indexByUrl } = collectMessageSources(message)
-  const answer = answerText(message, indexByUrl)
+  // One message object owns one answer. Memoizing by the message reference keeps
+  // source collection and answer assembly off the path of every sibling render;
+  // during streaming the reference changes per paint, so only the live answer
+  // pays for it.
+  const text = React.useMemo(() => messageText(message), [message])
+  const { sources, indexByUrl } = React.useMemo(() => collectMessageSources(message), [message])
+  const answer = React.useMemo(() => answerText(message, indexByUrl), [message, indexByUrl])
   // A server notice the export recorded next to the answer (such as the
   // content warning on an otherwise finished reply). It is shown below the
   // answer and is deliberately not part of the answer text, the copy action or
   // the model context.
-  const noticeBlocks = (message.blocks ?? []).filter(block => (
+  const noticeBlocks = React.useMemo(() => (message.blocks ?? []).filter(block => (
     block.type === 'notice' && typeof block.text === 'string' && block.text.trim() !== ''
-  ))
+  )), [message])
   const refused = message.stopReason === 'refusal'
   const errorInfo = message.error ? friendlyError(message.error) : null
   const showTyping = streaming && text === '' && (message.blocks ?? []).length === 0
@@ -9943,7 +10077,7 @@ function AssistantMessage({ message, streaming, isLast, canRegenerate, highlight
         : null,
       !refused && answer !== ''
         ? h('div', { className: 'dsc-answer', onClick: onAnswerClick },
-            h(Markdown, { text: answer, streaming: liveAnswer, sources }),
+            h(MemoMarkdown, { text: answer, streaming: liveAnswer, sources }),
           )
         : null,
       showTyping ? h(TypingDots, null) : null,
@@ -10010,7 +10144,7 @@ function AssistantMessage({ message, streaming, isLast, canRegenerate, highlight
             messageModelLabel(message) !== ''
               ? h('span', { className: 'dsc-msg-model', title: t('modelLabel') }, messageModelLabel(message))
               : null,
-            h(VersionNav, { message }),
+            h(VersionNav, { message, busy: streaming }),
             message.usage
               ? h('span', { className: 'dsc-usage' }, t('usage', {
                   input: message.usage.input_tokens ?? 0,
@@ -10098,7 +10232,7 @@ function UserMessageEditor({ message }) {
   )
 }
 
-function UserMessage({ message, canEdit, highlighted }) {
+function UserMessage({ message, canEdit, highlighted, busy = false }) {
   const t = useT()
   const [copied, setCopied] = React.useState(false)
   const files = Array.isArray(message.files) ? message.files : []
@@ -10130,11 +10264,20 @@ function UserMessage({ message, canEdit, highlighted }) {
             }, h(Icon, { name: 'pencil', size: 13 }), h('span', null, t('edit')))
           : null,
         h('span', { className: 'dsc-msg-actions-spacer' }),
-        h(VersionNav, { message }),
+        h(VersionNav, { message, busy }),
       ),
     ),
   )
 }
+
+/**
+ * Row components are pure functions of the message and a few primitives. The
+ * memo boundaries are what turn "Thread re-rendered" into "only the row whose
+ * props changed re-rendered": message objects stay stable for untouched history,
+ * so a draft keystroke or a stream chunk cannot reach them.
+ */
+const MemoAssistantMessage = React.memo(AssistantMessage)
+const MemoUserMessage = React.memo(UserMessage)
 
 function EmptyState() {
   const t = useT()
@@ -10144,6 +10287,9 @@ function EmptyState() {
     h('h1', { className: 'dsc-greeting' }, greetingText(t, greetingIndex, userName)),
   )
 }
+
+/** Histories at least this long opt into layout containment (see 60-style.js). */
+const LONG_THREAD_ROWS = 120
 
 function Thread() {
   const messages = useChat(state => state.messages)
@@ -10197,20 +10343,29 @@ function Thread() {
       ),
     )
   }
-  return h('div', { className: cx('dsc-thread', messages.length === 0 && 'is-empty'), ref, 'aria-label': tr('appTitle') },
+  return h('div', {
+    className: cx(
+      'dsc-thread',
+      messages.length === 0 && 'is-empty',
+      messages.length >= LONG_THREAD_ROWS && 'is-heavy',
+    ),
+    ref,
+    'aria-label': tr('appTitle'),
+  },
     messages.length === 0
       ? h(EmptyState, null)
       : h('div', { className: 'dsc-thread-inner' }, messages.map((message, index) => {
           if (message.role === 'user') {
             if (editingId === message.id) return h(UserMessageEditor, { key: message.id, message })
-            return h(UserMessage, {
+            return h(MemoUserMessage, {
               key: message.id,
               message,
               canEdit: streaming === null,
+              busy: streaming !== null,
               highlighted: highlight === message.id,
             })
           }
-          return h(AssistantMessage, {
+          return h(MemoAssistantMessage, {
             key: message.id,
             message,
             streaming: streaming?.assistantId === message.id,
@@ -10265,9 +10420,20 @@ function Composer() {
   const stopping = useChat(state => state.stopping)
   const auth = useChat(state => state.auth)
   const sendKey = useChat(state => state.sendKey)
-  const toolState = useChat(state => state)
-  useChat(state => state.modelChoice)
-  const choice = currentModelChoice()
+  // Menu entries read the live store when they render; this selection only
+  // decides when a capability change (settings, model, catalog) is worth a
+  // composer render. Draft and stream frames are not part of it.
+  const composerState = useChat(state => ({
+    settings: state.settings,
+    modelChoice: state.modelChoice,
+    models: state.models,
+    modelConfig: state.modelConfig,
+  }), shallowEqual)
+  const choice = React.useMemo(
+    () => currentModelChoice(),
+    [composerState.modelChoice, composerState.models, composerState.modelConfig],
+  )
+  const toolState = chatStore.state
   const tools = composerToolDefinitions()
   const unsupportedImages = !modelCapability(choice.model, 'vision')
     && attachments.some(item => item.isImage && item.status !== 'error')
@@ -10916,12 +11082,14 @@ function ChatHeader() {
   const t = useT()
   const activeId = useChat(state => state.activeId)
   const conversations = useChat(state => state.conversations)
-  const messages = useChat(state => state.messages)
+  // The header only branches on "is there history", never on message content:
+  // selecting the array itself made every streamed chunk re-render the title row.
+  const hasMessages = useChat(state => state.messages.length > 0)
   const auth = useChat(state => state.auth)
   const sidebarOpen = useChat(state => state.sidebarOpen)
   const conversation = conversations.find(item => item.id === activeId)
-  const canDraft = messages.length > 0
-  const blankHome = activeId === null && messages.length === 0
+  const canDraft = hasMessages
+  const blankHome = useChat(state => state.activeId === null && state.messages.length === 0)
   const hostHandoff = useChat(state => state.bootData?.handoff?.enabled !== false)
   return h('header', { className: 'dsc-header' },
     h('div', { className: 'dsc-header-left' },
@@ -13336,7 +13504,7 @@ function MemorySettingsPane() {
     h(SettingsSection, { title: t('memorySummarySection') },
       h('div', { className: 'dsc-memory-summary' },
         summary !== null
-          ? h(Markdown, { text: summary.text, className: 'dsc-memory-summary-text' })
+          ? h(MemoMarkdown, { text: summary.text, className: 'dsc-memory-summary-text' })
           : h('p', { className: 'dsc-memory-summary-empty' }, t('memorySummaryEmpty')),
         h('div', { className: 'dsc-memory-summary-foot' },
           h('span', { className: 'dsc-memory-summary-meta' }, summary !== null
@@ -15110,7 +15278,18 @@ html[data-windows-titlebar] .dsc-main {
 .dsc-text-button:disabled { opacity: 0.45; }
 
 /* ---------- messages ---------- */
+/* Long histories: every row is its own layout island. Without this, a tiny
+   change at the bottom (a caret line in the composer) makes the frame walk a
+   layout tree that grows with the message count; with it, the same keystroke
+   touched ~190k layout objects before and a handful after. No row is hidden,
+   clamped or virtualized: heights and scroll offsets stay exactly as they were,
+   search and scrollIntoView keep working, and paint is not clipped (only
+   layout/style containment is applied).
+   The class only exists on long threads: a new or short chat keeps its original
+   mount cost, and a long one pays one mount layout in exchange for cheap
+   keystrokes afterwards. */
 .dsc-msg { display: flex; width: 100%; min-width: 0; }
+.dsc-thread.is-heavy .dsc-msg { contain: layout style; }
 .dsc-msg-user { justify-content: flex-end; padding-left: 10%; }
 .dsc-user-block { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; max-width: 100%; min-width: 0; }
 .dsc-user-bubble {
@@ -16924,6 +17103,9 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
   globalThis.__DSC_TEST_HOOK__({
     chatStore,
     chatActions,
+    useChat,
+    shallowEqual,
+    createChatSelectorCache,
     openFilePicker,
     acceptFiles,
     registerFilePicker,

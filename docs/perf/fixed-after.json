@@ -1,0 +1,2927 @@
+{
+  "label": "fixed-final",
+  "url": "http://127.0.0.1:56002/?token=<redacted>",
+  "capturedAt": "2026-11-26T13:27:35.861Z",
+  "browser": {
+    "Browser": "Chrome/158.0.8127.88",
+    "File-Path-Style": "windows",
+    "Protocol-Version": "1.3",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/158.0.0.0 Safari/537.36",
+    "V8-Version": "15.8.62.31",
+    "WebKit-Version": "537.36 (@0cefb18236a23db1ebb6b2bc040fbbaf8cbe759e)",
+    "webSocketDebuggerUrl": "ws://127.0.0.1:9340/devtools/browser/66f309b6-0a8e-4b0e-be03-f461c5c502f5"
+  },
+  "node": "v24.19.0",
+  "platform": "win32",
+  "bundleId": "fixed",
+  "sizes": [
+    {
+      "kind": "size",
+      "messages": 10,
+      "focused": true,
+      "seedMs": 101,
+      "seedApplyMs": 0.20000001788139343,
+      "mount": {
+        "rendered": 10,
+        "waited": 0.10000002384185791
+      },
+      "mountCounts": {
+        "store.set": 1,
+        "store.emit": 1,
+        "Sidebar": 1,
+        "Thread": 1,
+        "UserMessage": 5,
+        "VersionNav": 10,
+        "AssistantMessage": 5,
+        "collectMessageSources": 5,
+        "answerText": 5,
+        "Markdown": 5,
+        "parseMarkdown": 5,
+        "renderBlocks": 5,
+        "Composer": 1
+      },
+      "singleKey": {
+        "counts": {
+          "store.set": 1,
+          "store.emit": 1,
+          "Composer": 1
+        },
+        "samples": [
+          {
+            "t": 4690.700000017881,
+            "inputType": "insertText",
+            "data": "z",
+            "length": 1,
+            "before": {},
+            "frame": 4696.5,
+            "task": 4699.4000000059605,
+            "after": {
+              "store.set": 1,
+              "store.emit": 1,
+              "Composer": 1
+            },
+            "frameDelta": 5.799999982118607,
+            "taskDelta": 8.699999988079071
+          }
+        ],
+        "draftLength": 1
+      },
+      "keys": 12,
+      "durationMs": 1737,
+      "draftLength": 12,
+      "samples": [
+        {
+          "t": 5960.9000000059605,
+          "inputType": "insertText",
+          "data": "a",
+          "length": 1,
+          "before": {
+            "Composer": 1
+          },
+          "frame": 5965.300000011921,
+          "task": 5967.300000011921,
+          "after": {
+            "Composer": 2,
+            "store.set": 1,
+            "store.emit": 1
+          },
+          "frameDelta": 4.4000000059604645,
+          "taskDelta": 6.4000000059604645
+        },
+        {
+          "t": 6109,
+          "inputType": "insertText",
+          "data": "b",
+          "length": 2,
+          "before": {
+            "Composer": 2,
+            "store.set": 1,
+            "store.emit": 1
+          },
+          "frame": 6112.0999999940395,
+          "task": 6114.300000011921,
+          "after": {
+            "Composer": 3,
+            "store.set": 2,
+            "store.emit": 2
+          },
+          "frameDelta": 3.0999999940395355,
+          "taskDelta": 5.300000011920929
+        },
+        {
+          "t": 6260,
+          "inputType": "insertText",
+          "data": "c",
+          "length": 3,
+          "before": {
+            "Composer": 3,
+            "store.set": 2,
+            "store.emit": 2
+          },
+          "frame": 6262.5,
+          "task": 6265,
+          "after": {
+            "Composer": 4,
+            "store.set": 3,
+            "store.emit": 3
+          },
+          "frameDelta": 2.5,
+          "taskDelta": 5
+        },
+        {
+          "t": 6403.300000011921,
+          "inputType": "insertText",
+          "data": "d",
+          "length": 4,
+          "before": {
+            "Composer": 4,
+            "store.set": 3,
+            "store.emit": 3
+          },
+          "frame": 6407,
+          "task": 6409,
+          "after": {
+            "Composer": 5,
+            "store.set": 4,
+            "store.emit": 4
+          },
+          "frameDelta": 3.699999988079071,
+          "taskDelta": 5.699999988079071
+        },
+        {
+          "t": 6550.800000011921,
+          "inputType": "insertText",
+          "data": "e",
+          "length": 5,
+          "before": {
+            "Composer": 5,
+            "store.set": 4,
+            "store.emit": 4
+          },
+          "frame": 6555.300000011921,
+          "task": 6557.700000017881,
+          "after": {
+            "Composer": 6,
+            "store.set": 5,
+            "store.emit": 5
+          },
+          "frameDelta": 4.5,
+          "taskDelta": 6.9000000059604645
+        },
+        {
+          "t": 6723.4000000059605,
+          "inputType": "insertText",
+          "data": "f",
+          "length": 6,
+          "before": {
+            "Composer": 6,
+            "store.set": 5,
+            "store.emit": 5
+          },
+          "frame": 6727.4000000059605,
+          "task": 6729.800000011921,
+          "after": {
+            "Composer": 7,
+            "store.set": 6,
+            "store.emit": 6
+          },
+          "frameDelta": 4,
+          "taskDelta": 6.4000000059604645
+        },
+        {
+          "t": 6864.300000011921,
+          "inputType": "insertText",
+          "data": "g",
+          "length": 7,
+          "before": {
+            "Composer": 7,
+            "store.set": 6,
+            "store.emit": 6
+          },
+          "frame": 6868.700000017881,
+          "task": 6871.200000017881,
+          "after": {
+            "Composer": 8,
+            "store.set": 7,
+            "store.emit": 7
+          },
+          "frameDelta": 4.4000000059604645,
+          "taskDelta": 6.9000000059604645
+        },
+        {
+          "t": 6996.800000011921,
+          "inputType": "insertText",
+          "data": "h",
+          "length": 8,
+          "before": {
+            "Composer": 8,
+            "store.set": 7,
+            "store.emit": 7
+          },
+          "frame": 6999.0999999940395,
+          "task": 7001.4000000059605,
+          "after": {
+            "Composer": 9,
+            "store.set": 8,
+            "store.emit": 8
+          },
+          "frameDelta": 2.2999999821186066,
+          "taskDelta": 4.5999999940395355
+        },
+        {
+          "t": 7129.9000000059605,
+          "inputType": "insertText",
+          "data": "i",
+          "length": 9,
+          "before": {
+            "Composer": 9,
+            "store.set": 8,
+            "store.emit": 8
+          },
+          "frame": 7134,
+          "task": 7137,
+          "after": {
+            "Composer": 10,
+            "store.set": 9,
+            "store.emit": 9
+          },
+          "frameDelta": 4.0999999940395355,
+          "taskDelta": 7.0999999940395355
+        },
+        {
+          "t": 7269.800000011921,
+          "inputType": "insertText",
+          "data": "j",
+          "length": 10,
+          "before": {
+            "Composer": 10,
+            "store.set": 9,
+            "store.emit": 9
+          },
+          "frame": 7272.700000017881,
+          "task": 7275.700000017881,
+          "after": {
+            "Composer": 11,
+            "store.set": 10,
+            "store.emit": 10
+          },
+          "frameDelta": 2.9000000059604645,
+          "taskDelta": 5.9000000059604645
+        },
+        {
+          "t": 7414.5,
+          "inputType": "insertText",
+          "data": "k",
+          "length": 11,
+          "before": {
+            "Composer": 11,
+            "store.set": 10,
+            "store.emit": 10
+          },
+          "frame": 7417.200000017881,
+          "task": 7419.300000011921,
+          "after": {
+            "Composer": 12,
+            "store.set": 11,
+            "store.emit": 11
+          },
+          "frameDelta": 2.7000000178813934,
+          "taskDelta": 4.800000011920929
+        },
+        {
+          "t": 7550.300000011921,
+          "inputType": "insertText",
+          "data": "l",
+          "length": 12,
+          "before": {
+            "Composer": 12,
+            "store.set": 11,
+            "store.emit": 11
+          },
+          "frame": 7552.9000000059605,
+          "task": 7555.4000000059605,
+          "after": {
+            "Composer": 13,
+            "store.set": 12,
+            "store.emit": 12
+          },
+          "frameDelta": 2.5999999940395355,
+          "taskDelta": 5.0999999940395355
+        }
+      ],
+      "counts": {
+        "Composer": 13,
+        "store.set": 12,
+        "store.emit": 12
+      },
+      "longTasks": [
+        {
+          "start": 3858.4000000059605,
+          "duration": 97
+        }
+      ],
+      "loafs": [
+        {
+          "start": 3858.4000000059605,
+          "duration": 100.90000000596046,
+          "blockingDuration": 0,
+          "renderStart": 3956.9000000059605,
+          "styleAndLayoutStart": 3958.0999999940395
+        }
+      ],
+      "metrics": {
+        "ScriptDuration": 0.0371,
+        "LayoutDuration": 0.012,
+        "RecalcStyleDuration": 0.0173,
+        "TaskDuration": 0.122,
+        "JSHeapUsedSize": 661244,
+        "Nodes": 13,
+        "Documents": 0
+      },
+      "heapUsed": 48519340
+    },
+    {
+      "kind": "size",
+      "messages": 50,
+      "focused": true,
+      "seedMs": 48,
+      "seedApplyMs": 0.09999999403953552,
+      "mount": {
+        "rendered": 50,
+        "waited": 0.19999998807907104
+      },
+      "mountCounts": {
+        "store.set": 1,
+        "store.emit": 1,
+        "Sidebar": 1,
+        "Thread": 1,
+        "UserMessage": 25,
+        "VersionNav": 50,
+        "AssistantMessage": 25,
+        "collectMessageSources": 25,
+        "answerText": 25,
+        "Markdown": 25,
+        "parseMarkdown": 25,
+        "renderBlocks": 25,
+        "Composer": 1
+      },
+      "singleKey": {
+        "counts": {
+          "store.set": 1,
+          "store.emit": 1,
+          "Composer": 1
+        },
+        "samples": [
+          {
+            "t": 8486.300000011921,
+            "inputType": "insertText",
+            "data": "z",
+            "length": 1,
+            "before": {},
+            "frame": 8489.700000017881,
+            "task": 8499.09999999404,
+            "after": {
+              "store.set": 1,
+              "store.emit": 1,
+              "Composer": 1
+            },
+            "frameDelta": 3.4000000059604645,
+            "taskDelta": 12.799999982118607
+          }
+        ],
+        "draftLength": 1
+      },
+      "keys": 12,
+      "durationMs": 1663,
+      "draftLength": 12,
+      "samples": [
+        {
+          "t": 9740.800000011921,
+          "inputType": "insertText",
+          "data": "a",
+          "length": 1,
+          "before": {
+            "Composer": 1
+          },
+          "frame": 9743.200000017881,
+          "task": 9748.09999999404,
+          "after": {
+            "Composer": 2,
+            "store.set": 1,
+            "store.emit": 1
+          },
+          "frameDelta": 2.4000000059604645,
+          "taskDelta": 7.299999982118607
+        },
+        {
+          "t": 9878.5,
+          "inputType": "insertText",
+          "data": "b",
+          "length": 2,
+          "before": {
+            "Composer": 2,
+            "store.set": 1,
+            "store.emit": 1
+          },
+          "frame": 9882.09999999404,
+          "task": 9885.59999999404,
+          "after": {
+            "Composer": 3,
+            "store.set": 2,
+            "store.emit": 2
+          },
+          "frameDelta": 3.5999999940395355,
+          "taskDelta": 7.0999999940395355
+        },
+        {
+          "t": 10021.09999999404,
+          "inputType": "insertText",
+          "data": "c",
+          "length": 3,
+          "before": {
+            "Composer": 3,
+            "store.set": 2,
+            "store.emit": 2
+          },
+          "frame": 10023.700000017881,
+          "task": 10026.90000000596,
+          "after": {
+            "Composer": 4,
+            "store.set": 3,
+            "store.emit": 3
+          },
+          "frameDelta": 2.600000023841858,
+          "taskDelta": 5.800000011920929
+        },
+        {
+          "t": 10160.09999999404,
+          "inputType": "insertText",
+          "data": "d",
+          "length": 4,
+          "before": {
+            "Composer": 4,
+            "store.set": 3,
+            "store.emit": 3
+          },
+          "frame": 10162.700000017881,
+          "task": 10166.59999999404,
+          "after": {
+            "Composer": 5,
+            "store.set": 4,
+            "store.emit": 4
+          },
+          "frameDelta": 2.600000023841858,
+          "taskDelta": 6.5
+        },
+        {
+          "t": 10301.800000011921,
+          "inputType": "insertText",
+          "data": "e",
+          "length": 5,
+          "before": {
+            "Composer": 5,
+            "store.set": 4,
+            "store.emit": 4
+          },
+          "frame": 10304.5,
+          "task": 10307.90000000596,
+          "after": {
+            "Composer": 6,
+            "store.set": 5,
+            "store.emit": 5
+          },
+          "frameDelta": 2.699999988079071,
+          "taskDelta": 6.0999999940395355
+        },
+        {
+          "t": 10439.59999999404,
+          "inputType": "insertText",
+          "data": "f",
+          "length": 6,
+          "before": {
+            "Composer": 6,
+            "store.set": 5,
+            "store.emit": 5
+          },
+          "frame": 10441.700000017881,
+          "task": 10444.09999999404,
+          "after": {
+            "Composer": 7,
+            "store.set": 6,
+            "store.emit": 6
+          },
+          "frameDelta": 2.100000023841858,
+          "taskDelta": 4.5
+        },
+        {
+          "t": 10579.59999999404,
+          "inputType": "insertText",
+          "data": "g",
+          "length": 7,
+          "before": {
+            "Composer": 7,
+            "store.set": 6,
+            "store.emit": 6
+          },
+          "frame": 10581.700000017881,
+          "task": 10585.59999999404,
+          "after": {
+            "Composer": 8,
+            "store.set": 7,
+            "store.emit": 7
+          },
+          "frameDelta": 2.100000023841858,
+          "taskDelta": 6
+        },
+        {
+          "t": 10719.90000000596,
+          "inputType": "insertText",
+          "data": "h",
+          "length": 8,
+          "before": {
+            "Composer": 8,
+            "store.set": 7,
+            "store.emit": 7
+          },
+          "frame": 10722.300000011921,
+          "task": 10725.200000017881,
+          "after": {
+            "Composer": 9,
+            "store.set": 8,
+            "store.emit": 8
+          },
+          "frameDelta": 2.4000000059604645,
+          "taskDelta": 5.300000011920929
+        },
+        {
+          "t": 10859.5,
+          "inputType": "insertText",
+          "data": "i",
+          "length": 9,
+          "before": {
+            "Composer": 9,
+            "store.set": 8,
+            "store.emit": 8
+          },
+          "frame": 10861.800000011921,
+          "task": 10864.300000011921,
+          "after": {
+            "Composer": 10,
+            "store.set": 9,
+            "store.emit": 9
+          },
+          "frameDelta": 2.300000011920929,
+          "taskDelta": 4.800000011920929
+        },
+        {
+          "t": 10987,
+          "inputType": "insertText",
+          "data": "j",
+          "length": 10,
+          "before": {
+            "Composer": 10,
+            "store.set": 9,
+            "store.emit": 9
+          },
+          "frame": 10989.300000011921,
+          "task": 10993.300000011921,
+          "after": {
+            "Composer": 11,
+            "store.set": 10,
+            "store.emit": 10
+          },
+          "frameDelta": 2.300000011920929,
+          "taskDelta": 6.300000011920929
+        },
+        {
+          "t": 11120.200000017881,
+          "inputType": "insertText",
+          "data": "k",
+          "length": 11,
+          "before": {
+            "Composer": 11,
+            "store.set": 10,
+            "store.emit": 10
+          },
+          "frame": 11122.700000017881,
+          "task": 11125.200000017881,
+          "after": {
+            "Composer": 12,
+            "store.set": 11,
+            "store.emit": 11
+          },
+          "frameDelta": 2.5,
+          "taskDelta": 5
+        },
+        {
+          "t": 11259.59999999404,
+          "inputType": "insertText",
+          "data": "l",
+          "length": 12,
+          "before": {
+            "Composer": 12,
+            "store.set": 11,
+            "store.emit": 11
+          },
+          "frame": 11262.300000011921,
+          "task": 11266.40000000596,
+          "after": {
+            "Composer": 13,
+            "store.set": 12,
+            "store.emit": 12
+          },
+          "frameDelta": 2.7000000178813934,
+          "taskDelta": 6.800000011920929
+        }
+      ],
+      "counts": {
+        "Composer": 13,
+        "store.set": 12,
+        "store.emit": 12
+      },
+      "longTasks": [],
+      "loafs": [
+        {
+          "start": 7706.800000011921,
+          "duration": 50.79999998211861,
+          "blockingDuration": 0,
+          "renderStart": 7754.300000011921,
+          "styleAndLayoutStart": 7754.5999999940395
+        }
+      ],
+      "metrics": {
+        "ScriptDuration": 0.0309,
+        "LayoutDuration": 0.0084,
+        "RecalcStyleDuration": 0.0123,
+        "TaskDuration": 0.1562,
+        "JSHeapUsedSize": -13171268,
+        "Nodes": -473,
+        "Documents": -2
+      },
+      "heapUsed": 37019728
+    },
+    {
+      "kind": "size",
+      "messages": 100,
+      "focused": true,
+      "seedMs": 76,
+      "seedApplyMs": 0.30000001192092896,
+      "mount": {
+        "rendered": 100,
+        "waited": 0.29999998211860657
+      },
+      "mountCounts": {
+        "store.set": 1,
+        "store.emit": 1,
+        "Sidebar": 1,
+        "Thread": 1,
+        "UserMessage": 50,
+        "VersionNav": 100,
+        "AssistantMessage": 50,
+        "collectMessageSources": 50,
+        "answerText": 50,
+        "Markdown": 50,
+        "parseMarkdown": 50,
+        "renderBlocks": 50,
+        "Composer": 1
+      },
+      "singleKey": {
+        "counts": {
+          "store.set": 1,
+          "store.emit": 1,
+          "Composer": 1
+        },
+        "samples": [
+          {
+            "t": 12224.700000017881,
+            "inputType": "insertText",
+            "data": "z",
+            "length": 1,
+            "before": {},
+            "frame": 12228.59999999404,
+            "task": 12233.90000000596,
+            "after": {
+              "store.set": 1,
+              "store.emit": 1,
+              "Composer": 1
+            },
+            "frameDelta": 3.899999976158142,
+            "taskDelta": 9.199999988079071
+          }
+        ],
+        "draftLength": 1
+      },
+      "keys": 12,
+      "durationMs": 1680,
+      "draftLength": 12,
+      "samples": [
+        {
+          "t": 13463.90000000596,
+          "inputType": "insertText",
+          "data": "a",
+          "length": 1,
+          "before": {
+            "Composer": 1
+          },
+          "frame": 13466.800000011921,
+          "task": 13475.90000000596,
+          "after": {
+            "Composer": 2,
+            "store.set": 1,
+            "store.emit": 1
+          },
+          "frameDelta": 2.9000000059604645,
+          "taskDelta": 12
+        },
+        {
+          "t": 13598.40000000596,
+          "inputType": "insertText",
+          "data": "b",
+          "length": 2,
+          "before": {
+            "Composer": 2,
+            "store.set": 1,
+            "store.emit": 1
+          },
+          "frame": 13601.700000017881,
+          "task": 13605.5,
+          "after": {
+            "Composer": 3,
+            "store.set": 2,
+            "store.emit": 2
+          },
+          "frameDelta": 3.300000011920929,
+          "taskDelta": 7.0999999940395355
+        },
+        {
+          "t": 13738.5,
+          "inputType": "insertText",
+          "data": "c",
+          "length": 3,
+          "before": {
+            "Composer": 3,
+            "store.set": 2,
+            "store.emit": 2
+          },
+          "frame": 13740.90000000596,
+          "task": 13744.700000017881,
+          "after": {
+            "Composer": 4,
+            "store.set": 3,
+            "store.emit": 3
+          },
+          "frameDelta": 2.4000000059604645,
+          "taskDelta": 6.200000017881393
+        },
+        {
+          "t": 13875,
+          "inputType": "insertText",
+          "data": "d",
+          "length": 4,
+          "before": {
+            "Composer": 4,
+            "store.set": 3,
+            "store.emit": 3
+          },
+          "frame": 13877.40000000596,
+          "task": 13880.40000000596,
+          "after": {
+            "Composer": 5,
+            "store.set": 4,
+            "store.emit": 4
+          },
+          "frameDelta": 2.4000000059604645,
+          "taskDelta": 5.4000000059604645
+        },
+        {
+          "t": 14013.59999999404,
+          "inputType": "insertText",
+          "data": "e",
+          "length": 5,
+          "before": {
+            "Composer": 5,
+            "store.set": 4,
+            "store.emit": 4
+          },
+          "frame": 14016.300000011921,
+          "task": 14020.5,
+          "after": {
+            "Composer": 6,
+            "store.set": 5,
+            "store.emit": 5
+          },
+          "frameDelta": 2.7000000178813934,
+          "taskDelta": 6.9000000059604645
+        },
+        {
+          "t": 14151,
+          "inputType": "insertText",
+          "data": "f",
+          "length": 6,
+          "before": {
+            "Composer": 6,
+            "store.set": 5,
+            "store.emit": 5
+          },
+          "frame": 14153.800000011921,
+          "task": 14158.59999999404,
+          "after": {
+            "Composer": 7,
+            "store.set": 6,
+            "store.emit": 6
+          },
+          "frameDelta": 2.800000011920929,
+          "taskDelta": 7.5999999940395355
+        },
+        {
+          "t": 14290.800000011921,
+          "inputType": "insertText",
+          "data": "g",
+          "length": 7,
+          "before": {
+            "Composer": 7,
+            "store.set": 6,
+            "store.emit": 6
+          },
+          "frame": 14295.40000000596,
+          "task": 14299.40000000596,
+          "after": {
+            "Composer": 8,
+            "store.set": 7,
+            "store.emit": 7
+          },
+          "frameDelta": 4.5999999940395355,
+          "taskDelta": 8.599999994039536
+        },
+        {
+          "t": 14432.300000011921,
+          "inputType": "insertText",
+          "data": "h",
+          "length": 8,
+          "before": {
+            "Composer": 8,
+            "store.set": 7,
+            "store.emit": 7
+          },
+          "frame": 14435,
+          "task": 14438.40000000596,
+          "after": {
+            "Composer": 9,
+            "store.set": 8,
+            "store.emit": 8
+          },
+          "frameDelta": 2.699999988079071,
+          "taskDelta": 6.0999999940395355
+        },
+        {
+          "t": 14570,
+          "inputType": "insertText",
+          "data": "i",
+          "length": 9,
+          "before": {
+            "Composer": 9,
+            "store.set": 8,
+            "store.emit": 8
+          },
+          "frame": 14572.40000000596,
+          "task": 14577.200000017881,
+          "after": {
+            "Composer": 10,
+            "store.set": 9,
+            "store.emit": 9
+          },
+          "frameDelta": 2.4000000059604645,
+          "taskDelta": 7.200000017881393
+        },
+        {
+          "t": 14707.40000000596,
+          "inputType": "insertText",
+          "data": "j",
+          "length": 10,
+          "before": {
+            "Composer": 10,
+            "store.set": 9,
+            "store.emit": 9
+          },
+          "frame": 14709.800000011921,
+          "task": 14715.09999999404,
+          "after": {
+            "Composer": 11,
+            "store.set": 10,
+            "store.emit": 10
+          },
+          "frameDelta": 2.4000000059604645,
+          "taskDelta": 7.699999988079071
+        },
+        {
+          "t": 14848.200000017881,
+          "inputType": "insertText",
+          "data": "k",
+          "length": 11,
+          "before": {
+            "Composer": 11,
+            "store.set": 10,
+            "store.emit": 10
+          },
+          "frame": 14851,
+          "task": 14854.40000000596,
+          "after": {
+            "Composer": 12,
+            "store.set": 11,
+            "store.emit": 11
+          },
+          "frameDelta": 2.7999999821186066,
+          "taskDelta": 6.199999988079071
+        },
+        {
+          "t": 14989.40000000596,
+          "inputType": "insertText",
+          "data": "l",
+          "length": 12,
+          "before": {
+            "Composer": 12,
+            "store.set": 11,
+            "store.emit": 11
+          },
+          "frame": 14992,
+          "task": 14996.59999999404,
+          "after": {
+            "Composer": 13,
+            "store.set": 12,
+            "store.emit": 12
+          },
+          "frameDelta": 2.5999999940395355,
+          "taskDelta": 7.199999988079071
+        }
+      ],
+      "counts": {
+        "Composer": 13,
+        "store.set": 12,
+        "store.emit": 12
+      },
+      "longTasks": [
+        {
+          "start": 11413.300000011921,
+          "duration": 73
+        }
+      ],
+      "loafs": [
+        {
+          "start": 11413.09999999404,
+          "duration": 82.2000000178814,
+          "blockingDuration": 0,
+          "renderStart": 11487.09999999404,
+          "styleAndLayoutStart": 11487.5
+        }
+      ],
+      "metrics": {
+        "ScriptDuration": 0.0369,
+        "LayoutDuration": 0.0099,
+        "RecalcStyleDuration": 0.0148,
+        "TaskDuration": 0.1317,
+        "JSHeapUsedSize": 436216,
+        "Nodes": 13,
+        "Documents": 0
+      },
+      "heapUsed": 40547540
+    },
+    {
+      "kind": "size",
+      "messages": 300,
+      "focused": true,
+      "seedMs": 251,
+      "seedApplyMs": 0.10000002384185791,
+      "mount": {
+        "rendered": 300,
+        "waited": 0.4000000059604645
+      },
+      "mountCounts": {
+        "store.set": 1,
+        "store.emit": 1,
+        "Sidebar": 1,
+        "Thread": 1,
+        "UserMessage": 150,
+        "VersionNav": 300,
+        "AssistantMessage": 150,
+        "collectMessageSources": 150,
+        "answerText": 150,
+        "Markdown": 150,
+        "parseMarkdown": 150,
+        "renderBlocks": 150,
+        "Composer": 1
+      },
+      "singleKey": {
+        "counts": {
+          "store.set": 1,
+          "store.emit": 1,
+          "Composer": 1
+        },
+        "samples": [
+          {
+            "t": 16182.09999999404,
+            "inputType": "insertText",
+            "data": "z",
+            "length": 1,
+            "before": {},
+            "frame": 16185.200000017881,
+            "task": 16192.40000000596,
+            "after": {
+              "store.set": 1,
+              "store.emit": 1,
+              "Composer": 1
+            },
+            "frameDelta": 3.100000023841858,
+            "taskDelta": 10.300000011920929
+          }
+        ],
+        "draftLength": 1
+      },
+      "keys": 12,
+      "durationMs": 1690,
+      "draftLength": 12,
+      "samples": [
+        {
+          "t": 17424.20000001788,
+          "inputType": "insertText",
+          "data": "a",
+          "length": 1,
+          "before": {
+            "Composer": 1
+          },
+          "frame": 17427.5,
+          "task": 17432.40000000596,
+          "after": {
+            "Composer": 2,
+            "store.set": 1,
+            "store.emit": 1
+          },
+          "frameDelta": 3.2999999821186066,
+          "taskDelta": 8.199999988079071
+        },
+        {
+          "t": 17573.40000000596,
+          "inputType": "insertText",
+          "data": "b",
+          "length": 2,
+          "before": {
+            "Composer": 2,
+            "store.set": 1,
+            "store.emit": 1
+          },
+          "frame": 17576.30000001192,
+          "task": 17579.80000001192,
+          "after": {
+            "Composer": 3,
+            "store.set": 2,
+            "store.emit": 2
+          },
+          "frameDelta": 2.9000000059604645,
+          "taskDelta": 6.4000000059604645
+        },
+        {
+          "t": 17715.40000000596,
+          "inputType": "insertText",
+          "data": "c",
+          "length": 3,
+          "before": {
+            "Composer": 3,
+            "store.set": 2,
+            "store.emit": 2
+          },
+          "frame": 17718.30000001192,
+          "task": 17722,
+          "after": {
+            "Composer": 4,
+            "store.set": 3,
+            "store.emit": 3
+          },
+          "frameDelta": 2.9000000059604645,
+          "taskDelta": 6.5999999940395355
+        },
+        {
+          "t": 17868.70000001788,
+          "inputType": "insertText",
+          "data": "d",
+          "length": 4,
+          "before": {
+            "Composer": 4,
+            "store.set": 3,
+            "store.emit": 3
+          },
+          "frame": 17871.09999999404,
+          "task": 17874,
+          "after": {
+            "Composer": 5,
+            "store.set": 4,
+            "store.emit": 4
+          },
+          "frameDelta": 2.399999976158142,
+          "taskDelta": 5.299999982118607
+        },
+        {
+          "t": 17997.40000000596,
+          "inputType": "insertText",
+          "data": "e",
+          "length": 5,
+          "before": {
+            "Composer": 5,
+            "store.set": 4,
+            "store.emit": 4
+          },
+          "frame": 18000.20000001788,
+          "task": 18004,
+          "after": {
+            "Composer": 6,
+            "store.set": 5,
+            "store.emit": 5
+          },
+          "frameDelta": 2.800000011920929,
+          "taskDelta": 6.5999999940395355
+        },
+        {
+          "t": 18129.20000001788,
+          "inputType": "insertText",
+          "data": "f",
+          "length": 6,
+          "before": {
+            "Composer": 6,
+            "store.set": 5,
+            "store.emit": 5
+          },
+          "frame": 18133,
+          "task": 18136.5,
+          "after": {
+            "Composer": 7,
+            "store.set": 6,
+            "store.emit": 6
+          },
+          "frameDelta": 3.7999999821186066,
+          "taskDelta": 7.299999982118607
+        },
+        {
+          "t": 18269.20000001788,
+          "inputType": "insertText",
+          "data": "g",
+          "length": 7,
+          "before": {
+            "Composer": 7,
+            "store.set": 6,
+            "store.emit": 6
+          },
+          "frame": 18273,
+          "task": 18276.20000001788,
+          "after": {
+            "Composer": 8,
+            "store.set": 7,
+            "store.emit": 7
+          },
+          "frameDelta": 3.7999999821186066,
+          "taskDelta": 7
+        },
+        {
+          "t": 18411.90000000596,
+          "inputType": "insertText",
+          "data": "h",
+          "length": 8,
+          "before": {
+            "Composer": 8,
+            "store.set": 7,
+            "store.emit": 7
+          },
+          "frame": 18414.30000001192,
+          "task": 18417.09999999404,
+          "after": {
+            "Composer": 9,
+            "store.set": 8,
+            "store.emit": 8
+          },
+          "frameDelta": 2.4000000059604645,
+          "taskDelta": 5.199999988079071
+        },
+        {
+          "t": 18550.09999999404,
+          "inputType": "insertText",
+          "data": "i",
+          "length": 9,
+          "before": {
+            "Composer": 9,
+            "store.set": 8,
+            "store.emit": 8
+          },
+          "frame": 18552.80000001192,
+          "task": 18556.90000000596,
+          "after": {
+            "Composer": 10,
+            "store.set": 9,
+            "store.emit": 9
+          },
+          "frameDelta": 2.7000000178813934,
+          "taskDelta": 6.800000011920929
+        },
+        {
+          "t": 18689.90000000596,
+          "inputType": "insertText",
+          "data": "j",
+          "length": 10,
+          "before": {
+            "Composer": 10,
+            "store.set": 9,
+            "store.emit": 9
+          },
+          "frame": 18692.20000001788,
+          "task": 18695.5,
+          "after": {
+            "Composer": 11,
+            "store.set": 10,
+            "store.emit": 10
+          },
+          "frameDelta": 2.300000011920929,
+          "taskDelta": 5.5999999940395355
+        },
+        {
+          "t": 18829.70000001788,
+          "inputType": "insertText",
+          "data": "k",
+          "length": 11,
+          "before": {
+            "Composer": 11,
+            "store.set": 10,
+            "store.emit": 10
+          },
+          "frame": 18832.20000001788,
+          "task": 18837.40000000596,
+          "after": {
+            "Composer": 12,
+            "store.set": 11,
+            "store.emit": 11
+          },
+          "frameDelta": 2.5,
+          "taskDelta": 7.699999988079071
+        },
+        {
+          "t": 18971.80000001192,
+          "inputType": "insertText",
+          "data": "l",
+          "length": 12,
+          "before": {
+            "Composer": 12,
+            "store.set": 11,
+            "store.emit": 11
+          },
+          "frame": 18974.40000000596,
+          "task": 18977.5,
+          "after": {
+            "Composer": 13,
+            "store.set": 12,
+            "store.emit": 12
+          },
+          "frameDelta": 2.5999999940395355,
+          "taskDelta": 5.699999988079071
+        }
+      ],
+      "counts": {
+        "Composer": 13,
+        "store.set": 12,
+        "store.emit": 12
+      },
+      "longTasks": [
+        {
+          "start": 15154.700000017881,
+          "duration": 247
+        }
+      ],
+      "loafs": [
+        {
+          "start": 15154.59999999404,
+          "duration": 266.5,
+          "blockingDuration": 0,
+          "renderStart": 15402.300000011921,
+          "styleAndLayoutStart": 15402.90000000596
+        }
+      ],
+      "metrics": {
+        "ScriptDuration": 0.0599,
+        "LayoutDuration": 0.0094,
+        "RecalcStyleDuration": 0.0143,
+        "TaskDuration": 0.1453,
+        "JSHeapUsedSize": 421932,
+        "Nodes": 13,
+        "Documents": 0
+      },
+      "heapUsed": 40037932
+    },
+    {
+      "kind": "size",
+      "messages": 500,
+      "focused": true,
+      "seedMs": 336,
+      "seedApplyMs": 0.09999999403953552,
+      "mount": {
+        "rendered": 500,
+        "waited": 0.800000011920929
+      },
+      "mountCounts": {
+        "store.set": 1,
+        "store.emit": 1,
+        "Sidebar": 1,
+        "Thread": 1,
+        "UserMessage": 250,
+        "VersionNav": 500,
+        "AssistantMessage": 250,
+        "collectMessageSources": 250,
+        "answerText": 250,
+        "Markdown": 250,
+        "parseMarkdown": 250,
+        "renderBlocks": 250,
+        "Composer": 1
+      },
+      "singleKey": {
+        "counts": {
+          "store.set": 1,
+          "store.emit": 1,
+          "Composer": 1
+        },
+        "samples": [
+          {
+            "t": 20221.80000001192,
+            "inputType": "insertText",
+            "data": "z",
+            "length": 1,
+            "before": {},
+            "frame": 20225.09999999404,
+            "task": 20233.90000000596,
+            "after": {
+              "store.set": 1,
+              "store.emit": 1,
+              "Composer": 1
+            },
+            "frameDelta": 3.2999999821186066,
+            "taskDelta": 12.099999994039536
+          }
+        ],
+        "draftLength": 1
+      },
+      "keys": 12,
+      "durationMs": 1681,
+      "draftLength": 12,
+      "samples": [
+        {
+          "t": 21450.70000001788,
+          "inputType": "insertText",
+          "data": "a",
+          "length": 1,
+          "before": {
+            "Composer": 1
+          },
+          "frame": 21453.30000001192,
+          "task": 21460.59999999404,
+          "after": {
+            "Composer": 2,
+            "store.set": 1,
+            "store.emit": 1
+          },
+          "frameDelta": 2.5999999940395355,
+          "taskDelta": 9.899999976158142
+        },
+        {
+          "t": 21589.5,
+          "inputType": "insertText",
+          "data": "b",
+          "length": 2,
+          "before": {
+            "Composer": 2,
+            "store.set": 1,
+            "store.emit": 1
+          },
+          "frame": 21592.5,
+          "task": 21598.5,
+          "after": {
+            "Composer": 3,
+            "store.set": 2,
+            "store.emit": 2
+          },
+          "frameDelta": 3,
+          "taskDelta": 9
+        },
+        {
+          "t": 21729.30000001192,
+          "inputType": "insertText",
+          "data": "c",
+          "length": 3,
+          "before": {
+            "Composer": 3,
+            "store.set": 2,
+            "store.emit": 2
+          },
+          "frame": 21731.90000000596,
+          "task": 21736,
+          "after": {
+            "Composer": 4,
+            "store.set": 3,
+            "store.emit": 3
+          },
+          "frameDelta": 2.5999999940395355,
+          "taskDelta": 6.699999988079071
+        },
+        {
+          "t": 21869.20000001788,
+          "inputType": "insertText",
+          "data": "d",
+          "length": 4,
+          "before": {
+            "Composer": 4,
+            "store.set": 3,
+            "store.emit": 3
+          },
+          "frame": 21871.59999999404,
+          "task": 21877.09999999404,
+          "after": {
+            "Composer": 5,
+            "store.set": 4,
+            "store.emit": 4
+          },
+          "frameDelta": 2.399999976158142,
+          "taskDelta": 7.899999976158142
+        },
+        {
+          "t": 22010.90000000596,
+          "inputType": "insertText",
+          "data": "e",
+          "length": 5,
+          "before": {
+            "Composer": 5,
+            "store.set": 4,
+            "store.emit": 4
+          },
+          "frame": 22013.80000001192,
+          "task": 22027.5,
+          "after": {
+            "Composer": 6,
+            "store.set": 5,
+            "store.emit": 5
+          },
+          "frameDelta": 2.9000000059604645,
+          "taskDelta": 16.599999994039536
+        },
+        {
+          "t": 22147.40000000596,
+          "inputType": "insertText",
+          "data": "f",
+          "length": 6,
+          "before": {
+            "Composer": 6,
+            "store.set": 5,
+            "store.emit": 5
+          },
+          "frame": 22150.59999999404,
+          "task": 22154.90000000596,
+          "after": {
+            "Composer": 7,
+            "store.set": 6,
+            "store.emit": 6
+          },
+          "frameDelta": 3.199999988079071,
+          "taskDelta": 7.5
+        },
+        {
+          "t": 22288.90000000596,
+          "inputType": "insertText",
+          "data": "g",
+          "length": 7,
+          "before": {
+            "Composer": 7,
+            "store.set": 6,
+            "store.emit": 6
+          },
+          "frame": 22291.59999999404,
+          "task": 22296.59999999404,
+          "after": {
+            "Composer": 8,
+            "store.set": 7,
+            "store.emit": 7
+          },
+          "frameDelta": 2.699999988079071,
+          "taskDelta": 7.699999988079071
+        },
+        {
+          "t": 22428.90000000596,
+          "inputType": "insertText",
+          "data": "h",
+          "length": 8,
+          "before": {
+            "Composer": 8,
+            "store.set": 7,
+            "store.emit": 7
+          },
+          "frame": 22431.70000001788,
+          "task": 22435.5,
+          "after": {
+            "Composer": 9,
+            "store.set": 8,
+            "store.emit": 8
+          },
+          "frameDelta": 2.800000011920929,
+          "taskDelta": 6.5999999940395355
+        },
+        {
+          "t": 22568.09999999404,
+          "inputType": "insertText",
+          "data": "i",
+          "length": 9,
+          "before": {
+            "Composer": 9,
+            "store.set": 8,
+            "store.emit": 8
+          },
+          "frame": 22571.20000001788,
+          "task": 22577.20000001788,
+          "after": {
+            "Composer": 10,
+            "store.set": 9,
+            "store.emit": 9
+          },
+          "frameDelta": 3.100000023841858,
+          "taskDelta": 9.100000023841858
+        },
+        {
+          "t": 22706.40000000596,
+          "inputType": "insertText",
+          "data": "j",
+          "length": 10,
+          "before": {
+            "Composer": 10,
+            "store.set": 9,
+            "store.emit": 9
+          },
+          "frame": 22709.70000001788,
+          "task": 22713.5,
+          "after": {
+            "Composer": 11,
+            "store.set": 10,
+            "store.emit": 10
+          },
+          "frameDelta": 3.300000011920929,
+          "taskDelta": 7.0999999940395355
+        },
+        {
+          "t": 22849.5,
+          "inputType": "insertText",
+          "data": "k",
+          "length": 11,
+          "before": {
+            "Composer": 11,
+            "store.set": 10,
+            "store.emit": 10
+          },
+          "frame": 22852.30000001192,
+          "task": 22857.09999999404,
+          "after": {
+            "Composer": 12,
+            "store.set": 11,
+            "store.emit": 11
+          },
+          "frameDelta": 2.800000011920929,
+          "taskDelta": 7.5999999940395355
+        },
+        {
+          "t": 22989,
+          "inputType": "insertText",
+          "data": "l",
+          "length": 12,
+          "before": {
+            "Composer": 12,
+            "store.set": 11,
+            "store.emit": 11
+          },
+          "frame": 22993.30000001192,
+          "task": 22997.90000000596,
+          "after": {
+            "Composer": 13,
+            "store.set": 12,
+            "store.emit": 12
+          },
+          "frameDelta": 4.300000011920929,
+          "taskDelta": 8.900000005960464
+        }
+      ],
+      "counts": {
+        "Composer": 13,
+        "store.set": 12,
+        "store.emit": 12
+      },
+      "longTasks": [
+        {
+          "start": 19123.20000001788,
+          "duration": 333
+        }
+      ],
+      "loafs": [
+        {
+          "start": 19123.09999999404,
+          "duration": 361.5,
+          "blockingDuration": 0,
+          "renderStart": 19457,
+          "styleAndLayoutStart": 19457.90000000596
+        }
+      ],
+      "metrics": {
+        "ScriptDuration": 0.0838,
+        "LayoutDuration": 0.0098,
+        "RecalcStyleDuration": 0.013,
+        "TaskDuration": 0.1822,
+        "JSHeapUsedSize": 433652,
+        "Nodes": 13,
+        "Documents": 0
+      },
+      "heapUsed": 54196228
+    }
+  ],
+  "complex": {
+    "kind": "complex",
+    "messages": 20,
+    "focused": true,
+    "seedMs": 123,
+    "seedApplyMs": 0.10000002384185791,
+    "mount": {
+      "rendered": 20,
+      "waited": 0.10000002384185791
+    },
+    "mountCounts": {
+      "store.set": 1,
+      "store.emit": 1,
+      "Sidebar": 1,
+      "Thread": 1,
+      "UserMessage": 10,
+      "VersionNav": 20,
+      "AssistantMessage": 10,
+      "collectMessageSources": 10,
+      "answerText": 10,
+      "Markdown": 10,
+      "parseMarkdown": 20,
+      "renderBlocks": 20,
+      "Composer": 1
+    },
+    "singleKey": {
+      "counts": {
+        "store.set": 1,
+        "store.emit": 1,
+        "Composer": 1
+      },
+      "samples": [
+        {
+          "t": 23990.70000001788,
+          "inputType": "insertText",
+          "data": "z",
+          "length": 1,
+          "before": {},
+          "frame": 23994.5,
+          "task": 23999.20000001788,
+          "after": {
+            "store.set": 1,
+            "store.emit": 1,
+            "Composer": 1
+          },
+          "frameDelta": 3.7999999821186066,
+          "taskDelta": 8.5
+        }
+      ],
+      "draftLength": 1
+    },
+    "keys": 12,
+    "durationMs": 1674,
+    "draftLength": 12,
+    "samples": [
+      {
+        "t": 25243.5,
+        "inputType": "insertText",
+        "data": "a",
+        "length": 1,
+        "before": {
+          "Composer": 1
+        },
+        "frame": 25246.09999999404,
+        "task": 25255.5,
+        "after": {
+          "Composer": 2,
+          "store.set": 1,
+          "store.emit": 1
+        },
+        "frameDelta": 2.5999999940395355,
+        "taskDelta": 12
+      },
+      {
+        "t": 25380.09999999404,
+        "inputType": "insertText",
+        "data": "b",
+        "length": 2,
+        "before": {
+          "Composer": 2,
+          "store.set": 1,
+          "store.emit": 1
+        },
+        "frame": 25382.40000000596,
+        "task": 25385.59999999404,
+        "after": {
+          "Composer": 3,
+          "store.set": 2,
+          "store.emit": 2
+        },
+        "frameDelta": 2.300000011920929,
+        "taskDelta": 5.5
+      },
+      {
+        "t": 25518.20000001788,
+        "inputType": "insertText",
+        "data": "c",
+        "length": 3,
+        "before": {
+          "Composer": 3,
+          "store.set": 2,
+          "store.emit": 2
+        },
+        "frame": 25520.30000001192,
+        "task": 25525.5,
+        "after": {
+          "Composer": 4,
+          "store.set": 3,
+          "store.emit": 3
+        },
+        "frameDelta": 2.0999999940395355,
+        "taskDelta": 7.299999982118607
+      },
+      {
+        "t": 25657.59999999404,
+        "inputType": "insertText",
+        "data": "d",
+        "length": 4,
+        "before": {
+          "Composer": 4,
+          "store.set": 3,
+          "store.emit": 3
+        },
+        "frame": 25660.70000001788,
+        "task": 25664.80000001192,
+        "after": {
+          "Composer": 5,
+          "store.set": 4,
+          "store.emit": 4
+        },
+        "frameDelta": 3.100000023841858,
+        "taskDelta": 7.200000017881393
+      },
+      {
+        "t": 25797.5,
+        "inputType": "insertText",
+        "data": "e",
+        "length": 5,
+        "before": {
+          "Composer": 5,
+          "store.set": 4,
+          "store.emit": 4
+        },
+        "frame": 25799.59999999404,
+        "task": 25803,
+        "after": {
+          "Composer": 6,
+          "store.set": 5,
+          "store.emit": 5
+        },
+        "frameDelta": 2.0999999940395355,
+        "taskDelta": 5.5
+      },
+      {
+        "t": 25937.5,
+        "inputType": "insertText",
+        "data": "f",
+        "length": 6,
+        "before": {
+          "Composer": 6,
+          "store.set": 5,
+          "store.emit": 5
+        },
+        "frame": 25940.70000001788,
+        "task": 25944.30000001192,
+        "after": {
+          "Composer": 7,
+          "store.set": 6,
+          "store.emit": 6
+        },
+        "frameDelta": 3.2000000178813934,
+        "taskDelta": 6.800000011920929
+      },
+      {
+        "t": 26078.90000000596,
+        "inputType": "insertText",
+        "data": "g",
+        "length": 7,
+        "before": {
+          "Composer": 7,
+          "store.set": 6,
+          "store.emit": 6
+        },
+        "frame": 26081.20000001788,
+        "task": 26084.30000001192,
+        "after": {
+          "Composer": 8,
+          "store.set": 7,
+          "store.emit": 7
+        },
+        "frameDelta": 2.300000011920929,
+        "taskDelta": 5.4000000059604645
+      },
+      {
+        "t": 26214.80000001192,
+        "inputType": "insertText",
+        "data": "h",
+        "length": 8,
+        "before": {
+          "Composer": 8,
+          "store.set": 7,
+          "store.emit": 7
+        },
+        "frame": 26217.30000001192,
+        "task": 26220.70000001788,
+        "after": {
+          "Composer": 9,
+          "store.set": 8,
+          "store.emit": 8
+        },
+        "frameDelta": 2.5,
+        "taskDelta": 5.9000000059604645
+      },
+      {
+        "t": 26352.59999999404,
+        "inputType": "insertText",
+        "data": "i",
+        "length": 9,
+        "before": {
+          "Composer": 9,
+          "store.set": 8,
+          "store.emit": 8
+        },
+        "frame": 26355.09999999404,
+        "task": 26360.5,
+        "after": {
+          "Composer": 10,
+          "store.set": 9,
+          "store.emit": 9
+        },
+        "frameDelta": 2.5,
+        "taskDelta": 7.9000000059604645
+      },
+      {
+        "t": 26495.5,
+        "inputType": "insertText",
+        "data": "j",
+        "length": 10,
+        "before": {
+          "Composer": 10,
+          "store.set": 9,
+          "store.emit": 9
+        },
+        "frame": 26498.20000001788,
+        "task": 26501.70000001788,
+        "after": {
+          "Composer": 11,
+          "store.set": 10,
+          "store.emit": 10
+        },
+        "frameDelta": 2.7000000178813934,
+        "taskDelta": 6.200000017881393
+      },
+      {
+        "t": 26633.30000001192,
+        "inputType": "insertText",
+        "data": "k",
+        "length": 11,
+        "before": {
+          "Composer": 11,
+          "store.set": 10,
+          "store.emit": 10
+        },
+        "frame": 26635.70000001788,
+        "task": 26639.59999999404,
+        "after": {
+          "Composer": 12,
+          "store.set": 11,
+          "store.emit": 11
+        },
+        "frameDelta": 2.4000000059604645,
+        "taskDelta": 6.299999982118607
+      },
+      {
+        "t": 26774.70000001788,
+        "inputType": "insertText",
+        "data": "l",
+        "length": 12,
+        "before": {
+          "Composer": 12,
+          "store.set": 11,
+          "store.emit": 11
+        },
+        "frame": 26777.5,
+        "task": 26781.30000001192,
+        "after": {
+          "Composer": 13,
+          "store.set": 12,
+          "store.emit": 12
+        },
+        "frameDelta": 2.7999999821186066,
+        "taskDelta": 6.5999999940395355
+      }
+    ],
+    "counts": {
+      "Composer": 13,
+      "store.set": 12,
+      "store.emit": 12
+    },
+    "longTasks": [
+      {
+        "start": 23142.30000001192,
+        "duration": 114
+      }
+    ],
+    "loafs": [
+      {
+        "start": 23142.20000001788,
+        "duration": 120.59999999403954,
+        "blockingDuration": 0,
+        "renderStart": 23256.70000001788,
+        "styleAndLayoutStart": 23257.40000000596
+      }
+    ],
+    "metrics": {
+      "ScriptDuration": 0.0281,
+      "LayoutDuration": 0.0086,
+      "RecalcStyleDuration": 0.0125,
+      "TaskDuration": 0.1173,
+      "JSHeapUsedSize": 406608,
+      "Nodes": 13,
+      "Documents": 0
+    },
+    "heapUsed": 58343716
+  },
+  "dense": [
+    {
+      "kind": "dense",
+      "messages": 300,
+      "focused": true,
+      "seedMs": 1707,
+      "seedApplyMs": 0.20000001788139343,
+      "mount": {
+        "rendered": 300,
+        "waited": 2.300000011920929
+      },
+      "mountCounts": {
+        "store.set": 1,
+        "store.emit": 1,
+        "Sidebar": 1,
+        "Thread": 1,
+        "UserMessage": 150,
+        "VersionNav": 300,
+        "AssistantMessage": 150,
+        "collectMessageSources": 150,
+        "answerText": 150,
+        "Markdown": 150,
+        "parseMarkdown": 600,
+        "renderBlocks": 600,
+        "Composer": 1
+      },
+      "singleKey": {
+        "counts": {
+          "store.set": 1,
+          "store.emit": 1,
+          "Composer": 1
+        },
+        "samples": [
+          {
+            "t": 29632.59999999404,
+            "inputType": "insertText",
+            "data": "z",
+            "length": 1,
+            "before": {},
+            "frame": 29637.5,
+            "task": 29650.20000001788,
+            "after": {
+              "store.set": 1,
+              "store.emit": 1,
+              "Composer": 1
+            },
+            "frameDelta": 4.9000000059604645,
+            "taskDelta": 17.600000023841858
+          }
+        ],
+        "draftLength": 1
+      },
+      "keys": 8,
+      "durationMs": 1162,
+      "draftLength": 8,
+      "samples": [
+        {
+          "t": 30892,
+          "inputType": "insertText",
+          "data": "a",
+          "length": 1,
+          "before": {
+            "Composer": 1
+          },
+          "frame": 30895.90000000596,
+          "task": 30903.80000001192,
+          "after": {
+            "Composer": 2,
+            "store.set": 1,
+            "store.emit": 1
+          },
+          "frameDelta": 3.9000000059604645,
+          "taskDelta": 11.800000011920929
+        },
+        {
+          "t": 31045,
+          "inputType": "insertText",
+          "data": "b",
+          "length": 2,
+          "before": {
+            "Composer": 2,
+            "store.set": 1,
+            "store.emit": 1
+          },
+          "frame": 31049.70000001788,
+          "task": 31056.30000001192,
+          "after": {
+            "Composer": 3,
+            "store.set": 2,
+            "store.emit": 2
+          },
+          "frameDelta": 4.700000017881393,
+          "taskDelta": 11.300000011920929
+        },
+        {
+          "t": 31184.40000000596,
+          "inputType": "insertText",
+          "data": "c",
+          "length": 3,
+          "before": {
+            "Composer": 3,
+            "store.set": 2,
+            "store.emit": 2
+          },
+          "frame": 31188.40000000596,
+          "task": 31195.20000001788,
+          "after": {
+            "Composer": 4,
+            "store.set": 3,
+            "store.emit": 3
+          },
+          "frameDelta": 4,
+          "taskDelta": 10.800000011920929
+        },
+        {
+          "t": 31337.20000001788,
+          "inputType": "insertText",
+          "data": "d",
+          "length": 4,
+          "before": {
+            "Composer": 4,
+            "store.set": 3,
+            "store.emit": 3
+          },
+          "frame": 31342.09999999404,
+          "task": 31349,
+          "after": {
+            "Composer": 5,
+            "store.set": 4,
+            "store.emit": 4
+          },
+          "frameDelta": 4.899999976158142,
+          "taskDelta": 11.799999982118607
+        },
+        {
+          "t": 31494.59999999404,
+          "inputType": "insertText",
+          "data": "e",
+          "length": 5,
+          "before": {
+            "Composer": 5,
+            "store.set": 4,
+            "store.emit": 4
+          },
+          "frame": 31498.70000001788,
+          "task": 31504.40000000596,
+          "after": {
+            "Composer": 6,
+            "store.set": 5,
+            "store.emit": 5
+          },
+          "frameDelta": 4.100000023841858,
+          "taskDelta": 9.800000011920929
+        },
+        {
+          "t": 31634.59999999404,
+          "inputType": "insertText",
+          "data": "f",
+          "length": 6,
+          "before": {
+            "Composer": 6,
+            "store.set": 5,
+            "store.emit": 5
+          },
+          "frame": 31638.20000001788,
+          "task": 31643.5,
+          "after": {
+            "Composer": 7,
+            "store.set": 6,
+            "store.emit": 6
+          },
+          "frameDelta": 3.600000023841858,
+          "taskDelta": 8.900000005960464
+        },
+        {
+          "t": 31774.20000001788,
+          "inputType": "insertText",
+          "data": "g",
+          "length": 7,
+          "before": {
+            "Composer": 7,
+            "store.set": 6,
+            "store.emit": 6
+          },
+          "frame": 31778,
+          "task": 31783.90000000596,
+          "after": {
+            "Composer": 8,
+            "store.set": 7,
+            "store.emit": 7
+          },
+          "frameDelta": 3.7999999821186066,
+          "taskDelta": 9.699999988079071
+        },
+        {
+          "t": 31913.20000001788,
+          "inputType": "insertText",
+          "data": "h",
+          "length": 8,
+          "before": {
+            "Composer": 8,
+            "store.set": 7,
+            "store.emit": 7
+          },
+          "frame": 31917.59999999404,
+          "task": 31923.70000001788,
+          "after": {
+            "Composer": 9,
+            "store.set": 8,
+            "store.emit": 8
+          },
+          "frameDelta": 4.399999976158142,
+          "taskDelta": 10.5
+        }
+      ],
+      "counts": {
+        "Composer": 9,
+        "store.set": 8,
+        "store.emit": 8
+      },
+      "longTasks": [
+        {
+          "start": 26925.70000001788,
+          "duration": 1703
+        },
+        {
+          "start": 28629.70000001788,
+          "duration": 147
+        },
+        {
+          "start": 28779,
+          "duration": 67
+        }
+      ],
+      "loafs": [
+        {
+          "start": 26925.59999999404,
+          "duration": 1837.1000000238419,
+          "blockingDuration": 83.1,
+          "renderStart": 28629.70000001788,
+          "styleAndLayoutStart": 28632.20000001788
+        },
+        {
+          "start": 28777.40000000596,
+          "duration": 117.09999999403954,
+          "blockingDuration": 17.6,
+          "renderStart": 28894.20000001788,
+          "styleAndLayoutStart": 28894.40000000596
+        }
+      ],
+      "metrics": {
+        "ScriptDuration": 0.1097,
+        "LayoutDuration": 0.0066,
+        "RecalcStyleDuration": 0.0089,
+        "TaskDuration": 0.1834,
+        "JSHeapUsedSize": 275220,
+        "Nodes": 9,
+        "Documents": 0
+      },
+      "heapUsed": 60091984
+    },
+    {
+      "kind": "dense",
+      "messages": 500,
+      "focused": true,
+      "seedMs": 2543,
+      "seedApplyMs": 0.09999999403953552,
+      "mount": {
+        "rendered": 500,
+        "waited": 4
+      },
+      "mountCounts": {
+        "store.set": 1,
+        "store.emit": 1,
+        "Sidebar": 1,
+        "Thread": 1,
+        "UserMessage": 250,
+        "VersionNav": 500,
+        "AssistantMessage": 250,
+        "collectMessageSources": 250,
+        "answerText": 250,
+        "Markdown": 250,
+        "parseMarkdown": 1000,
+        "renderBlocks": 1000,
+        "Composer": 1
+      },
+      "singleKey": {
+        "counts": {
+          "store.set": 1,
+          "store.emit": 1,
+          "Composer": 1
+        },
+        "samples": [
+          {
+            "t": 35612.30000001192,
+            "inputType": "insertText",
+            "data": "z",
+            "length": 1,
+            "before": {},
+            "frame": 35617.70000001788,
+            "task": 35634.70000001788,
+            "after": {
+              "store.set": 1,
+              "store.emit": 1,
+              "Composer": 1
+            },
+            "frameDelta": 5.4000000059604645,
+            "taskDelta": 22.400000005960464
+          }
+        ],
+        "draftLength": 1
+      },
+      "keys": 8,
+      "durationMs": 1243,
+      "draftLength": 8,
+      "samples": [
+        {
+          "t": 36878.40000000596,
+          "inputType": "insertText",
+          "data": "a",
+          "length": 1,
+          "before": {
+            "Composer": 1
+          },
+          "frame": 36883,
+          "task": 36891.70000001788,
+          "after": {
+            "Composer": 2,
+            "store.set": 1,
+            "store.emit": 1
+          },
+          "frameDelta": 4.5999999940395355,
+          "taskDelta": 13.300000011920929
+        },
+        {
+          "t": 37029.5,
+          "inputType": "insertText",
+          "data": "b",
+          "length": 2,
+          "before": {
+            "Composer": 2,
+            "store.set": 1,
+            "store.emit": 1
+          },
+          "frame": 37035.40000000596,
+          "task": 37042.90000000596,
+          "after": {
+            "Composer": 3,
+            "store.set": 2,
+            "store.emit": 2
+          },
+          "frameDelta": 5.9000000059604645,
+          "taskDelta": 13.400000005960464
+        },
+        {
+          "t": 37183.5,
+          "inputType": "insertText",
+          "data": "c",
+          "length": 3,
+          "before": {
+            "Composer": 3,
+            "store.set": 2,
+            "store.emit": 2
+          },
+          "frame": 37188.20000001788,
+          "task": 37197.70000001788,
+          "after": {
+            "Composer": 4,
+            "store.set": 3,
+            "store.emit": 3
+          },
+          "frameDelta": 4.700000017881393,
+          "taskDelta": 14.200000017881393
+        },
+        {
+          "t": 37339.80000001192,
+          "inputType": "insertText",
+          "data": "d",
+          "length": 4,
+          "before": {
+            "Composer": 4,
+            "store.set": 3,
+            "store.emit": 3
+          },
+          "frame": 37344.59999999404,
+          "task": 37353.40000000596,
+          "after": {
+            "Composer": 5,
+            "store.set": 4,
+            "store.emit": 4
+          },
+          "frameDelta": 4.799999982118607,
+          "taskDelta": 13.599999994039536
+        },
+        {
+          "t": 37496.90000000596,
+          "inputType": "insertText",
+          "data": "e",
+          "length": 5,
+          "before": {
+            "Composer": 5,
+            "store.set": 4,
+            "store.emit": 4
+          },
+          "frame": 37502.20000001788,
+          "task": 37510.59999999404,
+          "after": {
+            "Composer": 6,
+            "store.set": 5,
+            "store.emit": 5
+          },
+          "frameDelta": 5.300000011920929,
+          "taskDelta": 13.699999988079071
+        },
+        {
+          "t": 37653.40000000596,
+          "inputType": "insertText",
+          "data": "f",
+          "length": 6,
+          "before": {
+            "Composer": 6,
+            "store.set": 5,
+            "store.emit": 5
+          },
+          "frame": 37658.30000001192,
+          "task": 37667.90000000596,
+          "after": {
+            "Composer": 7,
+            "store.set": 6,
+            "store.emit": 6
+          },
+          "frameDelta": 4.9000000059604645,
+          "taskDelta": 14.5
+        },
+        {
+          "t": 37807.5,
+          "inputType": "insertText",
+          "data": "g",
+          "length": 7,
+          "before": {
+            "Composer": 7,
+            "store.set": 6,
+            "store.emit": 6
+          },
+          "frame": 37811.90000000596,
+          "task": 37821.20000001788,
+          "after": {
+            "Composer": 8,
+            "store.set": 7,
+            "store.emit": 7
+          },
+          "frameDelta": 4.4000000059604645,
+          "taskDelta": 13.700000017881393
+        },
+        {
+          "t": 37965.70000001788,
+          "inputType": "insertText",
+          "data": "h",
+          "length": 8,
+          "before": {
+            "Composer": 8,
+            "store.set": 7,
+            "store.emit": 7
+          },
+          "frame": 37971.5,
+          "task": 37979.90000000596,
+          "after": {
+            "Composer": 9,
+            "store.set": 8,
+            "store.emit": 8
+          },
+          "frameDelta": 5.799999982118607,
+          "taskDelta": 14.199999988079071
+        }
+      ],
+      "counts": {
+        "Composer": 9,
+        "store.set": 8,
+        "store.emit": 8
+      },
+      "longTasks": [
+        {
+          "start": 32063.30000001192,
+          "duration": 2533
+        },
+        {
+          "start": 34596.90000000596,
+          "duration": 236
+        }
+      ],
+      "loafs": [
+        {
+          "start": 32063.20000001788,
+          "duration": 2747.0999999940395,
+          "blockingDuration": 163.4,
+          "renderStart": 34597.5,
+          "styleAndLayoutStart": 34602.40000000596
+        }
+      ],
+      "metrics": {
+        "ScriptDuration": 0.1511,
+        "LayoutDuration": 0.0063,
+        "RecalcStyleDuration": 0.0084,
+        "TaskDuration": 0.2358,
+        "JSHeapUsedSize": 281816,
+        "Nodes": 9,
+        "Documents": 0
+      },
+      "heapUsed": 104089896
+    }
+  ],
+  "streaming": {
+    "kind": "streaming",
+    "messages": 300,
+    "keys": 10,
+    "samples": [
+      {
+        "t": 39467,
+        "inputType": "insertText",
+        "data": "a",
+        "length": 1,
+        "before": {
+          "store.set": 2,
+          "store.emit": 2,
+          "Thread": 1,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 151,
+          "collectMessageSources": 1,
+          "answerText": 1,
+          "Markdown": 1,
+          "parseMarkdown": 1,
+          "renderBlocks": 1,
+          "Composer": 1
+        },
+        "frame": 39470.90000000596,
+        "task": 39478.30000001192,
+        "after": {
+          "store.set": 4,
+          "store.emit": 4,
+          "Thread": 2,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 152,
+          "collectMessageSources": 2,
+          "answerText": 2,
+          "Markdown": 2,
+          "parseMarkdown": 2,
+          "renderBlocks": 2,
+          "Composer": 2
+        },
+        "frameDelta": 3.9000000059604645,
+        "taskDelta": 11.300000011920929
+      },
+      {
+        "t": 39574.90000000596,
+        "inputType": "insertText",
+        "data": "b",
+        "length": 2,
+        "before": {
+          "store.set": 5,
+          "store.emit": 5,
+          "Thread": 3,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 153,
+          "collectMessageSources": 3,
+          "answerText": 3,
+          "Markdown": 3,
+          "parseMarkdown": 3,
+          "renderBlocks": 3,
+          "Composer": 2
+        },
+        "frame": 39577.80000001192,
+        "task": 39581.09999999404,
+        "after": {
+          "store.set": 6,
+          "store.emit": 6,
+          "Thread": 3,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 153,
+          "collectMessageSources": 3,
+          "answerText": 3,
+          "Markdown": 3,
+          "parseMarkdown": 3,
+          "renderBlocks": 3,
+          "Composer": 3
+        },
+        "frameDelta": 2.9000000059604645,
+        "taskDelta": 6.199999988079071
+      },
+      {
+        "t": 39684.90000000596,
+        "inputType": "insertText",
+        "data": "c",
+        "length": 3,
+        "before": {
+          "store.set": 8,
+          "store.emit": 8,
+          "Thread": 5,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 155,
+          "collectMessageSources": 5,
+          "answerText": 5,
+          "Markdown": 5,
+          "parseMarkdown": 5,
+          "renderBlocks": 5,
+          "Composer": 3
+        },
+        "frame": 39693.09999999404,
+        "task": 39699.20000001788,
+        "after": {
+          "store.set": 10,
+          "store.emit": 10,
+          "Thread": 6,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 156,
+          "collectMessageSources": 6,
+          "answerText": 6,
+          "Markdown": 6,
+          "parseMarkdown": 6,
+          "renderBlocks": 6,
+          "Composer": 4
+        },
+        "frameDelta": 8.199999988079071,
+        "taskDelta": 14.300000011920929
+      },
+      {
+        "t": 39793.20000001788,
+        "inputType": "insertText",
+        "data": "d",
+        "length": 4,
+        "before": {
+          "store.set": 11,
+          "store.emit": 11,
+          "Thread": 7,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 157,
+          "collectMessageSources": 7,
+          "answerText": 7,
+          "Markdown": 7,
+          "parseMarkdown": 7,
+          "renderBlocks": 7,
+          "Composer": 4
+        },
+        "frame": 39799.80000001192,
+        "task": 39803.09999999404,
+        "after": {
+          "store.set": 12,
+          "store.emit": 12,
+          "Thread": 7,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 157,
+          "collectMessageSources": 7,
+          "answerText": 7,
+          "Markdown": 7,
+          "parseMarkdown": 7,
+          "renderBlocks": 7,
+          "Composer": 5
+        },
+        "frameDelta": 6.5999999940395355,
+        "taskDelta": 9.899999976158142
+      },
+      {
+        "t": 39901.20000001788,
+        "inputType": "insertText",
+        "data": "e",
+        "length": 5,
+        "before": {
+          "store.set": 14,
+          "store.emit": 14,
+          "Thread": 9,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 159,
+          "collectMessageSources": 9,
+          "answerText": 9,
+          "Markdown": 9,
+          "parseMarkdown": 9,
+          "renderBlocks": 9,
+          "Composer": 5
+        },
+        "frame": 39905.90000000596,
+        "task": 39908.80000001192,
+        "after": {
+          "store.set": 15,
+          "store.emit": 15,
+          "Thread": 9,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 159,
+          "collectMessageSources": 9,
+          "answerText": 9,
+          "Markdown": 9,
+          "parseMarkdown": 9,
+          "renderBlocks": 9,
+          "Composer": 6
+        },
+        "frameDelta": 4.699999988079071,
+        "taskDelta": 7.5999999940395355
+      },
+      {
+        "t": 40009.40000000596,
+        "inputType": "insertText",
+        "data": "f",
+        "length": 6,
+        "before": {
+          "store.set": 17,
+          "store.emit": 17,
+          "Thread": 11,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 161,
+          "collectMessageSources": 11,
+          "answerText": 11,
+          "Markdown": 11,
+          "parseMarkdown": 11,
+          "renderBlocks": 11,
+          "Composer": 6
+        },
+        "frame": 40012.80000001192,
+        "task": 40020.30000001192,
+        "after": {
+          "store.set": 18,
+          "store.emit": 18,
+          "Thread": 11,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 161,
+          "collectMessageSources": 11,
+          "answerText": 11,
+          "Markdown": 11,
+          "parseMarkdown": 11,
+          "renderBlocks": 11,
+          "Composer": 7
+        },
+        "frameDelta": 3.4000000059604645,
+        "taskDelta": 10.900000005960464
+      },
+      {
+        "t": 40117.80000001192,
+        "inputType": "insertText",
+        "data": "g",
+        "length": 7,
+        "before": {
+          "store.set": 19,
+          "store.emit": 19,
+          "Thread": 12,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 162,
+          "collectMessageSources": 12,
+          "answerText": 12,
+          "Markdown": 12,
+          "parseMarkdown": 12,
+          "renderBlocks": 12,
+          "Composer": 7
+        },
+        "frame": 40121.40000000596,
+        "task": 40125.30000001192,
+        "after": {
+          "store.set": 20,
+          "store.emit": 20,
+          "Thread": 12,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 162,
+          "collectMessageSources": 12,
+          "answerText": 12,
+          "Markdown": 12,
+          "parseMarkdown": 12,
+          "renderBlocks": 12,
+          "Composer": 8
+        },
+        "frameDelta": 3.5999999940395355,
+        "taskDelta": 7.5
+      },
+      {
+        "t": 40225.59999999404,
+        "inputType": "insertText",
+        "data": "h",
+        "length": 8,
+        "before": {
+          "store.set": 22,
+          "store.emit": 22,
+          "Thread": 14,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 164,
+          "collectMessageSources": 14,
+          "answerText": 14,
+          "Markdown": 14,
+          "parseMarkdown": 14,
+          "renderBlocks": 14,
+          "Composer": 8
+        },
+        "frame": 40228.80000001192,
+        "task": 40232.70000001788,
+        "after": {
+          "store.set": 23,
+          "store.emit": 23,
+          "Thread": 14,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 164,
+          "collectMessageSources": 14,
+          "answerText": 14,
+          "Markdown": 14,
+          "parseMarkdown": 14,
+          "renderBlocks": 14,
+          "Composer": 9
+        },
+        "frameDelta": 3.2000000178813934,
+        "taskDelta": 7.100000023841858
+      },
+      {
+        "t": 40334.90000000596,
+        "inputType": "insertText",
+        "data": "i",
+        "length": 9,
+        "before": {
+          "store.set": 25,
+          "store.emit": 25,
+          "Thread": 16,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 166,
+          "collectMessageSources": 16,
+          "answerText": 16,
+          "Markdown": 16,
+          "parseMarkdown": 16,
+          "renderBlocks": 16,
+          "Composer": 9
+        },
+        "frame": 40337.70000001788,
+        "task": 40340.90000000596,
+        "after": {
+          "store.set": 26,
+          "store.emit": 26,
+          "Thread": 16,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 166,
+          "collectMessageSources": 16,
+          "answerText": 16,
+          "Markdown": 16,
+          "parseMarkdown": 16,
+          "renderBlocks": 16,
+          "Composer": 10
+        },
+        "frameDelta": 2.800000011920929,
+        "taskDelta": 6
+      },
+      {
+        "t": 40444.80000001192,
+        "inputType": "insertText",
+        "data": "j",
+        "length": 10,
+        "before": {
+          "store.set": 28,
+          "store.emit": 28,
+          "Thread": 18,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 168,
+          "collectMessageSources": 18,
+          "answerText": 18,
+          "Markdown": 18,
+          "parseMarkdown": 18,
+          "renderBlocks": 18,
+          "Composer": 10
+        },
+        "frame": 40452.5,
+        "task": 40455.80000001192,
+        "after": {
+          "store.set": 29,
+          "store.emit": 29,
+          "Thread": 18,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 168,
+          "collectMessageSources": 18,
+          "answerText": 18,
+          "Markdown": 18,
+          "parseMarkdown": 18,
+          "renderBlocks": 18,
+          "Composer": 11
+        },
+        "frameDelta": 7.699999988079071,
+        "taskDelta": 11
+      }
+    ],
+    "counts": {
+      "store.set": 56,
+      "store.emit": 56,
+      "Thread": 45,
+      "UserMessage": 150,
+      "VersionNav": 300,
+      "AssistantMessage": 195,
+      "collectMessageSources": 45,
+      "answerText": 45,
+      "Markdown": 45,
+      "parseMarkdown": 45,
+      "renderBlocks": 45,
+      "Composer": 11
+    },
+    "longTasks": [
+      {
+        "start": 38130.59999999404,
+        "duration": 416
+      },
+      {
+        "start": 39403.70000001788,
+        "duration": 51
+      }
+    ],
+    "streamingStillActive": true,
+    "draftLength": "abcdefghij"
+  },
+  "errors": [],
+  "finalMetrics": {
+    "Timestamp": 135221.069499,
+    "AudioHandlers": 0,
+    "AudioWorkletProcessors": 0,
+    "Documents": 2,
+    "Frames": 1,
+    "JSEventListeners": 3819,
+    "LayoutObjects": 183313,
+    "MediaKeySessions": 0,
+    "MediaKeys": 0,
+    "Nodes": 202077,
+    "Resources": 169,
+    "ContextLifecycleStateObservers": 32,
+    "V8PerContextDatas": 1,
+    "WorkerGlobalScopes": 0,
+    "UACSSResources": 0,
+    "RTCPeerConnections": 0,
+    "ResourceFetchers": 2,
+    "AdSubframes": 0,
+    "DetachedScriptStates": 0,
+    "ArrayBufferContents": 6,
+    "LayoutCount": 442,
+    "RecalcStyleCount": 726,
+    "LayoutDuration": 1.867294,
+    "RecalcStyleDuration": 2.787293,
+    "DevToolsCommandDuration": 0.072986,
+    "ScriptDuration": 2.457658,
+    "V8CompileDuration": 0,
+    "TaskDuration": 8.862609,
+    "TaskOtherDuration": 1.677378,
+    "ThreadTime": 8.16963,
+    "ProcessTime": 12.551079,
+    "JSHeapUsedSize": 68696972,
+    "JSHeapTotalSize": 164110336,
+    "FirstMeaningfulPaint": 135180.251033,
+    "DomContentLoaded": 135179.410529,
+    "NavigationStart": 135179.001621
+  }
+}

@@ -214,9 +214,29 @@ const chatStore = {
       }
     }
   },
+  /**
+   * Replace the state with one patch.
+   *
+   * A patch that changes nothing must not notify subscribers: input handlers,
+   * stream throttles and layout effects legitimately write the same value back
+   * (the same draft, the same `stopping` flag), and an unconditional emit made
+   * those writes re-render every subscriber. Keeping the old state object is
+   * also what lets selector caches answer "nothing changed" without work.
+   *
+   * @returns whether the state actually changed.
+   */
   set(patch) {
+    let changed = false
+    for (const key of Object.keys(patch)) {
+      if (!Object.is(this.state[key], patch[key])) {
+        changed = true
+        break
+      }
+    }
+    if (!changed) return false
     this.state = { ...this.state, ...patch }
     this.emit()
+    return true
   },
   toast(message, kind = 'info') {
     if (!message) return
@@ -228,10 +248,85 @@ const chatStore = {
   },
 }
 
-function useChat(selector) {
-  const [, force] = React.useState(0)
-  React.useEffect(() => chatStore.subscribe(() => force(value => value + 1)), [])
-  return selector(chatStore.state)
+/**
+ * Shallow equality for selectors that derive a small object or array.
+ *
+ * A selector returning a fresh `{...}` on every call would otherwise defeat the
+ * snapshot cache and re-render forever. Fields are compared with `Object.is`,
+ * so nested objects and arrays keep identity semantics: rebuild them only when
+ * their own reference changes.
+ */
+function shallowEqual(left, right) {
+  if (Object.is(left, right)) return true
+  if (typeof left !== 'object' || left === null || typeof right !== 'object' || right === null) return false
+  const leftKeys = Object.keys(left)
+  const rightKeys = Object.keys(right)
+  if (leftKeys.length !== rightKeys.length) return false
+  for (const key of leftKeys) {
+    if (!Object.prototype.hasOwnProperty.call(right, key) || !Object.is(left[key], right[key])) return false
+  }
+  return true
+}
+
+/**
+ * Snapshot cache behind `useChat`.
+ *
+ * `useSyncExternalStore` requires `getSnapshot()` to return the same value for
+ * the same store state. Selectors are usually inline closures, so their identity
+ * changes on every render; the cache therefore compares the selected value with
+ * the caller's equality function and keeps the previous reference when the
+ * selection is equivalent. That is what makes `useChat(state => state.messages)`
+ * stable across a draft update, and what keeps derived objects from looping.
+ */
+function createChatSelectorCache() {
+  let hasValue = false
+  let value
+  let state
+  let selector
+  let equal
+  return function read(nextState, nextSelector, nextEqual) {
+    if (hasValue && state === nextState && selector === nextSelector && equal === nextEqual) return value
+    const next = nextSelector(nextState)
+    if (hasValue && equal === nextEqual && nextEqual(next, value)) {
+      state = nextState
+      selector = nextSelector
+      return value
+    }
+    hasValue = true
+    value = next
+    state = nextState
+    selector = nextSelector
+    equal = nextEqual
+    return value
+  }
+}
+
+/**
+ * Subscribe one component to a slice of the Chat store.
+ *
+ * React 18.3's `useSyncExternalStore` (the version the Harness web client
+ * bundles) provides the tear-free subscription; the selector cache provides the
+ * "only re-render when my slice changed" part that the old `useState` force-update
+ * implementation was missing. Components that select a primitive or a stable
+ * store reference need nothing else; selectors that build an object/array must
+ * pass `shallowEqual` (or memoize) so an equal selection keeps its identity.
+ *
+ * @param selector - maps the store state to the value this component reads.
+ * @param isEqual - equality of two selections; defaults to reference equality.
+ */
+function useChat(selector = state => state, isEqual = Object.is) {
+  const selectorRef = React.useRef(selector)
+  const equalityRef = React.useRef(isEqual)
+  const cacheRef = React.useRef(null)
+  selectorRef.current = selector
+  equalityRef.current = isEqual
+  if (cacheRef.current === null) cacheRef.current = createChatSelectorCache()
+  const getSnapshot = React.useCallback(
+    () => cacheRef.current(chatStore.state, selectorRef.current, equalityRef.current),
+    [],
+  )
+  const subscribe = React.useCallback(listener => chatStore.subscribe(listener), [])
+  return React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 }
 
 function uid() {

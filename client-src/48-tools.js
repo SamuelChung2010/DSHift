@@ -107,6 +107,27 @@ function activeChatTools(state) {
   return composerToolDefinitions().filter(tool => tool.kind === 'toggle' && tool.active?.(state) === true)
 }
 
+/**
+ * The slice of store state that can change a menu/tool entry.
+ *
+ * Built-in entries read settings, attachments and the current model; plugin
+ * tools get the full live state when an entry actually renders, but only this
+ * slice decides when that render is needed. High-frequency fields (draft,
+ * messages, toasts) are deliberately absent so typing and streaming do not
+ * re-render the composer's menus.
+ */
+function toolsMenuState(state) {
+  return {
+    settings: state.settings,
+    attachments: state.attachments,
+    modelChoice: state.modelChoice,
+    models: state.models,
+    modelConfig: state.modelConfig,
+    auth: state.auth,
+    limits: state.limits,
+  }
+}
+
 function toolAvailability(tool, state) {
   try {
     const result = tool.available?.(state)
@@ -192,7 +213,11 @@ function ComposerToolButton({ tool, state }) {
 
 function ToolsMenu() {
   const t = useT()
-  const state = useChat(snapshot => snapshot)
+  // The menu itself only reads capability state; drafts, history and toasts must
+  // not re-render it. `chatStore.state` stays the live value passed to entries,
+  // while this selection decides when it is worth reading it again.
+  useChat(toolsMenuState, shallowEqual)
+  const state = chatStore.state
   const [open, setOpen] = React.useState(false)
   const triggerRef = React.useRef(null)
   const panelRef = React.useRef(null)

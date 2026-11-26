@@ -1,0 +1,659 @@
+{
+  "label": "baseline-before",
+  "bundleId": "baseline",
+  "browser": "Chrome/158.0.8127.88",
+  "capturedAt": "2026-11-26T13:03:23.863Z",
+  "errors": [],
+  "sizes": [
+    {
+      "kind": "size",
+      "messages": 10,
+      "focused": true,
+      "seedMs": 3,
+      "mount": {
+        "rendered": 10,
+        "waited": 0.09999999403953552
+      },
+      "keys": 12,
+      "durationMs": 1664,
+      "draftLength": 12,
+      "samples": {
+        "n": 12,
+        "taskP50": 7.5,
+        "taskP95": 9,
+        "taskMax": 9,
+        "frameP50": 4,
+        "frameP95": 5.7,
+        "frameMax": 5.7,
+        "inputLengths": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "singleKey": {
+        "counts": {
+          "store.set": 1,
+          "store.emit": 1,
+          "Sidebar": 1,
+          "Thread": 1,
+          "UserMessage": 5,
+          "VersionNav": 10,
+          "AssistantMessage": 5,
+          "collectMessageSources": 5,
+          "answerText": 5,
+          "Markdown": 5,
+          "renderBlocks": 5,
+          "Composer": 1
+        },
+        "taskDelta": 11.6,
+        "frameDelta": 6.1,
+        "draftLength": 1
+      },
+      "renderCounts": {
+        "Thread": 13,
+        "AssistantMessage": 65,
+        "UserMessage": 65,
+        "Markdown": 65,
+        "renderBlocks": 65,
+        "parseMarkdown": 0,
+        "collectMessageSources": 65,
+        "answerText": 65,
+        "Composer": 13,
+        "Sidebar": 13,
+        "storeSet": 12,
+        "storeEmit": 12
+      },
+      "longTasks": {
+        "count": 1,
+        "maxMs": 75,
+        "totalMs": 75
+      },
+      "metrics": {
+        "ScriptDuration": 0.0497,
+        "LayoutDuration": 0.0099,
+        "RecalcStyleDuration": 0.0153,
+        "TaskDuration": 0.1757,
+        "JSHeapUsedSize": -10091312,
+        "Nodes": -66,
+        "Documents": 0
+      },
+      "heapMB": 35.5
+    },
+    {
+      "kind": "size",
+      "messages": 50,
+      "focused": true,
+      "seedMs": 9,
+      "mount": {
+        "rendered": 50,
+        "waited": 0.20000000298023224
+      },
+      "keys": 12,
+      "durationMs": 1699,
+      "draftLength": 12,
+      "samples": {
+        "n": 12,
+        "taskP50": 9.4,
+        "taskP95": 12,
+        "taskMax": 12,
+        "frameP50": 5.6,
+        "frameP95": 6.6,
+        "frameMax": 6.6,
+        "inputLengths": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "singleKey": {
+        "counts": {
+          "store.set": 1,
+          "store.emit": 1,
+          "Sidebar": 1,
+          "Thread": 1,
+          "UserMessage": 25,
+          "VersionNav": 50,
+          "AssistantMessage": 25,
+          "collectMessageSources": 25,
+          "answerText": 25,
+          "Markdown": 25,
+          "renderBlocks": 25,
+          "Composer": 1
+        },
+        "taskDelta": 12.4,
+        "frameDelta": 6.3,
+        "draftLength": 1
+      },
+      "renderCounts": {
+        "Thread": 13,
+        "AssistantMessage": 325,
+        "UserMessage": 325,
+        "Markdown": 325,
+        "renderBlocks": 325,
+        "parseMarkdown": 0,
+        "collectMessageSources": 325,
+        "answerText": 325,
+        "Composer": 13,
+        "Sidebar": 13,
+        "storeSet": 12,
+        "storeEmit": 12
+      },
+      "longTasks": {
+        "count": 0,
+        "maxMs": 0,
+        "totalMs": 0
+      },
+      "metrics": {
+        "ScriptDuration": 0.0681,
+        "LayoutDuration": 0.0104,
+        "RecalcStyleDuration": 0.0151,
+        "TaskDuration": 0.1649,
+        "JSHeapUsedSize": -255928,
+        "Nodes": 13,
+        "Documents": 0
+      },
+      "heapMB": 38.1
+    },
+    {
+      "kind": "size",
+      "messages": 100,
+      "focused": true,
+      "seedMs": 10,
+      "mount": {
+        "rendered": 100,
+        "waited": 0.19999998807907104
+      },
+      "keys": 12,
+      "durationMs": 1752,
+      "draftLength": 12,
+      "samples": {
+        "n": 12,
+        "taskP50": 11.7,
+        "taskP95": 13.3,
+        "taskMax": 13.3,
+        "frameP50": 7.3,
+        "frameP95": 8.7,
+        "frameMax": 8.7,
+        "inputLengths": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "singleKey": {
+        "counts": {
+          "store.set": 1,
+          "store.emit": 1,
+          "Sidebar": 1,
+          "Thread": 1,
+          "UserMessage": 50,
+          "VersionNav": 100,
+          "AssistantMessage": 50,
+          "collectMessageSources": 50,
+          "answerText": 50,
+          "Markdown": 50,
+          "renderBlocks": 50,
+          "Composer": 1
+        },
+        "taskDelta": 12.2,
+        "frameDelta": 6.6,
+        "draftLength": 1
+      },
+      "renderCounts": {
+        "Thread": 13,
+        "AssistantMessage": 650,
+        "UserMessage": 650,
+        "Markdown": 650,
+        "renderBlocks": 650,
+        "parseMarkdown": 0,
+        "collectMessageSources": 650,
+        "answerText": 650,
+        "Composer": 13,
+        "Sidebar": 13,
+        "storeSet": 12,
+        "storeEmit": 12
+      },
+      "longTasks": {
+        "count": 1,
+        "maxMs": 65,
+        "totalMs": 65
+      },
+      "metrics": {
+        "ScriptDuration": 0.0838,
+        "LayoutDuration": 0.0119,
+        "RecalcStyleDuration": 0.0157,
+        "TaskDuration": 0.1869,
+        "JSHeapUsedSize": 1241632,
+        "Nodes": 13,
+        "Documents": 0
+      },
+      "heapMB": 40.9
+    },
+    {
+      "kind": "size",
+      "messages": 300,
+      "focused": true,
+      "seedMs": 13,
+      "mount": {
+        "rendered": 300,
+        "waited": 0.4000000059604645
+      },
+      "keys": 12,
+      "durationMs": 1834,
+      "draftLength": 12,
+      "samples": {
+        "n": 12,
+        "taskP50": 18.7,
+        "taskP95": 22.2,
+        "taskMax": 22.2,
+        "frameP50": 12.8,
+        "frameP95": 14.7,
+        "frameMax": 14.7,
+        "inputLengths": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "singleKey": {
+        "counts": {
+          "store.set": 1,
+          "store.emit": 1,
+          "Sidebar": 1,
+          "Thread": 1,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 150,
+          "collectMessageSources": 150,
+          "answerText": 150,
+          "Markdown": 150,
+          "renderBlocks": 150,
+          "Composer": 1
+        },
+        "taskDelta": 23.5,
+        "frameDelta": 14.4,
+        "draftLength": 1
+      },
+      "renderCounts": {
+        "Thread": 13,
+        "AssistantMessage": 1950,
+        "UserMessage": 1950,
+        "Markdown": 1950,
+        "renderBlocks": 1950,
+        "parseMarkdown": 0,
+        "collectMessageSources": 1950,
+        "answerText": 1950,
+        "Composer": 13,
+        "Sidebar": 13,
+        "storeSet": 12,
+        "storeEmit": 12
+      },
+      "longTasks": {
+        "count": 1,
+        "maxMs": 200,
+        "totalMs": 200
+      },
+      "metrics": {
+        "ScriptDuration": 0.1696,
+        "LayoutDuration": 0.0113,
+        "RecalcStyleDuration": 0.0183,
+        "TaskDuration": 0.3014,
+        "JSHeapUsedSize": 10269036,
+        "Nodes": 13,
+        "Documents": 0
+      },
+      "heapMB": 53.4
+    },
+    {
+      "kind": "size",
+      "messages": 500,
+      "focused": true,
+      "seedMs": 22,
+      "mount": {
+        "rendered": 500,
+        "waited": 0.7999999970197678
+      },
+      "keys": 12,
+      "durationMs": 1959,
+      "draftLength": 12,
+      "samples": {
+        "n": 12,
+        "taskP50": 29.8,
+        "taskP95": 32,
+        "taskMax": 32,
+        "frameP50": 20.2,
+        "frameP95": 23.4,
+        "frameMax": 23.4,
+        "inputLengths": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "singleKey": {
+        "counts": {
+          "store.set": 1,
+          "store.emit": 1,
+          "Sidebar": 1,
+          "Thread": 1,
+          "UserMessage": 250,
+          "VersionNav": 500,
+          "AssistantMessage": 250,
+          "collectMessageSources": 250,
+          "answerText": 250,
+          "Markdown": 250,
+          "renderBlocks": 250,
+          "Composer": 1
+        },
+        "taskDelta": 29.5,
+        "frameDelta": 17.6,
+        "draftLength": 1
+      },
+      "renderCounts": {
+        "Thread": 13,
+        "AssistantMessage": 3250,
+        "UserMessage": 3250,
+        "Markdown": 3250,
+        "renderBlocks": 3250,
+        "parseMarkdown": 0,
+        "collectMessageSources": 3250,
+        "answerText": 3250,
+        "Composer": 13,
+        "Sidebar": 13,
+        "storeSet": 12,
+        "storeEmit": 12
+      },
+      "longTasks": {
+        "count": 2,
+        "maxMs": 274,
+        "totalMs": 348
+      },
+      "metrics": {
+        "ScriptDuration": 0.2807,
+        "LayoutDuration": 0.0116,
+        "RecalcStyleDuration": 0.0157,
+        "TaskDuration": 0.498,
+        "JSHeapUsedSize": 5395856,
+        "Nodes": -15088,
+        "Documents": 0
+      },
+      "heapMB": 60.7
+    }
+  ],
+  "complex": {
+    "kind": "complex",
+    "messages": 20,
+    "focused": true,
+    "seedMs": 36,
+    "mount": {
+      "rendered": 20,
+      "waited": 0.20000000298023224
+    },
+    "keys": 12,
+    "durationMs": 1684,
+    "draftLength": 12,
+    "samples": {
+      "n": 12,
+      "taskP50": 8.9,
+      "taskP95": 11.3,
+      "taskMax": 11.3,
+      "frameP50": 4.6,
+      "frameP95": 6.1,
+      "frameMax": 6.1,
+      "inputLengths": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    "singleKey": {
+      "counts": {
+        "store.set": 1,
+        "store.emit": 1,
+        "Sidebar": 1,
+        "Thread": 1,
+        "UserMessage": 10,
+        "VersionNav": 20,
+        "AssistantMessage": 10,
+        "collectMessageSources": 10,
+        "answerText": 10,
+        "Markdown": 10,
+        "renderBlocks": 20,
+        "parseMarkdown": 10,
+        "Composer": 1
+      },
+      "taskDelta": 12.5,
+      "frameDelta": 6.1,
+      "draftLength": 1
+    },
+    "renderCounts": {
+      "Thread": 13,
+      "AssistantMessage": 130,
+      "UserMessage": 130,
+      "Markdown": 130,
+      "renderBlocks": 260,
+      "parseMarkdown": 130,
+      "collectMessageSources": 130,
+      "answerText": 130,
+      "Composer": 13,
+      "Sidebar": 13,
+      "storeSet": 12,
+      "storeEmit": 12
+    },
+    "longTasks": {
+      "count": 1,
+      "maxMs": 68,
+      "totalMs": 68
+    },
+    "metrics": {
+      "ScriptDuration": 0.0538,
+      "LayoutDuration": 0.0102,
+      "RecalcStyleDuration": 0.0132,
+      "TaskDuration": 0.1558,
+      "JSHeapUsedSize": -19955276,
+      "Nodes": 13,
+      "Documents": 0
+    },
+    "heapMB": 50
+  },
+  "dense": [
+    {
+      "kind": "dense",
+      "messages": 300,
+      "focused": true,
+      "seedMs": 10,
+      "mount": {
+        "rendered": 300,
+        "waited": 2.4000000059604645
+      },
+      "keys": 8,
+      "durationMs": 1582,
+      "draftLength": 8,
+      "samples": {
+        "n": 8,
+        "taskP50": 63.4,
+        "taskP95": 69.8,
+        "taskMax": 69.8,
+        "frameP50": 35.6,
+        "frameP95": 40.6,
+        "frameMax": 40.6,
+        "inputLengths": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "singleKey": {
+        "counts": {
+          "store.set": 1,
+          "store.emit": 1,
+          "Sidebar": 1,
+          "Thread": 1,
+          "UserMessage": 150,
+          "VersionNav": 300,
+          "AssistantMessage": 150,
+          "collectMessageSources": 150,
+          "answerText": 150,
+          "Markdown": 150,
+          "renderBlocks": 600,
+          "parseMarkdown": 450,
+          "Composer": 1
+        },
+        "taskDelta": 72.9,
+        "frameDelta": 39.6,
+        "draftLength": 1
+      },
+      "renderCounts": {
+        "Thread": 9,
+        "AssistantMessage": 1350,
+        "UserMessage": 1350,
+        "Markdown": 1350,
+        "renderBlocks": 5400,
+        "parseMarkdown": 4050,
+        "collectMessageSources": 1350,
+        "answerText": 1350,
+        "Composer": 9,
+        "Sidebar": 9,
+        "storeSet": 8,
+        "storeEmit": 8
+      },
+      "longTasks": {
+        "count": 3,
+        "maxMs": 1556,
+        "totalMs": 1933
+      },
+      "metrics": {
+        "ScriptDuration": 0.3579,
+        "LayoutDuration": 0.0065,
+        "RecalcStyleDuration": 0.0109,
+        "TaskDuration": 0.6254,
+        "JSHeapUsedSize": 3812248,
+        "Nodes": 9,
+        "Documents": 0
+      },
+      "heapMB": 76.3
+    },
+    {
+      "kind": "dense",
+      "messages": 500,
+      "focused": true,
+      "seedMs": 64,
+      "mount": {
+        "rendered": 500,
+        "waited": 2.8999999910593033
+      },
+      "keys": 8,
+      "durationMs": 1905,
+      "draftLength": 8,
+      "samples": {
+        "n": 8,
+        "taskP50": 104.1,
+        "taskP95": 118.3,
+        "taskMax": 118.3,
+        "frameP50": 58.8,
+        "frameP95": 71.4,
+        "frameMax": 71.4,
+        "inputLengths": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "singleKey": {
+        "counts": {
+          "store.set": 1,
+          "store.emit": 1,
+          "Sidebar": 1,
+          "Thread": 1,
+          "UserMessage": 250,
+          "VersionNav": 500,
+          "AssistantMessage": 250,
+          "collectMessageSources": 250,
+          "answerText": 250,
+          "Markdown": 250,
+          "renderBlocks": 1000,
+          "parseMarkdown": 750,
+          "Composer": 1
+        },
+        "taskDelta": 104.6,
+        "frameDelta": 50.2,
+        "draftLength": 1
+      },
+      "renderCounts": {
+        "Thread": 9,
+        "AssistantMessage": 2250,
+        "UserMessage": 2250,
+        "Markdown": 2250,
+        "renderBlocks": 9000,
+        "parseMarkdown": 6750,
+        "collectMessageSources": 2250,
+        "answerText": 2250,
+        "Composer": 9,
+        "Sidebar": 9,
+        "storeSet": 8,
+        "storeEmit": 8
+      },
+      "longTasks": {
+        "count": 11,
+        "maxMs": 2213,
+        "totalMs": 3364
+      },
+      "metrics": {
+        "ScriptDuration": 0.6069,
+        "LayoutDuration": 0.0075,
+        "RecalcStyleDuration": 0.0106,
+        "TaskDuration": 1.0034,
+        "JSHeapUsedSize": -653052,
+        "Nodes": 9,
+        "Documents": 0
+      },
+      "heapMB": 92.8
+    }
+  ],
+  "streaming": {
+    "messages": 300,
+    "keys": 10,
+    "samples": {
+      "n": 10,
+      "taskP50": 18.8,
+      "taskP95": 29,
+      "taskMax": 29,
+      "frameP50": 12,
+      "frameP95": 14.5,
+      "frameMax": 14.5,
+      "inputLengths": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    "renderCounts": {
+      "store.set": 58,
+      "store.emit": 58,
+      "Sidebar": 57,
+      "Thread": 57,
+      "UserMessage": 8550,
+      "VersionNav": 17100,
+      "AssistantMessage": 8607,
+      "collectMessageSources": 8607,
+      "answerText": 8607,
+      "Markdown": 8607,
+      "renderBlocks": 8607,
+      "parseMarkdown": 47,
+      "Composer": 57
+    },
+    "longTasks": 4,
+    "stillStreaming": true,
+    "draftLength": "abcdefghij"
+  }
+}

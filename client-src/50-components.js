@@ -465,7 +465,7 @@ function ProcessPanel({ message, streaming }) {
           if (block.thinking.trim() === '') return null
           const active = streaming && block.endedAt === undefined
           return h('div', { className: cx('dsc-think-block', active && 'is-active'), key: `think-${index}` },
-            h(Markdown, { text: block.thinking, streaming: active }),
+            h(MemoMarkdown, { text: block.thinking, streaming: active }),
           )
         }
         if (block.type === 'server_tool_use') {
@@ -487,9 +487,8 @@ function ProcessPanel({ message, streaming }) {
  * Only rendered when the sibling group has more than one version, so a normal
  * single-path chat keeps its message actions clean.
  */
-function VersionNav({ message }) {
+function VersionNav({ message, busy = false }) {
   const t = useT()
-  const busy = useChat(state => state.streaming !== null)
   const version = message?.version
   if (!version || !(version.count > 1)) return null
   const index = Math.max(1, Math.min(version.count, version.index ?? 1))
@@ -515,16 +514,20 @@ function AssistantMessage({ message, streaming, isLast, canRegenerate, highlight
   const [copied, setCopied] = React.useState(false)
   const [sourcesOpen, setSourcesOpen] = React.useState(false)
   const [activeSource, setActiveSource] = React.useState(null)
-  const text = messageText(message)
-  const { sources, indexByUrl } = collectMessageSources(message)
-  const answer = answerText(message, indexByUrl)
+  // One message object owns one answer. Memoizing by the message reference keeps
+  // source collection and answer assembly off the path of every sibling render;
+  // during streaming the reference changes per paint, so only the live answer
+  // pays for it.
+  const text = React.useMemo(() => messageText(message), [message])
+  const { sources, indexByUrl } = React.useMemo(() => collectMessageSources(message), [message])
+  const answer = React.useMemo(() => answerText(message, indexByUrl), [message, indexByUrl])
   // A server notice the export recorded next to the answer (such as the
   // content warning on an otherwise finished reply). It is shown below the
   // answer and is deliberately not part of the answer text, the copy action or
   // the model context.
-  const noticeBlocks = (message.blocks ?? []).filter(block => (
+  const noticeBlocks = React.useMemo(() => (message.blocks ?? []).filter(block => (
     block.type === 'notice' && typeof block.text === 'string' && block.text.trim() !== ''
-  ))
+  )), [message])
   const refused = message.stopReason === 'refusal'
   const errorInfo = message.error ? friendlyError(message.error) : null
   const showTyping = streaming && text === '' && (message.blocks ?? []).length === 0
@@ -555,7 +558,7 @@ function AssistantMessage({ message, streaming, isLast, canRegenerate, highlight
         : null,
       !refused && answer !== ''
         ? h('div', { className: 'dsc-answer', onClick: onAnswerClick },
-            h(Markdown, { text: answer, streaming: liveAnswer, sources }),
+            h(MemoMarkdown, { text: answer, streaming: liveAnswer, sources }),
           )
         : null,
       showTyping ? h(TypingDots, null) : null,
@@ -622,7 +625,7 @@ function AssistantMessage({ message, streaming, isLast, canRegenerate, highlight
             messageModelLabel(message) !== ''
               ? h('span', { className: 'dsc-msg-model', title: t('modelLabel') }, messageModelLabel(message))
               : null,
-            h(VersionNav, { message }),
+            h(VersionNav, { message, busy: streaming }),
             message.usage
               ? h('span', { className: 'dsc-usage' }, t('usage', {
                   input: message.usage.input_tokens ?? 0,
@@ -710,7 +713,7 @@ function UserMessageEditor({ message }) {
   )
 }
 
-function UserMessage({ message, canEdit, highlighted }) {
+function UserMessage({ message, canEdit, highlighted, busy = false }) {
   const t = useT()
   const [copied, setCopied] = React.useState(false)
   const files = Array.isArray(message.files) ? message.files : []
@@ -742,11 +745,20 @@ function UserMessage({ message, canEdit, highlighted }) {
             }, h(Icon, { name: 'pencil', size: 13 }), h('span', null, t('edit')))
           : null,
         h('span', { className: 'dsc-msg-actions-spacer' }),
-        h(VersionNav, { message }),
+        h(VersionNav, { message, busy }),
       ),
     ),
   )
 }
+
+/**
+ * Row components are pure functions of the message and a few primitives. The
+ * memo boundaries are what turn "Thread re-rendered" into "only the row whose
+ * props changed re-rendered": message objects stay stable for untouched history,
+ * so a draft keystroke or a stream chunk cannot reach them.
+ */
+const MemoAssistantMessage = React.memo(AssistantMessage)
+const MemoUserMessage = React.memo(UserMessage)
 
 function EmptyState() {
   const t = useT()
@@ -756,6 +768,9 @@ function EmptyState() {
     h('h1', { className: 'dsc-greeting' }, greetingText(t, greetingIndex, userName)),
   )
 }
+
+/** Histories at least this long opt into layout containment (see 60-style.js). */
+const LONG_THREAD_ROWS = 120
 
 function Thread() {
   const messages = useChat(state => state.messages)
@@ -809,20 +824,29 @@ function Thread() {
       ),
     )
   }
-  return h('div', { className: cx('dsc-thread', messages.length === 0 && 'is-empty'), ref, 'aria-label': tr('appTitle') },
+  return h('div', {
+    className: cx(
+      'dsc-thread',
+      messages.length === 0 && 'is-empty',
+      messages.length >= LONG_THREAD_ROWS && 'is-heavy',
+    ),
+    ref,
+    'aria-label': tr('appTitle'),
+  },
     messages.length === 0
       ? h(EmptyState, null)
       : h('div', { className: 'dsc-thread-inner' }, messages.map((message, index) => {
           if (message.role === 'user') {
             if (editingId === message.id) return h(UserMessageEditor, { key: message.id, message })
-            return h(UserMessage, {
+            return h(MemoUserMessage, {
               key: message.id,
               message,
               canEdit: streaming === null,
+              busy: streaming !== null,
               highlighted: highlight === message.id,
             })
           }
-          return h(AssistantMessage, {
+          return h(MemoAssistantMessage, {
             key: message.id,
             message,
             streaming: streaming?.assistantId === message.id,
@@ -877,9 +901,20 @@ function Composer() {
   const stopping = useChat(state => state.stopping)
   const auth = useChat(state => state.auth)
   const sendKey = useChat(state => state.sendKey)
-  const toolState = useChat(state => state)
-  useChat(state => state.modelChoice)
-  const choice = currentModelChoice()
+  // Menu entries read the live store when they render; this selection only
+  // decides when a capability change (settings, model, catalog) is worth a
+  // composer render. Draft and stream frames are not part of it.
+  const composerState = useChat(state => ({
+    settings: state.settings,
+    modelChoice: state.modelChoice,
+    models: state.models,
+    modelConfig: state.modelConfig,
+  }), shallowEqual)
+  const choice = React.useMemo(
+    () => currentModelChoice(),
+    [composerState.modelChoice, composerState.models, composerState.modelConfig],
+  )
+  const toolState = chatStore.state
   const tools = composerToolDefinitions()
   const unsupportedImages = !modelCapability(choice.model, 'vision')
     && attachments.some(item => item.isImage && item.status !== 'error')
@@ -1528,12 +1563,14 @@ function ChatHeader() {
   const t = useT()
   const activeId = useChat(state => state.activeId)
   const conversations = useChat(state => state.conversations)
-  const messages = useChat(state => state.messages)
+  // The header only branches on "is there history", never on message content:
+  // selecting the array itself made every streamed chunk re-render the title row.
+  const hasMessages = useChat(state => state.messages.length > 0)
   const auth = useChat(state => state.auth)
   const sidebarOpen = useChat(state => state.sidebarOpen)
   const conversation = conversations.find(item => item.id === activeId)
-  const canDraft = messages.length > 0
-  const blankHome = activeId === null && messages.length === 0
+  const canDraft = hasMessages
+  const blankHome = useChat(state => state.activeId === null && state.messages.length === 0)
   const hostHandoff = useChat(state => state.bootData?.handoff?.enabled !== false)
   return h('header', { className: 'dsc-header' },
     h('div', { className: 'dsc-header-left' },

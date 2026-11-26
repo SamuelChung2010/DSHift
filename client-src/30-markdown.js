@@ -821,8 +821,20 @@ function renderBlock(block, key, context = {}, isLast = false) {
 function Markdown({ text, className = '', streaming = false, sources = [] }) {
   const context = React.useMemo(() => ({ streaming, sources }), [streaming, sources])
   const blocks = React.useMemo(() => parseMarkdown(text), [text])
+  // Rendering the block tree allocates the whole element tree. Keep it with the
+  // parsed tree instead of rebuilding it on every parent render (a highlight,
+  // an action state or a streaming sibling used to be enough to redo it).
+  const rendered = React.useMemo(() => renderBlocks(blocks, context), [blocks, context])
   return h('div', { className: `dsc-md ${className}`.trim() },
-    renderBlocks(blocks, context),
+    rendered,
     streaming ? h('span', { className: 'dsc-caret', 'aria-hidden': 'true' }) : null,
   )
 }
+
+/**
+ * Finished answers only change when their own message changes. The memo is
+ * what makes a draft update skip every historical Markdown subtree even though
+ * the Thread still renders its rows.
+ */
+const MemoMarkdown = React.memo(Markdown)
+

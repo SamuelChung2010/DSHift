@@ -1,0 +1,82 @@
+[
+  {
+    "messages": 10,
+    "dense": false,
+    "ms": 90.5,
+    "counts": {
+      "store.set": 1,
+      "store.emit": 1,
+      "Sidebar": 1,
+      "Thread": 1,
+      "UserMessage": 5,
+      "VersionNav": 10,
+      "AssistantMessage": 5,
+      "collectMessageSources": 5,
+      "answerText": 5,
+      "Markdown": 5,
+      "parseMarkdown": 5,
+      "renderBlocks": 5,
+      "Composer": 1
+    }
+  },
+  {
+    "messages": 100,
+    "dense": false,
+    "ms": 95.5,
+    "counts": {
+      "store.set": 1,
+      "store.emit": 1,
+      "Sidebar": 1,
+      "Thread": 1,
+      "UserMessage": 50,
+      "VersionNav": 100,
+      "AssistantMessage": 50,
+      "collectMessageSources": 50,
+      "answerText": 50,
+      "Markdown": 50,
+      "parseMarkdown": 50,
+      "renderBlocks": 50,
+      "Composer": 1
+    }
+  },
+  {
+    "messages": 500,
+    "dense": false,
+    "ms": 412.5,
+    "counts": {
+      "store.set": 1,
+      "store.emit": 1,
+      "Sidebar": 1,
+      "Thread": 1,
+      "UserMessage": 250,
+      "VersionNav": 500,
+      "AssistantMessage": 250,
+      "collectMessageSources": 250,
+      "answerText": 250,
+      "Markdown": 250,
+      "parseMarkdown": 250,
+      "renderBlocks": 250,
+      "Composer": 1
+    }
+  },
+  {
+    "messages": 500,
+    "dense": true,
+    "ms": 3226,
+    "counts": {
+      "store.set": 1,
+      "store.emit": 1,
+      "Sidebar": 1,
+      "Thread": 1,
+      "UserMessage": 250,
+      "VersionNav": 500,
+      "AssistantMessage": 250,
+      "collectMessageSources": 250,
+      "answerText": 250,
+      "Markdown": 250,
+      "parseMarkdown": 1000,
+      "renderBlocks": 1000,
+      "Composer": 1
+    }
+  }
+]

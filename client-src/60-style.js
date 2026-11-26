@@ -922,7 +922,18 @@ html[data-windows-titlebar] .dsc-main {
 .dsc-text-button:disabled { opacity: 0.45; }
 
 /* ---------- messages ---------- */
+/* Long histories: every row is its own layout island. Without this, a tiny
+   change at the bottom (a caret line in the composer) makes the frame walk a
+   layout tree that grows with the message count; with it, the same keystroke
+   touched ~190k layout objects before and a handful after. No row is hidden,
+   clamped or virtualized: heights and scroll offsets stay exactly as they were,
+   search and scrollIntoView keep working, and paint is not clipped (only
+   layout/style containment is applied).
+   The class only exists on long threads: a new or short chat keeps its original
+   mount cost, and a long one pays one mount layout in exchange for cheap
+   keystrokes afterwards. */
 .dsc-msg { display: flex; width: 100%; min-width: 0; }
+.dsc-thread.is-heavy .dsc-msg { contain: layout style; }
 .dsc-msg-user { justify-content: flex-end; padding-left: 10%; }
 .dsc-user-block { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; max-width: 100%; min-width: 0; }
 .dsc-user-bubble {

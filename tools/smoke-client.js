@@ -33,6 +33,9 @@ const React = {
   useMemo(factory) { return factory() },
   useCallback(fn) { return fn },
   useRef(initial) { return { current: initial } },
+  // The smoke shim renders once and does not run effects. Returning the current
+  // snapshot is enough to exercise selectors without a live store subscription.
+  useSyncExternalStore(_subscribe, getSnapshot) { return getSnapshot() },
   memo(component) { return component },
 }
 

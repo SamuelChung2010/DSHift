@@ -650,7 +650,7 @@ function MemorySettingsPane() {
     h(SettingsSection, { title: t('memorySummarySection') },
       h('div', { className: 'dsc-memory-summary' },
         summary !== null
-          ? h(Markdown, { text: summary.text, className: 'dsc-memory-summary-text' })
+          ? h(MemoMarkdown, { text: summary.text, className: 'dsc-memory-summary-text' })
           : h('p', { className: 'dsc-memory-summary-empty' }, t('memorySummaryEmpty')),
         h('div', { className: 'dsc-memory-summary-foot' },
           h('span', { className: 'dsc-memory-summary-meta' }, summary !== null

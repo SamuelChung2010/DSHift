@@ -31,6 +31,7 @@ const React = {
   useMemo(factory) { return factory() },
   useCallback(fn) { return fn },
   useRef(initial) { return { current: initial } },
+  useSyncExternalStore(_subscribe, getSnapshot) { return getSnapshot() },
   memo(component) { return component },
 }
 
@@ -322,7 +323,9 @@ assert.ok(consentText.includes('将把粘贴的内容发送到 DeepSeek API 处�
 const generalTabText = textOf(renderWith(hook.SettingsDialog, {}, {}))
 assert.ok(generalTabText.includes('通用') && generalTabText.includes('长期记忆'), 'settings must show both tabs')
 assert.ok(!generalTabText.includes('正在加载长期记忆…'), 'General stays the default tab and must not mount the memory pane')
-const memoryTabText = textOf(renderWith(hook.SettingsDialog, {}, { 11: 'memory' }))
+// useChat no longer consumes a useState slot (it is a real store subscription);
+// the tab is therefore the fifth useState in this dialog's shim ordering.
+const memoryTabText = textOf(renderWith(hook.SettingsDialog, {}, { 5: 'memory' }))
 assert.ok(memoryTabText.includes('正在加载长期记忆…'), 'the Memory tab must mount the memory pane')
 
 console.log('MEMORY_CLIENT_OK')

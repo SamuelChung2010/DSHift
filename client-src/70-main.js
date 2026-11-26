@@ -26,6 +26,9 @@ if (typeof globalThis.__DSC_TEST_HOOK__ === 'function') {
   globalThis.__DSC_TEST_HOOK__({
     chatStore,
     chatActions,
+    useChat,
+    shallowEqual,
+    createChatSelectorCache,
     openFilePicker,
     acceptFiles,
     registerFilePicker,
