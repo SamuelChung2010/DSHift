@@ -4,33 +4,35 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![DSH](https://img.shields.io/badge/DSH-%E2%89%A50.2.2--rc.5-5b6ee1)
 
-[简体中文](README.md) | [English](README.en.md)
+**简体中文** | [English](README.en.md)
 
-DSHift 为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（DSH）加入原生 **DeepSeek Chat 模式**，与 Agent 模式并列。它提供独立的聊天历史、输入框、模型与推理控制，并把 Chat 中的讨论直接交给 Agent 执行。
+**从对话到行动，都在 DeepSeek Harness 内完成。**
+
+DSHift 为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（DSH）加入原生 **DeepSeek Chat 模式**，与 Agent 模式并列。你可以导入 DeepSeek 聊天记录、跨平台迁移长期记忆，并把讨论直接交给 Agent 执行。
 
 ## 快速开始
-
-**前置条件**
-
-- DeepSeek Harness `>=0.2.2-rc.5`
-- 已登录的 DeepSeek 账号，或可用的 DeepSeek API Key
-- Windows / macOS 桌面端；Web 端尚未验证
 
 ```sh
 dsh plugin add github:SamuelChung2010/DSHift
 ```
 
+**前置条件**
+
+- DeepSeek Harness `>=0.2.2-rc.5`
+- 已登录的 DeepSeek 账号，或可用的 DeepSeek API Key
+- Windows 或 macOS 桌面端
+
 也可以在 DSH 的 **Plugins** 页面选择本仓库目录，或安装 [Releases](https://github.com/SamuelChung2010/DSHift/releases) 中的 `.tgz`。`.zip` 需要先解压再从目录安装。
 
 安装 Host 端后重启 DSH 或重载插件；浏览器端首次可能提示刷新。
 
-![DSHift 界面：Chat | Agent 切换、会话侧栏与输入框](assets/demo.gif)
+![DSHift 界面演示](assets/dshift-readme.gif)
 
 ## 核心特色
 
 ### Chat 与 Agent 双模式
 
-顶部共享的 `Chat | Agent` 切换器在同一窗口内切换两套独立界面。Chat 有自己的会话、搜索、草稿与输入框；Agent 的会话和工作区保持原样，切换不会丢失未发送内容。Chat 仅在空白页显示，进入已有会话后自动隐藏。
+使用顶部的 `Chat | Agent` 切换器，可以在同一窗口内切换两套独立界面。Chat 有自己的会话、搜索、草稿与输入框，Agent 有自己的会话和工作区。切换时会保留未发送的内容。切换器仅在空白页显示。进入已有会话或发送第一条消息后，只有切换器会自动隐藏，返回空白页时会重新显示。
 
 ### Chat → Agent 任务交接
 
@@ -38,7 +40,7 @@ dsh plugin add github:SamuelChung2010/DSHift
 
 ### 长期记忆与跨平台迁移
 
-可选的跨会话记忆保存在本机：自动提取、按问题相关度注入、Memory Summary、Ask or Update，以及从 ChatGPT / Claude / Gemini 导入已有记忆。记忆与聊天记录分开存储；关闭总开关后检索、注入和自动提取全部停止。
+跨会话记忆与聊天记录分开保存在本机。长期记忆默认开启，**自动提取默认关闭**，可在 **Chat 设置 → 长期记忆** 中按需开启自动提取。支持按问题相关度注入记忆、Memory Summary、Ask or Update，以及从 ChatGPT / Claude / Gemini 导入已有记忆。关闭长期记忆总开关后，检索、注入和自动提取全部停止。
 
 ### DeepSeek 聊天记录导入
 
@@ -52,6 +54,7 @@ dsh plugin add github:SamuelChung2010/DSHift
 - **完整会话管理**：文件夹、置顶、归档、历史搜索；编辑消息、重新生成、回答版本切换、从已有正文继续生成。
 - **Markdown / LaTeX / Mermaid**：代码高亮与复制、公式渲染（含 `\boxed{}`）、Mermaid 图表；失败时保留源码并说明原因。
 - **本地化界面**：中英文、明暗主题、响应式布局，以及 macOS / Windows 原生风格适配。
+- **零额外 npm 运行时依赖**，复用 Harness 提供的运行环境。
 
 ## Beta 4 长会话性能
 
@@ -80,7 +83,7 @@ API Key 只在 DSH Host 进程中使用，不会发送到浏览器。输入框�
 ## 隐私、兼容性与限制
 
 - 聊天历史、长期记忆、导入暂存与图片都保存在本机 `$DSH_HOME/deepseek-chat/`；导入 ZIP 不上传。聊天、联网搜索、文件解析和记忆提取会按需调用 DeepSeek API，可能产生用量费用。
-- DSHift 不是 DeepSeek 官方产品。当前在 DSH `0.2.2-rc.5` 上验证；Windows 与 macOS 桌面界面已实机核对，Web 端尚未验证。
+- DSHift 不是 DeepSeek 官方产品。当前在 DSH `0.2.2-rc.5` 上验证，Windows 与 macOS 桌面界面已实机核对。Web 端已完成部分性能测试，完整兼容性仍待验证。
 - 数学公式是面向聊天的 LaTeX 子集；Mermaid 支持流程图、时序图、饼图和基础类图；更复杂的语法会回退为源码而不是报错。
 - 生成过程中需要先停止回答，才能切换会话或编辑消息；`deepseek-v4-pro` 不支持图片理解。
 - 长会话首次挂载（500 条密集内容）仍约 3 秒，这是一次性成本，不在输入路径。

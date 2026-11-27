@@ -4,33 +4,35 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![DSH](https://img.shields.io/badge/DSH-%E2%89%A50.2.2--rc.5-5b6ee1)
 
-[简体中文](README.md) | [English](README.en.md)
+[简体中文](README.md) | **English**
 
-DSHift adds a native **DeepSeek Chat mode** to [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH), alongside Agent mode. Chat gets its own history, composer, model controls, and reasoning settings — and can hand a finished discussion to an Agent workspace without copying context by hand.
+**Go from conversation to action inside DeepSeek Harness.**
+
+DSHift adds a native **DeepSeek Chat mode** alongside Agent mode in [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH). Import DeepSeek chat history, bring long-term memory over from other platforms, and hand conversations off to Agent as tasks.
 
 ## Quick start
-
-**Requirements**
-
-- DeepSeek Harness `>=0.2.2-rc.5`
-- A signed-in DeepSeek account or a DeepSeek API key
-- Windows or macOS desktop; the Web UI is not yet verified
 
 ```sh
 dsh plugin add github:SamuelChung2010/DSHift
 ```
 
+**Requirements**
+
+- DeepSeek Harness `>=0.2.2-rc.5`
+- A signed-in DeepSeek account or a DeepSeek API key
+- Windows or macOS desktop
+
 You can also pick this repository directory from DSH **Plugins**, or install the `.tgz` from [Releases](https://github.com/SamuelChung2010/DSHift/releases). A `.zip` must be extracted and installed from the resulting directory.
 
 Restart DSH or reload the plugin after installing the Host half; the browser side may ask for a refresh the first time.
 
-![DSHift UI: Chat | Agent switch, conversation sidebar and composer](assets/demo.gif)
+![DSHift interface demo](assets/dshift-readme.gif)
 
 ## Core features
 
 ### Chat and Agent, side by side
 
-A shared `Chat | Agent` switch changes the view without changing the window. Chat keeps its own conversations, search, drafts, and composer; Agent keeps its sessions and workspaces untouched. Chat appears on blank pages and steps aside once a conversation starts.
+The shared `Chat | Agent` switch moves between two views in the same window. Chat has its own conversations, search, drafts, and composer. Agent has its own sessions and workspaces. Switching preserves unsent drafts. The switch appears only on blank pages. Opening an existing conversation or sending the first message hides only the switch. It reappears when you return to a blank page.
 
 ### Chat → Agent handoff
 
@@ -38,7 +40,7 @@ When the discussion is ready, click **Hand off to Agent**. DSHift turns it into 
 
 ### Long-term memory and migration
 
-Optional cross-conversation memory lives on your machine: automatic extraction, relevance-based injection, Memory Summary, Ask or Update, and imports from ChatGPT / Claude / Gemini. Memory is stored separately from chat history, and turning it off stops retrieval, injection, and extraction.
+Cross-conversation memory is stored locally, separately from chat history. Long-term memory is on by default, and **automatic extraction is off by default**. You can enable extraction in **Chat settings**. DSHift supports relevance-based memory injection, Memory Summary, Ask or Update, and imports from ChatGPT / Claude / Gemini. Turning off long-term memory stops retrieval, injection, and extraction.
 
 ### DeepSeek chat import
 
@@ -52,6 +54,7 @@ Import an official DeepSeek App / web export ZIP locally. Titles, timestamps, th
 - **Conversation management**: folders, pinning, archive, history search, message editing, regeneration, answer versions, and continue-from-prefix.
 - **Markdown / LaTeX / Mermaid**: highlighted and copyable code, formulas including `\boxed{}`, Mermaid diagrams; unsupported syntax falls back to source with an explanation.
 - **Native-feeling interface**: English and Chinese, light and dark themes, responsive layout, and Windows / macOS styling.
+- **Zero additional npm runtime dependencies.** DSHift runs in the Harness environment.
 
 ## Beta 4 long-chat performance
 
@@ -80,7 +83,7 @@ See the [user guide](docs/user-guide.md) for everyday workflows and [configurati
 ## Privacy, compatibility, and limitations
 
 - Chat history, long-term memory, import staging, and imported images stay under `$DSH_HOME/deepseek-chat/`; import ZIPs are never uploaded. Chat, web search, file parsing, and memory extraction call the DeepSeek API on demand and may incur usage costs.
-- DSHift is not an official DeepSeek product. It is verified on DSH `0.2.2-rc.5`; Windows and macOS desktop UI have been checked on real devices, the Web UI has not.
+- DSHift is an independent plugin verified on DSH `0.2.2-rc.5`. The Windows and macOS desktop interfaces were checked on real devices. The Web UI has undergone limited performance testing. Full Web compatibility still needs verification.
 - Math support is a chat-focused LaTeX subset. Mermaid covers flowcharts, sequence diagrams, pie charts, and basic class diagrams; unsupported syntax falls back to source instead of failing.
 - Stop a running answer before switching conversations or editing messages. `deepseek-v4-pro` does not support image understanding.
 - The first mount of a 500-message dense conversation still takes about 3 seconds; that one-time cost is outside the typing path.
