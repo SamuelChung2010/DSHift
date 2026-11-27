@@ -18,9 +18,9 @@ dsh plugin add github:SamuelChung2010/DSHift
 
 ---
 
-# dsh-chat（DSH 插件）
+# DSHift（DSH 插件）
 
-dsh-chat 在 DeepSeek Harness 中加入一个原生的 **DeepSeek Chat 模式**，与原生的 **Agent 模式**并列，通过顶部的 `Chat | Agent` 分段控件随时切换。Chat 使用 DeepSeek 官方面向应用开放的 API 能力，界面参考 DeepSeek App / ChatGPT 桌面版
+DSHift 在 DeepSeek Harness 中加入一个原生的 **DeepSeek Chat 模式**，与原生的 **Agent 模式**并列，通过顶部的 `Chat | Agent` 分段控件随时切换。Chat 使用 DeepSeek 官方面向应用开放的 API 能力，界面参考 DeepSeek App / ChatGPT 桌面版
 
 
 ## v0.2.0 Beta 更新
