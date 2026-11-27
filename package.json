@@ -2,11 +2,12 @@
   "name": "@local/deepseek-chat-mode",
   "version": "0.2.0-beta.4",
   "private": true,
+  "license": "MIT",
   "type": "module",
-  "description": "dsh-chat: a native DeepSeek Chat mode for DeepSeek Harness, with chat-export import, long-term memory, deep thinking, web search, file upload, and persistent history.",
+  "description": "DSHift: a native DeepSeek Chat mode for DeepSeek Harness, with chat-export import, long-term memory, deep thinking, web search, file upload, and persistent history.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SamuelChung2010/dsh-chat.git"
+    "url": "https://github.com/SamuelChung2010/DSHift.git"
   },
   "engines": {
     "dsh": ">=0.2.2-rc.5"
@@ -25,7 +26,10 @@
     "cordis.patch.yml",
     "locale/*.json",
     "icon.svg",
-    "README.md"
+    "README.md",
+    "README.en.md",
+    "CHANGELOG.md",
+    "assets/demo.gif"
   ],
   "dsh": {
     "bundle": {

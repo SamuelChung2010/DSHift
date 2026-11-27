@@ -2,7 +2,7 @@
 
 分支：`fix/long-chat-performance`（worktree `C:\Users\Zhong\Documents\dsh-chat-perf`）；集成分支最终合入 `main`
 基线：`87721ec`（`origin/main`，`develop` 当前稳定维护基线）
-状态：数学改动与性能修复已完成、合并并准备发布 `v0.2.0-beta.4`（提交与发布细节见第 9–10 节）
+状态：数学改动与性能修复已完成、合并，并已发布 `v0.2.0-beta.4`（2026-11-27；GitHub Release）
 
 ---
 
@@ -293,7 +293,8 @@
 - 数学改动：`5701147 feat(chat): render boxed and fenced TeX formulas`（`develop`）。
 - 性能修复：`9334a63 fix(chat): keep long histories out of the input render path`（`fix/long-chat-performance`）。
 - 集成：`ca80c2b merge: integrate math rendering work into long-chat performance branch`。
-- 发布提交：`e1ed4c1 chore(release): prepare dsh-chat v0.2.0 Beta 4`（`main`），tag `v0.2.0-beta.4`。
+- 发布提交：`e8d39de chore(release): prepare dsh-chat v0.2.0 Beta 4`（`main`），tag `v0.2.0-beta.4`。
+- GitHub Release：<https://github.com/SamuelChung2010/DSHift/releases/tag/v0.2.0-beta.4>（2026-11-27）。
 - Worktree：`C:\Users\Zhong\Documents\dsh-chat-perf` 与 `C:\Users\Zhong\Documents\dsh-chat-main`；`develop` 工作区只留下与本发布无关的 `promo/` 宣传素材，未提交。
 - 发布包、校验和与验证记录位于 `.release/v0.2.0-beta.4/`，GitHub Release 使用同一版本。
 
@@ -308,7 +309,7 @@
 2. Electron 窗口内的绝对延迟未单独测量（headless Chrome 数据用于同设备相对比较）；
 3. 长会话首次挂载（500 条密集内容）仍约 3 秒，属一次性成本。
 
-经作者确认，以上限制不阻塞 `v0.2.0-beta.4` beta 发布；后续补 macOS/Electron 验证与长会话挂载优化。
+经作者确认，以上限制不阻塞 `v0.2.0-beta.4` beta 发布；该版本已于 2026-11-27 发布。后续补 macOS/Electron 验证与长会话挂载优化。
 
 ---
 
